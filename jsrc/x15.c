@@ -1524,11 +1524,11 @@ DF2(jtmemalign){F12IP;I *s, n, r;  // shape and rank
 // 15!:15 memu - make a copy of y if it is not writable (inplaceable and not read-only)
 // We have to check jt in case this usage is in a fork that will use the block later
 F1(jtmemu) {F12IP;  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE) if(!((I)jtfg&JTINPLACEW && (AC(w)<(AFLAG(w)<<((BW-1)-AFROX)))))w=ca(w);
- // We will NUL-terminate a string in case called routines need it (not sure this is necessary)
+ // We will NUL-terminate a string in case called routines need it (needed if the buffer is being sent externally)
 #if SY_64
- if(unlikely((AT(w)&LAST0)!=0))*(C4*)&CAV(w)[AN(w)*bpnoun(AT(w))]=0;  // on 64-bit systems, always safe to add 4 bytes at end of data
+ if(unlikely((AT(w)&JCHAR)!=0))*(C4*)&CAV(w)[AN(w)<<bplg(AT(w))]=0;  // on 64-bit systems, always safe to add 4 bytes at end of data
 #else
- if(unlikely((AT(w)&LAST0)!=0)){I nulofst=AN(w)*bpnoun(AT(w)); *(UI4*)&CAV(w)[nulofst&~3]&=~((UI4)-1<<((nulofst&3)<<LGBB));}  // zero out the 4-byte word starting at NUL.  addr 00->mask w/0, 01->ff 02->ffff 03->ffffff
+ if(unlikely((AT(w)&JCHAR)!=0)){I nulofst=AN(w)<<bplg(AT(w)); *(UI4*)&CAV(w)[nulofst&~3]&=~((UI4)-1<<((nulofst&3)<<LGBB));}  // zero out the 4-byte word starting at NUL.  addr 00->mask w/0, 01->ff 02->ffff 03->ffffff.  Does not overstore; C4T padded
 #endif
  RETF(w);
 }

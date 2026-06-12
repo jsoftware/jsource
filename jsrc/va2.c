@@ -1104,7 +1104,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
      DPMULDE(nf,mf,mf);  // mf is total # iterations
      aawwzknfxrz[6]=--nf; aawwzknfxrz[9]=(mf-1)*(aawwzknfxrz[4]=zn<<rtypebplg(cv));   // set nf (#inner outer loops-1), byte offset to z location of last iteration
      n=n+n+((UI)neq1m<(UI)(cv&VIPWCRLONG));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set   Should generate ADC
-     cv|=VIPOLOOPREQD;  // indicate txhat the outer loops are needed
+     cv|=VIPOLOOPREQD;  // indicate that the outer loops are needed
     } 
     DPMULDE(zn,mf,zn)  // zn is total # atoms in result
 
@@ -1137,11 +1137,11 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
  if(withprob((ipw|ipa)<0,0.4)){  // see if either w or a is inplaceable
   // we are reusing an argument (ipw is neg if it's w, which has priority); make sure the type is updated to the result type
   z=ipw<0?w:a;  // z=inplaceable arg; in test suite, most inplaceables are inplaceable on both w and a, somewhat more on w
-if(!((!(AT(z)&rtype(cv))==!!(cv&(VTYPECHGA>>SGNTO0(ipw))))||AN(z)==0))SEGFAULT;  // scaf
-ASSERTSYS((!(AT(z)&rtype(cv))==!!(cv&(VTYPECHGA>>SGNTO0(ipw))))||AN(z)==0,"surprise type change")  // scaf
+// obsolete if(!((!(AT(z)&rtype(cv))==!!(cv&(VTYPECHGA>>SGNTO0(ipw))))||AN(z)==0))SEGFAULT;  // scaf
+// obsolete ASSERTSYS((!(AT(z)&rtype(cv))==!!(cv&(VTYPECHGA>>SGNTO0(ipw))))||AN(z)==0,"surprise type change")  // scaf
 // obsolete   if(unlikely(!(AT(z)&rtype(cv)))){   // if type changes (zt!=incumbent)...  zt does not have upper flag bits
-  if(unlikely(cv&(VTYPECHGA>>SGNTO0(ipw)))){   // if type changes (zt!=incumbent)...  zt does not have upper flag bits
-   // the type of inplaceable z must change.  But if z is UNINCORPABLE, it might be virtual.  Realizing it is a losing move.  And, we don't change the type of an UNINCORPABLE so that the caller
+  if(unlikely(cv&(VTYPECHGA>>SGNTO0(ipw)))){   // if result type is not the (possibly converted) argument type...
+   // the type of inplaceable z must (or might, if it was empty) change.  But if z is UNINCORPABLE, it might be virtual.  Realizing it is a losing move.  And, we don't change the type of an UNINCORPABLE so that the caller
    // that created it doesn't have to keep reinitializing the type.  So, we give up on inplacing it.  If both args are inplaceable, we try a (which might have the right type).  If neither works, we allocate
    if(AFLAG(z)&AFUNINCORPABLE){
 // obsolete      if((ipa&((zt&~AT(a))-1))>=0)goto allocate;  // unless a is inplaceable and does not require a new type, go GA the result area
@@ -1155,7 +1155,7 @@ allocate:;  // come here if no inplaceable block could have the type changed
    // vbls needed: m a w zn cv fr [jt]
   // allocate the result area.  We avoid the subroutine call for the overhead, and to save regs and to avoid needing to calculate zt->bplg->bytes
 // obsolete   GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
-  I bytes=ALLOBYTESVSZLG(zn,LANE(fr,ZRANK),rtypebplg(cv),0,0);
+  I bytes=ALLOBYTESVSZLG(zn,LANE(fr,ZRANK),rtypebplg(cv),0,0);   // never allo C4T
   ASSERT((UI)LANE(fr,ZRANK)<=(UI)RMAX,EVLIMIT) ASSERT((UI)zn<=2147483647,EVLIMIT) ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)   // verify size & rank are in limits
 /// obsolete  ASSERT(((atoms|ranktype)>>(32+LGRMAX))==0,EVLIMIT)
   union {UI4 fr; UI1 lanes[4];} fru={.fr=fr};  // save fr where we can get to the lanes fr free
@@ -1164,7 +1164,7 @@ allocate:;  // come here if no inplaceable block could have the type changed
   if(unlikely(AT(z)&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
   if(unlikely(((AT(z)&DIRECT)==0))){z=zfillind(z,bytes);}  // Clear data for non-DIRECT types in case of later error.  zfillind clears 32 bytes at a time, OK since the region of a power of 2 long
 // obsolete   GACV00(z,cv,zn,LANE(fr,ZRANK));   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
-  // vbls needed: m a w z cv [jt]
+  // vbls needed: m a w z cv zn [jt]
   // Install shape.  The first move installs the frame & is thus needed only when there is rank; but it's wrong to branch around it, because it's only a dozen instructions and we expect
   // a pipeline break for the branch to the action routine.  We hope to have many cycles in the pipe when that break happens
   MCISH(AS(z),AS((cv&VIPWFNOTLONG)?a:w),fru.lanes[frFL]);     MCISH(AS(z)+fru.lanes[frFL],  AS(cv&VIPWCRLONG?w:a)+fru.lanes[frFLC],   fru.lanes[frZRANK]-fru.lanes[frFL]);  // copy shape    fr free
@@ -1172,8 +1172,7 @@ allocate:;  // come here if no inplaceable block could have the type changed
  } 
  // Signal domain error if appropriate.  Must do this after agreement tests
  ASSERT(adocvfn,EVDOMAIN);  // if no function to run even on BOOL args, that's an error.  By waiting till now we hope to keep adocvfn in the call register till end of loop.  We might have allocated a BOOL result block, which is OK
- if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all
- // zn free
+ if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all   zn free
 
  // End of setup phase.  The execution phase:
  // vbls needed from setup: adocvfn m a w z [jt]

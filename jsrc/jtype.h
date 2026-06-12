@@ -298,15 +298,15 @@ struct AD {
 
 #if SY_64
 #define AKXR(x)         (SZI*(NORMAH+(x)))
-#define WP(t,n,r)       (SMMAH+ r   +(1&&t&LAST0)+(((t&NAME?sizeof(NM):0)+((n)<<bplg(t))+SZI-1)>>LGSZI))  // # I to allocate
+#define WP(t,n,r)       (SMMAH+ r   +(((t&NAME?sizeof(NM):0)+((n)<<bplg(t))+SZI-1)>>LGSZI))  // # I to allocate
 #else
 #if NORMAHX==0 || NORMAHX==2 || NORMAHX==4 || NORMAHX==6 || NORMAHX==8   // even number, then NORMAH is odd
 #define AKXR(x)         (SZI*(NORMAH+((x)|1)))
-#define WP(t,n,r)       (SMMAH+(r|1)+  (1&&t&LAST0)+(((t&NAME?sizeof(NM):0)+((n)<<bplg(t))+SZI-1)>>LGSZI))
+#define WP(t,n,r)       (SMMAH+(r|1)    +(((t&NAME?sizeof(NM):0)+((n)<<bplg(t))+SZI-1)>>LGSZI))
 /* r|1 to make sure array values are double-word aligned */
 #else
 #define AKXR(x)         (SZI*(NORMAH+(x)))
-#define WP(t,n,r)       (SMMAH+ r   +  (1&&t&LAST0)+(((t&NAME?sizeof(NM):0)+((n)<<bplg(t))+SZI-1)>>LGSZI))
+#define WP(t,n,r)       (SMMAH+ r   +(((t&NAME?sizeof(NM):0)+((n)<<bplg(t))+SZI-1)>>LGSZI))
 #endif
 #endif
 #define AKX(x)          AKXR(AR(x))
@@ -601,7 +601,7 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define FUNC            (VERB+ADV+CONJ)
 #define RHS             (NOUN+FUNC)
 #define IS1BYTE         (B01+LIT)
-#define LAST0           0
+// obsolete #define LAST0           0
 // obsolete (B01+LIT+C2T+C4T+NAME)
 #define SPARSABLE       (B01+INT+FL+CMPX+LIT)  // types that can be made sparse
 // Don't traverse for ra/fa unless one of these bits is set

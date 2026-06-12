@@ -404,7 +404,7 @@ static D jtspfor1(J jt, A w){D tot=0.0;
   if(AFNJA&AFLAG(w)) {  
    if(BETWEENC(AK(w),0,AM(w)))tot += SZI*WP(AT(w),AN(w),64);  // for NJA allocations with contiguous header, the size is the header size (7+64 words) plus the data size. fixed rank of 64 in NJA memory
    else{  // for NJA allocations with separate header, the size is the data size plus the size of the base block
-    tot += SZI*((1&&AT(w)&LAST0)+(((AN(w)<<bplg(AT(w)))+SZI-1)>>LGSZI));  // data size only.  NJA must be DIRECT type, so not NAME
+    tot += SZI*((((AN(w)<<bplg(AT(w)))+SZI-1)>>LGSZI));  // data size only.  NJA must be DIRECT type, so not NAME
     tot += alloroundsize(w);  // add in the header
    }
   } else {
@@ -1449,7 +1449,7 @@ A zfillind(A w, I m){
 RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
  // Get the number of bytes needed-1, including the header, the atoms, and end padding
  // This takes several cycles: type->bplg->bytes->CTLZI (and then fetch from [block] in the subroutine).  Unfortunately, stuck in this routine there's nothing to overlap with it.
- I bytes; if(likely(type&(BIT(LASTNOUNX+1)-1)))bytes=ALLOBYTESVSZLG(atoms,rank,bplg(type),type&LAST0,0);else bytes=ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),type&LAST0,0);
+ I bytes; if(likely(type&(BIT(LASTNOUNX+1)-1)))bytes=ALLOBYTESVSZLG(atoms,rank,bplg(type),(type)&C4T,0);else bytes=ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),0,0);
  ASSERT((UI)rank<=(UI)RMAX,EVLIMIT) ASSERT((UI)atoms<=2147483647,EVLIMIT) ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)   // verify size & rank are in limits
 /// obsolete  ASSERT(((atoms|ranktype)>>(32+LGRMAX))==0,EVLIMIT)
     // We never use GA for NAME types, so we don't need to check for it
@@ -1466,7 +1466,7 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
 RESTRICTF A jtga0cv(J jt,I cv,I rank,I atoms){A z;
  // Get the number of bytes needed-1, including the header, the atoms, and a full I appended for types that require a
  // trailing NUL (because boolean-op code needs it)
- I bytes=ALLOBYTESVSZLG(atoms,rank,rtypebplg(cv),0,0);
+ I bytes=ALLOBYTESVSZLG(atoms,rank,rtypebplg(cv),(type)&C4T,0);
  ASSERT((UI)rank<=(UI)RMAX,EVLIMIT) ASSERT((UI)atoms<=2147483647,EVLIMIT) ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)   // verify size & rank are in limits
 /// obsolete  ASSERT(((atoms|ranktype)>>(32+LGRMAX))==0,EVLIMIT)
  RZ(z=jtgaf(jt, CTLZI((UI)bytes)));   // allocate the block, filling in AC AFLAG AM
@@ -1481,7 +1481,7 @@ RESTRICTF A jtga0cv(J jt,I cv,I rank,I atoms){R jtga0(jt,rtype(cv),rank,atoms);}
 #else
 A zfillind(A w, I bytes){AS(z)[0]=0; mvc((bytes-(offsetof(AD,s[1])-32))&-32,(C*)(AS(z)+1),MEMSET00LEN,MEMSET00); R w;}  // copy in 0s after the header, to the end of the block
 RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
- I bytes; if(likely(type&(BIT(LASTNOUNX+1)-1)))bytes = ALLOBYTESVSZLG(atoms,rank,bplg(type),type&LAST0,0);else bytes = ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),type&LAST0,0);
+ I bytes; if(likely(type&(BIT(LASTNOUNX+1)-1)))bytes = ALLOBYTESVSZLG(atoms,rank,bplg(type),(type)&C4T,0);else bytes = ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),0,0);
  ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)
  RZ(z=jtgafv(jt, bytes));   // allocate the block, filling in AC and AFLAG
  AT(z)=type; ARINIT(z,rank); AK(z)=AKXR(rank);  // UI to prevent reusing the value from before the call

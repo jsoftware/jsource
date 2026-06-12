@@ -1485,13 +1485,13 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // to guarantee validity we allocate a tail area for everything we allocate, and insist that mapped files do the same.
 // obsolete #define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(NORMAH*SZI+sizeof(NM)+SZI-1-1):(NORMAH*SZI+SZI-1-1) : (NORMAH*SZI-1)) + (atoms)*(size)))  )  // # bytes to allocate allowing 1 I for string pad - include mem hdr - minus 1
 // obsolete #define ALLOBYTESVSZLG(atoms,rank,sizelg,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(NORMAH*SZI+sizeof(NM)+SZI-1-1):(NORMAH*SZI+SZI-1-1) : (NORMAH*SZI-1)) + ((atoms)<<(sizelg))))  )  // this version when we have power-of-2 size
-#define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( (((rank)|(!SY_64))*SZI + (NORMAH*SZI+SZI-1) + ((atoms)-1)*(size) + (unlikely((I)(size)-(I)SZI>0)?(size)-SZI:0))  )  // # bytes to allocate allowing 1 I for string pad - include mem hdr - minus 1
-#define ALLOBYTESVSZLG(atoms,rank,sizelg,islast,isname)      ( (((rank)|(!SY_64))*SZI + (NORMAH*SZI+SZI-1) + (((atoms)-1)<<(sizelg)) + (unlikely((sizelg)>LGSZI)?BIT(sizelg)-SZI:0))  )  // this version when we have power-of-2 size
+#define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( (((rank)|(!SY_64))*SZI + (SY_64?0:islast?SZI:0) + (NORMAH*SZI+SZI-1) + ((atoms)-1)*(size) + (unlikely((I)(size)-(I)SZI>0)?(size)-SZI:0))  )  // # bytes to allocate allowing 1 I for string pad - include mem hdr - minus 1
+#define ALLOBYTESVSZLG(atoms,rank,sizelg,islast,isname)      ( (((rank)|(!SY_64))*SZI + (SY_64?0:islast?SZI:0) + (NORMAH*SZI+SZI-1) + (((atoms)-1)<<(sizelg)) + (unlikely((sizelg)>LGSZI)?BIT(sizelg)-SZI:0))  )  // this version when we have power-of-2 size
 // the len-1 is (NORMAH*SZI) + (atoms)*(size) + MAX(0,SZI-size) - 1 => (NORMAH*SZI+SZI-1) + (atoms-1)*(size) + MAX(size-SZI,0)
 // here when size is constant.  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+5)
 // All NAMEs use ALLOBYTES & thus ALLOBYTESVSZ without executing bpnonnoun()
 // obsolete #define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms)+!!(islast))-1))  // # bytes to allocate-1
-#define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname)+!!(isname)*sizeof(NM):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms))-1))  // # bytes to allocate-1
+#define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname)+!!(isname)*sizeof(NM):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms)+ (SY_64?0:islast?1:0))-1))  // # bytes to allocate-1
 #define ALLOBLOCK(n) ((n)<2*PMIN?((n)<PMIN?PMINL-1:PMINL) : (n)<8*PMIN?((n)<4*PMIN?PMINL+1:PMINL+2) : (n)<32*PMIN?((n)<16*PMIN?PMINL+3:PMINL+4) : *(volatile I*)0)   // lg2(#bytes to allocate)-1.  n is #bytes-1
 // gives errors in some versions #define ALLOBLOCK(n) MAX(PMINL-1,(31-__builtin_clzl((UI4)(n))))    // lg2(#bytes to allocate)-1.  n is #bytes-1
 // value to put into name->bucketx for locale names: number if numeric, hash otherwise
@@ -1619,7 +1619,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // For best results declare name as: AD* RESTRICT name;  For GAT the number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+4)
 #define GATS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \
 { ASSERT(!((rank)&~RMAX),EVLIMIT); \
- I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
+ I bytes = ALLOBYTES(atoms,rank,size,(type)&C4T,(type)&NAME); \
  HISTOCALL \
  name = jtgaf(jt, ALLOBLOCK(bytes)); \
  I akx=AKXR(rank);   \
@@ -1640,7 +1640,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // Note: assigns name before assigning the components of the array, so the components had better not depend on name, i. e. no GATV(z,BOX,AN(z),AR(z),AS(z))
 // NAME allocations always go through GATV*
 #define GATVS(name,type,atoms,rank,shaape,size,shapecopier,erraction) \
-{ I bytes = ALLOBYTES(atoms,rank,size,(type)&LAST0,(type)&NAME); \
+{ I bytes = ALLOBYTES(atoms,rank,size,(type)&C4T,(type)&NAME); \
  if(SY_64){ASSERT((((I)(atoms)>>(SY_64?(TOOMANYATOMSX-RANKTX):0))|(I)(rank))<=RMAX,EVLIMIT)} /* SY_64? to avoid 32-bit compile error */\
  else{ASSERT(((I)bytes>(I)(atoms)&&(I)(atoms)>=(I)0)&&!((rank)&~RMAX),EVLIMIT)} \
  HISTOCALL \

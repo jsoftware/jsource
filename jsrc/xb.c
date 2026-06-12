@@ -135,7 +135,7 @@ static I bsize(J jt,B d,B tb,I t,I n,I r){
  I w=WS(d);                                 // SZI for target architecture
  I z=BH(d)+w*r;                             // bytes in header (1 each: f,t,n,r and r shape words)
  I k=t&INT+BOX+XNUM?w:t&RAT?w+w:bpnoun(t);  // bytes occupied by one atom in w (in target arch, for the pointers)
- I maxpad= ((t&LAST0)&&tb)+w-1;             // largest null terminator and alignment padding for strings
+ I maxpad= w-1;             // largest null terminator and alignment padding for strings
  I totalsize= z+(n*k+maxpad)&(-w);          // roll sum back to word boundary
  R totalsize;
 }   /* size in byte of binary representation, rounded up to even # words */
@@ -315,12 +315,12 @@ static C* jtbrepfill(J jt,B b,B d,A w,C *zv){
     // bytes, because the datalength is rounded up in bsize, and thus there are
     // up to 3 words at the end of y that will not be copied to.  We clear them to
     // 0 to provide repeatable results.
-    // This also leaves a zero byte if the string is empty
-    // * an exception is that LIT is also used for libgmp pseudo-arrays, without LAST0
+    // This also leaves a zero byte to pad an empty string
     I suffsize = MIN(4*SZI,origzv+blksize-zv);  // len of area to clear to 0 
     mvc(suffsize,(origzv+blksize)-suffsize,MEMSET00LEN,MEMSET00);   // clear suffix
     MC(zv,u,n<<klg);           // copy the valid part of the data
    } else {
+    // exception: LIT is also used for libgmp pseudo-arrays
     jtmvgmp(jt,zv,u,llabs(XSGN(w))*SZI,b,BU,d,C_64); // copy the valid part of the data
    }
    break;

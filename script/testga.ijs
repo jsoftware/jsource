@@ -87,9 +87,9 @@ echo '15&(128!:6) ', 15&(128!:6) 'abc'
 echo '| 7 c. _2147483648'
 echo | etx1 7 c. _2147483648
 
-echo '(imin+i. 5);
+echo '(imin+i. 5)'
 echo (imin+i. 5)
-echo '|/~ (imin+i. 5)
+echo '|/~ (imin+i. 5)'
 echo |/~ (imin+i. 5)
 echo '(imin+1)| imin+i.5'
 echo (imin+1)| imin+i.5

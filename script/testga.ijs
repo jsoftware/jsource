@@ -87,30 +87,16 @@ echo '15&(128!:6) ', 15&(128!:6) 'abc'
 echo '| 7 c. _2147483648'
 echo | etx1 7 c. _2147483648
 
-9!:37 ] 0 10000 0 10000
-echo '(imin+i. 20),i: 20'
-echo (imin+i. 20),i: 20
-echo '|/~ (imin+i. 20),i: 20'
-echo |/~ (imin+i. 20),i: 20
-echo 'x: (imin+i. 20),i: 20'
-echo x: (imin+i. 20),i: 20
-echo '|/~ x: (imin+i. 20),i: 20'
-echo |/~ x: (imin+i. 20),i: 20
-echo '|/~@:x: (imin+i. 20),i: 20'
-echo |/~@:x: (imin+i. 20),i: 20
-echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
-echo (|/~ -: |/~@:x:) t=: (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
-t1=: |/~ t [ t2=: |/~@:x: t
-echo $t
-echo t1-:t2
-echo 't1'
-echo t1
-echo 't2'
-echo t2
-echo 'diff'
-echo (I.(,t1)~:(,t2)){(i.#,t1),.(,t1),.,t2
-4!:55 ;:'t t1 t2'
-9!:37 ] 0 256 0 222
+echo '(imin+i. 5);
+echo (imin+i. 5)
+echo '|/~ (imin+i. 5)
+echo |/~ (imin+i. 5)
+echo '(imin+1)| imin+i.5'
+echo (imin+1)| imin+i.5
+echo '(imin+1)| imin+2'
+echo (imin+1)| imin+2
+assert. (imin+2)=(imin+1)| imin+2
+assert. (_1 0, 2}.imin+i.5)-: 1{ |/~ (imin+i. 5)
 
 NB. this sometimes failed on linux O2
 exformat_j_=: eformat_j_ f.

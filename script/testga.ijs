@@ -95,8 +95,10 @@ echo '(imin+1)| imin+i.5'
 echo (imin+1)| imin+i.5
 echo '(imin+1)| imin+2'
 echo (imin+1)| imin+2
+3 : 0''
 assert. (imin+2)=(imin+1)| imin+2
 assert. (_1 0, 2}.imin+i.5)-: 1{ |/~ (imin+i. 5)
+)
 
 NB. this sometimes failed on linux O2
 exformat_j_=: eformat_j_ f.

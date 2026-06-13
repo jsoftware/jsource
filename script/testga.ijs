@@ -105,6 +105,58 @@ echo 65 97 +/ 1 2
 echo 65 97 +/ i.2
 echo 65 97 +/ 0 1
 
+test=: 3 : 0   NB. ~:"_1
+ yy=: y
+ b=: ~:"_1 yy
+echo 'b1'
+ assert. 1=type b
+echo 'b2'
+ assert. (<:#$yy)=#$b
+echo 'b3'
+ assert. (1{$b) = 1{$yy
+echo 'b4'
+ assert. b -: (i.@# = i.~)"_1 yy
+echo 'b5'
+ assert. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
+echo 'b6'
+ 1
+)
+
+echo 'a1'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 0 1
+echo 'a2'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 'abcde'
+echo 'a3'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: u:'abcde'
+echo 'a4'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u:'abcde'
+echo 'a5'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: ?5$20
+echo 'a6'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: _10+?5$20
+echo 'a7'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: ?5$2e9
+echo 'a8'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: o.?5$20
+echo 'a9'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.5   [ t=: j./?2 5$20
+echo 'a10'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: u: ?5$65536
+echo 'a11'
+test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 10&u: RAND32 ?5$C4MAX
+echo 'a12'
+test@:(t"_ {~ (QKTEST{::3 877;3 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: x: ?5$20
+echo 'a13'
+test@:(t"_ {~ (QKTEST{::3 877;3 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: %/0 1+x:?2 5$20
+echo 'a14'
+test@:(t"_ {~ (QKTEST{::3 877;3 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: ;:' miasma chthonic chronic kakistocracy dado'
+echo 'a15'
+test@:(t"_ {~ (QKTEST{::3 877;3 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: (u:&.>) ;:' miasma chthonic chronic kakistocracy dado'
+echo 'a16'
+test@:(t"_ {~ (QKTEST{::3 877;3 77)&, ?@$ (#t)"_)"0 >:i.5   [ t=: (10&u:&.>) ;:' miasma chthonic chronic kakistocracy dado'
+echo 'a17'
+4!:55 <'test'
+
 NB. end of smoke test
 
 0!:_1 '$'   NB. temp skip to allow running full test suite

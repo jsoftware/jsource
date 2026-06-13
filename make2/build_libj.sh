@@ -95,7 +95,7 @@ case "$jplatform/$j64x" in
   fi
   ;;
  openbsd/*)
-  # NO_SHA_ASM=1
+  NO_SHA_ASM=1
   make=gmake
   ;;
  freebsd/*) make=gmake ;;

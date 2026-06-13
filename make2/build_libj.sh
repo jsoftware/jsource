@@ -95,7 +95,7 @@ case "$jplatform/$j64x" in
   fi
   ;;
  openbsd/*)
-  NO_SHA_ASM=1
+  # NO_SHA_ASM=1
   make=gmake
   ;;
  freebsd/*) make=gmake ;;
@@ -166,7 +166,7 @@ fi
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  # gcc
- common="$OPENMP -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions -ffp-contract=off \
+ common="$OPENMP -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions -ffp-contract=off -fno-finite-math-only \
  -Werror -Wextra -Wno-unknown-warning-option \
  -fsignaling-nans \
  -Wno-attributes \
@@ -205,7 +205,7 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 
 else
  # clang
- common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing -fwrapv \
+ common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-finite-math-only \
  -Werror -Wextra -Wno-unknown-warning-option \
  -Wconstant-conversion \
  -Wsign-compare \

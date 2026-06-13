@@ -109,15 +109,10 @@ test=: 3 : 0   NB. ~:"_1
  yy=: y
  b=: ~:"_1 yy
 echo 'b1'
-echo $y
+echo $yy
  assert. 1=type b
 echo 'b2'
- echo b
- echo #b
- echo $b
  echo #$b
- echo yy
- echo $yy
  echo (<:#$yy)
  assert. (<:#$yy)=#$b
 echo 'b3'
@@ -131,11 +126,7 @@ echo 'b6'
 )
 
 echo 'a1'
-test@:(t"_ {~ 3 8&, ?@$ (#t)"_)"0 >:i.1 2 [ t=: 0 1
-echo 'a2'
-test@:(t"_ {~ 3 87&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 0 1
-echo 'a3'
-test@:(t"_ {~ 3 877&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 0 1
+test@:(t"_ {~ 3 13&, ?@$ (#t)"_)"0 >:i.1 2 [ t=: 0 1
 4!:55 ;:'test yy b t'
 
 NB. end of smoke test

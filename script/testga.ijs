@@ -91,20 +91,16 @@ echo '(imin+i. 3)'
 echo (imin+i. 3)
 echo '|/~ (imin+i. 3)'
 echo |/~ (imin+i. 3)
-echo '(imin+i. 5)'
-echo (imin+i. 5)
-echo '|/~ (imin+i. 5)'
-echo |/~ (imin+i. 5)
-echo '(imin+1)| imin+i.5'
-echo (imin+1)| imin+i.5
+echo '(imin+1)| imin+1 2'
+echo (imin+1)| imin+1 2
+echo '(imin+1)| imin+2 2'
+echo (imin+1)| imin+2 2
 echo '(imin+1)| ,imin+2'
 echo (imin+1)| ,imin+2
 echo '(imin+1)| imin+2'
 echo (imin+1)| imin+2
 3 : 0''
-assert. (_1 0, 2}.imin+i.5)-: 1{ |/~ (imin+i. 5)
-assert. (,imin+2)=(imin+1)| ,imin+2
-assert. (imin+2)=(imin+1)| imin+2
+assert. (_1 0, 2}.imin+i.3)-: 1{ |/~ (imin+i.3)
 )
 
 NB. this sometimes failed on linux O2
@@ -122,10 +118,10 @@ test=: 3 : 0   NB. ~:"_1
  yy=: y
  b=: ~:"_1 yy
 echo 'b1'
+echo $b
 echo b
  assert. 1=type b
 echo 'b2'
-echo $b
 echo #$b
 echo (<:#$yy)
  assert. (<:#$yy)=#$b
@@ -134,6 +130,7 @@ echo 'b3'
 echo 'b4'
  assert. b -: (i.@# = i.~)"_1 yy
 echo 'b5'
+ echo ((<"1 b)#&.><"_1 yy) = <@~."_1 yy
  assert. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
 echo 'b6'
  1

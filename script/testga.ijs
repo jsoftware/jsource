@@ -93,9 +93,11 @@ echo (|/~ -: |/~@:x:) t=: (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax
 t1=: |/~ t [ t2=: |/~@:x: t
 echo $t
 echo t1-:t2
+9!:37 ] 0 10000 0 10000
 echo 200{. (,~#t) #: t3=: I.,t1~:t2
 echo 200{. t3{,t1
 echo 200{. t3{,t2
+9!:37 ] 0 256 0 222
 4!:55 ;:'t t1 t2 t3'
 NB.#
 
@@ -109,16 +111,16 @@ eformat_j_=: exformat_j_ f.
 NB. echo (2&^.) _.
 NB. echo datatype (2&^.) _.
 
-echo 65 97 +/ 1 2
-echo 65 97 +/ i.2
-echo 65 97 +/ 0 1
+0!:_1`1:@.(IF64<UNAME-:'Linux') '@'   NB this failed on linux32
 
 test=: 3 : 0   NB. ~:"_1
  yy=: y
  b=: ~:"_1 yy
 echo 'b1'
 echo $yy
+9!:37 ] 0 10000 0 10000
 echo _10]\,yy
+9!:37 ] 0 256 0 222
  assert. 1=type b
 echo 'b2'
  echo #$b
@@ -137,6 +139,7 @@ echo 'b6'
 echo 'aa1'
 test@:(t"_ {~ 3 87&, ?@$ (#t)"_)"0 >:i.3 5 [ t=: 0 1
 4!:55 ;:'test yy b t'
+NB.@
 
 NB. end of smoke test
 

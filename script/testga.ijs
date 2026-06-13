@@ -125,8 +125,14 @@ echo 'b6'
  1
 )
 
-echo 'a1'
-test@:(t"_ {~ 3 13&, ?@$ (#t)"_)"0 >:i.1 2 [ t=: 0 1
+echo 'aa1'
+test@:(t"_ {~ 3 13&, ?@$ (#t)"_)"0 >:i.2 3 [ t=: 0 1
+echo 'aa2'
+test@:(t"_ {~ 3 53&, ?@$ (#t)"_)"0 >:i.2 3 [ t=: 0 1
+echo 'aa3'
+test@:(t"_ {~ 3 73&, ?@$ (#t)"_)"0 >:i.2 3 [ t=: 0 1
+echo 'aa4'
+test@:(t"_ {~ 3 73&, ?@$ (#t)"_)"0 >:i.3 4 [ t=: 0 1
 4!:55 ;:'test yy b t'
 
 NB. end of smoke test

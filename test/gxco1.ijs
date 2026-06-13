@@ -581,7 +581,8 @@ Y=: 4 _4 4 _4 * x
 (|/~ -: |/~@:x:)  1e4+_20+i.(QKTEST{41 11)
 (|/~ -: |/~@:x:) 20e4+_20+i.(QKTEST{41 11)
 (|/~ -: |/~@:x:) 27e4+_20+i.(QKTEST{41 11)
-(GITHUBCI*.IFWA64) +. (|/~ -: |/~@:x:) (imin+i. 20),(-.QKTEST)#(imax-i. 20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
+NB. (GITHUBCI*.IFWA64) +. (|/~ -: |/~@:x:) (imin+i. 20),(-.QKTEST)#(imax-i. 20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
+(|/~ -: |/~@:x:) (imin+i. 20),(-.QKTEST)#(imax-i. 20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
 
 (x1 | 3.4) -: (x: x1) | etx 3.4
 (x1 | 3j4) -: (x: x1) | etx 3j4

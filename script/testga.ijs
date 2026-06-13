@@ -111,7 +111,7 @@ eformat_j_=: exformat_j_ f.
 NB. echo (2&^.) _.
 NB. echo datatype (2&^.) _.
 
-0!:_1`1:@.(IF64<UNAME-:'Linux') '@'   NB this failed on linux32
+0!:_1`1:@.(IF64<UNAME-:'Linux') '@'   NB. this failed on linux32
 
 test=: 3 : 0   NB. ~:"_1
  yy=: y

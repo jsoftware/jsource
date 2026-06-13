@@ -116,6 +116,9 @@ NB. echo datatype (2&^.) _.
 NB. this failed on linux32
 test=: 3 : 0   NB. ~:"_1
  yy=: y
+echo 'b0'
+echo $yy
+echo yy
  b=: ~:"_1 yy
 echo 'b1'
 echo $b
@@ -138,13 +141,15 @@ echo 'b7'
  echo $ 1{:: ((<"1 b)#&.><"_1 yy)
  echo 1{:: ((<"1 b)#&.><"_1 yy)
 echo 'b8'
+ echo (0{:: ((<"1 b)#&.><"_1 yy)) = 0{:: <@~."_1 yy
+echo 'b9'
  echo (1{:: ((<"1 b)#&.><"_1 yy)) = 1{:: <@~."_1 yy
  assert. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
-echo 'b9'
+echo 'b10'
  1
 )
 
-t=: 3 87 10 $ ,".;._2 (0 : 0)
+t=: 1 1 { 3 87 10 $ ,".;._2 (0 : 0)
 1 0 0 1 1 0 0 1 1 1
 1 0 1 0 1 0 1 1 1 0
 1 0 0 1 1 1 0 1 1 0

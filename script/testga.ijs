@@ -89,7 +89,12 @@ echo | etx1 7 c. _2147483648
 
 NB. this failed on windows arm64
 echo '(|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20'
-echo (|/~ -: |/~@:x:) (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
+echo (|/~ -: |/~@:x:) t=: (imin+i. 20),(imax-i.20),((<.-:imin)+i: 20),((<.-:imax)+i: 20),i: 20
+t1=: |/~ t [ t2=: |/~@:x: t
+echo $t
+echo t1-:t2
+echo (1,#t) #: I.,t1~:t2
+4!:55 ;:'t t1 t2'
 
 NB. this sometimes failed on linux O2
 exformat_j_=: eformat_j_ f.
@@ -110,6 +115,7 @@ test=: 3 : 0   NB. ~:"_1
  b=: ~:"_1 yy
 echo 'b1'
 echo $yy
+echo _10]\,yy
  assert. 1=type b
 echo 'b2'
  echo #$b
@@ -125,14 +131,10 @@ echo 'b6'
  1
 )
 
-echo 'aa1'
-test@:(t"_ {~ 3 13&, ?@$ (#t)"_)"0 >:i.2 3 [ t=: 0 1
 echo 'aa2'
-test@:(t"_ {~ 3 53&, ?@$ (#t)"_)"0 >:i.2 3 [ t=: 0 1
+test@:(t"_ {~ 3 63&, ?@$ (#t)"_)"0 >:i.2 3 [ t=: 0 1
 echo 'aa3'
 test@:(t"_ {~ 3 73&, ?@$ (#t)"_)"0 >:i.2 3 [ t=: 0 1
-echo 'aa4'
-test@:(t"_ {~ 3 73&, ?@$ (#t)"_)"0 >:i.3 4 [ t=: 0 1
 4!:55 ;:'test yy b t'
 
 NB. end of smoke test

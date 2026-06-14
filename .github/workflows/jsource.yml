@@ -350,7 +350,7 @@ jobs:
 # rpi64arm -------------------------------------------------------------
  jerpi64arm:
   name: JE (Linux arm64)
-  needs: all
+  #needs: all
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
@@ -1145,6 +1145,7 @@ jobs:
       script\buildga.cmd arm64
 
    - name: Setup Environment (Windows MSYS2 arm64)
+     if: ${{ false }}
      uses: msys2/setup-msys2@v2
      with:
       msystem: CLANGARM64
@@ -1154,6 +1155,7 @@ jobs:
         mingw-w64-clang-aarch64-lldb
 
    - name: Test JE (Windows MSYS2 arm64)
+     if: ${{ false }}
      shell: msys2 {0}
      env:
       DEBUGCMD: lldb
@@ -1164,7 +1166,7 @@ jobs:
       script/testga.sh windows arm64 || exit 1
 
    - name: Test JE (Windows arm64)
-     if: ${{ false }}
+     #if: ${{ false }}
      shell: cmd
      env:
       DEBUGCMD: lldb

@@ -87,20 +87,13 @@ echo '15&(128!:6) ', 15&(128!:6) 'abc'
 echo '| 7 c. _2147483648'
 echo | etx1 7 c. _2147483648
 
-echo '(imin+i. 3)'
-echo (imin+i. 3)
-echo '|/~ (imin+i. 3)'
-echo |/~ (imin+i. 3)
-echo '(imin+1)| imin+1 2'
-echo (imin+1)| imin+1 2
-echo '(imin+1)| imin+2 2'
-echo (imin+1)| imin+2 2
-echo '(imin+1)| ,imin+2'
-echo (imin+1)| ,imin+2
-echo '(imin+1)| imin+2'
-echo (imin+1)| imin+2
+NB. echo '|/~ (imin+i. 3)'
+NB. echo |/~ (imin+i. 3)
+echo '(imin+1)| imin+2 3'
+echo (imin+1)| imin+2 3
 3 : 0''
-assert. (_1 0, 2}.imin+i.3)-: 1{ |/~ (imin+i.3)
+NB. assert. (_1 0, 2}.imin+i.3)-: 1{ |/~ (imin+i.3)
+assert. 0
 )
 
 NB. this sometimes failed on linux O2

@@ -87,13 +87,11 @@ echo '15&(128!:6) ', 15&(128!:6) 'abc'
 echo '| 7 c. _2147483648'
 echo | etx1 7 c. _2147483648
 
-NB. echo '|/~ (imin+i. 3)'
-NB. echo |/~ (imin+i. 3)
+NB. previous windows arm64 issue
 echo '(imin+1)| imin+2 3'
 echo (imin+1)| imin+2 3
 3 : 0''
-NB. assert. (_1 0, 2}.imin+i.3)-: 1{ |/~ (imin+i.3)
-assert. 0
+assert. (_1 0, 2}.imin+i.3)-: 1{ |/~ (imin+i.3)
 )
 
 NB. this sometimes failed on linux O2

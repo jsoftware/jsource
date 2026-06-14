@@ -514,25 +514,20 @@ INLINE I remii(I a,I b){if((a&(a-1))==0&&likely(a>=0))R b&(a-1); if(unlikely(a==
     // C returns remainder with the same sign as dividend, J gives same sign as divisor; so adjust if the signs are different
 
 AHDR2(remII,I,I,I){I u,v;
- fprintf(stderr,"a1 m "FMTI" n "FMTI" \n",m,n);
  if(m<0){DQUC(m,*z++=remii(*x,*y); x++; y++; )
  }else if(m&1){m>>=1;   // repeated x.  Handle special cases and avoid integer divide
 #if SY_64 && C_USEMULTINTRINSIC
- fprintf(stderr,"a2 m "FMTI" n "FMTI" \n",m,n);
   DQU(n, u=*x++;
     // take abs(x); handle negative x in a postpass
    UI ua=-u>=0?-u:u;  // abs(x)
-   fprintf(stderr,"ua "FMTUI" \n",ua);
    if(!(ua&(ua-1))){ I umsk = ua-1; bw0001II AH2A_x1(m,y,&umsk,z,jt); z+=m; y+=m;   // x is a power of 2, including 0
    }else{
     // calculate 1/abs(x) to 53-bit precision.  Remember, x is at least 3, so the MSB will never have signed significance
     UI uarecip = (UI)(18446744073709551616.0/(D)(I)ua);  // recip, with binary point above the msb.  2^64 / ua
     // add in correction for the remaining precision.  The result will still never be higher than the true reciprocal
     I deficitprec = -(I)(uarecip*ua);  // we need to increase uarecip by enough to add (deficitprec) units to (uarecip*ua)
-   fprintf(stderr,"uarecip "FMTUI" deficitprec "FMTI" \n",uarecip, deficitprec );
     // because of rounding during the divide, deficitprec may be positive or negative, so we must 2's-comp-correct the product
     UI himul; DPUMULH(uarecip,(UI)deficitprec,himul); uarecip=deficitprec<0?0:uarecip; uarecip+=himul;   // now we have 63 bits of uarecip
-   fprintf(stderr,"himul "FMTUI" uarecip "FMTUI" \n",himul,uarecip);
     // Now loop through each input value.  It is possible that the quotient coming out of the multiplication will be
     // low by at most 1; we correct it if it is
     // The computations here are unsigned, because if signed the binary point gets offset and the upper significance requires a 128-bit shift.
@@ -540,18 +535,13 @@ AHDR2(remII,I,I,I){I u,v;
     DQU(m, I yv=*y;
       // Multiply by recip to get quotient, which is up to 1/2 LSB low; get remainder; adjust remainder if too high; store
       // 2's-complement adjust for negative y; to make the result still always on the low side, subtract an extra 1.
-   fprintf(stderr,"i "FMTI" uarecip "FMTUI" (UI)yv "FMTUI" himul "FMTUI" \n",i,uarecip,(UI)yv,himul);
-      DPUMULH(uarecip,(UI)yv,himul);
-   fprintf(stderr,"i "FMTI" uarecip "FMTUI" (UI)yv "FMTUI" new himul "FMTUI" \n",i,uarecip,(UI)yv,himul);
- himul-=(uarecip+1)&REPSGN(yv);
-   fprintf(stderr,"i "FMTI" himul "FMTUI" \n",i,himul);
- I rem=yv-himul*ua;
-//   fprintf(stderr,"i "FMTI" rem "FMTI" ua "FMTI" (I)ua "FMTI" (rem-(I)ua) "FMTI" \n",i,rem,ua,(I)ua,(rem-(I)ua));
-   fprintf(stderr,"i "FMTI" rem "FMTI" ua "FMTI" (I)ua "FMTI" \n",i,rem,ua,(I)ua);
- volatile I temp=(rem-(I)ua); rem=temp>=0?temp:rem;
-// rem=(rem-(I)ua)>=0?rem-(I)ua:rem;
-   fprintf(stderr,"i "FMTI" new rem "FMTI" \n",i,rem);
- *z++=rem;
+      DPUMULH(uarecip,(UI)yv,himul); himul-=(uarecip+1)&REPSGN(yv); I rem=yv-himul*ua;
+#if defined(_WIN32) && defined(__aarch64__)
+      volatile I temp=(rem-(I)ua); rem=temp>=0?temp:rem;  // windows arm64 optimization issue (rem-(I)ua)>=0 cannot detect overflow and false
+#else
+      rem=(rem-(I)ua)>=0?rem-(I)ua:rem;
+#endif
+      *z++=rem;
      y++;)
    }
    // if x was negative, move the remainder into the x+1 to 0 range

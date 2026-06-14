@@ -21,8 +21,8 @@ jobs:
 # for selected jobs, disable all and disable the selected needs
 
  all:
-  if: false
-  #if: true
+  #if: false
+  if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Runall jobs"
@@ -350,7 +350,7 @@ jobs:
 # rpi64arm -------------------------------------------------------------
  jerpi64arm:
   name: JE (Linux arm64)
-  #needs: all
+  needs: all
   runs-on: ubuntu-24.04-arm
   steps:
    - name: Checkout Git repository
@@ -927,6 +927,7 @@ jobs:
       script\buildga.cmd x64
 
    - name: Setup Environment (Windows MSYS2 x64 clang)
+     #if: ${{ false }}
      uses: msys2/setup-msys2@v2
      with:
       msystem: CLANG64
@@ -936,6 +937,7 @@ jobs:
         mingw-w64-clang-x86_64-lldb
 
    - name: Test JE (Windows MSYS2 x64 clang)
+     #if: ${{ false }}
      shell: msys2 {0}
      env:
       DEBUGCMD: lldb
@@ -1005,6 +1007,7 @@ jobs:
       script\buildga.cmd x86
 
    - name: Setup Environment (Windows MSYS2 x86)
+     #if: ${{ false }}
      uses: msys2/setup-msys2@v2
      with:
       msystem: MINGW32
@@ -1014,6 +1017,7 @@ jobs:
         mingw-w64-i686-gdb
 
    - name: Test JE (Windows MSYS2 x86)
+     #if: ${{ false }}
      shell: msys2 {0}
      env:
       DEBUGCMD: gdb
@@ -1123,7 +1127,7 @@ jobs:
 # windows arm64 --------------------------------------------------------
  jewinarm64:
   name: JE (Windows arm64)
-  # needs: all
+  needs: all
   runs-on: windows-11-arm
   steps:
    - name: Checkout Git repository
@@ -1145,7 +1149,7 @@ jobs:
       script\buildga.cmd arm64
 
    - name: Setup Environment (Windows MSYS2 arm64)
-     if: ${{ false }}
+     #if: ${{ false }}
      uses: msys2/setup-msys2@v2
      with:
       msystem: CLANGARM64
@@ -1155,7 +1159,7 @@ jobs:
         mingw-w64-clang-aarch64-lldb
 
    - name: Test JE (Windows MSYS2 arm64)
-     if: ${{ false }}
+     #if: ${{ false }}
      shell: msys2 {0}
      env:
       DEBUGCMD: lldb
@@ -1166,7 +1170,7 @@ jobs:
       script/testga.sh windows arm64 || exit 1
 
    - name: Test JE (Windows arm64)
-     #if: ${{ false }}
+     if: ${{ false }}
      shell: cmd
      env:
       DEBUGCMD: lldb

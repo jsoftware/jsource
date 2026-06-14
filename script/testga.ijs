@@ -104,46 +104,7 @@ eformat_j_=: exformat_j_ f.
 NB. echo (2&^.) _.
 NB. echo datatype (2&^.) _.
 
-NB. this failed on linux32
-test=: 3 : 0   NB. ~:"_1
- yy=: y
-echo 'b0'
-echo $yy
-echo yy
- b=: ~:"_1 yy
-echo 'b1'
-echo $b
-echo b
-echo _10]\,b
- assert. 1=type b
-echo 'b2'
-echo #$b
-echo (<:#$yy)
- assert. (<:#$yy)=#$b
-echo 'b3'
- assert. (1{$b) = 1{$yy
-echo 'b4'
- assert. b -: (i.@# = i.~)"_1 yy
-echo 'b5'
- echo ((<"1 b)#&.><"_1 yy) = <@~."_1 yy
-echo 'b6 ~. '
- echo $ 0{:: <@~."_1 yy
- echo t1=. 0{:: <@~."_1 yy
-echo 'b7 b# '
- echo $ 0{:: ((<"1 b)#&.><"_1 yy)
- echo t2=. 0{:: ((<"1 b)#&.><"_1 yy)
-echo 'b8'
- echo t1 = t2
- echo ((<"1 b)#&.><"_1 yy) ;&$ <@~."_1 yy
- echo ((<"1 b)#&.><"_1 yy) ,&($&.>) <@~."_1 yy
- echo ((<"1 b)#&.><"_1 yy) = <@~."_1 yy
- echo ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
- assert. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
-echo 'b9'
- 1
-)
-
-t=: 1 56 10 $ ,".;._2 (0 : 0)
+t0=: {. t=: 1 56 10 $ ,".;._2 (0 : 0)
 1 1 1 0 1 1 0 0 1 0
 0 0 1 1 1 1 0 1 0 0
 0 1 0 1 0 1 1 1 1 1
@@ -202,8 +163,55 @@ t=: 1 56 10 $ ,".;._2 (0 : 0)
 0 1 0 1 0 1 0 0 1 0
 )
 
+b1=: 56$ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1
+
+echo b1#t0
+
+3 : 0''
+assert. 1 0 1 0 1 1 0 1 1 0 = _2{ b1#t0
+)
+
+NB. this failed on linux32
+test=: 3 : 0   NB. ~:"_1
+ yy=: y
+echo 'b0'
+echo $yy
+echo yy
+ b=: ~:"_1 yy
+echo 'b1'
+echo $b
+echo b
+echo _10]\,b
+ assert. 1=type b
+echo 'b2'
+echo #$b
+echo (<:#$yy)
+ assert. (<:#$yy)=#$b
+echo 'b3'
+ assert. (1{$b) = 1{$yy
+echo 'b4'
+ assert. b -: (i.@# = i.~)"_1 yy
+echo 'b5'
+ echo ((<"1 b)#&.><"_1 yy) = <@~."_1 yy
+echo 'b6 ~. '
+ echo $ 0{:: <@~."_1 yy
+ echo t1=. 0{:: <@~."_1 yy
+echo 'b7 b# '
+ echo $ 0{:: ((<"1 b)#&.><"_1 yy)
+ echo t2=. 0{:: ((<"1 b)#&.><"_1 yy)
+echo 'b8'
+ echo t1 = t2
+ echo ((<"1 b)#&.><"_1 yy) ;&$ <@~."_1 yy
+ echo ((<"1 b)#&.><"_1 yy) ,&($&.>) <@~."_1 yy
+ echo ((<"1 b)#&.><"_1 yy) = <@~."_1 yy
+ echo ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
+ assert. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
+echo 'b9'
+ 1
+)
+
 test t
-4!:55 ;:'test yy b t'
+4!:55 ;:'test yy b b1 t t0'
 exit 1
 
 NB. end of smoke test

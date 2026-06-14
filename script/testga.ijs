@@ -126,14 +126,18 @@ echo 'b4'
  assert. b -: (i.@# = i.~)"_1 yy
 echo 'b5'
  echo ((<"1 b)#&.><"_1 yy) = <@~."_1 yy
-echo 'b6'
+echo 'b6 ~. '
  echo $ 0{:: <@~."_1 yy
- echo 0{:: <@~."_1 yy
-echo 'b7'
+ echo t1=. 0{:: <@~."_1 yy
+echo 'b7 b# '
  echo $ 0{:: ((<"1 b)#&.><"_1 yy)
- echo 0{:: ((<"1 b)#&.><"_1 yy)
+ echo t2=. 0{:: ((<"1 b)#&.><"_1 yy)
 echo 'b8'
- echo (0{:: ((<"1 b)#&.><"_1 yy)) = 0{:: <@~."_1 yy
+ echo t1 = t2
+ echo ((<"1 b)#&.><"_1 yy) ;&$ <@~."_1 yy
+ echo ((<"1 b)#&.><"_1 yy) ,&($&.>) <@~."_1 yy
+ echo ((<"1 b)#&.><"_1 yy) = <@~."_1 yy
+ echo ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
  assert. ((<"1 b)#&.><"_1 yy) -: <@~."_1 yy
 echo 'b9'
  1

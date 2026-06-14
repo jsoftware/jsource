@@ -384,6 +384,7 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #define IMIN            (~9223372036854775807LL)   /* ANSI C LONG_MIN is  -LONG_MAX */
 #define FLIMIN          ((D)IMIN)  // smallest FL value that can be converted to I
 #define FMTI            "%lli"
+#define FMTUI           "%llu"
 #define FMTI02          "%02lli"
 #define FMTI04          "%04lli"
 #define FMTI05          "%05lli"
@@ -402,6 +403,7 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #define IMIN            (~2147483647L)   /* ANSI C LONG_MIN is  -LONG_MAX */
 #define FLIMIN          ((D)IMIN)  // smallest FL value that can be converted to I
 #define FMTI            "%d"
+#define FMTUI           "%u"
 #define FMTI02          "%02d"
 #define FMTI04          "%04d"
 #define FMTI05          "%05d"

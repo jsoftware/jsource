@@ -548,7 +548,7 @@ AHDR2(remII,I,I,I){I u,v;
  I rem=yv-himul*ua;
 //   fprintf(stderr,"i "FMTI" rem "FMTI" ua "FMTI" (I)ua "FMTI" (rem-(I)ua) "FMTI" \n",i,rem,ua,(I)ua,(rem-(I)ua));
    fprintf(stderr,"i "FMTI" rem "FMTI" ua "FMTI" (I)ua "FMTI" \n",i,rem,ua,(I)ua);
- I temp=(rem-(I)ua); rem=temp>=0?temp:rem;
+ volatile I temp=(rem-(I)ua); rem=temp>=0?temp:rem;
 // rem=(rem-(I)ua)>=0?rem-(I)ua:rem;
    fprintf(stderr,"i "FMTI" new rem "FMTI" \n",i,rem);
  *z++=rem;

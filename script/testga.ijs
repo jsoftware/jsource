@@ -223,7 +223,6 @@ echo 'b9'
 
 test t
 4!:55 ;:'test yy b b1 t t0'
-exit 1
 
 NB. end of smoke test
 

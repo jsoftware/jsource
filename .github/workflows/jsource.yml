@@ -21,8 +21,8 @@ jobs:
 # for selected jobs, disable all and disable the selected needs
 
  all:
-  if: false
-  #if: true
+  #if: false
+  if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Runall jobs"
@@ -148,7 +148,7 @@ jobs:
 # linux32 --------------------------------------------------------------
  jelinux32:
   name: JE (Linux32)
-  #needs: all
+  needs: all
   runs-on: ubuntu-24.04
   steps:
    - name: Checkout Git repository
@@ -205,7 +205,7 @@ jobs:
 # linux32 gcc ----------------------------------------------------------
  jelinux32-gcc:
   name: JE (Linux32 gcc)
-  #needs: all
+  needs: all
   runs-on: ubuntu-24.04
   steps:
    - name: Checkout Git repository

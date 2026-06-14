@@ -540,13 +540,20 @@ AHDR2(remII,I,I,I){I u,v;
     DQU(m, I yv=*y;
       // Multiply by recip to get quotient, which is up to 1/2 LSB low; get remainder; adjust remainder if too high; store
       // 2's-complement adjust for negative y; to make the result still always on the low side, subtract an extra 1.
-      DPUMULH(uarecip,(UI)yv,himul); himul-=(uarecip+1)&REPSGN(yv); I rem=yv-himul*ua; rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
+   fprintf(stderr,"i "FMTI" uarecip "FMTUI" (UI)yv "FMTUI" himul "FMTUI" \n",i,uarecip,(UI)yv,himul);
+      DPUMULH(uarecip,(UI)yv,himul);
+   fprintf(stderr,"i "FMTI" uarecip "FMTUI" (UI)yv "FMTUI" new himul "FMTUI" \n",i,uarecip,(UI)yv,himul);
+ himul-=(uarecip+1)&REPSGN(yv);
+   fprintf(stderr,"i "FMTI" himul "FMTUI" \n",i,himul);
+ I rem=yv-himul*ua;
    fprintf(stderr,"i "FMTI" rem "FMTI" \n",i,rem);
+ rem=(rem-(I)ua)>=0?rem-(I)ua:rem;
+   fprintf(stderr,"i "FMTI" new rem "FMTI" \n",i,rem);
+ *z++=rem;
      y++;)
    }
- fprintf(stderr,"a5 \n");
    // if x was negative, move the remainder into the x+1 to 0 range
-   if(unlikely(u<-1)){I *zt=z; DQU(m, I t=*--zt; t=t>0?t-ua:t; *zt=t;fprintf(stderr,"a6 \n"); )}
+   if(unlikely(u<-1)){I *zt=z; DQU(m, I t=*--zt; t=t>0?t-ua:t; *zt=t;)}
   )
 #else
   DQU(n, u=*x++;
@@ -554,7 +561,6 @@ AHDR2(remII,I,I,I){I u,v;
    else DQU(m, *z++=remii( u,*y);      y++;)
   )
 #endif
- fprintf(stderr,"a7 \n");
  }else{m>>=1; DQU(n, v=*y++; DQU(m, *z++=remii(*x, v); x++;     ))}  // repeated y
  R EVOK;
 }

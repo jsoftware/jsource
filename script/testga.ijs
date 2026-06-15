@@ -166,7 +166,23 @@ t0=: {. t=: 1 56 10 $ ,".;._2 (0 : 0)
 b1=: 1 56$ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1
 
 echo 'a1'
-echo ((<"1 b1)#&.><"_1 t)
+echo b1 #"1 _1 t
+echo 'a2'
+echo ({. b1) # {.t
+echo 'a3'
+echo ({. b1) # t0
+echo 'a4'
+echo ((<"1 b1) #&.> <"_1 t)
+echo 'a5'
+echo ((<"1 b1) #&.> < {. t)
+echo 'a6'
+echo ((<"1 b1) #&.> < t0)
+echo 'a7'
+echo ((<{. b1) #&.> <"_1 t)
+echo 'a8'
+echo ((<{. b1) #&.> < {. t)
+echo 'a9'
+echo ((<{. b1) #&.> < t0)
 
 NB. this failed on linux32
 test=: 3 : 0   NB. ~:"_1

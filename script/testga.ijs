@@ -166,20 +166,7 @@ t0=: {. t=: 1 56 10 $ ,".;._2 (0 : 0)
 b1=: 1 56$ 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1
 
 echo 'a1'
-echo ({.b1)#t0
-echo 'a2'
-echo (<{.b1) #&> <t0
-echo 'a3'
-echo (<{.b1) #&.> <t0
-echo 'a4'
-echo (<"1 b1) #&.> <t0
-
-3 : 0''
-assert. 1 0 1 0 1 1 0 1 1 0 = _2{ ({.b1)#t0
-assert. 1 0 1 0 1 1 0 1 1 0 = _2{ (<{.b1) #&> <t0
-assert. 1 0 1 0 1 1 0 1 1 0 = _2{ > (<{.b1) #&.> <t0
-assert. 1 0 1 0 1 1 0 1 1 0 = _2{ 0{:: (<"1 b1) #&.> <t0
-)
+echo ((<"1 b1)#&.><"_1 t)
 
 NB. this failed on linux32
 test=: 3 : 0   NB. ~:"_1
@@ -189,6 +176,7 @@ echo $yy
 echo yy
  b=: ~:"_1 yy
 assert. b1-:b
+assert. t-:yy
 echo 'b1'
 echo $b
 echo b
@@ -204,6 +192,10 @@ echo 'b4'
  assert. b -: (i.@# = i.~)"_1 yy
 echo 'b5'
  echo ((<"1 b)#&.><"_1 yy) = <@~."_1 yy
+echo 'b5a'
+echo ((<"1 b1)#&.><"_1 t)
+echo 'b5b'
+echo ((<"1 b)#&.><"_1 yy)
 echo 'b6 ~. '
  echo $ 0{:: <@~."_1 yy
  echo t1=. 0{:: <@~."_1 yy

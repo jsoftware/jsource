@@ -172,13 +172,7 @@ echo (<b0) #&.> <"_1 t
 echo 'a2'
 echo (<b0) #&.> < {. t
 echo 'a3'
-echo (<"1 b1) #&.> <"_1 t
-echo 'a4'
-echo (<"1 b1) #&.> < {. t
-echo 'a5'
-echo (<{. b1) #&.> <"_1 t
-echo 'a6'
-echo (<{. b1) #&.> < {. t
+echo (<b0) #&.> < t0
 
 4!:55 ;:'b0 b1 t t0'
 exit 1

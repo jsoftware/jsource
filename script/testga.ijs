@@ -172,8 +172,11 @@ echo 'a2'
 echo (<b0) #&.> < {. t
 echo 'a3'
 echo (<b0) #&.> < t0
+echo 'a4'
+echo (<b0) #&.> < memu {. t
 echo 'a9'
 echo ((<b0) #&.> < {. t) -: {. <@~."_1 t
+echo ((<b0) #&.> < memu {. t) -: {. <@~."_1 t
 
 4!:55 ;:'b0 t t0'
 exit 1

@@ -42,8 +42,8 @@ jobs:
     - run: echo "Run deprecated jobs"
 
  disabled:
-  #if: false
-  if: true
+  if: false
+  #if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Run disabled jobs"

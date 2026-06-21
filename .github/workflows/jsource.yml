@@ -42,8 +42,8 @@ jobs:
     - run: echo "Run deprecated jobs"
 
  disabled:
-  #if: false
-  if: true
+  if: false
+  #if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Run disabled jobs"
@@ -164,7 +164,7 @@ jobs:
 
    - name: Build JE (Linux32)
      env:
-      CC: clang-20
+      CC: clang-18
       USE_SLEEF: 1
       USE_OPENMP: 0
       USE_PYXES: 0
@@ -927,6 +927,7 @@ jobs:
       script\buildga.cmd x64
 
    - name: Setup Environment (Windows MSYS2 x64 clang)
+     #if: ${{ false }}
      uses: msys2/setup-msys2@v2
      with:
       msystem: CLANG64
@@ -936,6 +937,7 @@ jobs:
         mingw-w64-clang-x86_64-lldb
 
    - name: Test JE (Windows MSYS2 x64 clang)
+     #if: ${{ false }}
      shell: msys2 {0}
      env:
       DEBUGCMD: lldb
@@ -1005,6 +1007,7 @@ jobs:
       script\buildga.cmd x86
 
    - name: Setup Environment (Windows MSYS2 x86)
+     #if: ${{ false }}
      uses: msys2/setup-msys2@v2
      with:
       msystem: MINGW32
@@ -1014,6 +1017,7 @@ jobs:
         mingw-w64-i686-gdb
 
    - name: Test JE (Windows MSYS2 x86)
+     #if: ${{ false }}
      shell: msys2 {0}
      env:
       DEBUGCMD: gdb
@@ -1145,6 +1149,7 @@ jobs:
       script\buildga.cmd arm64
 
    - name: Setup Environment (Windows MSYS2 arm64)
+     #if: ${{ false }}
      uses: msys2/setup-msys2@v2
      with:
       msystem: CLANGARM64
@@ -1154,6 +1159,7 @@ jobs:
         mingw-w64-clang-aarch64-lldb
 
    - name: Test JE (Windows MSYS2 arm64)
+     #if: ${{ false }}
      shell: msys2 {0}
      env:
       DEBUGCMD: lldb

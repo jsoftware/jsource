@@ -535,7 +535,13 @@ AHDR2(remII,I,I,I){I u,v;
     DQU(m, I yv=*y;
       // Multiply by recip to get quotient, which is up to 1/2 LSB low; get remainder; adjust remainder if too high; store
       // 2's-complement adjust for negative y; to make the result still always on the low side, subtract an extra 1.
-      DPUMULH(uarecip,(UI)yv,himul); himul-=(uarecip+1)&REPSGN(yv); I rem=yv-himul*ua; rem=(rem-(I)ua)>=0?rem-(I)ua:rem; *z++=rem;
+      DPUMULH(uarecip,(UI)yv,himul); himul-=(uarecip+1)&REPSGN(yv); I rem=yv-himul*ua;
+#if defined(_WIN32) && defined(__aarch64__)
+      volatile I temp=(rem-(I)ua); rem=temp>=0?temp:rem;  // windows arm64 optimization issue (rem-(I)ua)>=0 cannot detect overflow and false
+#else
+      rem=(rem-(I)ua)>=0?rem-(I)ua:rem;
+#endif
+      *z++=rem;
      y++;)
    }
    // if x was negative, move the remainder into the x+1 to 0 range

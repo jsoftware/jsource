@@ -160,7 +160,7 @@ NB. DESTROY.
 {{
 jdict =. y conew 'jdict'
 put__jdict~ i. 7
-assert. 'rank error' -: destroy__jdict GetError 0
+invalidate__jdict ''
 assert. 'untimely request' -: get__jdict GetError 0
 assert. 'untimely request' -: put__jdict GetError~ i. 10
 assert. 'untimely request' -: has__jdict GetError i. 10
@@ -297,7 +297,7 @@ for. i. n_iter do.
   jhasans =. has__x keys
   assert. jhasans -: naivemask
   if. -. valshape -: 0 do.
-    fillatom =. {. valuetype__x c. ''
+    fillatom =. {. (3!:0 (genval`:6) 0) c. ''
     jgetans =. (valshape $ fillatom) get__x keys
     jmask =. +./@,"valrank ] fillatom ~: jgetans
     assert. jmask -: naivemask
@@ -734,7 +734,7 @@ partition =: {{
       ids =: root js} ids NB. Mark that those entries are reachable from the platform p.
     end.
     r put__s~ p_index ;~ l , h NB. Always put p as middle platform.
-    assert. (0) 16!:_7 dict__s
+NB. debug only    assert. audittree__s 0
   end.
   destroy__s ''
   NB. Map every index to its group root in ids and compute groups.
@@ -857,6 +857,28 @@ X =: (D # 0) , (0.5 0.3 0.1 ,&< 0 0 ; 0 1 ; , 1) gen T
 C =: D enc X
 Y =: (D # 0) dec T ; C
 X -: Y
+
+NB. Named dict
+
+s0 =. 7!:0 ''
+1: create_jdict_ 'hash';<_2 ]\ 'name';'_xxx_base_'
+put_xxx~ i. 1000
+1 3 5 -: get_xxx 1 3 5
+1: close_xxx''
+s1 =. 7!:0''
+1024 > s1-s0
+
+NB. Symbols
+dict =. ('hash';<_2 ]\ 'keytype';32) conew 'jsymbol'
+put__dict <'abc'
+put__dict ;: 'def ghi'
+0 = get__dict <'abc'
+1 = get__dict <'def'
+2 = get__dict <'ghi'
+_1 = get__dict <'xxx'
+(<'ghi') = get__dict 2
+'index error' -: get__dict etx 4
+destroy__dict''
 
 epilog''
 

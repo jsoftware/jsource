@@ -29,6 +29,23 @@ CREBLOCKATOMV2(a0j1,CMPX,0.0,1.0)  // 0j1
 #define CREBLOCKATOMI(name,t,v) I __attribute__((aligned(ABDY))) B##name[NORMAH+2-SY_64]=CBAIVAL(t,v);
 #endif
 struct Bxnum0 {I hdr[AKXR(0)/SZI]; X v[1];};
+// validitymask is used mostly to set a sequence of all1/all0 words in a ymm reg.  We also use it as a read-only area containing
+// 0 or 1 fields.  We put all those fields over validitymask so that we use just one cacheline for all the uses.  The mappings into
+// validitymask are in jtype.h
+#if !SY_64
+long long __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // maskload expect s64x2 mask
+#elif C_AVX2 || EMU_AVX2
+I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -1, -1,0,0,0,0};  // allows inverted mask
+// maskec creates masks for fetching 16-byte float entities.  There are 4 choices, each giving 2 2-bit values for
+// lanes 01/23, for the 2 successive fetches.  Each value is the top 2 bits of a 4-byte value.  The I values are broadcast
+// into each 64-byte lane, and then the UPPER (second) value is selected for lanes 0-1, and the LOWER (first)
+// for lanes 2-3
+I __attribute__((aligned(ABDY))) maskec4123[4]={0xc0000000c0000000, 0x8000000000000000, 0x8000000080000000, 0xc000000080000000,};  // 4, 1, 2, 3
+#else 
+I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // native ss2/neon register is s64x2
+#endif
+// ASSERTAGREE does a fetch from validitymask[rank], i. e. up to [63].  If rank>4 the fetch is discarded, but to make sure it doesn't segfault
+// we follow it here with a bunch of blocks.  Of course the linker might not allocate them this way, but it usually does and the tests will fail if it doesn't.
 #define CREBLOCKVEC0(name,t) I __attribute__((aligned(ABDY))) B##name[NORMAH+1]={Xrh0 (NORMAH+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,1,0};  // no padding at end - no atoms should be referenced
 CREBLOCKVEC0(aqq,LIT)  // ''
 CREBLOCKVEC0(mtv,B01)  // i.0 boolean
@@ -69,22 +86,6 @@ CREBLOCKVEC1I(iv1,INT,1)     /* ,1                                              
 CREBLOCKVEC2I(mtm,B01)    // i. 0 0, but boolean
 CREBLOCKVEC2I(mtmi,INT)    // i. 0 0 integer
 A   mnuvxynam[6]={0,0,0,0,0,0};   // name blocks for all arg names
-// validitymask is used mostly to set a sequence of all1/all0 words in a ymm reg.  We also use it as a read-only area containing
-// 0 or 1 fields.  We put all those fields over validitymask so that we use just one cacheline for all the uses.  The mappings into
-// validitymask are in jtype.h
-#if !SY_64
-long long __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // maskload expect s64x2 mask
-#elif C_AVX2 || EMU_AVX2
-I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -1, -1,0,0,0,0};  // allows inverted mask
-// maskec creates masks for fetching 16-byte float entities.  There are 4 choices, each giving 2 2-bit values for
-// lanes 01/23, for the 2 successive fetches.  Each value is the top 2 bits of a 4-byte value.  The I values are broadcast
-// into each 64-byte lane, and then the UPPER (second) value is selected for lanes 0-1, and the LOWER (first)
-// for lanes 2-3
-I __attribute__((aligned(ABDY))) maskec4123[4]={0xc0000000c0000000, 0x8000000000000000, 0x8000000080000000, 0xc000000080000000,};  // 4, 1, 2, 3
-#else 
-I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // native ss2/neon register is s64x2
-#endif
-
 #if NORMAHX
 __attribute__((aligned(2*ABDY))) I Bnum[NUMMAX-NUMMIN+1+2][((8-NORMAHX)+NORMAH+1)*(2-SY_64)] = {   // A blocks for the numbers we keep at hand.  0 and 1 are B01, the rest INT; but the first 2 are integer forms of 0 and 1
 #else

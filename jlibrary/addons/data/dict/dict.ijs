@@ -1,6 +1,7 @@
 coclass 'jdict'
 
-SIZE_GROWTH_GEOMETRIC_STEP =: 2
+issym=:0  NB. dicts created through jdict are not symbols
+check1x =: (_1:^:(_&-:))@:(13!:8@3^:(<&0))@:(13!:8@14^:('' -.@-: $))  NB. verify no get from empty values
 
 create =: {{)m
 if. 'literal' -: datatype y do.
@@ -9,26 +10,12 @@ if. 'literal' -: datatype y do.
 else.
   'index_type creation_parameters' =. y
 end.
-NB. Default values of params.
-keytype =: 4
-keyshape =: i. 0
-valuetype =: 4
-valueshape =: i. 0
-keyhash =: 16!:0`''
-keycompare =: 16!:0`''
-initcapacity =: 100
-NB. Names of params.
-long_param_names =: <;._2 {{)n
-keytype
-keyshape
-valuetype
-valueshape
-keyhash
-keycompare
-initcapacity
-}}
-short_param_names =: 4 2 $ 'ktksvtvs'
-search_short_param_names =: short_param_names&i.
+
+NB. Names of params, and defaults
+long_param_names =. ;: 'keytype keyshape valuetype valueshape    keyhash    keycompare   initcapacity name'
+(long_param_names) =.      4   ; (i. 0) ;    4    ;  (i. 0)  ; (16!:0`'') ; (16!:0`'') ;       100   ; ''
+short_param_names =. _2 <\ 'ktksvtvs'
+occupancy=. 0.5   NB. hash only
 
 if. (-: (index_type {.~ -@#)) 'concurrent' do.
   singlethreaded =. 0
@@ -37,20 +24,27 @@ else.
   singlethreaded =. 1
 end.
 
+if. #creation_parameters do. names =. {."1 creation_parameters [ values =. {:"1 creation_parameters else. names =. values =. 0$a: end.  NB. requests
+if. index_type -: 'hash' do. long_param_names =. long_param_names , <'occupancy' end.  NB. occupancy supported only for hash type
+names =. (((#short_param_names){.long_param_names),names) {~ (short_param_names,names) i. names  NB. xlate short names to long equivs
+namex =. long_param_names i. names
+if. (#long_param_names) e. namex do.  13!:8&3 'incorrect attribute: ' , ;:^:_1 names #~ (#long_param_names) e. namex end.
+(,names) =. ,values  NB. assign values to local names (, to unbox if singleton)
+
+if. 2 = 3!:0 keytype do. keytype =. typeid_from_typename keytype end.  NB. translate type to internal code
+if. 2 = 3!:0 valuetype do. valuetype =. typeid_from_typename valuetype end.
+name =. ,&'__'^:('_' ~: {:!.'_') name  NB. if name is not empty and doesn't end with _, append __
+
 select. index_type   NB. set up params for create, based on map type
 case. 'hash' do.
-  itype =: 0   NB. index type 0 is hash
-  occupancy =: 0.5   NB. default for occupancy
-  NB. Parse params and update above attributes.
-  long_param_names =: long_param_names , < 'occupancy'
-  search_long_param_names =: long_param_names&i.
-  parse^:(*@#) creation_parameters
+  if. issym do.   NB. override & audit parms for symbols dict
+    valueshape=.0 [ valuetype=.0  NB. type=0 signals symbols
+    if. keytype e. 1 4 8 16 64 128 5 6 7 9 10 11 do. 13!:8&3 'symbol key cannot be numeric' end.
+  elseif. valuetype=0 do. 13!:8&3 'valuetype invalid'
+  end.
   internal_parameters =. (0 , initcapacity , <. initcapacity % occupancy) ; singlethreaded ; (keytype ; keyshape) ; < (valuetype ; valueshape)
 case. 'tree' do.
-  itype =: 1  NB. index type 1 is tree
-  NB. Parse params and update above attributes.
-  search_long_param_names =: long_param_names&i.
-  parse^:(*@#) creation_parameters
+  if. issym do. 13!:8@3 'symbol requires hash' end.
   internal_parameters =. (0 , initcapacity) ; singlethreaded ; (keytype ; keyshape) ; < (valuetype ; valueshape)
 case. do.
   13!:8&3 'Incorrect index type'
@@ -58,67 +52,71 @@ end.
 
 NB. Create the map, which remains as dict.  dict is marked nondisplayable because 1 {:: dict is.
 NB. 1 2{::dict appear to be empty so that the user can't crash by touching them.  To see the actual values, use 1 2 (16!:_8) dict which returns a virtual block.
+NB. dict is a local name; after this function completes the only link to dict is through the verbs.  This is because there might be no object
 if. keyhash -: keycompare do. keyfn =. keyhash `: 6 else. keyfn =. keyhash `: 6 : (keycompare `: 6) end.
-size =: initcapacity
-dict =: keyfn f. (16!:_1) internal_parameters
+dict =. keyfn f. (16!:_1) internal_parameters
 
 NB. Assign names.
-get =: dict 16!:_2
-put =: dict 16!:_3
-del =: dict 16!:_4
-has =: dict 16!:_12
-count =: 0&(16!:_8)@dict
+clsnms =. 'get put items has count items invalidate close'
+('get',name) =: dict 16!:_2
+('put',name) =: dict 16!:_3
+if. -.issym do. ('del',name) =: dict 16!:_4 [. clsnms =. clsnms , ' del' end.
+('has',name) =: dict 16!:_12
+('count',name) =: {.@(0&(16!:_8))@dict
+('invalidate',name) =: dict 16!:_5~ 1:
 if. index_type -: 'tree' do.
   valuemask =. 2b100 * valueshape -.@-: 0
-  check1x =: (_1:^:(_&-:))@:(13!:8@3^:(<&0))@:(13!:8@14^:('' -.@-: $))
-  mget =: dict 16!:_6
-  min =: [: 13!:8@6^:(0 = +/@:(#@>)) (2b11000 + valuemask)&mget
-  max =: [: 13!:8@6^:(0 = +/@:(#@>)) (2b11001 + valuemask)&mget
-  items =:(_1 ,~ 2b11001 + valuemask)&mget
-  after =: _&$: : ((mget~ (2b101010 + valuemask) , check1x)~)
-  since =: _&$: : ((mget~ (2b101011 + valuemask) , check1x)~)
-  before =: _&$: : ((mget~ (2b101000 + valuemask) , check1x)~)
-  until =: _&$: : ((mget~ (2b101001 + valuemask) , check1x)~)
-  range =: 1 1&$: : ((mget~ 2b1001000 + valuemask + #.@:|.@:(13!:8@3^:(1 1 -.@-: e.&0 1))@:(13!:8@14^:((, 2) -.@-: $)))~)
+  ('mget',name) =: dict 16!:_6
+  ('min',name) =: [: 13!:8@6^:(0 = +/@:(#@>)) (2b11000 + valuemask)&(dict 16!:_6)
+  ('max',name) =: [: 13!:8@6^:(0 = +/@:(#@>)) (2b11001 + valuemask)&(dict 16!:_6)
+  ('items',name) =:(_1 ,~ 2b11001 + valuemask)&(dict 16!:_6)
+  ('after',name) =: _&$: : (((dict 16!:_6)~ (2b101010 + valuemask) , check1x_jdict_)~)
+  ('since',name) =: _&$: : (((dict 16!:_6)~ (2b101011 + valuemask) , check1x_jdict_)~)
+  ('before',name) =: _&$: : (((dict 16!:_6)~ (2b101000 + valuemask) , check1x_jdict_)~)
+  ('until',name) =: _&$: : (((dict 16!:_6)~ (2b101001 + valuemask) , check1x_jdict_)~)
+  ('range',name) =: 1 1&$: : (((dict 16!:_6)~ 2b1001000 + valuemask + #.@:|.@:(13!:8@3^:(1 1 -.@-: e.&0 1))@:(13!:8@14^:((, 2) -.@-: $)))~)
+  ('audittree',name) =: 16!:_7&dict
+  clsnms =. clsnms , ' mget min max after since before until range audittree' 
 else.
-  items =: {{
-    (0 0) 16!:_9 dict NB. read-lock.
-    r =. memu (<<<0 (16!:_5) dict) { 1 (16!:_8) dict
-    if. -. valueshape -: 0 do.
-      r =. r ,&< memu (<<<0 (16!:_5) dict) { 2 (16!:_8) dict
+  ('items',name) =: dict {{
+    (0 0) 16!:_9 m NB. read-lock.
+    r =. memu (<<<0 (16!:_5) m) { 1 (16!:_8) m
+    if. -. y -: 0 do.
+      r =. r ,&< memu (<<<0 (16!:_5) m) { 2 (16!:_8) m
     end.
-    (1 0) 16!:_9 dict
+    (1 0) 16!:_9 m
     r
-  }}
+  }}@valueshape
 end.
-EMPTY
+  ('close',name) =: (4!:55@;:@(,&name&.>&.;: clsnms)) , (dict 16!:_5~ 1:)  NB. clear the empty chain in the keys to avoid errors freeing it
+dict  NB. We never use the dict itself, but in case a user wants to, this is a hook that they can use to get to it
 }}
 
 destroy =: {{
-(1) 16!:_5 dict  NB. clear the empty chain in the keys to avoid errors freeing it
+close''  NB. delete all verbs, which also deletes the dict
 codestroy y  NB. destroy the locale, freeing everything
 }}
 
-NB. Resize operation.  Nilad.  Allocate a larger/smaller dictionary and repopulate its keys
-NB. We have a lock on (dict) during this entire operation
+NB. Resize operation.  Nilad.  Allocate a larger/smaller dictionary and repopulate its keys.  For the nonce we assume the call is to upsize
+NB. The dictionary might not be in its own class (i. e. it might have a name), so we must not refer to class variables.  The dict is
+NB. the y argument
 resize =: {{)m
-size =: SIZE_GROWTH_GEOMETRIC_STEP * size
-NB. We allocate a new DIC block of the correct size.  This is a temp whose contents, when filled, will be exchanged into (dict)
+'cardinality minsize maxsize hashsiz' =. 0 (16!:_8) y  NB. fetch cardinality,minsize,maxsize,size of hash 0 if red/black)
+maxsize =. 2 * maxsize 
+NB. We allocate a new DIC block of the correct maxsize.  This is a temp whose contents, when filled, will be exchanged into (y)
 NB. This also allocates new areas for the keys, vals, and hash/tree
-select. itype
-case. 0 do.
-  newdict =. dict (16!:_1) 0 , size , <. size * % occupancy  NB. allocate new DIC (hashed)
-NB. for hashing: call (newdict 16!:_3) to rehash all the keys.  Limit the number of kvs per install to reduce temp space needed.
-NB. Install the kvs from dict into newdict.
-NB. to allow the key block to be freed.  Then (<<<e) { keys/vals gives the kvs:
-  empties =. (0) 16!:_5 dict   NB. get list of empties in dict
-  (2 (16!:_8) dict) (newdict 16!:_3)&((<<<empties)&{) (1 (16!:_8) dict)  NB. Install all keys from dict into newdict
-  (1) 16!:_5 dict  NB. Delete chains; prevents free error when releasing dict
-case. 1 do.
-  newdict =. dict (16!:_1) 0 , size  NB. allocate new DIC (tree)
-  NB. for red/black: copying the keys, vals, and tree from dict to newdict is done in JE when we return
+if. hashsiz do.
+  newy =. y (16!:_1) 0 , maxsize , 2 * hashsiz  NB. allocate new DIC (hashed)
+  NB. for hashing: call (newy 16!:_3) to rehash all the keys.  Limit the number of kvs per install to reduce temp space needed.
+  NB. Install the kvs from y into newy to allow the key block to be freed.  Then (<<<e) { keys/vals gives the kvs:
+  empties =. (0) 16!:_5 y   NB. get list of empties in y
+  (2 (16!:_8) y) (newy 16!:_3)&((<<<empties)&{) (1 (16!:_8) y)  NB. Install all keys from y into newy
+  (1) 16!:_5 y  NB. Delete chains; prevents free error when releasing y
+else.
+  newy =. y (16!:_1) 0 , maxsize  NB. allocate new DIC (tree)
+  NB. for red/black: copying the keys, vals, and tree from y to newy is done in JE when we return
 end.
-newdict  NB. Return the new block.  Its contents will be swapped with the old block so that the EPILOG for the resize will free the old keys/vals/hash
+newy  NB. Return the new block.  Its contents will be swapped with the old block so that the EPILOG for the resize will free the old keys/vals/hash
 }}
 
 NB. Utils.
@@ -134,7 +132,7 @@ t =. t , '/integer1/integer2/integer4/floating2/floating4/floating16'
 n {~ (<;._1 t) i. < y
 }}
 
-NB. Parse attribute and set its value.
+NB. Parse attribute and set its value.  no longer used
 parse =: {{)m
 'attribute value' =: y
 if. (# short_param_names) > idx =. search_short_param_names attribute do.
@@ -148,3 +146,9 @@ end.
 (attribute) =: value
 EMPTY
 }}"1
+
+coclass'jsymbol'  NB. The only extra thing about the symbol class is the path
+issym=:1  NB. symbols are created through this locale
+coinsert'jdict'
+
+coclass'jdict'

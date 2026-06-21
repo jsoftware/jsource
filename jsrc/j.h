@@ -1115,18 +1115,26 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // Avoid call to memcmp to save registers
 #if C_AVX2 || EMU_AVX2
-// verify that shapes *x and *y match for l axes using AVX for rank<=vector size, loop otherwise
+// verify that shapes *x and *y match for l axes using AVX for rank<vector size, loop otherwise
+// Strains to stay in 3 registers
+// obsolete #define ASSERTAGREECOMMON(x,y,l,ASTYPE) 
+// obsolete  {C *aaa=(C*)(x), *aab=(C*)(y); I aai=(l)<<LGSZI;
+// obsolete   if(unlikely(aai>NPAR*SZI)){NOUNROLL do{ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)&(aaa[aai-NPAR*SZI])),_mm256_loadu_si256((__m256i *)&(aab[aai-NPAR*SZI]))),_mm256_loadu_si256((__m256i*)validitymask)),EVLENGTH)}while((aai-=NPAR*SZI)>NPAR*SZI);} 
+// obsolete   ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)(aaa+aai-NPAR*SZI)),_mm256_loadu_si256((__m256i *)(aab+aai-NPAR*SZI))),_mm256_loadu_si256((__m256i*)((C*)&validitymask+NPAR*SZI+aai))),EVLENGTH) /* result is 1 if all match */ 
+// obsolete  }
 #define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
- {C *aaa=(C*)(x), *aab=(C*)(y); I aai=(l)<<LGSZI; \
-  if(unlikely(aai>NPAR*SZI)){NOUNROLL do{ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)&(aaa[aai-NPAR*SZI])),_mm256_loadu_si256((__m256i *)&(aab[aai-NPAR*SZI]))),_mm256_loadu_si256((__m256i*)validitymask)),EVLENGTH)}while((aai-=NPAR*SZI)>NPAR*SZI);} \
-  ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)(aaa+aai-NPAR*SZI)),_mm256_loadu_si256((__m256i *)(aab+aai-NPAR*SZI))),_mm256_loadu_si256((__m256i*)((C*)&validitymask+NPAR*SZI+aai))),EVLENGTH) /* result is 1 if all match */ \
+ {C *aaa, *aab=(C*)&validitymask; I aai=(l)<<LGSZI; __m256i enbmask=_mm256_loadu_si256((__m256i*)(aab+NPAR*SZI+aai)); \
+  if(unlikely(aai>NPAR*SZI)){aaa=(C*)(aai&(NPAR*SZI-1)); enbmask=_mm256_loadu_si256((__m256i*)(aab+NPAR*SZI+(I)aaa)); aaa=(C*)(x); aab=(C*)(y); \
+   NOUNROLL do{ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)&(aaa[aai-NPAR*SZI])),_mm256_loadu_si256((__m256i *)&(aab[aai-NPAR*SZI]))),_mm256_cmp_pd(enbmask,enbmask,_CMP_EQ_OQ)),EVLENGTH)}while((aai-=NPAR*SZI)>=NPAR*SZI); \
+  }else{aaa=(C*)(x); aab=(C*)(y);} \
+  ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)(aaa+aai-NPAR*SZI)),_mm256_loadu_si256((__m256i *)(aab+aai-NPAR*SZI))),enbmask),EVLENGTH) /* result is 1 if all match */ \
  }
 // result is true if shapes agree.  Modify only aai
 #define TESTAGREE(x,y,l) \
  ({I *aaa=(x), *aab=(y); I aai=(l); __m256i aaaa,aaab,aaam; \
   if(unlikely(aai>NPAR)){ \
    aaam=_mm256_loadu_si256((__m256i*)(validitymask)); /* start testing all words */ \
-   do{ \
+   NOUNROLL do{ \
     aaaa=_mm256_loadu_si256((__m256i *)&aaa[aai-NPAR]); aaab=_mm256_loadu_si256((__m256i *)&aab[aai-NPAR]); \
     if(!_mm256_testz_si256(_mm256_xor_si256(aaaa,aaab),aaam))break; \
    }while((aai-=NPAR)>NPAR); \
@@ -1153,13 +1161,13 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 #define TESTAGREE(x,y,l) \
  ({I *aaa=(x), *aab=(y); I aai=(l); \
- for(--aai;aai>=0;--aai)if(aaa[aai]!=aab[aai])break; \
+ NOUNROLL for(--aai;aai>=0;--aai)if(aaa[aai]!=aab[aai])break; \
  aai<0;  /* return 1 if all matched */ \
  })
 
 #define TESTXITEMSMALL(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); r=0; \
-  DO(l, if(unlikely(aaa[i]>aab[i])){r=1;break;}) \
+  DONOUNROLL(l, if(unlikely(aaa[i]>aab[i])){r=1;break;}) \
  }
 #endif
 #define ASSERTAGREE(x,y,l) ASSERTAGREECOMMON(x,y,l,ASSERT)
@@ -2168,13 +2176,22 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
                            PRISTCLRF(a) PRISTCLRF(w)
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a nonempty dense array)
 // assign length first so we can sneak some computation into ain in va2.  DON'T call a subroutine, to keep registers free
-#if !defined(__wasm__)
+// This version uses only 3 registers
+#if 1||!defined(__wasm__)
+#if 0  // obsolete 
 #define PRODCOMMON(z,length,ain,LTYPE) {LTYPE _i=(LTYPE)(length); I * RESTRICT _zzt=(ain); \
-if(likely(_i<(LTYPE)3)){z=(I)&oneone; z=_i>(LTYPE)1?(I)_zzt:z; _zzt=_i<(LTYPE)1?(I*)z:_zzt; z=((I*)z)[1]; z*=_zzt[0];}else{z=_zzt[--_i]; NOUNROLL do{z*=_zzt[--_i];}while(_i); } }
+if(likely(_i<(LTYPE)3)){z=(I)&oneone; z=_i>(LTYPE)1?(I)_zzt:z; _zzt=_i<(LTYPE)1?(I*)z:_zzt; z=((I*)z)[1]; z*=_zzt[0];} \
+else{z=_zzt[--_i]; NOUNROLL do{z*=_zzt[--_i];}while(_i); } }
 #else
+#define PRODCOMMON(z,length,ain,LTYPE) {I _i=(LTYPE)(length); I * _zzt=(ain); z=_zzt[_i-1]; \
+if(likely(_i<3)){z=_i==1?_i:z; z*=_zzt[0]; _zzt=(I*)1; z=_i<1?(I)_zzt:z;} \
+else{--_i; NOUNROLL do{z*=_zzt[_i-1];}while(--_i); } \
+ }
+#endif
+#else  // obsolete 
 // the above original version confuse emscripten compiler when 1==length where zzt always becomes &oneone
 // but this version introduces mispredicted branches
-#define PRODCOMMON(z,length,ain,LTYPE) {LTYPE _i=(LTYPE)(length); I * RESTRICT _zzt=(ain); \
+#define PRODCOMMON(z,length,ain,LTYPE) {LTYPE _i=(LTYPE)(length); I * _zzt=(ain); \
 if(likely(_i<3)){z=(_i<1)?1:(_i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else{z=1; NOUNROLL do{z*=_zzt[--_i];}while(_i); } }
 #endif
 #define PROD(z,length,ain) PRODCOMMON(z,length,ain,I)

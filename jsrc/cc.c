@@ -172,6 +172,7 @@ DF2(jtboxcut0){F12IP;A z;I i;
 
  // This code follows the discussion in jtbox
  I t=AT(w); I wr=AR(w); I wi; SETIC(w,wi);   // rank of w, #items of w
+ wr=wr==0?1:wr;   // We use this rank to allocate the boxes - we always create arrays
  I resatoms; PROD(resatoms,f,AS(a)); I cellsize; PROD(cellsize,wr-1,AS(w)+1);
  I k=bplg(t); C *wv=CAV(w);  // k is length of an atom of w
  // allocate the result area
@@ -187,7 +188,6 @@ DF2(jtboxcut0){F12IP;A z;I i;
  // Step through each block: fetch start/end; verify both positive and inrange; calc size of block; alloc and move; make block recursive
  I (*av)[2]=(I (*)[2])voidAV(a);  // pointer to first start/length pair
  I abslength=(I)FAV(self)->localuse.boxcut0.parm;  // 0 for start/length, ~0 for start/end+1
- wr=wr==0?1:wr;   // We use this rank to allocate the boxes - we always create arrays
  A wback=ABACK(w); wback=AFLAG(w)&AFVIRTUAL?wback:w;   // w is the backer for new blocks unless it is itself virtual
  for(i=0;i<resatoms;++i){
   I start=av[i][0]; I endorlen=av[i][1];

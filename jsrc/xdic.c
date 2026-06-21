@@ -125,7 +125,7 @@ typedef struct ADic {
   A locale;  // the numbered locale of the dictionary, saved here to protect it.  User hash/compare is called in this locale    displays as empty
    // *** end of J value
   UI4 ktype;  // type of a key
-  UI4 vtype;   // type of a value
+  UI4 vtype;   // type of a value - 0 for symbol-type table (del not allowed, key-slot# is used as value)
   UI4 kaii;   // atoms in a key
   UI4 vaii;   // atoms in a value
   I filler1;
@@ -149,6 +149,7 @@ typedef struct ADic {
 #if !NORMAHX
 _Static_assert(sizeof(DIC)==32*SZI,"DIC not 32 Is");
 #endif
+#if 0
 /*
 // temp for debugging
 int getsize_xdic_DIC(int i){
@@ -184,6 +185,7 @@ switch (i) {
 }
 // temp for debugging
 */
+#endif
 
 #define ST UI4   // type of hash slot
 #define STX UI8   // type of index to hash slot, which is + for found, 1s-comp for not found
@@ -217,6 +219,7 @@ switch (i) {
 //      (min #eles,max #eles,#hashslots)   when a dictionary is being resized
 //     if #hashslots is omitted, the map is a red/black tree
 // result is DIC to use, ready for get/put, with hash/keys/vals/empty allocated, and 0 valid kvs
+// If value shape is 0, there are no values.  If type is also 0, the dict is for symbols (i. e. delete not allowed, value is key slot#)
 static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
  ARGCHK1(w);
  A a=FAV(self)->fgh[0];  // extract u from the verb
@@ -238,10 +241,16 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
   I t, r, n, n1, *s;    //  type, rank, #atoms in item, pointer to shape of value then key
   // valuespec.  must be 2 boxes
   box=C(AAV(w)[3]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)
-  box1=C(AAV(box)[0]); t=rei0(box1); ASSERT(((t=fromonehottype(t,jt))&NOUN+SPARSE)>0,EVDOMAIN) flags|=t&DIRECT?0:DICFVINDIR;  // type. convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid.  Remember if indirect
-  box1=C(AAV(box)[1]); r=AN(box1); ASSERT(AR(box1)<=1,EVRANK) ASSERT(r>=0,EVLENGTH) RZ(box1=ccvt(INT,ravel(box1),0)) s=IAV(box1); PRODX(n,r,s,1) ((DIC*)z)->bloc.vaii=n;  // shape. copy to allow IAV1.  get # atoms in item & save
-  ASSERT(likely(n>0)||r==1,EVLENGTH)   // empty value only allowed at rank 1
-  INCORPNV(box1); ((DIC*)z)->bloc.vshape=box1; ((DIC*)z)->bloc.vtype=t; ((DIC*)z)->bloc.vbytelen=n<<bplg(t);  // save shape & type; save # bytes for copy
+  box1=C(AAV(box)[0]); t=rei0(box1); 
+  if(likely(t!=0)){
+   ASSERT(((t=fromonehottype(t,jt))&NOUN+SPARSE)>0,EVDOMAIN) flags|=t&DIRECT?0:DICFVINDIR;  // type. convert from 3!:0 form, which must be an atomic integer, to internal type, which must be valid.  Remember if indirect
+   box1=C(AAV(box)[1]); r=AN(box1); ASSERT(AR(box1)<=1,EVRANK) ASSERT(r>=0,EVLENGTH) RZ(box1=ccvt(INT,ravel(box1),0)) s=IAV(box1); PRODX(n,r,s,1) ((DIC*)z)->bloc.vaii=n;  // shape. copy to allow IAV1.  get # atoms in item & save
+   ASSERT(likely(n>0)||r==1,EVLENGTH)   // empty value only allowed at rank 1
+   INCORPNV(box1); ((DIC*)z)->bloc.vshape=box1; ((DIC*)z)->bloc.vtype=t; ((DIC*)z)->bloc.vbytelen=n<<bplg(t);  // save shape & type; save # bytes for copy
+  }else{
+   // valuetype=0: symbols dict.  There is no shape or type (atomic INT implied).
+   ((DIC*)z)->bloc.vtype=0; ((DIC*)z)->bloc.vshape=mtvi; ((DIC*)z)->bloc.vbytelen=SZI; ((DIC*)z)->bloc.vaii=1;  // vtype=0 indicates symbol
+  }
 
   // keyspec.  must be 2 boxes
   box=C(AAV(w)[2]); ASSERT(AT(box)&BOX,EVDOMAIN) ASSERT(AR(box)==1,EVRANK) ASSERT(AN(box)==2,EVLENGTH)
@@ -250,6 +259,7 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
   ASSERT(AN(box1)<=9 || flags&DICFICF,EVNONCE)  // if the user has a compare function, we want virt to be on the stack to save registers.  Make sure the rank is OK then
   INCORPNV(box1); ((DIC*)z)->bloc.kshape=box1; ((DIC*)z)->bloc.ktype=t; I l=n1<<bplg(t); ((DIC*)z)->bloc.kbytelen=l; // save shape & type; save #bytes in key
   UI4 (*fn2)()=l&(SZI-1)?(UI4 (*)())crcbytes:(UI4 (*)())crcwords; fn2=(t&XNUM+RAT)?crcxnums:fn2; fn2=(t&CMPX+FL+QP)?crcfloats:fn2; fn2=(t&BOX)?crcboxes:fn2; fn2=flags&DICFIHF?fn2:(UI4 (*)())FAV(a)->valencefns[0]; ((DIC*)z)->bloc.hashfn=fn2; // save internal or external hash function
+  ASSERT(!(((DIC*)z)->bloc.vtype==0&&(t&NUMERIC)),EVDOMAIN)   // if symbols dict, key must be nonnumeric
 
   box=C(AAV(w)[0]);  // fetch size parameters
   ((DIC*)z)->bloc.flags=flags|=AN(box)==2?DICFRB:0;  // now that we have all the flags, save them.  Remember hash/tree type
@@ -273,12 +283,13 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
  // box has the size parameters.  Audit & install into dic, overwriting anything that was copied.
  ASSERT(AR(box)<=1,EVRANK) ASSERT(BETWEENC(AN(box),2,3),EVLENGTH) if(!AT(box)&INT)RZ(box=ccvt(INT,box,0));  // sizes. must be box of 3 integers
  I redblack=!!(flags&DICFRB);  // if only min,max, that's a red/black tree
- UI hashsiz=((DIC*)z)->bloc.hashsiz=IAV(box)[2-redblack];   // move hashsiz, which overwrites flags/lgminsiz/hashelesiz
+ UI hashsiz=((DIC*)z)->bloc.hashsiz=redblack?0:IAV(box)[2];   // move hashsiz, which overwrites flags/lgminsiz/hashelesiz; 0 if no hash
  ((DIC*)z)->bloc.lgminsiz=CTLZI(UIAV(box)[0]|1); UI maxeles=IAV(box)[1]; ASSERT((I)maxeles>0,EVDOMAIN)   // save min size, get max# kvs
  UI hashelesiz;   // length of a kv index, in the hashtable or tree: max slot#, plus reserved (empty/tombstone/birthstone).  Subtract 1 for max code point.  top bit#+1 is #bits we need; round that up to #bytes
  if(redblack){
   // red/black.  LSB of indexes is reserved for color
   hashelesiz=((DIC*)z)->bloc.hashelesiz=(CTLZI(maxeles+TREENRES-1)+1+1+(BB-1))>>LGBB;
+  ASSERT(((DIC*)z)->bloc.hashelesiz!=0,EVDOMAIN)  // red/black trees don't support symbols
  }else{   // hash, nothing reserved in index
   ASSERT(hashsiz>(maxeles+(maxeles>>4)),EVDEADLOCK)  // min, max, hash sizes.  Hash at least 6% spare
   hashelesiz=((DIC*)z)->bloc.hashelesiz=(CTLZI(maxeles+HASHNRES-1)+1+(BB-1))>>LGBB;
@@ -311,8 +322,10 @@ static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
  void *ev=voidAVn(AN(sa)+1,box); DO(maxeles-1, *(UI4*)ev=i+1; ev=(void *)((I)ev+((DIC*)z)->bloc.kbytelen);)   // chain keys on empty list
  *(UI4*)ev=maxeles-1; // install end of chain loopback.  overstore OK
  // values.  We clear AN/AS[0] to 0 so that the block is harmless for display etc.
- t=((DIC*)z)->bloc.vtype; sa=((DIC*)z)->bloc.vshape;   // value type & shape
- GA0(box,t,maxeles*((DIC*)z)->bloc.vaii,AN(sa)+1) AFLAG(box)=(t&RECURSIBLE); INCORPNV(box) AN(box)=AS(box)[0]=0; MCISH(AS(box)+1,IAV1(sa),AN(sa)) ((DIC*)z)->bloc.vals=box;   // allocate array of vals, recursive
+ if(likely((t=((DIC*)z)->bloc.vtype)!=0)){   // if normal non-symbols case...
+  sa=((DIC*)z)->bloc.vshape;   // value type & shape
+  GA0(box,t,maxeles*((DIC*)z)->bloc.vaii,AN(sa)+1) AFLAG(box)=(t&RECURSIBLE); INCORPNV(box) AN(box)=AS(box)[0]=0; MCISH(AS(box)+1,IAV1(sa),AN(sa)) ((DIC*)z)->bloc.vals=box;   // allocate array of vals, recursive
+ }else ((DIC*)z)->bloc.vals=0;  // if symbols, there is no values block (even though we set the shape/type of INT for the value)
  ((DIC*)z)->bloc.cardinality=0;  // init the dic is empty
  ra0(z); INCORP(z); AM(z)=0;  // make z recursive, protecting descendants; INCORP and clear the lock
  RETF(z)
@@ -467,19 +480,19 @@ static UI diclkwrwt(DIC *dic,I type){I n;
 #endif
 
 // **************************************************** resize ***************************************
-// Request resize, in the dic locale
+// Request resize, in the 'jdict' locale
 A dicresize(DIC *dic,J jt){
  A *_ttop=jt->tnextpushp;  // stack restore point
   // call dicresize in the locale of the dic.  No need for explicit locative because locale is protected by dic
  A nam, val;
  A savjtg=jt->global; SYMSETGLOBAL(dic->bloc.locale);  // push global, and move to locale.  We know resize is explicit verb so we don't need to worry about locals
- ASSERTGOTO(((nam=nfs(6,"resize",0))!=0)
+ ASSERTGOTO(((nam=nfs(13,"resize_jdict_",0))!=0)
   &&((val=jtsyrd1((J)((I)jt+NAV(nam)->m),NAV(nam)->s,NAV(nam)->hash,jt->global))!=0  // look up name in current locale and ra() if found
   &&((val=QCWORD(namerefacv(nam,QCWORD(val))))!=0)   // turn the value into a reference, undo the ra
   &&((val&&LOWESTBIT(AT(val))&VERB))),EVVALUE, exit)   // make sure the result is a verb
  A newdica; RZ(newdica=jtunquote(jt,(A)dic,val,val)); DIC *newdic=(DIC*)newdica;  // execute resize on the dic, returning new dic
  struct Dic t=dic->bloc; dic->bloc=newdic->bloc; newdic->bloc=t;  // Exchange the parms and data areas from the new dic to the old.  Since they are recursive, this exchanges ownership and will cause the old blocks to be freed when the new dic is.
- AN(newdic->bloc.keys)=newdic->bloc.maxeles*newdic->bloc.kaii; AN(newdic->bloc.vals)=newdic->bloc.maxeles*newdic->bloc.vaii;  // newdic is going away - restore its AN values for the free.  AS immaterial 
+ AN(newdic->bloc.keys)=newdic->bloc.maxeles*newdic->bloc.kaii; if(newdic->bloc.vals)AN(newdic->bloc.vals)=newdic->bloc.maxeles*newdic->bloc.vaii;  // newdic is going away - restore its AN values for the free.  AS immaterial 
  // NOTE: we keep the old blocks hanging around until the new have been allocated.  This seems unnecessary for the hashtable, but we do it because other threads still have the old pointers and may prefetch from
  //  the old hash.  This won't crash, but it might be slow if the old hash is no longer in mapped memory
  if(dic->bloc.flags&DICFRB){
@@ -487,9 +500,12 @@ A dicresize(DIC *dic,J jt){
   DO(nhold, *(UI4*)ov=_bzhi_u64(*(UI4*)iv,il<<LGBB); iv+=il; ov+=ol;)   // copy all the old nodes, zero-extending if needed.  Fails on a downsize!
   // for trees, we copy the old tree into the new one because it's still a valid prefix of the new larger tree and recreating it is slow.  The tree element may have changed size!
   // we must then copy the keys and values too, which is tricky because of empties.  To avoid looking at atoms we copy the keys and values en bloc and then switch the type of the old kv to INT, in effect freeing them one time
-  I kk=bplg(AT(newdic->bloc.keys)), kn=AN(newdic->bloc.keys), vk=bplg(AT(newdic->bloc.vals)), vn=AN(newdic->bloc.vals);  // kv, #atom & size of atom
+  I kk=bplg(AT(newdic->bloc.keys)), kn=AN(newdic->bloc.keys);  // type/# keys
   MC(voidAV(dic->bloc.keys), voidAV(newdic->bloc.keys), kn<<kk); AT(newdic->bloc.keys)=INT;   // copy & abandon the old keys, transferring ownership
-  MC(voidAV(dic->bloc.vals), voidAV(newdic->bloc.vals), vn<<vk); AT(newdic->bloc.vals)=INT;   // copy & abandon the old values, transferring ownership
+  if(likely(dic->bloc.vtype!=0)){
+   I vk=bplg(AT(newdic->bloc.vals)), vn=AN(newdic->bloc.vals);  // kv, #atom & size of atom
+   MC(voidAV(dic->bloc.vals), voidAV(newdic->bloc.vals), vn<<vk); AT(newdic->bloc.vals)=INT;   // copy & abandon the old values, transferring ownership
+  }
   dic->bloc.cardinality=newdic->bloc.cardinality;  // record the moved keys in the key count
   UI nkold=newdic->bloc.maxeles; dic->bloc.emptyn=nkold-1;  // the end of the free chain is always the last key, which is never allocated.  Point that to the first new key and make it the head of the free chain
   UI t=nkold; WRHASH1234(t, dic->bloc.emptysiz, &CAV(dic->bloc.keys)[(nkold-1)*newdic->bloc.kbytelen])  // hang the excess new empty chain off the old
@@ -598,7 +614,7 @@ retz:;   // release lock & return, with z set
 exiterr:; z=0; goto retz;
 }
 
-// k is A for keys, s is slot#s, zv is result area (rank 1 for isin, >1 for get)
+// k is A for keys, s is slot#s, zv is result area (rank 1 for has, >1 for get)
 // resolve each key in the hash and copy the value (or default) to the result
 // a is default if given, 0 if not; or 1 if has
 // We take a read lock on the table and return with it
@@ -611,7 +627,7 @@ static INLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT vi
 
  UI8 hsz=dic->bloc.hashsiz; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz  prototype required to get arg converted to I
  C *kbase=CAV(dic->bloc.keys);  // address of first stored key.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
- C *vbase=CAV(dic->bloc.vals);  // address of first stored value.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the value array
+ C *vbase=unlikely(dic->bloc.vtype==0)?0:CAV(dic->bloc.vals);  // address of first stored value.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the value array if symbols, set vbase=0
 
  if(unlikely(!(hsz&(DICFICF<<DICFBASE))))biasforcomp
 
@@ -622,16 +638,15 @@ static INLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT vi
   I curslot=(((UI8)(UI4)s[i]*(UI4)hsz)>>32)*(hsz>>56); I hval; // convert hash to slot# and then to byte offset;  place where biased kv slot# is read into
   while(1){
    s[i]=hval=_bzhi_u64(*(UI4*)&hashtbl[curslot],(hsz>>53))-HASHNRES;   // point to field beginning with hash value, clear higher bits. remember the unbiased hash value, which will be the index of the kv
-   if(withprob(hval>=0,0.6)){if(withprob(keysne((UI4)kib,kbase+(kib>>32)*hval,k,hsz&(DICFICF<<DICFBASE),exitkeyvals)==0,0.7)){PREFETCH(vbase+s[i]*vn); break;}}  // if we hit a non-tombstone that matches the key, exit found
+   if(withprob(hval>=0,0.6)){if(withprob(keysne((UI4)kib,kbase+(kib>>32)*hval,k,hsz&(DICFICF<<DICFBASE),exitkeyvals)==0,0.7)){if(vbase)PREFETCH(vbase+s[i]*vn); break;}}  // if we hit a non-tombstone that matches the key, exit found.  No prefetch if symbols read
    else if(withprob(hval<HASHTSTN-HASHNRES,0.3))break;   // if we hit an empty (incl birthstone empty but not a tombstone), that ends the search (not found)
    // here not found
    if(unlikely((curslot-=(hsz>>56))<0))curslot+=(UI4)hsz*(hsz>>56);  // move to next hash slot, wrap to end if we hit 0
   }
  }
-
- 
  // copy using the kv indexes we calculated.  Copy in ascending order so we can overstore
  if(a==(A)1){DICLKRDRELKV(dic,lv) DO(n, ((C*)zv)[i]=s[i]>=0;)   // if processing has, just copy found status, then release lock
+ }else if(vbase==0){DICLKRDRELKV(dic,lv) DO(n, ((I*)zv)[i]=s[i]>=0?s[i]:-1;)  // if symbol, copy just the slot#s, _1 if missing
  }else{
   DICLKRDWTV(dic,lv) DICLKRDRELK(dic,lv) // We have finished our use of the keys, but we must wait till the values are safe to copy
   JMCDECL(endmask) JMCSETMASK(endmask,vn,0)  // declare & set length of copy - with overstore
@@ -669,15 +684,30 @@ static DF2(jtdicget){F12IP;A z;
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
  ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
- I t=dic->bloc.vtype; A sa=dic->bloc.vshape; I vaii=dic->bloc.vaii; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; vaii=FAV(self)->localuse.lu1.varno==0?vaii:1; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has
+ I t=dic->bloc.vtype; A sa=dic->bloc.vshape; I vaii=dic->bloc.vaii; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtvi; vaii=FAV(self)->localuse.lu1.varno==0?vaii:1; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has
+ if(unlikely(t==0)){
+  // symbols mode.
+  if(AT(w)&NUMERIC){
+   // reverse symbol lookup when w is numeric.  Return the keys with the requested #s
+   if(unlikely(!(AT(w)&INT)))RZ(w=ccvt(INT,w,0))  // make indexes integers
+   DO(AN(w), ASSERT(BETWEENO(IAV(w)[i],0,dic->bloc.emptyn),EVINDEX))  // keys are allocated sequentially.  abort if any req out of range
+   I zn; DPMULDE(AN(w),dic->bloc.kaii,zn)  // number of result atoms
+   GA0(z,dic->bloc.ktype,zn,AR(w)+AN(dic->bloc.kshape))  // allocate result
+   AFLAG(z)=AT(z)&RECURSIBLE; MCISH(AS(z),AS(w),AR(w)) MCISH(AS(z)+AR(w),IAV1(dic->bloc.kshape),AN(dic->bloc.kshape))   // allocate recursive result area & install shape
+   UI lv; DICLKRDRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request read lock
+   DO(AN(w), GETV(CAV(z)+i*dic->bloc.kbytelen,CAV(dic->bloc.keys)+IAV(w)[i]*dic->bloc.kbytelen,dic->bloc.kbytelen,dic->bloc.flags&DICFKINDIR))  // copy the keys
+   DICLKRDRELKV(dic,lv);   // request read lock
+   RETF(z);
+  }else t=INT;  // symbols, but normal get.  Switch type to implied INT vbytelen is 1 I
+ }
  ASSERT((FAV(self)->localuse.lu1.varno|dic->bloc.vbytelen)!=0,EVDOMAIN)   // get not allowed when values are empty (only has)
  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0))   // convert type of w if needed
- if((wf+((dic->bloc.flags&DICFIHF+DICFICF)^(DICFIHF+DICFICF)))==0){
+ if((wf+((dic->bloc.flags&DICFIHF+DICFICF)^(DICFIHF+DICFICF)))==0&&likely(dic->bloc.vtype!=0)){
   // fast path: no frame, and no user functions
   z=0; if(adyad!=(A)1){GA0(z,t,vaii,AN(sa)) AFLAG(z)=t&RECURSIBLE; MCISH(AS(z),IAV1(sa),AN(sa))}   // for get, allocate recursive result area & install shape; for has, result will be constant
   z=jtget1(dic,voidAV(w),z,jt,adyad);  // get the result
  }else{
-  // general case, including multiple keys
+  // general case, including multiple keys and symbols
   if(unlikely(AN(w)==0)){A avalues=dic->bloc.vals; avalues=adyad==(A)1?mtv:avalues; R reitem(drop(sc(-AN(dic->bloc.kshape)),shape(w)),avalues);}  // if no keys, return empty fast   ((-#kshape) }. $w) $ values/''
   I kn; PROD(kn,wf,AS(w))   // kn = number of keys to be looked up
   ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
@@ -764,7 +794,7 @@ static INLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,
 
  UI8 hsz=dic->bloc.hashsiz; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz  base of hashtbl
  C *kbase=CAV(dic->bloc.keys);  // key 0 address for empties; address corresponding to hash value of 0.
- C *vbase=CAV(dic->bloc.vals);  // pointer to values
+ C *vbase=unlikely(dic->bloc.vtype==0)?0:CAV(dic->bloc.vals);  // pointer to values vbase=dic->bloc.vtype==0?0:  set vbase=0 if symbols
 
  if(unlikely(!(hsz&(DICFICF<<DICFBASE))))biasforcomp
 
@@ -806,7 +836,7 @@ static INLINE UI8 jtputslots(DIC *dic,void *k,I n,void *v,I vn,I8 *s,J jt,UI lv,
   (*empties)[nnew][0]=((I4*)(&s[cur]))[0]; (*empties)[nnew][1]=emptyx; ++nnew;  // save (hashslot we are about to use),(kv index to put into the hashslot)
   UI emptynxt=_bzhi_u64(*(UI4*)&kbase[emptyx*(kib>>32)],(hsz>>45));  // get next empty, which must exist
   PUTKVNEW(kbase+emptyx*(kib>>32),(void*)((I)k+cur*(kib>>32)),kib>>32,hsz&(DICFKINDIR<<DICFBASE))
-; PUTKVNEW(vbase+emptyx*vb,(void*)((I)v+(likely(cur<vn)?cur:cur%vn)*vb),vb,hsz&(DICFVINDIR<<DICFBASE));  // not worth testing to skip empty values
+; if(vbase)PUTKVNEW(vbase+emptyx*vb,(void*)((I)v+(likely(cur<vn)?cur:cur%vn)*vb),vb,hsz&(DICFVINDIR<<DICFBASE));  // not worth testing to skip empty values; but skip symbols
   cur=nxt; emptyx=emptynxt;  // advance to next
  }
  dic->bloc.emptyn=emptyx;  // We have allocated all the new blocks successfully.  Update the free root, freeing the old blocks
@@ -861,7 +891,7 @@ found:;  // hval is the kv slot we compared with, or a new empty kv slot
  if(!(hsz&(DICFRESIZE<<DICFBASE))){DICLKWRWTV(dic,lv) DICLKWRRELK(dic,lv)}    // wait for values to be free (at which point we automatically own them), then allow gets to look at hashtable & keys.  We still have a write lock.  But if we are resizing, leave the full lock
 
  // we have updated the keys and hash.  Now move the (non-new) values, indexed by s[i] (unbiased).  Every value gets moved once.  We move the old then the conflicts, knowing that any old must precede any conflict that maps to the same slot
- if(vb!=0){   // Skip all value moves if values not empty
+ if(likely(vb!=0)&&likely(vbase!=0)){   // Skip all value moves if values empty
   ((I4*)(&s[otail]))[1]=croot; oroot=oroot<0?croot:oroot;  // append conflict chain to old chain (if old chain is empty otail=0, which is OK to store into because ele 0 can never be a conflict); start on combined chain
   for(cur=oroot;cur>=0;){I8 nxtkv=s[cur]; if(likely((UI4)nxtkv!=(UI4)~0))PUTKVOLD(vbase+(UI4)nxtkv*vb,(void*)((I)v+(likely(cur<vn)?cur:cur%vn)*vb),vb,hsz&(DICFVINDIR<<DICFBASE)); cur=nxtkv>>32;} // chase the old keys, copying the value (except the last during resize)
  }
@@ -885,10 +915,15 @@ static DF2(jtdicput){F12IP;A z;
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
  ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I vt=dic->bloc.vtype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
+ I af;  //
+ if(unlikely(vt==0)){   // if monad...
+  w=a; af=0;  // make sure no error based on key; look like 1 key  get w from a
+ }else{  // normal case of dyad
+  af=AR(a)-vr; ASSERT(af>=0,EVRANK) ASSERTAGREE(AS(a)+af,vs,vr)   // a must be a single value or an array of them, with correct shape
+ }
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
- I af=AR(a)-vr; ASSERT(af>=0,EVRANK) ASSERTAGREE(AS(a)+af,vs,vr)   // v must be a single value or an array of them, with correct shape
  UI lv;   // will hold most recent value of lock
- if((af+wf+((dic->bloc.flags&DICFIHF+DICFICF)^(DICFIHF+DICFICF)))==0){  // fast path?
+ if((af+wf+((dic->bloc.flags&DICFIHF+DICFICF)^(DICFIHF+DICFICF)))==0&&dic->bloc.vtype!=0){  // fast path?
   // put of a single key using internal hash/compare - the fast path
   if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0)) if(unlikely((AT(a)&vt)==0))RZ(a=ccvt(vt,a,0))  // convert type of k and v if needed
   DICLKRWRQ(dic,lv,dic->bloc.flags&DICFSINGLETHREADED);   // request prewrite lock, which we keep until end of operation (perhaps including resize)
@@ -902,7 +937,7 @@ static DF2(jtdicput){F12IP;A z;
   // fall through for multiple keys, or user functions
   I cf=MIN(af,wf); ASSERTAGREE(AS(a)+af-cf,AS(w)+wf-cf,cf)  // frames must be suffixes
   if(unlikely(AN(w)==0)){R mtm;}  // if no keys, return empty fast
-  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0)) if(unlikely((AT(a)&vt)==0))RZ(a=ccvt(vt,a,0))  // convert type of k and v if needed.  Agreement error has priority over type
+  if(unlikely((AT(w)&kt)==0))RZ(w=ccvt(kt,w,0)) if(unlikely((AT(a)&vt)==0)&&likely(vt!=0))RZ(a=ccvt(vt,a,0))  // convert type of k and v if needed.  Agreement error has priority over type
   I kn; PROD(kn,wf,AS(w)) I vn; PROD(vn,af,AS(a))   // kn = number of keys to be looked up  vn=#values to be looked up
   ASSERT((UI)kn<=(UI)2147483647,EVLIMIT)   // no more than 2^31-1 kvs: we use a signed 32-bit index
   // We do not have to make incoming kvs recursive, because the keys/vals tables do not take ownership of the kvs.  The input kvs must have their own protection, valid over the call.
@@ -1062,6 +1097,7 @@ errexit:; R 0;
 static DF1(jtdicdel){F12IP;A z;
  ARGCHK1(w)
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ ASSERT(dic->bloc.vtype!=0,EVUNTIMELY)   // if symbols, don't allow deletes
  ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I vt=dic->bloc.ktype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
@@ -1258,6 +1294,7 @@ static DF2(jtdicgeto){F12IP;A z;
  ARGCHK2(a,w)
  A adyad=w!=self?a:0; w=w!=self?w:a;  // if dyad, keep a,w, otherwise 0,w
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ ASSERT(dic->bloc.vtype!=0,EVUNTIMELY)   // if symbols, don't allow red/black trees
  ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
  I t=dic->bloc.vtype; A sa=dic->bloc.vshape; I vaii=dic->bloc.vaii; t=FAV(self)->localuse.lu1.varno==0?t:B01; sa=FAV(self)->localuse.lu1.varno==0?sa:mtv; vaii=FAV(self)->localuse.lu1.varno==0?vaii:1; adyad=FAV(self)->localuse.lu1.varno==0?adyad:(A)1;  // type/shape of output, for get or has
@@ -1421,6 +1458,7 @@ static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
  I flags;  // processing flags k,v,min,max
  void *k;  // will point to key if any
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ ASSERT(dic->bloc.vtype!=0,EVUNTIMELY)   // if symbols, don't allow red/black trees
  ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I plist;  // operation sequence for this request
  if(unlikely(!(AT(a)&INT)))RZ(a=ccvt(INT,a,0))   // force to int
@@ -1641,6 +1679,7 @@ errexit: R 0;
 static DF2(jtdicputo){F12IP;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ ASSERT(dic->bloc.vtype!=0,EVUNTIMELY)   // if symbols, don't allow red/black trees
  ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I vt=dic->bloc.vtype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
@@ -1814,6 +1853,7 @@ errexit: R 0;
 static DF1(jtdicdelo){F12IP;
  ARGCHK1(w)
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
+ ASSERT(dic->bloc.vtype!=0,EVUNTIMELY)   // if symbols, don't allow red/black trees
  ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I vt=dic->bloc.ktype; I vr=AN(dic->bloc.vshape), *vs=IAV1(dic->bloc.vshape);   // value info
  I wf=AR(w)-kr; ASSERT(wf>=0,EVRANK) ASSERTAGREE(AS(w)+wf,ks,kr)   // w must be a single key or an array of them, with correct shape
@@ -1870,7 +1910,7 @@ DF1(jtdicputc){F12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
  ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
- R fdef(0,CMODX,VERB, jtvalenceerr,!(((DIC*)w)->bloc.flags&DICFRB)?jtdicput:jtdicputo, w,self,0, VNONAME+VNOSELF, RMAX,RMAX,RMAX); 
+ R fdef(0,CMODX,VERB, (((DIC*)w)->bloc.vtype==0)?(AF)jtdicput:(AF)jtvalenceerr,(((DIC*)w)->bloc.vtype==0)?(AF)jtvalenceerr:!(((DIC*)w)->bloc.flags&DICFRB)?(AF)jtdicput:(AF)jtdicputo, w,self,0, VNONAME+VNOSELF, RMAX,RMAX,RMAX); 
 }
 
 // u 16!:_4  del: u=dic
@@ -1921,11 +1961,11 @@ DF2(jtdicempties){F12IP;
  if(x==1){
   // 'destroy' request.  Clear chain to mark destroyed, and reinstate the AN fields
   dic->bloc.emptyn=-1;  // set chain invalid if we have deleted it.  The noun is still undisplayable.
-  AN(dic->bloc.keys)=dic->bloc.maxeles*dic->bloc.kaii; AN(dic->bloc.vals)=dic->bloc.maxeles*dic->bloc.vaii;  // dic is going away - restore its AN values for the destroy.  AS immaterial
+  AN(dic->bloc.keys)=dic->bloc.maxeles*dic->bloc.kaii; if(dic->bloc.vals!=0)AN(dic->bloc.vals)=dic->bloc.maxeles*dic->bloc.vaii;  // dic is going away - restore its AN values for the destroy.  AS immaterial
  }else if(x==2){   // 'clear' request
   if(dic->bloc.flags&DICFKINDIR){A *av=AAV(dic->bloc.keys); DO((dic->bloc.kbytelen*=dic->bloc.maxeles*dic->bloc.kaii)>>LGSZI, if(av[i]!=0){fa(av[i]); av[i]=0;})}   // delete keys...
-  if(dic->bloc.flags&DICFVINDIR){A *av=AAV(dic->bloc.vals); DO((dic->bloc.vbytelen*dic->bloc.maxeles*dic->bloc.vaii)>>LGSZI, if(av[i]!=0){fa(av[i]); av[i]=0;})}   // ...and values
-  // go back and reinitialize everything as if after create.  Why not just destroy/recreate?  Questionable decision.  Doing it this way keeps the dic in place, avoiding invalidating pointers.  Start with the hash:
+  if(dic->bloc.vals!=0&&(dic->bloc.flags&DICFVINDIR)){A *av=AAV(dic->bloc.vals); DO((dic->bloc.vbytelen*dic->bloc.maxeles*dic->bloc.vaii)>>LGSZI, if(av[i]!=0){fa(av[i]); av[i]=0;})}   // ...and values
+  // go back and reinitialize everything as if after create.  Why not just destroy/recreate?  Doing it this way keeps the dic in place, needed for symbols.  Start with the hash:
   if(dic->bloc.flags&DICFRB){  // red/black: allocate n2nxh block for tree
    IAVn(3,dic->bloc.hash)[0]=2*0+0; IAVn(3,dic->bloc.hash)[1]=2*0+0;  // empty tree.  parent of root is red NULL (with only one child) regardless of elesiz.  empty list is not biased.  First key points to root
   }else{  // hash: allocate hashtable, as a LIT list
@@ -1941,16 +1981,16 @@ DF2(jtdicempties){F12IP;
  RETF(z)
 }
 
-// x 16!:_8 dic   return dic info. x=0: cardinality 1=virtual block for keys 2=virtual block for vals
+// x 16!:_8 dic   return dic info. x=0: cardinality[,occupancy] 1=virtual block for keys 2=virtual block for vals
 DF2(jtdicstats){F12IP;A z;I r;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)w;
  ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
  I type=rei0(a);  // get the stat arg
  switch(type){
- case 0: z=sc(dic->bloc.cardinality); break; // nkeys
+ case 0: GAT0(z,INT,4,1) IAV1(z)[0]=dic->bloc.cardinality; IAV1(z)[1]=(I)1<<dic->bloc.lgminsiz; IAV1(z)[2]=dic->bloc.maxeles; IAV1(z)[3]=(I)(dic->bloc.hashsiz&0xffffffffff); break; // nkeys
  case 1: r=AR(dic->bloc.keys); RZ(z=virtual(dic->bloc.keys,0,r)) AN(z)=dic->bloc.maxeles*dic->bloc.kaii; AS(z)[0]=dic->bloc.maxeles; MCISH(AS(z)+1,AS(dic->bloc.keys)+1,r-1) break;  // virtual for all keys
- case 2: r=AR(dic->bloc.vals); RZ(z=virtual(dic->bloc.vals,0,r)) AN(z)=dic->bloc.maxeles*dic->bloc.vaii; AS(z)[0]=dic->bloc.maxeles; MCISH(AS(z)+1,AS(dic->bloc.vals)+1,r-1) break;  // virtual for all vals
+ case 2: ASSERT(dic->bloc.vals!=0,EVDOMAIN) r=AR(dic->bloc.vals); RZ(z=virtual(dic->bloc.vals,0,r)) AN(z)=dic->bloc.maxeles*dic->bloc.vaii; AS(z)[0]=dic->bloc.maxeles; MCISH(AS(z)+1,AS(dic->bloc.vals)+1,r-1) break;  // virtual for all vals
  default: ASSERT(0,EVDOMAIN)
  }
  RETF(z);

@@ -1127,7 +1127,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
  {C *aaa, *aab=(C*)&validitymask; I aai=(l)<<LGSZI; __m256i enbmask=_mm256_loadu_si256((__m256i*)(aab+NPAR*SZI+aai)); \
   if(unlikely(aai>NPAR*SZI)){aaa=(C*)(aai&(NPAR*SZI-1)); enbmask=_mm256_loadu_si256((__m256i*)(aab+NPAR*SZI+(I)aaa)); aaa=(C*)(x); aab=(C*)(y); \
-   NOUNROLL do{ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)&(aaa[aai-NPAR*SZI])),_mm256_loadu_si256((__m256i *)&(aab[aai-NPAR*SZI]))),_mm256_cmp_pd(enbmask,enbmask,_CMP_EQ_OQ)),EVLENGTH)}while((aai-=NPAR*SZI)>=NPAR*SZI); \
+   NOUNROLL do{ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)&(aaa[aai-NPAR*SZI])),_mm256_loadu_si256((__m256i *)&(aab[aai-NPAR*SZI]))),_mm256_cmpeq_epi64(enbmask,enbmask)),EVLENGTH)}while((aai-=NPAR*SZI)>=NPAR*SZI); \
   }else{aaa=(C*)(x); aab=(C*)(y);} \
   ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)(aaa+aai-NPAR*SZI)),_mm256_loadu_si256((__m256i *)(aab+aai-NPAR*SZI))),enbmask),EVLENGTH) /* result is 1 if all match */ \
  }

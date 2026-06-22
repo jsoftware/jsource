@@ -76,14 +76,14 @@ NB. +/ D ----------------------------------------------------------------
 
 plus=: 4 : 'x+y'
 
-(+/   -:!.5e_11 plus/  ) x=:(% 128)*_1e9+?    11$(QKTEST{2e9 2e3)  NB. comparison not close because of different orders of operations
-(+/   -:!.5e_11 plus/  ) x=:(% 128)*_1e9+?4   11$(QKTEST{2e9 2e3)
-(+/"1 -:!.5e_11 plus/"1) x
-(+/   -:!.5e_11 plus/  ) x=:(% 128)*_1e9+?7 5 11$(QKTEST{2e9 2e3)
-(+/"1 -:!.5e_11 plus/"1) x
-(+/"2 -:!.5e_11 plus/"2) x
-(+/   -:!.5e_11 plus/  )@> x=:((% 128)*_1e9+(QKTEST{2e9 2e3) ?@$~ ])&.> 4 ,&.>/ >: i. 100   NB. failed for random number discovered by j32
-(+/   -:!.5e_11 plus/  )@> x=:((% 128)*_1e9+(QKTEST{2e9 2e3) ?@$~ ])&.> >: i. 100
+(+/   -: plus/  ) x=:(% 128)*_1e9+?    11$(QKTEST{2e9 2e3)  NB. comparison not close because of different orders of operations
+(+/   -: plus/  ) x=:(% 128)*_1e9+?4   11$(QKTEST{2e9 2e3)
+(+/"1 -: plus/"1) x
+(+/   -: plus/  ) x=:(% 128)*_1e9+?7 5 11$(QKTEST{2e9 2e3)
+(+/"1 -: plus/"1) x
+(+/"2 -: plus/"2) x
+(+/   -: plus/  )@> x=:((% 128)*_1e9+(QKTEST{2e9 2e3) ?@$~ ])&.> 4 ,&.>/ >: i. 100   NB. failed for random number discovered by j32
+(+/   -: plus/  )@> x=:((% 128)*_1e9+(QKTEST{2e9 2e3) ?@$~ ])&.> >: i. 100
 
 NB. +/!.0 D ----------------------------------------------------------------
 
@@ -120,12 +120,12 @@ NB. +/ Z ----------------------------------------------------------------
 
 plus=: 4 : 'x+y'
 
-(+/   -:!.5e_11 plus/  ) x=:j./(% 128)*_1e9+?2     11$(QKTEST{2e9 2e3)
-(+/   -:!.5e_11 plus/  ) x=:j./(% 128)*_1e9+?2 4   11$(QKTEST{2e9 2e3)
-(+/"1 -:!.5e_11 plus/"1) x
-(+/   -:!.5e_11 plus/  ) x=:j./(% 128)*_1e9+?2 7 5 11$(QKTEST{2e9 2e3)
-(+/"1 -:!.5e_11 plus/"1) x
-(+/"2 -:!.5e_11 plus/"2) x
+(+/   -: plus/  ) x=:j./(% 128)*_1e9+?2     11$(QKTEST{2e9 2e3)
+(+/   -: plus/  ) x=:j./(% 128)*_1e9+?2 4   11$(QKTEST{2e9 2e3)
+(+/"1 -: plus/"1) x
+(+/   -: plus/  ) x=:j./(% 128)*_1e9+?2 7 5 11$(QKTEST{2e9 2e3)
+(+/"1 -: plus/"1) x
+(+/"2 -: plus/"2) x
 
 
 NB. +/ X ----------------------------------------------------------------

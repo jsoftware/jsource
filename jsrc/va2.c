@@ -923,7 +923,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
    self=0;  // indicate not sparse
   }else{
 
-   // Get the result type and routine
+   // An arg is not BID.  Get the control vector and routine
    adocv=var(self,at&~SPARSE,wt&~SPARSE);
    if(unlikely(adocv.f==0)){
     // There is no routine for these argument types.  That's an error unless an argument is empty
@@ -933,6 +933,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
     at=((-AN(a)&(-AN(w)|-(at&NUMERIC)))>=0)?B01:at;
     wt=((-AN(w)&(-AN(a)|-(wt&NUMERIC)))>=0)?B01:wt;
     adocv=var(self,at&~SPARSE,wt&~SPARSE);   // rerun the decode with safer types
+    if((-AN(a)&-AN(w))>=0)adocv.cv&=~VICMSK;  // disable input conversion if there is an empty
     adocv.cv|=VTYPECHGA+VTYPECHGW;  // we don't know whether the verb will change the original type.  Only an empty could be inplaced, so we warn the inplacing code to change the type
     forcetomemory(aawwzknfxrz);  // make sure we don't try to keep these values in registers
    }
@@ -971,7 +972,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
  // We detect agreement error before domain error
  A awlongcr,awlongfr;  // The arg with the longer-or-equal frame.
  {
-  if(likely((RANK2T)afwfagreefr==0)){ // rank 0 0 means no outer frames, sets up faster
+  if(withprob((RANK2T)afwfagreefr==0,0.75)){ // rank 0 0 means no outer frames, sets up faster
    if(likely(self==0)){  // nonsparse
 #if 0  // obsolete 
     I an=AN(a); m=zn=AN(w);   // lengths
@@ -1012,8 +1013,8 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
 // obsolete    {I af,wf;
     // Heavy register pressure here.
-    // vbls needed: cv a w allranks acr wcr af wf self
-   UI4 afwfarwr=(afwfagreefr<<(2*RANKTX))+(ar<<RANKTX)+wr; wcr=afwfarwr-(US)afwfagreefr;   // afwfarwr=af/wf/anr/wnr, subtract 0/0/af/wf => af/wf/acr/wcr = wcr
+    // vbls needed: cv a w afwfagreefr self
+   UI4 afwfarwr=(afwfagreefr<<(2*RANKTX))+(ar<<RANKTX)+wr; wcr=afwfarwr-(US)afwfagreefr;   // afwfarwr=af/wf/anr/wnr, subtract 0/0/af/wf => af/wf/acr/wcr = wcr  afwfagreefr free
    if(likely(self==0)){  // If not sparse...
     { I wcomp=wcr<<RANKTX; I lflg=0+((US)wcr<(US)wcomp); awlongcr=(US)wcr<(US)wcomp?w:a; lflg=lflg+lflg+((UI4)wcomp<(UI4)wcr); cv+=lflg<<VIPWFNOTLONGX; }  //  WCRLONG if acr<wcr, then WFLONG if wf<af.  Actually, the = value is indeterminate.  Should gen ADC
     // vbls needed: a w cv acr wcr allranks [jt]
@@ -1152,9 +1153,9 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
  // If the argument has rank that large, and the arguments agree, the argument MUST have the same number of atoms as the result, because all shape is accounted for.
  // rank = rank of result (the rank of the result is the sum of (the longer frame-length) plus (the larger cell-rank))
  // Also, if the operation is one that may abort, we suppress inplacing it if the user can't handle early assignment.
- if(unlikely(a==w))goto allocate;   // Finally, if a==w suppress inplacing, in case the operation must be retried (we could check which ones but they are just not likely to be used reflexively)
  I ipw=ASGNINPLACENEG(SGNIF(cv,JTINPLACEWX),w), ipa=ASGNINPLACENEG(SGNIF(cv,JTINPLACEAX),a);  // is w/a inplaceable?  In test suite, inplaces 25% of the time
  if(withprob((ipw|ipa)<0,0.4)){  // see if either w or a is inplaceable
+  if(unlikely(a==w))goto allocate;   // If a==w suppress inplacing, in case the operation must be retried (we could check which ones but they are just not likely to be used reflexively)
   // we are reusing an argument (ipw is neg if it's w, which has priority); make sure the type is updated to the result type
   z=ipw<0?w:a;  // z=inplaceable arg; in test suite, most inplaceables are inplaceable on both w and a, somewhat more on w
 // obsolete if(!((!(AT(z)&rtype(cv))==!!(cv&(VTYPECHGA>>SGNTO0(ipw))))||AN(z)==0))SEGFAULT;  // scaf

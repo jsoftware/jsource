@@ -2108,22 +2108,6 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #define NUMMAX          9    // largest number represented in num[]
 #define NUMMIN          (~NUMMAX)    // smallest number represented in num[]
 #define OUTSEQ          "\n"  // string used for internal end-of-line (not jtpx)
-// Given SZI B01s read into p, pack the bits into the MSBs of p and clear the lower bits of p
-#if C_LE  // if anybody makes a bigendian CPU we'll have to recode
-#if BW==64
-#ifdef PEXT
-#define PACKBITS(p) {p=PEXT(p,VALIDBOOLEAN)<<(BW-SZI);}
-#define PACKBITSINTO(p,out) {out=PACKBITS(p)|(out>>SZI);}  // pack and shift into out, which must be unsigned
-#else
-// this is what it should be #define PACKBITS(p) {p|=p>>7LL;p|=p>>14LL;p|=p>>28LL;p<<=56LL;}
-#define PACKBITS(p) {p&=VALIDBOOLEAN; p|=p>>7LL;p|=p>>14LL;p|=p<<28LL;p&=0xff0000000; p<<=28LL;}  // this generates one extra instruction, rather than the 3 for the correct version
-#define PACKBITSINTO(p,out) {p&=VALIDBOOLEAN; p|=p>>7LL;p|=p>>14LL;out=((p|(p>>28LL))<<56)|(out>>SZI);}  // pack and shift into out, which must be unsigned
-#endif
-#else
-#define PACKBITS(p) {p&=VALIDBOOLEAN; p|=p>>7LL;p|=p>>14LL;p<<=28LL;}
-#define PACKBITSINTO(p,out) {p&=VALIDBOOLEAN; p|=p>>7LL;p|=p>>14LL;out=(p<<28)|(out>>SZI);}  // pack and shift into out
-#endif
-#endif
 // parser results have the LSB set if the last thing was an assignment
 #define PARSERVALUE(p) ((A)((I)(p)&-2))   // the value part of the parser return, pointer to the A block
 #define PARSERASGN(p) ((I)(p)&1)   // the assignment part of the parser return, 1 if assignment
@@ -2706,7 +2690,7 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 #define PEXT(s,m) _pext_u64((UI)(s),(UI)(m))
 #define PEXT0(s,x,m)  _pext_u64((UI)(s),((UI)(m)<<(x)))  // x is bit#, m must be contiguous starting at bit 0.  x and m should be compile-time constants; otherwise use SHMSK
 // scafdebug #define PEXT0(s,x,m)  ((m)&((m)+1)?SEGFAULT:_pext_u64((UI)(s),((UI)(m)<<(x))))  //use this to ensure masks OK after major changes it bit numbering
-#define PEXT08(s,x,m) PEXT0(s,x,m)
+#define PEXT08(s,x,m) PEXT0(s,x,m)   // must be 8-byte value
 #define PDEP(s,m) _pdep_u64((UI)(s),(UI)(m))
 #else
 #define PEXT0(s,x,m) SHMSK(s,x,m)  // x is bit#, m must be contiguous
@@ -2718,6 +2702,23 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 #define offsetof(TYPE, MEMBER)  __builtin_offsetof (TYPE, MEMBER)
 #else
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+#endif
+#endif
+
+// Given SZI B01s read into p, pack the bits into the MSBs of p and clear the lower bits of p
+#if C_LE  // if anybody makes a bigendian CPU we'll have to recode
+#if BW==64
+#ifdef PEXT
+#define PACKBITS(p) {p=PEXT(p,VALIDBOOLEAN)<<(BW-SZI);}
+#define PACKBITSINTO(p,out) {out=PACKBITS(p)|(out>>SZI);}  // pack and shift into out, which must be unsigned
+#else
+// this is what it should be #define PACKBITS(p) {p|=p>>7LL;p|=p>>14LL;p|=p>>28LL;p<<=56LL;}
+#define PACKBITS(p) {p&=VALIDBOOLEAN; p|=p>>7LL;p|=p>>14LL;p|=p<<28LL;p&=0xff0000000; p<<=28LL;}  // this generates one extra instruction, rather than the 3 for the correct version
+#define PACKBITSINTO(p,out) {p&=VALIDBOOLEAN; p|=p>>7LL;p|=p>>14LL;out=((p|(p>>28LL))<<56)|(out>>SZI);}  // pack and shift into out, which must be unsigned
+#endif
+#else
+#define PACKBITS(p) {p&=VALIDBOOLEAN; p|=p>>7LL;p|=p>>14LL;p<<=28LL;}
+#define PACKBITSINTO(p,out) {p&=VALIDBOOLEAN; p|=p>>7LL;p|=p>>14LL;out=(p<<28)|(out>>SZI);}  // pack and shift into out
 #endif
 #endif
 

@@ -112,6 +112,10 @@ case "$j64x" in
 esac
 make="${make:=make}"
 
+case "$jplatform/$j64x" in
+ linux/j32*) OPTLEVEL=" -O0 " ;;
+esac
+
 CC=${CC-"$(which cc clang gcc 2> /dev/null | head -n1 | xargs basename)"}
 CXX="${CXX:=$CC}"
 echo "CC=$CC"

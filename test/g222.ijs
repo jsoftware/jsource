@@ -166,7 +166,7 @@ NB. echo (<b0) #&.> < t0
 NB. echo 'a9'
 NB. echo ((<b0) #&.> < {. t) -: {. <@~."_1 t
 3 : 0''
-for_i. i.1 do.
+for_i. i.2 do.
 assert. ((<b0) #&.> < {. t) -: {. <@~."_1 t
 end.
 )

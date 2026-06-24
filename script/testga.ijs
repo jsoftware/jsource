@@ -105,6 +105,7 @@ NB. echo (2&^.) _.
 NB. echo datatype (2&^.) _.
 
 NB. g222 smoke test
+echo 'g222 smoke test'
 t0=: {. t=: 1 56 10 $ ,".;._2 (0 : 0)
 1 1 1 0 1 1 0 0 1 0
 0 0 1 1 1 1 0 1 0 0
@@ -175,7 +176,7 @@ NB. echo (<b0) #&.> < t0
 NB. echo 'a9'
 NB. echo ((<b0) #&.> < {. t) -: {. <@~."_1 t
 3 : 0''
-for_i. i.1 do.
+for_i. i.2 do.
 assert. ((<b0) #&.> < {. t) -: {. <@~."_1 t
 end.
 )

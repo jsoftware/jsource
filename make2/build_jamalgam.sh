@@ -7,14 +7,15 @@ echo "entering $(pwd)"
 unameop=$(uname -o || uname -s)
 eval "$(./jplatform64.sh)"
 
-OPTL=${OPTL:="-Og"}
+OPTL=${OPTL:="-O2"}
+OPTLD=${OPTLD:="-Og"}
 
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
  # OPTLEVEL is probably overly elaborate, but it works
  case "$_DEBUG" in
   3)
-   OPTLEVEL=" $OPTL -g "
+   OPTLEVEL=" $OPTLD -g "
    DEBUG=1
    NASM_FLAGS="-g"
    ;;
@@ -24,13 +25,13 @@ if [ "" = "$CFLAGS" ]; then
    NASM_FLAGS="-g"
    ;;
   1)
-   OPTLEVEL=" $OPTL -g "
+   OPTLEVEL=" $OPTLD -g "
    DEBUG=1
    NASM_FLAGS="-g"
    j64x=$64x-debug
    ;;
   *)
-   OPTLEVEL=" -O2 "
+   OPTLEVEL=" $OPTL "
    DEBUG=0
    NASM_FLAGS=""
    ;;

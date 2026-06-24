@@ -711,6 +711,7 @@ bodyend: ;  // we branch to here to exit with z set to result
    DC d; RZ(d=deba(DCPM+(~bic<<8)+((NPGpysfmtdl<<(7-6))&SHMSK(~(I)jtfg,JTXDEFMODIFIERX-7,128)),locsym,AAV1(sv->fgh[2])[HN*PEXT0(NPGpysfmtdl,6,1)],self));  // push a debug frame for this error.  We know we didn't free locsym
    RETF(0)
   }
+  // scaf! next beta   tpop(_ttop);  // here we had an error but we are not going to go into pm debug.  In that case, we must pop the tstack to ensure that UNINCORPABLE values are not left hanging around
  }
 
  // locsym may have been freed now, if it was cloned and there was no error.

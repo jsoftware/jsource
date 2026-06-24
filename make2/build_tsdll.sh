@@ -7,7 +7,7 @@ echo "entering $(pwd)"
 unameop=$(uname -o || uname -s)
 eval "$(./jplatform64.sh)"
 
-OPTL=-Og
+OPTL=${OPTL:="-Og"}
 
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down

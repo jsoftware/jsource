@@ -10,7 +10,7 @@ eval "$(./jplatform64.sh)"
 unset TARGET
 unset TARGET_a
 
-OPTL=-Og
+OPTL=${OPTL:="-Og"}
 
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
@@ -111,10 +111,6 @@ case "$j64x" in
  *) USE_PYXES="${USE_PYXES:=1}" ;;
 esac
 make="${make:=make}"
-
-case "$jplatform/$j64x" in
- linux/j32*) OPTLEVEL=" -O0 " ;;
-esac
 
 CC=${CC-"$(which cc clang gcc 2> /dev/null | head -n1 | xargs basename)"}
 CXX="${CXX:=$CC}"

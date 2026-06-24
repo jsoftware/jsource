@@ -43,8 +43,8 @@ jobs:
     - run: echo "Run deprecated jobs"
 
  disabled:
-  if: false
-  #if: true
+  #if: false
+  if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Run disabled jobs"
@@ -1500,7 +1500,7 @@ jobs:
 # AFAIK there is no cleaner way to do this
   needs:
    - jelinux
-   - jelinux32
+#   - jelinux32
    - jemacos
    - jemacosarm
    - jerpi64arm
@@ -1514,7 +1514,7 @@ jobs:
    - jeopenbsd
    - jewin-msys2-x64-clang
    - jewin-msys2-x64
-   - jewin-msys2-x86
+#   - jewin-msys2-x86
    - jewin-msys2-arm64
   steps:
    - name: Checkout Git repository

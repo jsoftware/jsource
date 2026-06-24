@@ -156,11 +156,7 @@ case "$jplatform/$j64x" in
 
  linux/j32) # linux x86
   TARGET=libtsdll.so
-  # faster, but sse2 not available for 32-bit amd cpu
-  # sse does not support mfpmath=sse in 32-bit gcc
-  CFLAGS="$common -m32 -msse2 -mfpmath=sse "
-  # slower, use 387 fpu and truncate extra precision
-  # CFLAGS="$common -m32 -ffloat-store "
+  CFLAGS="$common -march=i686 -m32 -msse2 -mfpmath=sse "
   LDFLAGS=" -shared -Wl,-soname,libtsdll.so -m32 -lm -ldl "
   ;;
 
@@ -182,12 +178,6 @@ case "$jplatform/$j64x" in
   LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm -ldl "
   ;;
 
- openbsd/j32) # openbsd x86
-  TARGET=libtsdll.so
-  CFLAGS="$common "
-  LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm "
-  ;;
-
  openbsd/j64arm) # openbsd arm64
   TARGET=libtsdll.so
   CFLAGS="$common -march=armv8-a+crc "
@@ -195,12 +185,6 @@ case "$jplatform/$j64x" in
   ;;
 
  openbsd/j64*) # openbsd intel 64bit nonavx
-  TARGET=libtsdll.so
-  CFLAGS="$common "
-  LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm "
-  ;;
-
- freebsd/j32) # freebsd x86
   TARGET=libtsdll.so
   CFLAGS="$common "
   LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm "
@@ -216,12 +200,6 @@ case "$jplatform/$j64x" in
   TARGET=libtsdll.so
   CFLAGS="$common "
   LDFLAGS=" -shared -Wl,-soname,libtsdll.so -lm "
-  ;;
-
- darwin/j32) # darwin x86
-  TARGET=libtsdll.dylib
-  CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
-  LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl -m32 $macmin "
   ;;
 
  darwin/j64arm) # darwin arm
@@ -250,9 +228,9 @@ case "$jplatform/$j64x" in
   LDFLAGS=" -dynamiclib -install_name libtsdll.dylib -lm -ldl $macmin "
   ;;
 
- windows/j32*) # windows x86
+ windows/j32) # windows x86
   TARGET=tsdll.dll
-  CFLAGS="$common -Wno-psabi -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 "
+  CFLAGS="$common -Wno-psabi -march=i686 -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 "
   LDFLAGS=" -shared -Wl,--enable-stdcall-fixup -m32 -lm -static-libgcc -static-libstdc++ "
   LIBJDEF=" ../makevs/tsdll/tsdll.def "
   ;;

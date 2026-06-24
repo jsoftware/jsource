@@ -7,14 +7,15 @@ echo "entering $(pwd)"
 unameop=$(uname -o || uname -s)
 eval "$(./jplatform64.sh)"
 
-OPTL=-Og
+OPTL=${OPTL:="-O2"}
+OPTLD=${OPTLD:="-Og"}
 
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
  # OPTLEVEL is probably overly elaborate, but it works
  case "$_DEBUG" in
   3)
-   OPTLEVEL=" $OPTL -g "
+   OPTLEVEL=" $OPTLD -g "
    NASM_FLAGS="-g"
    ;;
   2)
@@ -22,11 +23,15 @@ if [ "" = "$CFLAGS" ]; then
    NASM_FLAGS="-g"
    ;;
   1)
-   OPTLEVEL=" $OPTL -g "
+   OPTLEVEL=" $OPTLD -g "
    NASM_FLAGS="-g"
    j64x=$64x-debug
    ;;
-  *) OPTLEVEL=" -O2 " ;;
+  *)
+   OPTLEVEL=" $OPTL "
+   DEBUG=0
+   NASM_FLAGS=""
+   ;;
  esac
 
 fi
@@ -189,7 +194,7 @@ case "$jplatform/$j64x" in
 
  linux/j32)
   TARGET=libjnative.so
-  CFLAGS="$common -m32 -msse2 -mfpmath=sse -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
+  CFLAGS="$common -march=i686 -m32 -msse2 -mfpmath=sse -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
   LDFLAGS=" -shared -Wl,-soname,libjnative.so  -m32 "
   ;;
  linux/j64*)
@@ -207,11 +212,6 @@ case "$jplatform/$j64x" in
   CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/linux "
   LDFLAGS=" -shared -Wl,-soname,libjnative.so "
   ;;
- openbsd/j32)
-  TARGET=libjnative.so
-  CFLAGS="$common -m32 -msse2 -mfpmath=sse -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
-  LDFLAGS=" -shared -Wl,-soname,libjnative.so  -m32 "
-  ;;
  openbsd/j64arm)
   TARGET=libjnative.so
   CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
@@ -222,11 +222,6 @@ case "$jplatform/$j64x" in
   CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/openbsd "
   LDFLAGS=" -shared -Wl,-soname,libjnative.so "
   ;;
- freebsd/j32)
-  TARGET=libjnative.so
-  CFLAGS="$common -m32 -msse2 -mfpmath=sse -I$JAVA_HOME/include -I$JAVA_HOME/include/freebsd "
-  LDFLAGS=" -shared -Wl,-soname,libjnative.so  -m32 "
-  ;;
  freebsd/j64arm)
   TARGET=libjnative.so
   CFLAGS="$common -march=armv8-a+crc -I$JAVA_HOME/include -I$JAVA_HOME/include/freebsd "
@@ -236,11 +231,6 @@ case "$jplatform/$j64x" in
   TARGET=libjnative.so
   CFLAGS="$common -I$JAVA_HOME/include -I$JAVA_HOME/include/freebsd "
   LDFLAGS=" -shared -Wl,-soname,libjnative.so "
-  ;;
- darwin/j32)
-  TARGET=libjnative.dylib
-  CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin -I$JAVA_HOME/include -I$JAVA_HOME/include/darwin "
-  LDFLAGS=" -m32 $macmin -dynamiclib -install_name libjnative.dylib "
   ;;
  darwin/j64arm) # darwin arm
   TARGET=libjnative.dylib

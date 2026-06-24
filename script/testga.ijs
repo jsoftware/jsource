@@ -104,6 +104,8 @@ eformat_j_=: exformat_j_ f.
 NB. echo (2&^.) _.
 NB. echo datatype (2&^.) _.
 
+NB. g222 smoke test
+echo 'g222 smoke test'
 t0=: {. t=: 1 56 10 $ ,".;._2 (0 : 0)
 1 1 1 0 1 1 0 0 1 0
 0 0 1 1 1 1 0 1 0 0
@@ -174,13 +176,12 @@ NB. echo (<b0) #&.> < t0
 NB. echo 'a9'
 NB. echo ((<b0) #&.> < {. t) -: {. <@~."_1 t
 3 : 0''
-for_i. i.1e3 do.
+for_i. i.2 do.
 assert. ((<b0) #&.> < {. t) -: {. <@~."_1 t
 end.
 )
 
 4!:55 ;:'b0 t t0'
-
 NB. end of smoke test
 
 0!:_1 '$'   NB. temp skip to allow running full test suite

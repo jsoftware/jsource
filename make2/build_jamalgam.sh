@@ -7,14 +7,15 @@ echo "entering $(pwd)"
 unameop=$(uname -o || uname -s)
 eval "$(./jplatform64.sh)"
 
-OPTL=-Og
+OPTL=${OPTL:="-O2"}
+OPTLD=${OPTLD:="-Og"}
 
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
  # OPTLEVEL is probably overly elaborate, but it works
  case "$_DEBUG" in
   3)
-   OPTLEVEL=" $OPTL -g "
+   OPTLEVEL=" $OPTLD -g "
    DEBUG=1
    NASM_FLAGS="-g"
    ;;
@@ -24,13 +25,13 @@ if [ "" = "$CFLAGS" ]; then
    NASM_FLAGS="-g"
    ;;
   1)
-   OPTLEVEL=" $OPTL -g "
+   OPTLEVEL=" $OPTLD -g "
    DEBUG=1
    NASM_FLAGS="-g"
    j64x=$64x-debug
    ;;
   *)
-   OPTLEVEL=" -O2 "
+   OPTLEVEL=" $OPTL "
    DEBUG=0
    NASM_FLAGS=""
    ;;
@@ -138,7 +139,7 @@ if [ $USE_OPENMP -eq 1 ]; then
    OPENMP=" -Xpreprocessor -fopenmp -I/usr/local/include "
    LDOPENMP=" -L/usr/local/lib -Wl,-rpath,/usr/local/lib -lomp "
    ;;
-  windows/j32*)
+  windows/j32)
    OPENMP=" -fopenmp "
    LDOPENMP=" ../openmp/obj/windows/x86/libomp.lib "
    ;;
@@ -271,7 +272,7 @@ fi
 
 if [ $USE_PYXES -eq 1 ]; then
  case "$jplatform/$j64x" in
-  windows/j32*)
+  windows/j32)
    common="$common -DPYXES=1"
    if [ -n "$PTHREADS4WSRC" ]; then
     OBJS_PTHREADS4W=" ../pthreads4w/src/pthread.o "
@@ -565,13 +566,9 @@ OBJS_BASE64=" \
 
 case "$jplatform/$j64x" in
 
- linux/j32*) # linux x86
+ linux/j32) # linux x86
   TARGET=jamalgam
-  # faster, but sse2 not available for 32-bit amd cpu
-  # sse does not support mfpmath=sse in 32-bit gcc
-  CFLAGS="$common -m32 -msse2 -mfpmath=sse "
-  # slower, use 387 fpu and truncate extra precision
-  # CFLAGS="$common -m32 -ffloat-store "
+  CFLAGS="$common -march=i686 -m32 -msse2 -mfpmath=sse "
   LDFLAGS=" -m32 -lm -ldl $LDOPENMP32 $LDTHREAD -Wl,-z,noexecstack "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX32}"
@@ -634,20 +631,6 @@ case "$jplatform/$j64x" in
   FLAGS_BASE64=" -DHAVE_NEON64=1 "
   ;;
 
- openbsd/j32*) # openbsd x86
-  TARGET=jamalgam
-  # faster, but sse2 not available for 32-bit amd cpu
-  # sse does not support mfpmath=sse in 32-bit gcc
-  CFLAGS="$common -m32 -msse2 -mfpmath=sse "
-  # slower, use 387 fpu and truncate extra precision
-  # CFLAGS="$common -m32 -ffloat-store "
-  LDFLAGS=" -m32 -lm -lkvm $LDOPENMP32 $LDTHREAD"
-  OBJS_AESNI=" aes-ni.o "
-  SRC_ASM="${SRC_ASM_LINUX32}"
-  GASM_FLAGS="-m32"
-  FLAGS_BASE64=""
-  ;;
-
  openbsd/j64arm) # openbsd arm64
   TARGET=jamalgam
   CFLAGS="$common -march=armv8-a+crc " # mno-outline-atomics unavailable on clang-7
@@ -694,20 +677,6 @@ case "$jplatform/$j64x" in
   FLAGS_BASE64=""
   ;;
 
- freebsd/j32*) # freebsd x86
-  TARGET=jamalgam
-  # faster, but sse2 not available for 32-bit amd cpu
-  # sse does not support mfpmath=sse in 32-bit gcc
-  CFLAGS="$common -m32 -msse2 -mfpmath=sse "
-  # slower, use 387 fpu and truncate extra precision
-  # CFLAGS="$common -m32 -ffloat-store "
-  LDFLAGS=" -m32 -lm $LDOPENMP32 $LDTHREAD"
-  OBJS_AESNI=" aes-ni.o "
-  SRC_ASM="${SRC_ASM_LINUX32}"
-  GASM_FLAGS="-m32"
-  FLAGS_BASE64=""
-  ;;
-
  freebsd/j64arm) # freebsd arm64
   TARGET=jamalgam
   CFLAGS="$common -march=armv8-a+crc " # mno-outline-atomics unavailable on clang-7
@@ -751,16 +720,6 @@ case "$jplatform/$j64x" in
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX}"
   GASM_FLAGS=""
-  FLAGS_BASE64=""
-  ;;
-
- darwin/j32*) # darwin x86
-  TARGET=jamalgam
-  CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin"
-  LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP -m32 $macmin -framework Accelerate "
-  OBJS_AESNI=" aes-ni.o "
-  SRC_ASM="${SRC_ASM_MAC32}"
-  GASM_FLAGS="-m32 $macmin"
   FLAGS_BASE64=""
   ;;
 
@@ -830,19 +789,15 @@ case "$jplatform/$j64x" in
   FLAGS_BASE64=" -DHAVE_SSE42=1 "
   ;;
 
- windows/j32*) # windows x86
+ windows/j32) # windows x86
   jolecom="${jolecom:=1}"
   if [ $jolecom -eq 1 ]; then
    DOLECOM="-DOLECOM"
   fi
   WINDRES="${WINDRES:=windres}"
   TARGET=jamalgam
-  # faster, but sse2 not available for 32-bit amd cpu
-  # sse does not support mfpmath=sse in 32-bit gcc
-  CFLAGS="$common -Wno-psabi -Wno-incompatible-pointer-types -m32 -msse2 -mfpmath=sse -fno-finite-math-only $DOLECOM -D_FILE_OFFSET_BITS=64 -D_WIN32 "
-  # slower, use 387 fpu and truncate extra precision
-  # CFLAGS="$common -m32 -ffloat-store "
-  CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -Wno-psabi $DOLECOM -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 "
+  CFLAGS="$common -Wno-psabi -Wno-incompatible-pointer-types -march=i686 -m32 -msse2 -mfpmath=sse -fno-finite-math-only $DOLECOM -D_FILE_OFFSET_BITS=64 -D_WIN32 "
+  CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -Wno-psabi $DOLECOM -march=i686 -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 "
   LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -Wl,-Bstatic -lwinpthread -Wl,-Bdynamic -lole32 -ladvapi32 -loleaut32 -lsynchronization -lpsapi -luuid $LDTHREAD $LDOPENMP "
   if [ $jolecom -eq 1 ]; then
    DLLOBJS=" ../dllsrc/jdll.o ../dllsrc/jdllcomx.o "
@@ -967,7 +922,7 @@ case "$jplatform/$j64x" in
   FLAGS_BASE64=""
   ;;
 
- wasm/j32) # webassembly
+ wasm/j32*) # webassembly
   TARGET=jamalgam.js
   # 948KB stack on v8
   CFLAGS="$common -m32 -D IMPORTGMPLIB -D CSTACKSIZE=1007616 -D CSTACKRESERVE=100000 -Wno-cast-function-type-mismatch -D TESTS "

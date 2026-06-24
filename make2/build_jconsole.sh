@@ -7,14 +7,15 @@ echo "entering $(pwd)"
 unameop=$(uname -o || uname -s)
 eval "$(./jplatform64.sh)"
 
-OPTL=-Og
+OPTL=${OPTL:="-O2"}
+OPTLD=${OPTLD:="-Og"}
 
 if [ "" = "$CFLAGS" ]; then
  # OPTLEVEL will be merged back into CFLAGS, further down
  # OPTLEVEL is probably overly elaborate, but it works
  case "$_DEBUG" in
   3)
-   OPTLEVEL=" $OPTL -g "
+   OPTLEVEL=" $OPTLD -g "
    DEBUG=1
    NASM_FLAGS="-g"
    ;;
@@ -24,13 +25,13 @@ if [ "" = "$CFLAGS" ]; then
    NASM_FLAGS="-g"
    ;;
   1)
-   OPTLEVEL=" $OPTL -g "
+   OPTLEVEL=" $OPTLD -g "
    DEBUG=1
    NASM_FLAGS="-g"
    j64x=$64x-debug
    ;;
   *)
-   OPTLEVEL=" -O2 "
+   OPTLEVEL=" $OPTL "
    DEBUG=0
    ;;
  esac
@@ -271,7 +272,7 @@ esac
 case "$jplatform/$j64x" in
 
  linux/j32)
-  CFLAGS="$common -m32 -msse2 -mfpmath=sse "
+  CFLAGS="$common -march=i686 -m32 -msse2 -mfpmath=sse "
   LDFLAGS=" -m32 -ldl $LDTHREAD "
   ;;
  linux/j64*)
@@ -286,10 +287,6 @@ case "$jplatform/$j64x" in
   CFLAGS="$common -march=armv8-a+crc -DRASPI"
   LDFLAGS=" -ldl $LDTHREAD "
   ;;
- openbsd/j32)
-  CFLAGS="$common -m32 -msse2 -mfpmath=sse "
-  LDFLAGS=" -m32 $LDTHREAD "
-  ;;
  openbsd/j64arm)
   CFLAGS="$common -march=armv8-a+crc"
   LDFLAGS=" $LDTHREAD "
@@ -298,10 +295,6 @@ case "$jplatform/$j64x" in
   CFLAGS="$common"
   LDFLAGS=" $LDTHREAD "
   ;;
- freebsd/j32)
-  CFLAGS="$common -m32 -msse2 -mfpmath=sse "
-  LDFLAGS=" -m32 $LDTHREAD "
-  ;;
  freebsd/j64arm)
   CFLAGS="$common -march=armv8-a+crc"
   LDFLAGS=" $LDTHREAD "
@@ -309,10 +302,6 @@ case "$jplatform/$j64x" in
  freebsd/j64*)
   CFLAGS="$common"
   LDFLAGS=" $LDTHREAD "
-  ;;
- darwin/j32)
-  CFLAGS="$common -m32 -msse2 -mfpmath=sse $macmin "
-  LDFLAGS=" -ldl $LDTHREAD -m32 $macmin "
   ;;
  darwin/j64arm) # darwin arm
   CFLAGS="$common $macmin -march=armv8-a+crc "
@@ -332,7 +321,7 @@ case "$jplatform/$j64x" in
   ;;
  windows/j32)
   TARGET=jconsole.exe
-  CFLAGS="$common -Wno-psabi -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_WIN32 "
+  CFLAGS="$common -Wno-psabi -march=i686 -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_WIN32 "
   LDFLAGS=" -m32 -Wl,--stack=0xc00000,--subsystem,console -static-libgcc $LDTHREAD "
   LIBJRES=" ../makevs/jconsole/jconsole.res "
   ;;

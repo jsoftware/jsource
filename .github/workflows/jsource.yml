@@ -14,7 +14,7 @@ on:
 
 env:
  DEBUGLEVEL: 0
- OPTL: -Og
+ OPTL: -O2
 
 jobs:
 

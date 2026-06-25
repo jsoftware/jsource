@@ -1512,7 +1512,7 @@ jobs:
    - jewasm
    - jefreebsd
    - jeopenbsd
-   - jewin-msys2-x64-clang
+#   - jewin-msys2-x64-clang
    - jewin-msys2-x64
 #   - jewin-msys2-x86
    - jewin-msys2-arm64
@@ -1556,7 +1556,7 @@ jobs:
    - jewasm
    - jefreebsd
    - jeopenbsd
-   - jewin-msys2-x64-clang
+#   - jewin-msys2-x64-clang
    - jewin-msys2-x64
 #   - jewin-msys2-x86
    - jewin-msys2-arm64

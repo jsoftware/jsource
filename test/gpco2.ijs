@@ -108,6 +108,7 @@ c=: _4 _1 0 1 2 3 4 5
 
 'domain error' -: 1    p: etx 13x _
 'domain error' -: 1    p: etx 13x __
+echo 1    p: etx 1.3 _
 'domain error' -: 1    p: etx 1.3 _
 'domain error' -: 1    p: etx 1.3 __
 'domain error' -: 1    p: etx 1j3 _

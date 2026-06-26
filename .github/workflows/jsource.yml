@@ -175,7 +175,8 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: ${{ env.DEBUGLEVEL }}
+#      _DEBUG: ${{ env.DEBUGLEVEL }}
+      _DEBUG: 3
       OPTL: ${{ env.OPTL }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
@@ -186,7 +187,8 @@ jobs:
       DEBUGCMD: gdb
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: ${{ env.DEBUGLEVEL }}
+#      _DEBUG: ${{ env.DEBUGLEVEL }}
+      _DEBUG: 3
      run: |
       script/testga.sh linux i386 || exit 1
       cp jlibrary/bin32/* j32 || true
@@ -234,7 +236,8 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: ${{ env.DEBUGLEVEL }}
+#      _DEBUG: ${{ env.DEBUGLEVEL }}
+      _DEBUG: 3
       OPTL: ${{ env.OPTL }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
@@ -245,7 +248,8 @@ jobs:
       DEBUGCMD: gdb
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: ${{ env.DEBUGLEVEL }}
+#      _DEBUG: ${{ env.DEBUGLEVEL }}
+      _DEBUG: 3
      run: |
       script/testga.sh linux i386 || exit 1
 

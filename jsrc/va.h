@@ -200,7 +200,7 @@
 #define VA2CBW1100 13
 #define VA2CBW1101 14
 #define VA2CBW1110 15
-#define VA2CBW1111 16
+#define VA2CBW1111 16  // the branch table lumps all earlier lines here
 #define VA2CBW10000 17
 #define VA2CBW10001 18
 #define VA2CBW10010 19
@@ -226,13 +226,15 @@
 #define VA2CSTILE 37
 #define VA2CBANG 38
 #define VA2CCIRCLE 39
-// the following are used only for execution, not definition, and only for singletons
+// the following are used only for execution, not definition
 #define VA2CEQABS 40  // all the entries in va[] share this block
 #define VA2CNEABS 41
 #define VA2CLTABS 42
 #define VA2CLEABS 43
 #define VA2CGEABS 44
-#define VA2CGTABS 45
+#define VA2CGTABS 45  // end of the dyad branch table: len=46-16=30
+#define VA2CRES0 46  // there are no entries for these 2, which fill out the table
+#define VA2CRES1 47
 // end of the dyads
 #define VA1ORIGIN 32 // the start of the monadic section
 #define VA1CMIN 32

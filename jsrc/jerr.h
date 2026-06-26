@@ -75,7 +75,7 @@
 #define EWOVIPMINUSIB   6  //0b110
 #define EWOVIPMULII     5
 #define EWOVFLOOR0      68   // minor oflo in <./>., can be left as INT
-#define EWOVFLOOR1      69   // major oflo in <./>., must be converted to FL
+#define EWOVFLOOR1      69   // major oflo in <./>., must be converted to FL   EWOVFLOOR0&~EWOVFLOOR1 must be 0
 #define EVCUTSTACK      76  // set when Cut Stack executed; passed into caller to force its termination; intercepted when terminated line finishes, to revert to suspension
 #define EVDEBUGEND      79  // EVEXIT+64 set when debug wants to fail all avoiding all try blocks
 #define EVABORTEMPTY    80  // when a verb produces this, abort the sentence without error and return empty

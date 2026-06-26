@@ -46,9 +46,10 @@ NOINLINE static A jtssingleton(J jtfg,A a,A w,I af,A self){F12JT;  // scaf! lose
  I bidcase=(I)self&0x3c; self=(A)((I)self&~0x3f); I opcode=(I)FAV(self)->lu2.lc;  // fetch bidcase from self; restore self; operation#
  A z=jt->zombieval;  // fetch address of assignand, which we presumptively make the result
  void *av=voidAV(a), *wv=voidAV(w), *zv;  // point to the argument values and result
- I caseno=(opcode&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno; caseno=SSINGCASE(caseno,bidcase>>INTX);  // case # for eventual switch.  Lump all Booleans at 0
- // Start loading everything we will need as values before the pipeline break.  Tempting to convert int-to-float as well, but perhaps it will predict right?
- I aiv=*(I*)av; I wiv=*(I*)wv; D adv,wdv;  // arg values
+// obsolete  I caseno=(opcode&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno; caseno=SSINGCASE(caseno,bidcase>>INTX);  // case # for eventual switch.  Lump all Booleans at 0
+ I caseno=opcode-VA2CBW1111; caseno=caseno<0?0:caseno; caseno&=31; caseno=SSINGCASE(caseno,bidcase>>INTX);  // case # for eventual switch.  Lump all Booleans at 0. &31 to remove comparison flag and to help the compiler
+ // Start loading everything we will need as values before the pipeline break.
+ I aiv=*(I*)av; I wiv=*(I*)wv; D adv,wdv;  // arg values, as I and D
 #ifdef ALIGNEDMEMD
  adv=*(D*)(intptr_t)((I)av&-SZD); wdv=*(D*)(intptr_t)((I)wv&-SZD);   // all atoms are aligned to a boundary of their size.  avoid spec check if loading an FL from a non-FL boundary (which must be invalid)
 #else
@@ -62,23 +63,24 @@ NOINLINE static A jtssingleton(J jtfg,A a,A w,I af,A self){F12JT;  // scaf! lose
  // and not AFRO if bare; and never UNINCORPABLE since we may change the type and we don't want callers to bear the burden of checking that.  Assign in place is best,
  // because it makes the assignment skip the free
  // See if we can inplace an assignment.  That is always a good idea
- if(unlikely((2*(a==z)+(w==z))&(I)jtfg)){   // one of the args is being reassigned
-  if(likely((AFLAG(z)&AFVIRTUAL+AFUNINCORPABLE)+(af^AR(z))==0)){goto getzv;}   // mustn't modify type of VIRTUAL or INCORPABLE, and reassigned value must have the higher rank
+ I asginplacemsk=(2*(a==z)+(w==z))&(I)jtfg;  // mask of reassigned inplaceable args
+ if(asginplacemsk){   // one of the args is being reassigned
+  if(likely((AFLAG(z)&AFVIRTUAL+AFUNINCORPABLE)+(af^AR(z))==0)){zv=asginplacemsk&1?wv:av; goto haszv;}   // mustn't modify type of VIRTUAL or INCORPABLE, and reassigned value must have the higher rank
  }
- if(awip&=(I)jtfg){z=awip&JTINPLACEW?w:a;   // block is abandoned inplaceable, pick it.  Priority to w
-  if(likely((AFLAG(z)&AFUNINCORPABLE+AFRO)+(af^AR(z))==0))goto getzv;  // not disallowed and correct rank: use it
-  if(awip==3){z=a; if(likely((AFLAG(a)&AFUNINCORPABLE+AFRO)+(af^AR(a))==0))goto getzv;}  // if a & w both eligible, check a if w failed
+ if(awip&=(I)jtfg){z=awip&JTINPLACEW?w:a; zv=awip&JTINPLACEW?wv:av;   // block is abandoned inplaceable, pick it.  Priority to w
+  if(withprob((AFLAG(z)&AFUNINCORPABLE+AFRO)+(af^AR(z))==0,0.9)){goto haszv;}  // not disallowed and correct rank: use it
+  if(awip==3){if(withprob((AFLAG(a)&AFUNINCORPABLE+AFRO)+(af^AR(a))==0,0.9)){z=a; zv=av; goto haszv;}}  // if a & w both eligible, check a if w failed
  }
  // fall through: no inplacing, allocate the result, usually an atom.  If not atom, make the shape all 1s
  if(likely(af==0)){GAT0(z,FL,1,0); zv=voidAV0(z);}else{GATV1(z,FL,1,af); zv=voidAVn(af,z);}  // af persists over call, then freed
- goto nozv;
-getzv:;  // here when we are operating inplace on z
- zv=voidAV(z);  // get addr of value
+// obsolete  goto nozv;
+haszv:;  // here when we are operating inplace on z/zv
+// obsolete  zv=voidAV(z);  // get addr of value
 nozv:;  // here when we have zv or don't need it
  // z is 0 ONLY for comparisons with no rank.
  I ziv; D zdv;
  
- // Huge switch statement to handle every case.  Lump all the booleans together at 0
+ // Huge switch statement to handle every case.  Lump all the booleans together at 0.  Expect pipeline break here.
  switch(caseno){
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv+(B)wiv,z,INT,I) R z;  // NV because B01 is never virtual inplace
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBD): SSSTORENV((B)aiv+wdv,z,FL,D) R z;
@@ -323,6 +325,8 @@ nozv:;  // here when we have zv or don't need it
  case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGII): ziv=aiv==wiv; goto compareresult;
  case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGDD): ziv=TEQ(adv,wdv); goto compareresult;
 
+ case SSINGCASE(VA2CRES0-VA2CBW1111,SSINGDD):   // these blocks just fill out the table
+ case SSINGCASE(VA2CRES1-VA2CBW1111,SSINGDD): 
  case SSINGCASE(VA2CEQABS-VA2CBW1111,SSINGDD): ziv=TEQ(adv,ABS(wdv)); goto compareresult;
  case SSINGCASE(VA2CNEABS-VA2CBW1111,SSINGDD): ziv=TNE(adv,ABS(wdv)); goto compareresult;
  case SSINGCASE(VA2CLTABS-VA2CBW1111,SSINGDD): ziv=TLT(adv,ABS(wdv)); goto compareresult;
@@ -358,7 +362,6 @@ nozv:;  // here when we have zv or don't need it
  case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGDD): 
   floatresidue: ;
    zdv=jtremdd(jt,adv,wdv); if(!jt->jerr){SSSTORE(zdv,z,FL,D);}else z=0; R z;  // Since this can retry, we must not modify the input block if there is an error
- default: ASSERTSYS(0,"ssing");
  }
  // The only thing left is exit processing for the different functions
  gcdintresult:

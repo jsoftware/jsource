@@ -1267,7 +1267,8 @@ jobs:
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
-      OPTL: ${{ env.OPTL }}
+#      OPTL: ${{ env.OPTL }}
+      OPTL: -Og
      run: |
       script/buildga.sh windows x86_64 || exit 1
 

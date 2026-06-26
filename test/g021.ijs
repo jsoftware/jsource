@@ -16,6 +16,8 @@ p =. 1e20*o.?3 4$100
 q =. >.p
 q -: >.q
 ($q) -: $p
+echo <.,p
+echo <.{.,p
 echo p
 echo q
 echo (p<:q)

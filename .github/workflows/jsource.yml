@@ -15,6 +15,7 @@ on:
 env:
  DEBUGLEVEL: 0
  OPTL: -O2
+ NO_UNDEFINED: 0
 
 jobs:
 
@@ -78,6 +79,7 @@ jobs:
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
       OPTL: ${{ env.OPTL }}
+      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script/buildga.sh linux x86_64 || exit 1
 
@@ -136,6 +138,7 @@ jobs:
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
       OPTL: ${{ env.OPTL }}
+      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script/buildga.sh linux x86_64 || exit 1
 
@@ -172,8 +175,10 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: ${{ env.DEBUGLEVEL }}
+#      _DEBUG: ${{ env.DEBUGLEVEL }}
+      _DEBUG: 3
       OPTL: ${{ env.OPTL }}
+      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script/buildga.sh linux i386 || exit 1
 
@@ -182,7 +187,8 @@ jobs:
       DEBUGCMD: gdb
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: ${{ env.DEBUGLEVEL }}
+#      _DEBUG: ${{ env.DEBUGLEVEL }}
+      _DEBUG: 3
      run: |
       script/testga.sh linux i386 || exit 1
       cp jlibrary/bin32/* j32 || true
@@ -230,8 +236,10 @@ jobs:
       USE_OPENMP: 0
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: ${{ env.DEBUGLEVEL }}
+#      _DEBUG: ${{ env.DEBUGLEVEL }}
+      _DEBUG: 3
       OPTL: ${{ env.OPTL }}
+      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script/buildga.sh linux i386 || exit 1
 
@@ -240,7 +248,8 @@ jobs:
       DEBUGCMD: gdb
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: ${{ env.DEBUGLEVEL }}
+#      _DEBUG: ${{ env.DEBUGLEVEL }}
+      _DEBUG: 3
      run: |
       script/testga.sh linux i386 || exit 1
 
@@ -266,6 +275,7 @@ jobs:
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
       OPTL: ${{ env.OPTL }}
+      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script/buildga.sh darwin x86_64 || exit 1
 
@@ -321,6 +331,7 @@ jobs:
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
       OPTL: ${{ env.OPTL }}
+      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script/buildga.sh darwin arm64 || exit 1
 
@@ -376,6 +387,7 @@ jobs:
       USE_EMU_AVX: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
       OPTL: ${{ env.OPTL }}
+      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script/buildga.sh raspberry arm64 || exit 1
 
@@ -431,6 +443,7 @@ jobs:
       USE_EMU_AVX: 0
       _DEBUG: ${{ env.DEBUGLEVEL }}
       OPTL: ${{ env.OPTL }}
+      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script/buildga.sh raspberry armv6l || exit 1
 
@@ -628,6 +641,7 @@ jobs:
        export USE_EMU_AVX=1
        export _DEBUG=${{ env.DEBUGLEVEL }}
        export OPTL=${{ env.OPTL }}
+       export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        script/buildga.sh openbsd x86_64 || exit 1
        script/testga.sh openbsd x86_64 || exit 1
        cp jlibrary/bin/* j64 || true
@@ -689,6 +703,7 @@ jobs:
        export USE_EMU_AVX=1
        export _DEBUG=${{ env.DEBUGLEVEL }}
        export OPTL=${{ env.OPTL }}
+       export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        script/buildga.sh openbsd arm64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
@@ -752,6 +767,7 @@ jobs:
        export USE_EMU_AVX=1
        export _DEBUG=${{ env.DEBUGLEVEL }}
        export OPTL=${{ env.OPTL }}
+       export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        script/buildga.sh freebsd x86_64 || exit 1
        script/testga.sh freebsd x86_64 || exit 1
        cp jlibrary/bin/* j64 || true
@@ -816,6 +832,7 @@ jobs:
        export USE_EMU_AVX=1
        export _DEBUG=${{ env.DEBUGLEVEL }}
        export OPTL=${{ env.OPTL }}
+       export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        script/buildga.sh freebsd arm64 || exit 1
        script/testga.sh freebsd arm64 || exit 1
        cp jlibrary/bin/* j64 || true
@@ -937,6 +954,7 @@ jobs:
       PTHREADS4WSRC: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
       OPTL: ${{ env.OPTL }}
+      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script\buildga.cmd x64
 
@@ -1018,6 +1036,7 @@ jobs:
       USE_EMU_AVX: 0
       _DEBUG: ${{ env.DEBUGLEVEL }}
       OPTL: ${{ env.OPTL }}
+      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script\buildga.cmd x86
 
@@ -1099,6 +1118,7 @@ jobs:
       PTHREADS4WSRC: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
       OPTL: ${{ env.OPTL }}
+      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script\buildga.cmd arm64
 
@@ -1162,6 +1182,7 @@ jobs:
       PTHREADS4WSRC: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
       OPTL: ${{ env.OPTL }}
+      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script\buildga.cmd arm64
 
@@ -1267,7 +1288,10 @@ jobs:
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
-      OPTL: ${{ env.OPTL }}
+#      OPTL: ${{ env.OPTL }}
+      OPTL: -Og
+#      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      NO_UNDEFINED: 1
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
@@ -1333,6 +1357,7 @@ jobs:
       PTHREADS4WSRC: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
       OPTL: ${{ env.OPTL }}
+      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
@@ -1397,6 +1422,7 @@ jobs:
       PTHREADS4WSRC: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
       OPTL: ${{ env.OPTL }}
+      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script/buildga.sh windows i386 || exit 1
 
@@ -1461,6 +1487,7 @@ jobs:
       PTHREADS4WSRC: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
       OPTL: ${{ env.OPTL }}
+      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script/buildga.sh windows arm64 || exit 1
 
@@ -1512,7 +1539,7 @@ jobs:
    - jewasm
    - jefreebsd
    - jeopenbsd
-#   - jewin-msys2-x64-clang
+   - jewin-msys2-x64-clang
    - jewin-msys2-x64
 #   - jewin-msys2-x86
    - jewin-msys2-arm64
@@ -1556,7 +1583,7 @@ jobs:
    - jewasm
    - jefreebsd
    - jeopenbsd
-#   - jewin-msys2-x64-clang
+   - jewin-msys2-x64-clang
    - jewin-msys2-x64
 #   - jewin-msys2-x86
    - jewin-msys2-arm64

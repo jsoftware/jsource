@@ -121,7 +121,11 @@ static AMONPS(floorDI,I,D,
  {if(likely(((fbits=*(UI*)x)&0x7fffffffffffffff)<0x43c0000000000000)){D wdv=jround(*x); *z=wdv-TGT(wdv,*x);}
   // if there is a value above 2^61, encode it by setting bit 62 to the opposite of bit 63 (we know bit 62 was 1 originally).  Remember the fact that we need a correction pass.
   // See if the value must be promoted to floating-point in the correction pass.  Return value of EWOVFLOOR0 if there are values all of which fit in an integer, EWOVFLOOR1 if float is required
+#if NO_UNDEFINED
+  else{rc|=EWOVFLOOR0; D d=tfloor(*x); *z=fbits^(SGNTO0(fbits)<<(BW-2)); volatile I d1=(I)d; if(d!=d1)rc|=EWOVFLOOR1;} } ,  // we use DQ; i is n-1-reali, ~i = (reali-n+1)-1 = i-n
+#else
   else{rc|=EWOVFLOOR0; D d=tfloor(*x); *z=fbits^(SGNTO0(fbits)<<(BW-2)); if(d!=(I)d)rc|=EWOVFLOOR1;} } ,  // we use DQ; i is n-1-reali, ~i = (reali-n+1)-1 = i-n
+#endif
   R rc?rc:EVOK;
  ; )  // x100 0011 1100 =>2^61
 #else
@@ -138,7 +142,11 @@ static AMONPS(ceilDI,I,D,
  {if(likely(((fbits=*(UI*)x)&0x7fffffffffffffff)<0x43c0000000000000)){D wdv=jround(*x); *z=wdv+TLT(wdv,*x);}
   // if there is a value above 2^61, encode it by setting bit 62 to the opposite of bit 63 (we know bit 62 was 1 originally).  Remember the fact that we need a correction pass.
   // See if the value must be promoted to floating-point in the correction pass.  Return value of -2 if there are values all of which fit in an integer, -3 if float is required
+#if NO_UNDEFINED
+  else{rc|=EWOVFLOOR0; D d=tceil(*x); *z=fbits^(SGNTO0(fbits)<<(BW-2)); volatile I d1=(I)d; if(d!=d1)rc|=EWOVFLOOR1;} } ,  // we use DQ; i is n-1-reali, ~i = (reali-n+1)-1 = i-n
+#else
   else{rc|=EWOVFLOOR0; D d=tceil(*x); *z=fbits^(SGNTO0(fbits)<<(BW-2)); if(d!=(I)d)rc|=EWOVFLOOR1;} } ,  // we use DQ; i is n-1-reali, ~i = (reali-n+1)-1 = i-n
+#endif
   R rc?rc:EVOK;
  ; )  // x100 0011 1100 =>2^61
 #else

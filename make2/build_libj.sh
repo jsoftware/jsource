@@ -10,6 +10,7 @@ eval "$(./jplatform64.sh)"
 unset TARGET
 unset TARGET_a
 
+NO_UNDEFINED=${NO_UNDEFINED:=0}
 OPTL=${OPTL:="-O2"}
 OPTLD=${OPTLD:="-Og"}
 
@@ -246,6 +247,8 @@ else
  $CFLAGS"
 
 fi
+
+common="$common -DNO_UNDEFINED=$NO_UNDEFINED"
 
 if [ $DEBUG -eq 1 ]; then
  common="$common -DDEBUG"

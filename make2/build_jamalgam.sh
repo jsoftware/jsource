@@ -7,6 +7,7 @@ echo "entering $(pwd)"
 unameop=$(uname -o || uname -s)
 eval "$(./jplatform64.sh)"
 
+NO_UNDEFINED=${NO_UNDEFINED:=0}
 OPTL=${OPTL:="-O2"}
 OPTLD=${OPTLD:="-Og"}
 

@@ -94,6 +94,14 @@ echo (imin+1)| imin+2 3
 assert. (_1 0, 2}.imin+i.3)-: 1{ |/~ (imin+i.3)
 )
 
+NB. test overflow
+3 : 0''
+echo _ __ ; <. _ __
+assert. _ __ -: <. _ __
+echo _ __ ; >. _ __
+assert. _ __ -: >. _ __
+)
+
 NB. this sometimes failed on linux O2
 exformat_j_=: eformat_j_ f.
 4!:55<'eformat_j_'

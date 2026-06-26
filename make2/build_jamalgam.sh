@@ -243,6 +243,8 @@ fi
 
 common="$common -DJAMALGAM"
 
+common="$common -DNO_UNDEFINED=$NO_UNDEFINED"
+
 if [ $DEBUG -eq 1 ]; then
  common="$common -DDEBUG"
 fi

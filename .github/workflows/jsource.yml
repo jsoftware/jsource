@@ -44,8 +44,8 @@ jobs:
     - run: echo "Run deprecated jobs"
 
  disabled:
-  #if: false
-  if: true
+  if: false
+  #if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Run disabled jobs"
@@ -1417,8 +1417,7 @@ jobs:
       USE_EMU_AVX: 0
       PTHREADS4WSRC: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
-#      OPTL: ${{ env.OPTL }}
-      OPTL: -O0
+      OPTL: ${{ env.OPTL }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script/buildga.sh windows i386 || exit 1

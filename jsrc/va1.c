@@ -16,7 +16,7 @@
 #define SSINGENC(type) ((type)>>INTX)
 #define SSINGCASE(id,subtype) (3*(id)+(subtype))   // encode case/args into one branch value
 
-INLINE static A jtssingleton1(J jtfg, A w,I caseno){F12JT;A z;void *zv;
+NOINLINE static A jtssingleton1(J jtfg, A w,I caseno){F12JT;A z;void *zv;
  I ar=AR(w);
  // Start loading everything we will need as values before the pipeline break.  Tempting to convert int-to-float as well, but perhaps it will predict right?
  I wiv=IAV(w)[0],ziv;

@@ -2435,9 +2435,13 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #define VAL2            '\002'
 // like vec(INT,n,v), but without the call and using shape-copy
 #define VECI(z,n,v) {if(n==0)z=mtvi; else{GATV0(z,INT,(I)(n),1); MCISH(IAV1(z),(v),(I)(n));}}
-#define MAYBEPUSHNOMSGS(pushcond) C _e=jt->emsgstate; if(pushcond)jt->emsgstate|=EMSGSTATEFORMATTED;  // turn off message formatting by pretending we've already done it
-#define PUSHNOMSGS MAYBEPUSHNOMSGS(1);  // turn off message formatting by pretending we've already done it
 #define POPMSGS jt->emsgstate=_e;  // restore previous state
+#define MAYBEPUSHNOJTJERR(pushcond) C _e=jt->emsgstate; if(pushcond)jt->emsgstate|=EMSGSTATEFORMATTED;  // turn off message formatting by pretending we've already done it
+#define PUSHNOJTJERR MAYBEPUSHNOJTJERR(1);  // turn off message formatting by pretending we've already done it
+#define MAYBEWITHJTJERROFF(offcond,stmt) {MAYBEPUSHNOJTJERR(offcond) stmt POPMSGS}  // execute stmt, optionally with msgs off.  Use only around internal functions
+#define WITHJTJERROFF(stmt) MAYBEWITHJTJERROFF(1,stmt)  // execute stmt with debug/eformat turned off; restore at end.  Sets jt->jerr if error, and should be used when calling possible user code
+#define MAYBEPUSHNOMSGS(pushcond) C _e=jt->emsgstate; if(pushcond)jt->emsgstate|=EMSGSTATENOTEXT;  // turn off message formatting by pretending we've already done it
+#define PUSHNOMSGS MAYBEPUSHNOMSGS(1);  // turn off message formatting by pretending we've already done it
 #define MAYBEWITHMSGSOFF(offcond,stmt) {MAYBEPUSHNOMSGS(offcond) stmt POPMSGS}  // execute stmt, optionally with msgs off.  Use only around internal functions
 #define WITHMSGSOFF(stmt) MAYBEWITHMSGSOFF(1,stmt)  // execute stmt with debug/eformat turned off; restore at end.  Sets jt->jerr if error, and should be used when calling possible user code
 // scaf! in next line, remove TRAPPING if TRACEDB is not set, so that an error will offer post-mortem debug

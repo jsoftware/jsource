@@ -1224,6 +1224,7 @@ union{
 } V;  // two cachelines in 64-bit (16 Is); 20 I4s in 32-bit
 // The AN and AR fields of functions are not used
 
+#if 0  // obsolete 
 // cut-down version of V, used only for executing atomic combinations
 typedef struct {
  // the localuse fields are not freed or counted for space, as the f/g/h fields are.  They are for local optimizations only.
@@ -1252,6 +1253,7 @@ typedef struct {
  C lc;  // lc is a local-use byte.  Used in atomic verbs to indicate which singleton function to execute.  in the derived function from fold, lc has the original id byte of the fold op
 // 3 bytes free
 } exeV;  //one cacheline
+#endif
 
 #define IDD(f) FAV(AT(f)&FUNC?(f):FUNCID0)->id  // id of a value known to be defined but possibly not an ACV
 #define ID(f)  FAV(AT((f)?(f):FUNCTYPE0)&FUNC?(f):FUNCID0)->id  // id of possibly 0 value

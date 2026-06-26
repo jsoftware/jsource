@@ -711,7 +711,7 @@ bodyend: ;  // we branch to here to exit with z set to result
    DC d; RZ(d=deba(DCPM+(~bic<<8)+((NPGpysfmtdl<<(7-6))&SHMSK(~(I)jtfg,JTXDEFMODIFIERX-7,128)),locsym,AAV1(sv->fgh[2])[HN*PEXT0(NPGpysfmtdl,6,1)],self));  // push a debug frame for this error.  We know we didn't free locsym
    RETF(0)
   }
-  // scaf! next beta   tpop(_ttop);  // here we had an error but we are not going to go into pm debug.  In that case, we must pop the tstack to ensure that UNINCORPABLE values are not left hanging around
+// scaf  tpop(_ttop);
  }
 
  // locsym may have been freed now, if it was cloned and there was no error.
@@ -727,7 +727,8 @@ bodyend: ;  // we branch to here to exit with z set to result
  // BUT: SPARSE value must NEVER be inplaceable, because the children aren't handled correctly during assignment; and READONLY values must never be inplaceable
  // SURPRISE: if there is a PM stack (that has not been moved to a debug stack), tpop has been disabled, which means that the EPILOGNORET call did little, and that we
  // cannot infer from the fact that something is above ttop that it is necessarily our result that was pushed there.  In that case, skip this fillip.
- if(likely(z!=0)&&likely(((_ttop!=jt->tnextpushp)==AC(z))&(~AFLAG(z)>>AFROX))&&likely(jt->pmstacktop==0)){ACRESET(z,(ACINPLACE&~AT(z))|ACUC1) AZAPLOC(z)=_ttop;}  // AC can't be 0.  The block is not in use elsewhere. AT is for sparse
+ if(likely(z!=0)){if(likely(((_ttop!=jt->tnextpushp)==AC(z))&(~AFLAG(z)>>AFROX))&&likely(jt->pmstacktop==0)){ACRESET(z,(ACINPLACE&~AT(z))|ACUC1) AZAPLOC(z)=_ttop;}  // AC can't be 0.  The block is not in use elsewhere. AT is for sparse
+ }else tpop(_ttop);  // here we had an error but we are not going to go into pm debug.  In that case, we must pop the tstack to ensure that UNINCORPABLE values are not left hanging around
  RETF(z);
 }
 
@@ -968,7 +969,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
   if((QCSENTTYPE(lv[j])&~(QCASGNISLOCAL+QCASGNISTONAME))==QCASGN&&AT(t)&LIT&&AN(t)&&CAV(t)[0]!=CGRAVE){
    A neww; RZ(neww=words(t));  // find names; if string ill-formed, we might as well catch it now
    if(AN(neww)){  // ignore blank string
-    A newt; WITHMSGSOFF(newt=every(neww,(A)&onmself);)  // convert every word to a NAME block
+    A newt; WITHJTJERROFF(newt=every(neww,(A)&onmself);)  // convert every word to a NAME block
     if(newt){lv[j-1]=QCINSTALLTYPE(t=incorp(newt),QCNOUN); AT(t)|=BOXMULTIASSIGN;}else RESETERR  // if no error, mark the block as MULTIASSIGN type and save it in the compiled definition; also set as t for below.  If error, catch it later
    }
   }
@@ -987,12 +988,12 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
     // LIT followed by =.  Probe each word.  Now that we support lists of NAMEs, this is used only for AR assignments
     // First, convert string to words
     s=CAV(t);   // s->1st character; remember if it is
-    WITHMSGSOFF(wds=words(s[0]==CGRAVE?str(AN(t)-1,1+s):t);)
+    WITHJTJERROFF(wds=words(s[0]==CGRAVE?str(AN(t)-1,1+s):t);)
     if(wds){I kk;  // convert to words (discarding leading ` if present)
      I wdsn=AN(wds); A *wdsv = AAV(wds), wnm;
      for(kk=0;kk<wdsn;++kk) {  // Process each word in string
       // Convert word to NAME; if local name, add to symbol table
-      WITHMSGSOFF(wnm=onm(wdsv[kk]);)
+      WITHJTJERROFF(wnm=onm(wdsv[kk]);)
       if(wnm) {
        if(!(NAV(wnm)->flag&(NMLOC|NMILOC))){L *nml; RZ(nml=probeisres(wnm,pfst)); AT(nml->name)&=~NAMEABANDON;}  // see above
       } else RESETERR
@@ -1118,7 +1119,7 @@ I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(frag
       if(fragl<rparx-startx-1){A fb; GATV0(fb,INT,rparx-startx-1,0) fragv=AAV0(fb); fragl=AN(fb);}  // if the fragment buffer isn't big enough, allocate a new one
       DO(rparx-startx-1, fragv[i]=QCSENTTYPE(lvv[startx+i+1])==QCVERB?QCINSTALLTYPE(ds(CCAP),QCVERB):lvv[startx+i+1];)  // copy the fragment, not including (), with verbs replaced
       // parse the temp for error, which will usually be an attempt to execute a verb
-      WITHMSGSOFF(parseok=(I)parsea(fragv,rparx-startx-1);)    // trial parse, no msg formatting needed.   Remember if it was OK
+      WITHJTJERROFF(parseok=(I)parsea(fragv,rparx-startx-1);)    // trial parse, no msg formatting needed.   Remember if it was OK
      }
      if(parseok){
       // no error: parse the actual () block.  (( )) may fail, which is a real error.  Ignore errors in () which are usually [:

@@ -82,7 +82,7 @@ _Static_assert(POWERADOWHILE==JTDOWHILE,"bit field mismatch");
  }
  if(unlikely(poweratom&POWERANEG)){
   // negative power not _1.  This is a path not worth much attention.  Create the inverse of u
-  A uinv; WITHMSGSOFF(uinv=a?invamp(a,fs,0):inv(fs);) ASSERT(uinv!=0,EVDOMAIN) a=0; fs=uinv;  // try inverse, monad or dyad
+  A uinv; WITHJTJERROFF(uinv=a?invamp(a,fs,0):inv(fs);) ASSERT(uinv!=0,EVDOMAIN) a=0; fs=uinv;  // try inverse, monad or dyad
  }
  A *old=jt->tnextpushp;  // save tpop pointer, so as to leave untouched zz and anything related to the inverse
  AF f12=FAV(fs)->valencefns[!!a];  // action routine for u
@@ -267,7 +267,9 @@ static DF2(jtgcr12){F12IP;PROLOG(0);
  STACKCHKOFL     // unless we prevent it, the gerund might return a gerund, creating an infinite loop
  A ff;   // the routine for the function -  u or u^:newpower
  A z0; RZ(z0=CALL12(w,FAV(hv[hn-2])->valencefns[!!w],a,w,hv[hn-2]))  // z=.[x] v1 y  which is the power to use
- A uc; I u0; if(likely(((AT(z0)&~(B01+INT))|AR(z0)|((u0=BIV0(z0))&~1))==0)||(AR(z0)==0&&AT(z0)&NUMERIC&&(uc=cvt(INT,z0))!=0&&!((u0=IAV(uc)[0])&~1))){  // v1 result is atomic bool/int 0/1 (if statement)
+ A uc; I u0, co; WITHJTJERROFF(co=(((AT(z0)&~(B01+INT))|AR(z0)|((u0=BIV0(z0))&~1))==0)||(AR(z0)==0&&AT(z0)&NUMERIC&&(uc=cvt(INT,z0))!=0&&!((u0=IAV(uc)[0])&~1));)
+// obsolete  if(likely(((AT(z0)&~(B01+INT))|AR(z0)|((u0=BIV0(z0))&~1))==0)||(AR(z0)==0&&AT(z0)&NUMERIC&&(uc=cvt(INT,z0))!=0&&!((u0=IAV(uc)[0])&~1))){  // v1 result is atomic bool/int 0/1 (if statement)
+ if(likely(co)){  // v1 result is atomic bool/int 0/1 (if statement)
   ff=FAV(self)->fgh[0]; ff=u0?ff:0;  // we will execute u or nothing; ff tells which
  }else{  // v1 returned something other than 0/1
   RESETERR;  // we have to clear the error in case cvt() failed
@@ -363,7 +365,7 @@ DF2(jtpowop){F12IP;B b;V*v;
      if(n<0){  // u^:_1
       // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names
       // must wait until we get arguments.  We can't trust the inverse to be NOLOCCHG.  nameless means no name, no locchg.  If there is a locchg there can't be an inverse anyway
-      f2=jtinv2; f1=jtinv1; if(nameless(a)){WITHMSGSOFF(if(h=inv(a)){f1=jtinvh1;flag=FAV(h)->flag&VNOLOCCHG+VNONAME+VNOSELF;}else{f1=jtinverr;})} // h must be valid A block for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
+      f2=jtinv2; f1=jtinv1; if(nameless(a)){WITHJTJERROFF(if(h=inv(a)){f1=jtinvh1;flag=FAV(h)->flag&VNOLOCCHG+VNONAME+VNOSELF;}else{f1=jtinverr;})} // h must be valid A block for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
      }else flag=FAV(a)->flag&VNONAME+VNOSELF;     // if u^:_, never allow inplace assignment since we are converging
      // Note: negative powers other than _1 are resolved in the action routine
     }

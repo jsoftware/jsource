@@ -35,7 +35,7 @@ static A jtfitct(J jt,A a,A w,I cno,A z){
  ARGCHK2(a,w);
  ASSERT(!AR(w),EVRANK);
  D d=1.0; A dw=w; // ct, when that's what we have (init to invalid); w converted to float
- if(likely(w==num(0)))d=0.0; else{if(!ISDENSETYPE(AT(w),FL))dw=ccvt(FL,w,0); if(dw)d=DAV(dw)[0]; RESETERR}  // 0 is usual; otherwise it better be FL, but convert in case its value is 0  It's not a hard error
+ if(likely(w==num(0)))d=0.0; else{if(!ISDENSETYPE(AT(w),FL))WITHJTJERROFF(dw=ccvt(FL,w,0);); if(dw)d=DAV(dw)[0]; RESETERR}  // 0 is usual; otherwise it better be FL, but convert in case its value is 0  It's not a hard error
  // Handle i.!.1 specially; otherwise drop i. back to normal for i.!.0 of i.!.f
  if(unlikely(cno==3)){if(d==1.0){d=1.0-jt->cct; if(!C_VIAVX)cno=0;}else cno=0;}   // i.!.1 is special on viavx.c systems; others just specify fit
  // u!.ct, unless u is > in which case it could be anything

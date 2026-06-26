@@ -1010,7 +1010,7 @@ A jtbcvt(J jtfg,C mode,A w){F12IP; A z=w;
  if(mode&1||!(AT(w)&XNUM+RAT)){  // if we are not stopping at XNUM/RAT
   // To avoid a needless copy, suppress conversion to B01 if type is B01, to INT if type is INT, etc
   // set the NOFUZZ flag in t to insist on an exact match so we won't lose precision
-  PUSHNOMSGS  // no need to format the messages for failed conversions
+  PUSHNOJTJERR  // no need to format the messages for failed conversions
   if(!(mode&14)&&(z=jtccvt(jtfg,B01|CVTNOFUZZ,w,0)));  // if OK to try B01, and it fits, keep B01
   else if(ISDENSETYPE(AT(w),INT))z=w;   // if w is INT, we can't improve
   else if(!(mode&12)&&(z=jtccvt(jtfg,INT|CVTNOFUZZ,w,0)));  //  OK to try INT and it fits, keep B01
@@ -1037,7 +1037,7 @@ F1(jticvt){F12IP;A z;D*v,x;I i,n,*u;
 }
 
 A jtpcvt(J jt,I t,A w){B b;RANK2T oqr=jt->ranks;
- RESETRANK; A z; WITHMSGSOFF(z=ccvt(t,w,0);) jt->ranks=oqr;
+ RESETRANK; A z; WITHJTJERROFF(z=ccvt(t,w,0);) jt->ranks=oqr;
  RESETERR; R z?z:w;
 }    /* convert w to type t, if possible, otherwise just return w.  Leave ranks unaffected */
 

@@ -768,9 +768,9 @@ static A jtmovsumavg1(J jt,I m,A w,A fs,B avg){A y,z;D d=(D)m;I c,p,wt;
 }    /* m +/\w or (if 0=avg) m (+/%#)\w (if 1=avg); bool or integer or float; 0<m */
 
 static A jtmovsumavg(J jt,I m,A w,A fs,B avg){A z;
- z=movsumavg1(m,w,fs,avg);
- if(jt->jerr==EVNAN)RESETERR else R z;
- R jtinfixprefix2(jt,sc(m),w,fs);
+ WITHMSGSOFF(z=movsumavg1(m,w,fs,avg);)   // try with fast code.  Any error will go into jt->jerr
+ if(jt->jerr!=EVNAN)R z;  // if not NaN error, return result/error
+ RESETERR R jtinfixprefix2(jt,sc(m),w,fs);  // fail over to generic code
 }
 
 static DF2(jtmovavg){F12IP;I m,j;

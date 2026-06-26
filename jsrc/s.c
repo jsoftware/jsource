@@ -617,7 +617,7 @@ static A jtdllsymaddr(J jt,A w,C component){A*wv,x,y,z;I i,n,*zv;
   else{
    if(unlikely((AR(x)&~1)+(component^3)==0))RZ(x=take(indexof(x,scc('>')),x));  // script lookup: name =. (name i. '>') {. name
    RE(y=stdnm(x)); ASSERTN(y,EVILNAME,nfs(nmlen,CAV(x),0)); RESETERR; 
-   MAYBEWITHMSGSOFF(component==3 , val=jtsyrdinternal(jt,y,component);)  // read the symbol; suppress all error for 4!:4 to avoid corrupting 13!:12 result
+   MAYBEWITHJTJERROFF(component==3 , val=jtsyrdinternal(jt,y,component);)  // read the symbol; suppress all error for 4!:4 to avoid corrupting 13!:12 result
   }
   RE(0);  // if the name lookup failed, exit; but 4!:4 never fails, because used in 13!:13
   ASSERT(component==3||val!=0,EVVALUE);  // error if name not found, for symbol or data address

@@ -138,7 +138,7 @@ F1(jtnc){F12IP;A*wv,x,y,z;I i,n,t,*zv;
  I zr=AR(w); GATV(z,INT,n,AR(w),AS(w)); zv=AVn(zr,z);   // Allocate z=result, same shape as input; zv->first result
  for(i=0;i<n;++i){   // for each name...
   RE(y=stdnm(C(wv[i])));  // point to name, audit for validity
-  if(y){if(QCWORD(x=syrd(y,jt->locsyms))){t=AT(QCWORD(x)); if(ISFAOWED(x))fa(QCWORD(x));}else{if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined.  Undo the ra() in syrd
+  if(y){WITHMSGSOFF(x=syrd(y,jt->locsyms);); if(QCWORD(x)){t=AT(QCWORD(x)); if(ISFAOWED(x))fa(QCWORD(x));}else{if(jt->jerr){y=0; RESETERR;}}}  // If valid, see if the name is defined.  Undo the ra() in syrd
   // syrd can fail if a numbered locative is retrograde.  Call that an invalid name, rather than an error, here; thus the RESETERR
   // kludge: if the locale is not defined, syrd will create it.  Better to use a version/parameter to syrd to control that?
   //   If that were done, we could dispense with the error check here (but invalid locale would be treated as undefined rather than invalid).

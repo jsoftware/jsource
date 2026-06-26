@@ -256,26 +256,34 @@ static DF2(jthklvl2){F12IP;
  RETF(num(PEXT0(FAV(self)->flag,VFHKLVLGTX,1)^levelle(jt,w,comparand-(FAV(self)->flag&VFHKLVLDEC))));  // decrement for < or >:; complement for > >:
 }
 
-// table of half-verbs for executing (compare |).  We back the address to the phantom start of the verb block.
-// each half-verb is valid ONLY for DD functions, and thepointers to those functions are next to each other in the block nominally for (=|)
-static exeV cmpabsblk[6] = {
- {.lu1.uavandx[1]=(sizeof(VA)*VA2CEQABS+sizeof(VA2)*(VA2CEQABS-VA2CGTABS)),.lc=VA2CEQABS},  // =
- {.lu1.uavandx[1]=(sizeof(VA)*VA2CEQABS+sizeof(VA2)*(VA2CNEABS-VA2CGTABS)),.lc=VA2CNEABS},  // ~:
- {.lu1.uavandx[1]=(sizeof(VA)*VA2CEQABS+sizeof(VA2)*(VA2CLTABS-VA2CGTABS)),.lc=VA2CLTABS},  // <
- {.lu1.uavandx[1]=(sizeof(VA)*VA2CEQABS+sizeof(VA2)*(VA2CLEABS-VA2CGTABS)),.lc=VA2CLEABS},  // <:
- {.lu1.uavandx[1]=(sizeof(VA)*VA2CEQABS+sizeof(VA2)*(VA2CGEABS-VA2CGTABS)),.lc=VA2CGEABS},  // >:
- {.lu1.uavandx[1]=(sizeof(VA)*VA2CEQABS+sizeof(VA2)*(VA2CGTABS-VA2CGTABS)),.lc=VA2CGTABS},  // >
-};
 
+
+// table of verbs for executing (compare |).  We back the address to the phantom start of the verb block.
+// each verb is valid ONLY for DD operands, and the pointers to those functions are next to each other in the block nominally for (=|)
+#define PRIMASSIGN(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc) \
+ ={{Xrh0 0,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,(ar)},{{.valencefns={f0,f1},.fgh={f,g,h},.localuse={initpm1,initpm2},.flag=(vflg),.flag2=(vflg2),.lrr=(RANK2T)((rl<<RANKTX)+rr),.mr=(RANKT)rm,.id=idd,.lu2.lc=lcc}}}
+#define PRIMALL(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc) [idda]PRIMASSIGN(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc)
+#define PRIMATOMIC2(vaid,id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(vaid,id,t,f0,f1,0,0,0,.lu1.uavandx=0,VA2##vaid*sizeof(VA),rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
+ VA2##vaid+0x80*(vaid==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
+#define PRIMCOMPAREABS(ctype) \
+ {{Xrh0 0,0,0,0,ACPERMANENT,0,0},{{.valencefns={0,0},.fgh={0,0,0},.localuse={.lu1.uavandx={0,(sizeof(VA)*VA2CEQABS+sizeof(VA2)*((ctype)-VA2CGTABS))},},.flag=0,.flag2=0,.lrr=0,.mr=0,.id=0,.lu2.lc=(ctype)}}}
+PRIM cmpabsblk[6] = {
+ PRIMCOMPAREABS(VA2CEQABS), //
+ PRIMCOMPAREABS(VA2CNEABS), //
+ PRIMCOMPAREABS(VA2CLTABS), //
+ PRIMCOMPAREABS(VA2CLEABS), //
+ PRIMCOMPAREABS(VA2CGEABS), //
+ PRIMCOMPAREABS(VA2CGTABS), //
+};
 
 // (compare |) dyadic, reverting if not float
 static DF2(jthkcmpabs){F12IP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtfg,a,w,self);
- z=jtatomic2(jtfg,a,w,(A)((I)&cmpabsblk[FAV(self)->localuse.lu1.linkvb]-offsetof(V,localuse.lu1)-AKXR(0)));
+ z=jtatomic2(jtfg,a,w,(A)((I)&cmpabsblk[FAV(self)->localuse.lu1.linkvb]));
  RETF(z);
 }
 // (compare!.n |) dyadic, reverting if not float
 static DF2(jthkcmpfitabs){F12IP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtfg,a,w,self);
- PUSHCCT(FAV(FAV(self)->fgh[0])->localuse.lu1.cct) z=jtatomic2(jtfg,a,w,(A)((I)&cmpabsblk[FAV(self)->localuse.lu1.linkvb]-offsetof(V,localuse.lu1)-AKXR(0)));
+ PUSHCCT(FAV(FAV(self)->fgh[0])->localuse.lu1.cct) z=jtatomic2(jtfg,a,w,(A)((I)&cmpabsblk[FAV(self)->localuse.lu1.linkvb]));
  POPCCT RETF(z);
 }
 

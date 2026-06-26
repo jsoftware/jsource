@@ -377,6 +377,7 @@ static DF1(jtva1){F12IP;A z;I cv,n,wt,zt;VA1F ado;
  if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&SGNIF(cv,VIPOKWX),w)){z=w; if(TYPESNE(AT(w),zt))MODBLOCKTYPE(z,zt)}else{GA(z,zt,n,AR(w),AS(w)); if(unlikely(zt&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;}  // move 16-byte values to 16-byte bdy
  if(!n){RETF(z);}
  I oprc = ((AHDR1FN*)ado)(jt,n,AV(z),AV(w));  // perform the operation on all the atoms, save result status.  If an error was signaled it will be reported here, but not necessarily vice versa
+ fprintf(stderr,"oprc "FMTI" \n",oprc);
 // obsolete  if(likely(!(oprc&(255&~EVNOCONV)))){RETF(unlikely(cv&VRI+VRD&&oprc!=EVNOCONV)?cvz(cv,z):z);}  // Normal return point: if no error, convert the result if necessary (rare)
  if(likely(!(oprc&(255&~EVNOCONV)))){RETF(unlikely(((cv+VRD)&VRI))&&likely(oprc!=EVNOCONV)?cvz(cv,z):z);}  // Normal return point: if no error, convert the result if necessary (rare)
  else{

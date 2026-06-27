@@ -14,8 +14,8 @@ on:
 
 env:
  DEBUGLEVEL: 0
- OPTL: -O0
- OPTLD: -O0
+ OPTL: -O2
+ OPTLD: -O2
  NO_UNDEFINED: 1
 
 jobs:
@@ -118,7 +118,7 @@ jobs:
  jelinux-gcc:
   name: JE (Linux gcc)
   needs: all
-  runs-on: ubuntu-24.04
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6
@@ -158,7 +158,7 @@ jobs:
  jelinux32:
   name: JE (Linux32)
   needs: all
-  runs-on: ubuntu-24.04
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6
@@ -220,7 +220,7 @@ jobs:
  jelinux32-gcc:
   name: JE (Linux32 gcc)
   needs: all
-  runs-on: ubuntu-24.04
+  runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6

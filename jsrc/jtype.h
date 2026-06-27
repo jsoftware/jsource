@@ -1170,7 +1170,7 @@ typedef struct {VA1F f;I cv;} VA1;  // for monads
 typedef struct {VARPSF f;I cv;} VARPS;  // for reduce/prefix/suffix
 
 typedef struct {I nprec; VARPS actrtns[];} VARPSA;
-typedef struct {VA2 p2[16];VARPSA *rps;} VA;  // 9 main types (B01/INT/FL), CMPX, XNUM, RAT, SP, QP, INT2, INT4  // scaf make routine order follow priority order [B01 INT] XNUM RAT [FL] [INT1] INT2 INT4 [SP] QP CMPX 
+typedef struct {VA2 p2[15];VARPSA *rps;} VA;  // 9 main types (B01/INT/FL), then in priority order [B01 INT] XNUM RAT [FL] [INT1] INT2 INT4 [HP] [SP] QP CMPX 
 typedef struct {VA1 p1[10];} UA;  // B01, INT, FL, CMPX, XNUM, RAT, SP, QP, INT2, INT4  // scaf make routine order follow VA2 order
 // ********************** layout of a FUNC (starts at AS[0]) ************************************
 typedef struct {

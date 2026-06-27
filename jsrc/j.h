@@ -2140,7 +2140,7 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // conversion from priority index to bit# in a type with that priority
 #define PRIORITYTYPE(p) (unlikely(BIT((p))&0x1000c)?(((((((((I)C4TX<<8)+C2TX)<<8)+0)<<8)+0)>>(((p)&0x3)<<3))&0x1f):(I)(((((((((((((((((((((((((((((((((UI8)CMPXX<<4)+QPX)<<4)+SPX)<<4)+HPX)<<4)+INT4X)<<4)+INT2X)<<4)+INT1X)<<4)+FLX)<<4)+RATX)<<4)+XNUMX)<<4)+BOXX)<<4)+INTX)<<4)+0)<<4)+0)<<4)+LITX)<<4)+B01X)>>((p)*4))&0xf))  // 0 for C2TX/C4Tx to avoid field overflow
 // Conversion from type to priority
-//  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F  
+//  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F    this has priorities for all types, even unimplemented ones
 // B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX
 #define TYPEPRIORITYNUM(t) ((I)SHMSK8((UI8)0x00edcba9765f8410LL,CTTZ(t)*4,0xf))  // used for types below 0x10000, which includes all numerics
 #define TYPEPRIORITY(t) (unlikely(((t)&0xffff)==0)?((CTTZ(t)&0x3)+1):TYPEPRIORITYNUM(t))

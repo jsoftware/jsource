@@ -37,7 +37,7 @@ static INLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so many
  R z;
 }
 
-#define SSINGCASE(id,subtype) (9*(id)+(subtype))   // encode case/args into one branch value
+#define SSINGCASE(id,bidenc) ((bidenc)*32+(id))   // encode case/args into one branch value.  To reduce cache footprint of branch table, collect the arg combinations together.  ids are grouped by usage
 
 // we know that AN=1 in a and w, which are FL/INT/B01 types.  af is larger arg rank (=rank of result)
 // low 6 bits of self are the encoded operand types, i. e. the routine index to use
@@ -585,257 +585,258 @@ static VARPSA rpsmax = {RATX+1 , {
 
 
 // The 9 routines that handle B/I/D do not have to indicate argument conversion type unless it is a change.  For (D,D) (routine 8) we OR VDD into the argument field sometimes; this is 0xc and so the arg conv there must be omitted or one of VBB VII VDD
-// Routines that require both inputs to have the same precision (anything higher than FL) MUST include an input conversion in case a lower-priority arg is converted there
+// Routines that require both inputs to have the same precision (anything higher than FL) MUST include an input conversion in case a lower-priority arg is converted there.  If the result type is the same as the input, it should usually be IP.
+// This layout wastes cache, because the dominant type are BB, II, and DD which are only 3 of the 9 combinations.  It would be better to make the first axis the type combination and the second the opcode.  Then lump the opcodes by frequency.
+// We don't do this (yet), because the cv result is not needed very fast in the no-rank case
 VA va[]={
-/* non-atomic functions      */ {
+/* non-atomic functions      */ [0]={
  {{0,0}, {0,0}, {0,0},                                /* BB BI BD              */
   {0,0}, {0,0}, {0,0},                                /* IB II ID              */
   {0,0}, {0,0}, {0,0},                                /* DB DI DD              */
-  {0,0}, {0,0}, {0,0}, {0,0}, {0,0}, {0,0}},                        /* ZZ XX QQ SP E I2 I4     (SP not implemented)    */
+  {0,0}, {0,0}, {0,0}, {0,0}, {0,0}, {0,0}},                        /* XX QQ I2 I4 E Z    (prority order)    */
   &rpsnull},
 
-/* 10    */ {
+/* 10    */ [VA2CBW0000]={
  {{(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, 
   {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VIP},     {(VF)bw0000II,VRNONE+VI+VII+VIP},
   {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP},
-  {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0000I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0000I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP}}, 
   &rpsbw0000},
 
-/* 11    */ {
+/* 11    */ [VA2CBW0001]={
  {{(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, 
   {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VIP},     {(VF)bw0001II,VRNONE+VI+VII+VIP},
   {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP},
-  {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0001I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0001I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP}}, 
   &rpsbw0001},
 
-/* 12    */ {
+/* 12    */ [VA2CBW0010]={
  {{(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, 
   {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VIP},     {(VF)bw0010II,VRNONE+VI+VII+VIP},
   {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP},
-  {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0010I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0010I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP}}, 
   &rpsbw0010},
 
-/* 13    */ {
+/* 13    */ [VA2CBW0011]={
  {{(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, 
   {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VIP},     {(VF)bw0011II,VRNONE+VI+VII+VIP},
   {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP},
-  {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0011I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0011I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP}}, 
   &rpsbw0011},
 
-/* 14    */ {
+/* 14    */ [VA2CBW0100]={
  {{(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, 
   {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VIP},     {(VF)bw0100II,VRNONE+VI+VII+VIP},
   {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP},
-  {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0100I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0100I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP}}, 
   &rpsbw0100},
 
-/* 15    */ {
+/* 15    */ [VA2CBW0101]={
  {{(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, 
   {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VIP},     {(VF)bw0101II,VRNONE+VI+VII+VIP},
   {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP},
-  {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0101I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0101I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP}}, 
   &rpsbw0101},
 
-/* 16    */ {
+/* 16    */ [VA2CBW0110]={
  {{(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, 
   {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VIP},     {(VF)bw0110II,VRNONE+VI+VII+VIP},
   {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP},
-  {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0110I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0110I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP}}, 
   &rpsbw0110},
 
-/* 17    */ {
+/* 17    */ [VA2CBW0111]={
  {{(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, 
   {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VIP},     {(VF)bw0111II,VRNONE+VI+VII+VIP},
   {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP},
-  {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0111I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0111I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP}}, 
   &rpsbw0111},
 
-/* 18    */ {
+/* 18    */ [VA2CBW1000]={
  {{(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, 
   {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VIP},     {(VF)bw1000II,VRNONE+VI+VII+VIP},
   {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP},
-  {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1000I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1000I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP}}, 
   &rpsbw1000},
 
-/* 19    */ {
+/* 19    */ [VA2CBW1001]={
  {{(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, 
   {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VIP},     {(VF)bw1001II,VRNONE+VI+VII+VIP},
   {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP},
-  {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1001I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1001I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP}}, 
   &rpsbw1001},
 
-/* 1a    */ {
+/* 1a    */ [VA2CBW1010]={
  {{(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, 
   {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VIP},     {(VF)bw1010II,VRNONE+VI+VII+VIP},
   {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP},
-  {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1010I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1010I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP}}, 
   &rpsbw1010},
 
-/* 1b    */ {
+/* 1b    */ [VA2CBW1011]={
  {{(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, 
   {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VIP},     {(VF)bw1011II,VRNONE+VI+VII+VIP},
   {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP},
-  {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1011I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1011I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP}}, 
   &rpsbw1011},
 
-/* 1c    */ {
+/* 1c    */ [VA2CBW1100]={
  {{(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, 
   {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VIP},     {(VF)bw1100II,VRNONE+VI+VII+VIP},
   {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP},
-  {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1100I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1100I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP}}, 
   &rpsbw1100},
+                                 
 
-/* 1d    */ {
+/* 1d    */ [VA2CBW1101]={
  {{(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, 
   {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VIP},     {(VF)bw1101II,VRNONE+VI+VII+VIP},
   {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP},
-  {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1101I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1101I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP}}, 
   &rpsbw1101},
 
-/* 1e    */ {
+/* 1e    */ [VA2CBW1110]={
  {{(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, 
   {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VIP},     {(VF)bw1110II,VRNONE+VI+VII+VIP},
   {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP},
-  {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1110I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1110I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP}}, 
   &rpsbw1110},
 
-/* 1f    */ {
+/* 1f    */ [VA2CBW1111]={
  {{(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, 
   {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VIP},     {(VF)bw1111II,VRNONE+VI+VII+VIP},
   {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP},
-  {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1111I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1111I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP}}, 
   &rpsbw1111},
 
-/* 32 b.    */ {
+/* 32 b.    */ [VA2CBW10000]={
  {{(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, 
   {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VIP},     {(VF)bw10000II,VRNONE+VI+VII+VIP},
   {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP},
-  {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw10000I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw10000I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP}}, 
   &rpsnull},
 
-/* 33 b.    */ {
+/* 33 b.    */ [VA2CBW10001]={
  {{(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, 
   {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VIP},     {(VF)bw10001II,VRNONE+VI+VII+VIP},
   {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP},
-  {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw10001I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw10001I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP}}, 
   &rpsnull},
 
-/* 34 b.    */ {
+/* 34 b.    */ [VA2CBW10010]={
  {{(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, 
   {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VIP},     {(VF)bw10010II,VRNONE+VI+VII+VIP},
   {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP},
-  {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw10010I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw10010I4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP}}, 
   &rpsnull},
 
 
-   // For Booleans, VIP means 'inplace if rank not specified and there is no frame'  scaf is this right?
-/* 95 ~: */ {
+/* 95 ~: */ [VA2CNE]={
  {{(VF)neBB,VRNONE+VB+VIP}, {(VF)neBI,VRNONE+VB+VIPOKA}, {(VF)neBD,VRNONE+VB+VIPOKA},
   {(VF)neIB,VRNONE+VB+VIPOKW}, {(VF)neII,VRNONE+VB}, {(VF)neID,VRNONE+VB},
   {(VF)neDB,VRNONE+VB+VIPOKW}, {(VF)neDI,VRNONE+VB}, {(VF)neDD,VRNONE+VB}, 
-  {(VF)neZZ,VRNONE+VB+VZZ}, {(VF)neXX,VRNONE+VB+VXEQ}, {(VF)neQQ,VRNONE+VB+VQQ}, {0,0}, {(VF)neEE,VRNONE+VEE+VB}, {(VF)neI2I2,VRNONE+VI2I2+VB}, {(VF)neI4I4,VRNONE+VI4I4+VB}},
+  {(VF)neXX,VRNONE+VB+VXEQ}, {(VF)neQQ,VRNONE+VB+VQQ}, {(VF)neI2I2,VRNONE+VI2I2+VB}, {(VF)neI4I4,VRNONE+VI4I4+VB}, {(VF)neEE,VRNONE+VEE+VB}, {(VF)neZZ,VRNONE+VB+VZZ}}, 
   &rpsne},
 
-/* 25 %  */ {
+/* 25 %  */ [VA2CDIV]={
  {{(VF)divBB,VRNONE+VD}, {(VF)divBI,VRNONE+VD+VIP0I}, {(VF)divBD,VRNONE+VD+VIPOKW},
   {(VF)divIB,VRNONE+VD+VIPI0}, {(VF)divII,VRNONE+VD+VIPI0+VIP0I}, {(VF)divID,VRNONE+VD+VIPID},
   {(VF)divDB,VRNONE+VD+VIPOKA}, {(VF)divDI,VRNONE+VD+VIPDI}, {(VF)divDD,VRNONE+VD+VIP+VCANHALT}, 
-  {(VF)divZZ,VRNONE+VZ+VZZ+VIP}, {(VF)divXX,VRNONE+VX+VXEX}, {(VF)divQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)divEE,VRNONE+VIP+VEE+VE+VCANHALT}, {(VF)divII,VRNONE+VII+VD+VIPI0+VIP0I}, {(VF)divII,VRNONE+VII+VD+VIPI0+VIP0I}},
+  {(VF)divXX,VRNONE+VX+VXEX}, {(VF)divQQ,VRNONE+VQ+VQQ}, {(VF)divII,VRNONE+VII+VD+VIPI0+VIP0I}, {(VF)divII,VRNONE+VII+VD+VIPI0+VIP0I}, {(VF)divEE,VRNONE+VIP+VEE+VE+VCANHALT}, {(VF)divZZ,VRNONE+VZ+VZZ+VIP}}, 
   &rpsdiv},
 
-/* 89 +: */ {
+/* 89 +: */ [VA2CPLUSCO]={
  {{(VF)norBB,VRNONE+VB+VIP    }, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP},
   {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP},
   {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, 
-  {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {0,0}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}},
+  {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}}, 
   &rpsnor},
 
-/* 88 +. */ {
+/* 88 +. */ [VA2CPLUSDOT]={
  {{(VF)orBB,VRNONE+VB+VIP     }, {(VF)gcdII,VRNONE+VI+VII}, {(VF)gcdDD,VRNONE+VD+VDD+VIP},
   {(VF)gcdII,VRNONE+VI+VII}, {(VF)gcdII,VRNONE+VI}, {(VF)gcdDD,VRNONE+VD+VDD+VIP},
   {(VF)gcdDD,VRNONE+VD+VDD+VIP}, {(VF)gcdDD,VRNONE+VD+VDD+VIP}, {(VF)gcdDD,VRNONE+VD+VIP+VCANHALT}, 
-  {(VF)gcdZZ,VRNONE+VZ+VZZ}, {(VF)gcdXX,VRNONE+VX+VXEX}, {(VF)gcdQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)gcdDD,VRNONE+VD+VDD+VIP+VCANHALT}, {(VF)gcdII,VRNONE+VII+VI}, {(VF)gcdII,VRNONE+VII+VI}},
+  {(VF)gcdXX,VRNONE+VX+VXEX}, {(VF)gcdQQ,VRNONE+VQ+VQQ}, {(VF)gcdII,VRNONE+VII+VI}, {(VF)gcdII,VRNONE+VII+VI}, {(VF)gcdDD,VRNONE+VD+VDD+VIP+VCANHALT}, {(VF)gcdZZ,VRNONE+VZ+VZZ}}, 
   &rpsor},
 
-/* 2d -  */ {
+/* 2d -  */ [VA2CMINUS]={
  {{(VF)minusBB,VRNONE+VI    }, {(VF)minusBI,VRNONE+VI+VIPOKW}, {(VF)minusBD,VRNONE+VD+VIPOKW}, 
   {(VF)minusIB,VRNONE+VI+VIPOKA}, {(VF)minusII,VRNONE+VI+VIP}, {(VF)minusID,VRNONE+VD+VIPID},
   {(VF)minusDB,VRNONE+VD+VIPOKA    }, {(VF)minusDI,VRNONE+VD+VIPDI    }, {(VF)minusDD,VRNONE+VD+VIP+VCANHALT}, 
-  {(VF)minusZZ,VRNONE+VZ+VZZ+VIP}, {(VF)minusXX,VRNONE+VX+VXEX}, {(VF)minusQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)minusEE,VRNONE+VIP+VEE+VE+VCANHALT}, {(VF)minusI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)minusI4I4,VRNONE+VI4I4+VI4+VIP}},
+  {(VF)minusXX,VRNONE+VX+VXEX}, {(VF)minusQQ,VRNONE+VQ+VQQ}, {(VF)minusI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)minusI4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)minusEE,VRNONE+VIP+VEE+VE+VCANHALT}, {(VF)minusZZ,VRNONE+VZ+VZZ+VIP}}, 
   &rpsminus},
 
-   // For Booleans, VIP means 'inplace if rank not specified and there is no frame'  scaf is txhis right?
-/* 3c <  */ {
+/* 3c <  */ [VA2CLT]={
  {{(VF)ltBB,VRNONE+VB+VIP}, {(VF)ltBI,VRNONE+VB+VIPOKA}, {(VF)ltBD,VRNONE+VB+VIPOKA},
   {(VF)ltIB,VRNONE+VB+VIPOKW}, {(VF)ltII,VRNONE+VB}, {(VF)ltID,VRNONE+VB},
   {(VF)ltDB,VRNONE+VB+VIPOKW}, {(VF)ltDI,VRNONE+VB}, {(VF)ltDD,VRNONE+VB}, 
-  {(VF)ltDD,VRNONE+VB+VDD}, {(VF)ltXX,VRNONE+VB+VXFC}, {(VF)ltQQ,VRNONE+VB+VQQ}, {0,0}, {(VF)ltEE,VRNONE+VEE+VB}, {(VF)ltI2I2,VRNONE+VI2I2+VB}, {(VF)ltI4I4,VRNONE+VI4I4+VB}},
+  {(VF)ltXX,VRNONE+VB+VXFC}, {(VF)ltQQ,VRNONE+VB+VQQ}, {(VF)ltI2I2,VRNONE+VI2I2+VB}, {(VF)ltI4I4,VRNONE+VI4I4+VB}, {(VF)ltEE,VRNONE+VEE+VB}, {(VF)ltDD,VRNONE+VB+VDD}}, 
   &rpslt},
 
-/* 3d =  */ {
+/* 3d =  */ [VA2CEQ]={
  {{(VF)eqBB,VRNONE+VB+VIP}, {(VF)eqBI,VRNONE+VB+VIPOKA}, {(VF)eqBD,VRNONE+VB+VIPOKA},
   {(VF)eqIB,VRNONE+VB+VIPOKW}, {(VF)eqII,VRNONE+VB}, {(VF)eqID,VRNONE+VB},
   {(VF)eqDB,VRNONE+VB+VIPOKW}, {(VF)eqDI,VRNONE+VB}, {(VF)eqDD,VRNONE+VB}, 
-  {(VF)eqZZ,VRNONE+VB+VZZ}, {(VF)eqXX,VRNONE+VB+VXEQ}, {(VF)eqQQ,VRNONE+VB+VQQ}, {0,0}, {(VF)eqEE,VRNONE+VEE+VB}, {(VF)eqI2I2,VRNONE+VI2I2+VB}, {(VF)eqI4I4,VRNONE+VI4I4+VB}},
+  {(VF)eqXX,VRNONE+VB+VXEQ}, {(VF)eqQQ,VRNONE+VB+VQQ}, {(VF)eqI2I2,VRNONE+VI2I2+VB}, {(VF)eqI4I4,VRNONE+VI4I4+VB}, {(VF)eqEE,VRNONE+VEE+VB}, {(VF)eqZZ,VRNONE+VB+VZZ}}, 
   &rpseq},
 
-/* 3e >  */ {
+/* 3e >  */ [VA2CGT]={
  {{(VF)gtBB,VRNONE+VB+VIP}, {(VF)gtBI,VRNONE+VB+VIPOKA}, {(VF)gtBD,VRNONE+VB+VIPOKA},
   {(VF)gtIB,VRNONE+VB+VIPOKW}, {(VF)gtII,VRNONE+VB}, {(VF)gtID,VRNONE+VB},
   {(VF)gtDB,VRNONE+VB+VIPOKW}, {(VF)gtDI,VRNONE+VB}, {(VF)gtDD,VRNONE+VB}, 
-  {(VF)gtDD,VRNONE+VB+VDD}, {(VF)gtXX,VRNONE+VB+VXCF}, {(VF)gtQQ,VRNONE+VB+VQQ}, {0,0}, {(VF)gtEE,VRNONE+VEE+VB}, {(VF)gtI2I2,VRNONE+VI2I2+VB}, {(VF)gtI4I4,VRNONE+VI4I4+VB}},
+  {(VF)gtXX,VRNONE+VB+VXCF}, {(VF)gtQQ,VRNONE+VB+VQQ}, {(VF)gtI2I2,VRNONE+VI2I2+VB}, {(VF)gtI4I4,VRNONE+VI4I4+VB}, {(VF)gtEE,VRNONE+VEE+VB}, {(VF)gtDD,VRNONE+VB+VDD}}, 
   &rpsgt},
 
-/* 8a *. */ {
+/* 8a *. */ [VA2CSTARDOT]={
  {{(VF)andBB,VRNONE+VB+VIP    }, {(VF)lcmII,VRNONE+VI+VII}, {(VF)lcmDD,VRNONE+VD+VDD+VIP},
   {(VF)lcmII,VRNONE+VI+VII}, {(VF)lcmII,VRNONE+VI    }, {(VF)lcmDD,VRNONE+VD+VDD+VIP},
   {(VF)lcmDD,VRNONE+VD+VDD+VIP}, {(VF)lcmDD,VRNONE+VD+VDD+VIP}, {(VF)lcmDD,VRNONE+VD+VIP+VCANHALT}, 
-  {(VF)lcmZZ,VRNONE+VZ+VZZ}, {(VF)lcmXX,VRNONE+VX+VXEX}, {(VF)lcmQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)lcmDD,VRNONE+VD+VDD+VIP+VCANHALT}, {(VF)lcmII,VRNONE+VII+VI}, {(VF)lcmII,VRNONE+VII+VI}},
+  {(VF)lcmXX,VRNONE+VX+VXEX}, {(VF)lcmQQ,VRNONE+VQ+VQQ}, {(VF)lcmII,VRNONE+VII+VI}, {(VF)lcmII,VRNONE+VII+VI}, {(VF)lcmDD,VRNONE+VD+VDD+VIP+VCANHALT},{(VF)lcmZZ,VRNONE+VZ+VZZ}}, 
   &rpsand},
 
-/* 8b *: */ {
+/* 8b *: */ [VA2CSTARCO]={
  {{(VF)nandBB,VRNONE+VB+VIP},     {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP},
   {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP},
   {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, 
-  {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {0,0}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}},
+  {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP},{(VF)nandBB,VRNONE+VB+VBB+VIP}}, 
   &rpsnand},
 
-/* 85 >: */ {
+/* 85 >: */ [VA2CGE]={
  {{(VF)geBB,VRNONE+VB+VIP}, {(VF)geBI,VRNONE+VB+VIPOKA}, {(VF)geBD,VRNONE+VB+VIPOKA},
   {(VF)geIB,VRNONE+VB+VIPOKW}, {(VF)geII,VRNONE+VB}, {(VF)geID,VRNONE+VB},
   {(VF)geDB,VRNONE+VB+VIPOKW}, {(VF)geDI,VRNONE+VB}, {(VF)geDD,VRNONE+VB}, 
-  {(VF)geDD,VRNONE+VB+VDD}, {(VF)geXX,VRNONE+VB+VXFC}, {(VF)geQQ,VRNONE+VB+VQQ}, {0,0}, {(VF)geEE,VRNONE+VEE+VB}, {(VF)geI2I2,VRNONE+VI2I2+VB}, {(VF)geI4I4,VRNONE+VI4I4+VB}},
+  {(VF)geXX,VRNONE+VB+VXFC}, {(VF)geQQ,VRNONE+VB+VQQ}, {(VF)geI2I2,VRNONE+VI2I2+VB}, {(VF)geI4I4,VRNONE+VI4I4+VB}, {(VF)geEE,VRNONE+VEE+VB}, {(VF)geDD,VRNONE+VB+VDD}}, 
   &rpsge},
 
-/* 83 <: */ {
+/* 83 <: */ [VA2CLE]={
  {{(VF)leBB,VRNONE+VB+VIP}, {(VF)leBI,VRNONE+VB+VIPOKA}, {(VF)leBD,VRNONE+VB+VIPOKA},
   {(VF)leIB,VRNONE+VB+VIPOKW}, {(VF)leII,VRNONE+VB}, {(VF)leID,VRNONE+VB},
   {(VF)leDB,VRNONE+VB+VIPOKW}, {(VF)leDI,VRNONE+VB}, {(VF)leDD,VRNONE+VB}, 
-  {(VF)leDD,VRNONE+VB+VDD}, {(VF)leXX,VRNONE+VB+VXCF}, {(VF)leQQ,VRNONE+VB+VQQ}, {0,0}, {(VF)leEE,VRNONE+VEE+VB}, {(VF)leI2I2,VRNONE+VI2I2+VB}, {(VF)leI4I4,VRNONE+VI4I4+VB}},
+  {(VF)leXX,VRNONE+VB+VXCF}, {(VF)leQQ,VRNONE+VB+VQQ}, {(VF)leI2I2,VRNONE+VI2I2+VB}, {(VF)leI4I4,VRNONE+VI4I4+VB}, {(VF)leEE,VRNONE+VEE+VB}, {(VF)leDD,VRNONE+VB+VDD}}, 
   &rpsle},
 
-/* 82 <. */ {
+/* 82 <. */ [VA2CMIN]={
  {{(VF)andBB,VRNONE+VB+VIP}, {(VF)minBI,VRNONE+VI+VIPOKW}, {(VF)minBD,VRNONE+VD+VIPOKW},
   {(VF)minIB,VRNONE+VI+VIPOKA}, {(VF)minII,VRNONE+VI+VIP}, {(VF)minID,VRNONE+VD+VIPID},
   {(VF)minDB,VRNONE+VD+VIPOKA}, {(VF)minDI,VRNONE+VD+VIPDI}, {(VF)minDD,VRNONE+VD+VIP}, 
-  {(VF)minDD,VRNONE+VD+VDD+VIP}, {(VF)minXX,VRNONE+VX+VXEX}, {(VF)minQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)minEE,VRNONE+VEE+VE+VIP}, {(VF)minI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)minI4I4,VRNONE+VI4I4+VI4+VIP}},  // always VIP a forced conversion
+  {(VF)minXX,VRNONE+VX+VXEX}, {(VF)minQQ,VRNONE+VQ+VQQ}, {(VF)minI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)minI4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)minEE,VRNONE+VEE+VE+VIP}, {(VF)minDD,VRNONE+VD+VDD+VIP}}, 
   &rpsmin},
 
-/* 84 >. */ {
+/* 84 >. */ [VA2CMAX]={
  {{(VF)orBB,VRNONE+VB+VIP}, {(VF)maxBI,VRNONE+VI+VIPOKW}, {(VF)maxBD,VRNONE+VD+VIPOKW},
   {(VF)maxIB,VRNONE+VI+VIPOKA}, {(VF)maxII,VRNONE+VI+VIP}, {(VF)maxID,VRNONE+VD+VIPID},
   {(VF)maxDB,VRNONE+VD+VIPOKA}, {(VF)maxDI,VRNONE+VD+VIPDI}, {(VF)maxDD,VRNONE+VD+VIP}, 
-  {(VF)maxDD,VRNONE+VD+VDD+VIP}, {(VF)maxXX,VRNONE+VX+VXEX}, {(VF)maxQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)maxEE,VRNONE+VEE+VE+VIP}, {(VF)maxI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)maxI4I4,VRNONE+VI4I4+VI4+VIP}},
+  {(VF)maxXX,VRNONE+VX+VXEX}, {(VF)maxQQ,VRNONE+VQ+VQQ}, {(VF)maxI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)maxI4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)maxEE,VRNONE+VEE+VE+VIP}, {(VF)maxDD,VRNONE+VD+VDD+VIP}}, 
   &rpsmax},
 
-/* 2b +  */ {
+/* 2b +  */ [VA2CPLUS]={
  {{(VF)plusBB,VRNONE+VI    }, {(VF)plusBI,VRNONE+VI+VIPOKW}, {(VF)plusBD,VRNONE+VD+VIPOKW}, 
   {(VF)plusIB,VRNONE+VI+VIPOKA}, {(VF)plusII,VRNONE+VI+VIP}, {(VF)plusID,VRNONE+VD+VIPID}, 
   {(VF)plusDB,VRNONE+VD+VIPOKA}, {(VF)plusDI,VRNONE+VD+VIPDI}, {(VF)plusDD,VRNONE+VD+VIP+VCANHALT}, 
-  {(VF)plusZZ,VRNONE+VZ+VZZ+VIP}, {(VF)plusXX,VRNONE+VX+VXEX}, {(VF)plusQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)plusEE,VRNONE+VEE+VE+VIP+VCANHALT}, {(VF)plusI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)plusI4I4,VRNONE+VI4I4+VI4+VIP}},
+  {(VF)plusXX,VRNONE+VX+VXEX}, {(VF)plusQQ,VRNONE+VQ+VQQ}, {(VF)plusI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)plusI4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)plusEE,VRNONE+VEE+VE+VIP+VCANHALT}, {(VF)plusZZ,VRNONE+VZ+VZZ+VIP}}, 
   &rpsplus},
 
-/* 2a *  */ {
+/* 2a *  */ [VA2CSTAR]={
 #if SY_64  // boolean multiply is the same for int and double if value length the same
 #define tymesBI tymesBD
 #define tymesIB tymesDB
@@ -843,44 +844,44 @@ VA va[]={
  {{(VF)andBB,VRNONE+VB+VIP}, {(VF)tymesBI,VRNONE+VI+VIPOKW}, {(VF)tymesBD,VRNONE+VD+VIPOKW},
   {(VF)tymesIB,VRNONE+VI+VIPOKA}, {(VF)tymesII,VRNONE+VI+VIP}, {(VF)tymesID,VRNONE+VD+VIPID},
   {(VF)tymesDB,VRNONE+VD+VIPOKA}, {(VF)tymesDI,VRNONE+VD+VIPDI}, {(VF)tymesDD,VRNONE+VD+VIP}, 
-  {(VF)tymesZZ,VRNONE+VZ+VZZ+VIP}, {(VF)tymesXX,VRNONE+VX+VXEX}, {(VF)tymesQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)tymesEE,VRNONE+VEE+VE+VIP}, {(VF)tymesI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)tymesI4I4,VRNONE+VI4I4+VI4+VIP}},
+  {(VF)tymesXX,VRNONE+VX+VXEX}, {(VF)tymesQQ,VRNONE+VQ+VQQ}, {(VF)tymesI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)tymesI4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)tymesEE,VRNONE+VEE+VE+VIP}, {(VF)tymesZZ,VRNONE+VZ+VZZ+VIP}}, 
   &rpstymes},
 
-/* 5e ^  */ {   // may produce complex numbers
+/* 5e ^  */ [VA2CEXP]={   // may produce complex numbers
  {{(VF)geBB,VRNONE+VB+VIP}, {(VF)powBI,VRNONE+VD}, {(VF)powBD,VRNONE+VD},
   {(VF)powIB,VRNONE+VI}, {(VF)powII,VRNONE+VD}, {(VF)powID,VRNONE+VD+VCANHALT},
   {(VF)powDB,VRNONE+VD}, {(VF)powDI,VRNONE+VD}, {(VF)powDD,VRNONE+VD+VCANHALT}, 
-  {(VF)powZZ,VRNONE+VZ+VZZ}, {(VF)powXX,VRNONE+VX+VXEX}, {(VF)powQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)powEE,VRNONE+VEE+VE+VCANHALT}, {(VF)powII,VRNONE+VII+VD+VCANHALT}, {(VF)powII,VRNONE+VII+VD+VCANHALT}},
+  {(VF)powXX,VRNONE+VX+VXEX}, {(VF)powQQ,VRNONE+VQ+VQQ}, {(VF)powII,VRNONE+VII+VD+VCANHALT}, {(VF)powII,VRNONE+VII+VD+VCANHALT}, {(VF)powEE,VRNONE+VEE+VE+VCANHALT}, {(VF)powZZ,VRNONE+VZ+VZZ}}, 
   &rpsge},
 
-/* 7c |  */ {
+/* 7c |  */ [VA2CSTILE]={
  {{(VF)ltBB,VRNONE+VB+VIP    }, {(VF)remII,VRNONE+VI+VII+VIP}, {(VF)remDD,VRNONE+VD+VDD+VIP},
   {(VF)remII,VRNONE+VI+VII+VIP}, {(VF)remII,VRNONE+VI+VIP}, {(VF)remID,VRNONE+VI+VCANHALT    },   // remID can 'overflow' if result is nonintegral
   {(VF)remDD,VRNONE+VD+VDD+VIP}, {(VF)remDD,VRNONE+VD+VDD+VIP}, {(VF)remDD,VRNONE+VD+VIP+VCANHALT}, 
-  {(VF)remZZ,VRNONE+VZ+VZZ}, {(VF)remXX,VRNONE+VX+VXEX}, {(VF)remQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)remDD,VRNONE+VD+VDD+VIP+VCANHALT}, {(VF)remI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)remI4I4,VRNONE+VI4I4+VI4+VIP}},
+  {(VF)remXX,VRNONE+VX+VXEX}, {(VF)remQQ,VRNONE+VQ+VQQ}, {(VF)remI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)remI4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)remDD,VRNONE+VD+VDD+VIP+VCANHALT}, {(VF)remZZ,VRNONE+VZ+VZZ}}, 
   &rpslt},
 
-/* 21 !  */ {
+/* 21 !  */ [VA2CBANG]={
  {{(VF)leBB,VRNONE+VB+VIP            }, {(VF)binDD,VRI+VD+VDD+VIP}, {(VF)binDD,VRNONE+VD+VDD+VIP}, 
   {(VF)binDD,VRI+VD+VDD+VIP}, {(VF)binDD,VRI+VD+VDD+VIP}, {(VF)binDD,VRNONE+VD+VDD+VIP}, 
   {(VF)binDD,VRNONE+VD+VDD+VIP    }, {(VF)binDD,VRNONE+VD+VDD+VIP    }, {(VF)binDD,VRNONE+VD+VIP}, 
-  {(VF)binZZ,VRNONE+VZ+VZZ}, {(VF)binXX,VRNONE+VX+VXEX}, {(VF)binQQ,VRNONE+VX+VQQ}, {0,0}, {(VF)binDD,VRNONE+VD+VDD+VIP}, {(VF)binDD,VRNONE+VD+VDD+VIP}, {(VF)binDD,VRNONE+VD+VDD+VIP}}, 
+  {(VF)binXX,VRNONE+VX+VXEX}, {(VF)binQQ,VRNONE+VX+VQQ}, {(VF)binDD,VRNONE+VD+VDD+VIP}, {(VF)binDD,VRNONE+VD+VDD+VIP},  {(VF)binDD,VRNONE+VD+VDD+VIP}, {(VF)binZZ,VRNONE+VZ+VZZ}}, 
   &rpsle},
 
-/* d1 o. */ {
+/* d1 o. */ [VA2CCIRCLE]={
  {{(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirBD,VRNONE+VD},
   {(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirID,VRNONE+VD},
   {(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirDD,VRNONE+VD}, 
-  {(VF)cirZZ,VRD+VZ+VZZ}, {(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirDD,VRNONE+VD+VDD}, {0,0}, {(VF)cirEE,VRNONE+VEE+VE+VCANHALT}, {(VF)cirDD,VRNONE+VDD+VD}, {(VF)cirDD,VRNONE+VDD+VD}},
+  {(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirDD,VRNONE+VDD+VD}, {(VF)cirDD,VRNONE+VDD+VD}, {(VF)cirEE,VRNONE+VEE+VE+VCANHALT}, {(VF)cirZZ,VRD+VZ+VZZ}}, 
   &rpsnull},
 
 
-/* -- (compare |) */ {
+/* -- (compare |) */ [VA2CEQABS]={
 // these routines are used only for floating-point types (DD), so they overlap
  {{0,0}, {0,0}, {0,0},
   {(VF)eqabsDD,VRNONE+VB}, {(VF)neabsDD,VRNONE+VB}, {(VF)ltabsDD,VRNONE+VB},
   {(VF)leabsDD,VRNONE+VB}, {(VF)geabsDD,VRNONE+VB}, {(VF)gtabsDD,VRNONE+VB}, 
-  {0,0}, {0,0}, {0,0}},
+  },
   &rpsnull},
 
 
@@ -954,7 +955,7 @@ static INLINE A jtva2(J jtfg,AD *a,AD *w,AD * RESTRICT self,I afwfagreefr){F12IP
  }
 
  // vbls in use: a w allranks cv jt
- // cv is going to take ~6 cycles to settle.  We want to do as much as we can before needing to look at it.  We can do the agreement test first, and then any input conversions
+ // cv is going to take ~6 cycles to settle, or more if it missed D1$.  We want to do as much as we can before needing to use it.  We can do the agreement test first, and then any input conversions
 
  ASSERTAGREE(AS(a),AS(w),afwfagreefr>>(2*RANKTX));  // outermost (or only) agreement check.  If we retry the operation we will do it agan, which is a waste.  But is it worth testing for?  We might be killing enough time that we never block on cv
 
@@ -1060,7 +1061,7 @@ static INLINE A jtva2(J jtfg,AD *a,AD *w,AD * RESTRICT self,I afwfagreefr){F12IP
 #define frFLMSK ~0
     // vbls needed: a w wcr cv wcr afwfarwr [jt]
     { I wcomp=wcr<<RANKTX; UI lflg=0+(UI)((US)wcr<(US)wcomp); awlongcr=(US)wcr<(US)wcomp?w:a; lflg=2*lflg+(UI)((UI4)wcomp<(UI4)wcr); cv+=lflg<<VIPWFNOTLONGX; }  //  WCRLONG if acr<wcr, then WFLONG if wf<af.  Actually, the = value is indeterminate.  Should gen ADC
-        // cv has settled from its initial load, but only by a few clocks
+        // cv has settled from its initial load if it was in D1$, perhaps not if it missed
     I wcrs=wcr>>RANKTX; UI4 shortr=cv&VIPWCRLONG?wcrs:wcr; fr=cv&VIPWCRLONG?wcr:wcrs;  // shortr=x/frame(short cell)/x/cellrank(short cell) fr=x/frame(long cell)/x/cellrank(long cell) wcr free
     shortr=LANE(shortr,tCSC); shortr*=BIT(shortrCSC*RANKTX)+BIT(shortrCSURPOFST*RANKTX)-1;   //  cellrank(short cell);  cellrank(short cell)/cellrank(short cell)/0/-cellrank(short cell)  100000000+10000+ffffffffffffffff
     shortr+=fr&=(RANKTMSK*(BIT(shortrtCSC*RANKTX)+BIT(frFLC*RANKTX)));  // shortr=cellrank(short cell)/frame(long cell)+cellrank(short cell)/0/cellrank(long cell)-cellrank(short cell)  fr=0/frame(long cell)/0/cellrank(long cell)
@@ -1918,12 +1919,12 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    //  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F     // priorities
    // B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX
 // obsolete    //  0               4       10  11  8     15 16    13 14  9   routine indexes for homogeneous args (final pri)
-   //  0               4       10  11  8     14 15    12 13  9   routine indexes for homogeneous args (final pri)
-   //                          6   7   4     10 11    8   9  5   biased by 4, the smallest we use here (values stored in the shift constant)
+   //  0               4       9   10  8     11 12       13 14   routine indexes for homogeneous args (final pri)
+   //                          5   6   4      7  8        9 10   biased by 4, the smallest we use here (values stored in the shift constant)
    // (B)             (I)      X   Q   D     I2 I4    DS  E  Z   internal type for each precision 
-   pri=4+(I)SHMSK8(0x59ffbaf476ffffffLL,pri<<2,0xf);  // 4 is II, lower than the lowest routine# we can call for here  f is unimplemented precision
+   pri=4+(I)SHMSK8(0xa9ff87f465ffffffLL,pri<<2,0xf);  // 4 is II, lower than the lowest routine# we can call for here  f is unimplemented precision
    VA2 selva2 = vainfo->p2[pri];  // routine/flags for the top-priority arg
-   if(unlikely(pri==8))selva2.cv|=VDD;      // We allow input conversion to be omitted for BID, so if we are using the DD line we have to install DD conversion
+   if(unlikely(pri==8))selva2.cv|=VDD;      // We allow input conversion to be omitted for BID, so if we are using the DD line (necessarily with non-BID input) we have to install DD conversion
 // obsolete    I cvtflgs=(apri>wpri?VCOPYA:0)+(apri<wpri?VCOPYW:0);  // set the flag to cause conversion of low-pri arg to the upper.  This handles ALL mixed-mode conversions
 // obsolete    cvtflgs=selva2.cv&(VBB|VII|VDD|VZZ)?0:cvtflgs;  //  If the routine already forces a conversion, don't override.  Most DD, SP, QP specify no conversion, but +. or bitwise require bool or integer 
 // obsolete    selva2.cv|=cvtflgs;

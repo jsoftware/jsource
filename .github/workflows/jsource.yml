@@ -14,8 +14,8 @@ on:
 
 env:
  DEBUGLEVEL: 0
- OPTL: -O2
- NO_UNDEFINED: 0
+ OPTL: -O1
+ NO_UNDEFINED: 1
 
 jobs:
 
@@ -1288,10 +1288,8 @@ jobs:
       USE_EMU_AVX: 1
       PTHREADS4WSRC: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
-#      OPTL: ${{ env.OPTL }}
-      OPTL: -Og
-#      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
-      NO_UNDEFINED: 1
+      OPTL: ${{ env.OPTL }}
+      NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
      run: |
       script/buildga.sh windows x86_64 || exit 1
 

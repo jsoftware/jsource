@@ -268,7 +268,6 @@ static DF2(jtgcr12){F12IP;PROLOG(0);
  A ff;   // the routine for the function -  u or u^:newpower
  A z0; RZ(z0=CALL12(w,FAV(hv[hn-2])->valencefns[!!w],a,w,hv[hn-2]))  // z=.[x] v1 y  which is the power to use
  A uc; I u0, co; WITHJTJERROFF(co=(((AT(z0)&~(B01+INT))|AR(z0)|((u0=BIV0(z0))&~1))==0)||(AR(z0)==0&&AT(z0)&NUMERIC&&(uc=cvt(INT,z0))!=0&&!((u0=IAV(uc)[0])&~1));)
-// obsolete  if(likely(((AT(z0)&~(B01+INT))|AR(z0)|((u0=BIV0(z0))&~1))==0)||(AR(z0)==0&&AT(z0)&NUMERIC&&(uc=cvt(INT,z0))!=0&&!((u0=IAV(uc)[0])&~1))){  // v1 result is atomic bool/int 0/1 (if statement)
  if(likely(co)){  // v1 result is atomic bool/int 0/1 (if statement)
   ff=FAV(self)->fgh[0]; ff=u0?ff:0;  // we will execute u or nothing; ff tells which
  }else{  // v1 returned something other than 0/1

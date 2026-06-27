@@ -46,7 +46,6 @@ INLINE static A jtssingleton(J jtfg,A a,A w,I af,A self){F12JT;
  I bidcase=(I)self&0x3c; self=(A)((I)self&~0x3f); I opcode=(I)FAV(self)->lu2.lc;  // fetch bidcase from self; restore self; operation#
  A z=jt->zombieval;  // fetch address of assignand, which we presumptively make the result
  void *av=voidAV(a), *wv=voidAV(w), *zv;  // point to the argument values and result
-// obsolete  I caseno=(opcode&0x7f)-VA2CBW1111; caseno=caseno<0?0:caseno; caseno=SSINGCASE(caseno,bidcase>>INTX);  // case # for eventual switch.  Lump all Booleans at 0
  I caseno=opcode-VA2CBW1111; caseno=caseno<0?0:caseno; caseno&=31; caseno=SSINGCASE(caseno,bidcase>>INTX);  // case # for eventual switch.  Lump all Booleans at 0. &31 to remove comparison flag and to help the compiler
  // Start loading everything we will need as values before the pipeline break.
  I aiv=*(I*)av; I wiv=*(I*)wv; D adv,wdv;  // arg values, as I and D
@@ -73,9 +72,7 @@ INLINE static A jtssingleton(J jtfg,A a,A w,I af,A self){F12JT;
  }
  // fall through: no inplacing, allocate the result, usually an atom.  If not atom, make the shape all 1s
  if(likely(af==0)){GAT0(z,FL,1,0); zv=voidAV0(z);}else{GATV1(z,FL,1,af); zv=voidAVn(af,z);}  // af persists over call, then freed
-// obsolete  goto nozv;
 haszv:;  // here when we are operating inplace on z/zv
-// obsolete  zv=voidAV(z);  // get addr of value
 nozv:;  // here when we have zv or don't need it
  // z is 0 ONLY for comparisons with no rank.
  I ziv; D zdv;
@@ -889,7 +886,6 @@ VA va[]={
 
 A jtcvz(J jt,I cv,A w){I t;
  t=AT(w);
-// obsolete  if(cv&VRD&&!(t&FL) ){
  if(cv&VRD&&t&CMPX){
   // conversion to D is needed when we took the real/int/mag of a complex number and we want a FL result from that.
   // unfortunately it's hard to tell when that's what we did; rather than converting intolerantly (which would work but allocates
@@ -898,7 +894,6 @@ A jtcvz(J jt,I cv,A w){I t;
   // imaginaries all 0, can demote to float
   R ccvt(FL,w,0);  // convert - must be possible
  }else if(cv&VRI&&!(t&INT))R icvt(w);  // convert to integer if possible.  Only 1 conversion allowed
-// obsolete  if(cv&VRI&&!(t&INT))R icvt(w);  // convert to integer if possible
  R w;
 }    /* convert result */
 
@@ -919,11 +914,9 @@ static INLINE A jtva2(J jtfg,AD *a,AD *w,AD * RESTRICT self,I afwfagreefr){F12IP
  I vandx=__atomic_load_n(&FAV((A)((I)self&~0x3f))->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
  I ar=AR(a), wr=AR(w);   // noun types & ranks
  {
-// obsolete   if(likely(!((at|wt)&((SPARSE|NOUN)&~(B01|INT|FL))))&&likely(!((I)jtfg&JTRETRY))){  // no error, bool/int/fl nonsparse args
   if(likely(!((I)self&1))){  // bool/int/fl nonsparse args (always cleared on error retry)
    // Here for the fast and important case, where the arguments are both dense B01/INT/FL
-   VA *vainfo=(VA*)((I)va+vandx);  // extract table line from the primitive
-   VA2 *aadocv=&vainfo->p2[((I)self&0x3c)>>INTX];   // test here to avoid the call overhead
+   VA2 *aadocv=&((VA*)((I)va+vandx))->p2[((I)self&0x3c)>>INTX];   // read table[primitive][argtype]
    cv=aadocv->cv; adocvfn=aadocv->f;   // fetch the address of the function and the cv
   }else{
    // An arg is not BID.  Get the control vector and routine
@@ -940,13 +933,11 @@ static INLINE A jtva2(J jtfg,AD *a,AD *w,AD * RESTRICT self,I afwfagreefr){F12IP
     at=((-AN(a)&(-AN(w)|-(at&NUMERIC)))>=0)?B01:at;
     wt=((-AN(w)&(-AN(a)|-(wt&NUMERIC)))>=0)?B01:wt;
     adocv=var(self,at&~SPARSE,wt&~SPARSE);   // rerun the decode with safer types
-// obsolete      if((-AN(a)&-AN(w))>=0)adocv.cv&=~VICMSK;  // disable input conversion if there is an empty
     adocv.cv&=~VICMSK;  // disable input conversion: if there is an empty we need to; if not we are going to take an error
     adocv.cv|=VTYPECHGA+VTYPECHGW;  // we don't know whether the verb will change the original type.  Only an empty could be inplaced, so we warn the inplacing code to change the type
     forcetomemory(aawwzknfxrz);  // make sure we don't try to keep these values in registers
    }
    cv=adocv.cv; adocvfn=adocv.f;   // fetch the address of the function and the cv
-// obsolete   aadocv=&adocv;  // we save the address of the struct
    // We could allocate the result block here & avoid the test after the allocation later.  But we would have to check for agreement etc
    // Don't signal domain error on the types yet, because domain has lower priority than agreement
    // If we switch a sparse nonnumeric matrix to boolean, that may be a space problem; but we don't
@@ -981,26 +972,6 @@ static INLINE A jtva2(J jtfg,AD *a,AD *w,AD * RESTRICT self,I afwfagreefr){F12IP
  {
   if(withprob((RANK2T)afwfagreefr==0,0.75)){ // rank 0 0 means no outer frames, sets up faster
    if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
-#if 0  // obsolete 
-    I an=AN(a); m=zn=AN(w);   // lengths
-    fr=ar; UI shortr=wr;  // fr,shortr = ar,wr to begin with.  Changes later
-    // No rank specified.  Since all these verbs have rank 0, that simplifies quite a bit.  ak/wk/zk are not needed and are garbage
-    I raminusw=fr-shortr;   // ar-wr, neg if WISLONG
-    zn=raminusw<0?zn:an; m=raminusw<0?an:m; awlongcr=raminusw<0?w:a; awlongfr=a;  // zn=# atoms in higher-rank operand, m=#atoms in lower-rank; longer cell rank; any valid addr (to avoid microprogram check) for long frame, since frame is empty
-// obsolete  aawwzknfxrz[5]=
-    mf=REPSGN(raminusw);  // mf=-1 if w has longer frame, means cannot inplace a
-// obsolete     cv+=mf&VIPWCRLONG;  // set  VIPWCRLONG if a repeated
-    raminusw=-raminusw;   // now wr-ar
-    nf=REPSGN(raminusw);  // nf=-1 if a has longer frame, means cannot inplace w
-    nf=3+2*mf+nf+~(JTINPLACEA+JTINPLACEW);  // set inplaceability here: only if nonrepeated cell
-// obsolete     aawwzknfxrz[9]=0;  // set result-offset of last block to 0 indicating no loop over nf/mf
-    raminusw=raminusw&mf; fr+=raminusw; shortr-=raminusw;  // if ar is the longer one, change nothing; otherwise transfer aw-ar from shortr to r.  f (high part of fr) is 0
-    PRODRNK(n,fr-shortr,AS(awlongcr)+shortr);  // treat the entire operands as one big cell; get the rest of the values needed
-   // notionally we now repurpose fr to be frame/rank, with the frame 0.  n takes 8 cycles to settle
-    cv&=nf;
-    // parm aawwzknfxrz[5] is orig m, i. e. the length of the inner or only loop.
-    n=2*n-mf;  // parm m if there are 2 loops.  The value is 2 * (length of inner loop), with LSB set if x is the repeated value (i. e. w has long frame)
-#else
     awlongcr=(UI)ar<(UI)wr?w:a; awlongfr=(UI)ar<(UI)wr?a:w;   // point to long cell and short cell.  short cell could be either, since it is not used, but it must be mapped to avoid uprogram check and we need short cell here
     zn=AN(awlongcr); m=AN(awlongfr);   // fetch lengths of result and the short arg
     fr=(UI)ar<(UI)wr?wr:ar; UI shortr=(UI)ar<(UI)wr?ar:wr;   // long frame and short frame
@@ -1008,17 +979,12 @@ static INLINE A jtva2(J jtfg,AD *a,AD *w,AD * RESTRICT self,I afwfagreefr){F12IP
     PRODRNK(n,fr-shortr,AS(awlongcr)+shortr);  // treat the entire operands as one big cell
     cv&=~nf;  // bit 0-1=routine/rank/arg/input inplaceable
     n=2*n+mf;   // parm m if there are multiple inner loops.  The value is 2 * (length of inner loop), with LSB set if x is the repeated value (i. e. w has long frame)
-#endif
-// obsolete     m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
-// obsolete     m=n>3?n:m;  // if inner-loop len > 1, there are 2 loops, use mf; if inner-loop len=1, use the 1-loop value
    }else{
     // Sparse setup
-// obsolete     R vasp(a,w,FAV(self)->id,adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),0,fr,0,shortr,0,shortr>fr?shortr:fr);
     R vasp(a,w,FAV(self)->id,adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),0,ar,0,wr,0,MAX(ar,wr));
    }
   }else{I ak,wk;UI wcr;
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
-// obsolete    {I af,wf;
     // Heavy register pressure here.
     // vbls needed: cv a w afwfagreefr self
    UI4 afwfarwr=((UI4)afwfagreefr<<(2*RANKTX))+(ar<<RANKTX)+wr; wcr=afwfarwr-(US)afwfagreefr;   // afwfarwr=af/wf/anr/wnr, subtract 0/0/af/wf => af/wf/acr/wcr = wcr  afwfagreefr free
@@ -1042,7 +1008,6 @@ static INLINE A jtva2(J jtfg,AD *a,AD *w,AD * RESTRICT self,I afwfagreefr){F12IP
 #define afwfarwrWFMSK RANKTMSK
 #define afwfarwrAF 3
 #define afwfarwrAFMSK ~0
-// obsolete     ak=(cv&VIPWFNOTLONG)?ak:0; wk=(cv&VIPWFNOTLONG)?0:wk; aawwzknfxrz[1]=ak; aawwzknfxrz[3]=wk;  // set inner cell size for non-last, 0 for a repeated cell ak/wk free.  This runs a while but has no carried dependency
 #define shortrtCSC 0  // temporarily, cell rank of short cell
 #define shortrtCSCMSK RANKTMSK
 #define shortrCSURP 0  // long cell rank - short cell rank = length of surplus long rank
@@ -1092,9 +1057,6 @@ static INLINE A jtva2(J jtfg,AD *a,AD *w,AD * RESTRICT self,I afwfagreefr){F12IP
     // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
 // this shows the fix   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
     // vbls needed: a w ak wk cv n nf mf [jt]
-// obsolete     if(unlikely(a==w))cv&=~(JTINPLACEW+JTINPLACEA);  // 0-1=routine/rank/arg/input inplaceable; but never if args equal.
-// obsolete     {I f=LANE(fr,FS);  // recover (shorter frame len) from fr
-// obsolete     }
     
     // vbls needed: a w ak wk cv n mf nf [jt].  n has settled, and nf/mf are close to settling
     // Now nf=outer repeated frame  mf=outer common frame  n=inner repeated frame  m=inner common frame
@@ -1129,7 +1091,6 @@ static INLINE A jtva2(J jtfg,AD *a,AD *w,AD * RESTRICT self,I afwfagreefr){F12IP
      cv|=VIPOLOOPREQD;  // indicate that the outer loops are needed
      aawwzknfxrz[6]=--nf;   // set nf (#inner outer loops-1)
      n=n+n+((UI)neq1m<(UI)(cv&VIPWCRLONG));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set   Should generate ADC
-// obsolete      aawwzknfxrz[9]=0;  // set result-offset of last block to 0 indicating no loop over nf/mf.  No other aawwzknfxrz except [5] matter
     }else{
      // migration is possible
      m*=mf; n*=nf;   // propagate mf and nf down
@@ -1151,7 +1112,6 @@ migrate1: ;  // here if there was 0-1 outer cell, i. e. mf=nf=1 or zn=0.  Rare b
  // Not sparse.
  RESETRANK;  // Ranks are required for sparse, which calls IRS-enabled routines internally.  We clear in case the action routine calls a function with IRS
 
-// obsolete  if(likely(jtfg!=0)){   // if not sparse...
  // vbls needed: a w ak wk cv fr n jt
  // convert (n=#inner loops/a is repeated)/(m=len of inner loop) to m(~(single-loop len), or (#inner loops)/(a is repeated))/aawwzknfxrz[5](garbage, or inner-loop len)
  // n/m are settling here
@@ -1173,14 +1133,10 @@ migrate1: ;  // here if there was 0-1 outer cell, i. e. mf=nf=1 or zn=0.  Rare b
   if(unlikely(a==w))goto allocate;   // If a==w suppress inplacing, in case the operation must be retried (we could check which ones but they are just not likely to be used reflexively)
   // we are reusing an argument (ipw is neg if it's w, which has priority); make sure the type is updated to the result type
   z=ipw<0?w:a;  // z=inplaceable arg; in test suite, most inplaceables are inplaceable on both w and a, somewhat more on w
-// obsolete if(!((!(AT(z)&rtype(cv))==!!(cv&(VTYPECHGA>>SGNTO0(ipw))))||AN(z)==0))SEGFAULT;
-// obsolete ASSERTSYS((!(AT(z)&rtype(cv))==!!(cv&(VTYPECHGA>>SGNTO0(ipw))))||AN(z)==0,"surprise type change")
-// obsolete   if(unlikely(!(AT(z)&rtype(cv)))){   // if type changes (zt!=incumbent)...  zt does not have upper flag bits
   if(unlikely(cv&(VTYPECHGA>>SGNTO0(ipw)))){   // if result type is not the (possibly converted) argument type...
    // the type of inplaceable z must (or might, if it was empty) change.  But if z is UNINCORPABLE, it might be virtual.  Realizing it is a losing move.  And, we don't change the type of an UNINCORPABLE so that the caller
    // that created it doesn't have to keep reinitializing the type.  So, we give up on inplacing it.  If both args are inplaceable, we try a (which might have the right type).  If neither works, we allocate
    if(AFLAG(z)&AFUNINCORPABLE){
-// obsolete      if((ipa&((zt&~AT(a))-1))>=0)goto allocate;  // unless a is inplaceable and does not require a new type, go GA the result area
     if((ipa&SGNIF(AT(a),rbitno(cv)))>=0)goto allocate;  // if a is not inplaceable or requires a new type, go GA the result area
        // we could use a even if it changes type, if it is not UNINCORPABLE.  But if w is UNINCORPABLE and a is inplaceable, it's surely because a is an unrepeated UNINCORPABLE cell in dyad u"n - not worth checking
     z=a;  // we can use a as is, do so
@@ -1190,9 +1146,7 @@ migrate1: ;  // here if there was 0-1 outer cell, i. e. mf=nf=1 or zn=0.  Rare b
 allocate:;  // come here if no inplaceable block could have the type changed
    // vbls needed: a w zn m cv fr [jt]
   // allocate the result area.  We avoid the subroutine call for the overhead, and to save regs and to avoid needing to calculate zt->bplg->bytes
-// obsolete   GA00(z,zt,zn,(RANKT)fr);   // get type and allocate result area (zn survives the call)  scaf we have the type index & could avoid CTTZI
   I bytes=ALLOBYTESVSZLG(zn,LANE(fr,ZRANK),rtypebplg(cv),0,0);   // never allo C4T
-/// obsolete  ASSERT(((atoms|ranktype)>>(32+LGRMAX))==0,EVLIMIT)
   union {UI4 fr; UI1 lanes[4];} fru={.fr=fr};  // save fr where we can get to the lanes fr free
 #if SY_64
   ASSERT((UI)LANE(fr,ZRANK)<=(UI)RMAX,EVLIMIT) ASSERT((UI)zn<=2147483647,EVLIMIT)   // verify size & rank are in limits
@@ -1207,7 +1161,6 @@ allocate:;  // come here if no inplaceable block could have the type changed
   AT(z)=rtype(cv); ARINIT(z,fru.lanes[frZRANK]); AK(z)=AKXR(fru.lanes[frZRANK]); AN(z)=zn;  // fill in the rest
   if(unlikely(AT(z)&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
   if(unlikely(((AT(z)&DIRECT)==0))){z=zfillind(z,bytes);}  // Clear data for non-DIRECT types in case of later error.  zfillind clears 32 bytes at a time, OK since the region of a power of 2 long
-// obsolete   GACV00(z,cv,zn,LANE(fr,ZRANK));   // get type and allocate result area (zn survives the call)
   // vbls needed: m a w z cv zn [jt]
   // Install shape.  The first move installs the frame & is thus needed only when there is rank; but it's wrong to branch around it, because it's only a dozen instructions and we expect
   // a pipeline break for the branch to the action routine.  We hope to have many cycles in the pipe when that break happens.  For the same reason, it is OK to fetch awlongcr and awlongfr
@@ -1317,8 +1270,6 @@ allocate:;  // come here if no inplaceable block could have the type changed
   if(aawwzknfxrz[8]<=NEVM)jsignal(aawwzknfxrz[8]);else jt->jerr=(UC)aawwzknfxrz[8];
  }
 
-// obsolete  // sparse processing:
-// obsolete  }else{z=vasp(a,w,FAV(self)->id,aadocv->f,aadocv->cv,isatype(aadocv->cv)?atype(aadocv->cv):0,rtype(aadocv->cv),mf,aawwzknfxrz[0],nf,aawwzknfxrz[1],fr>>RANKTX,(RANKT)fr-(fr>>RANKTX)); if(!jt->jerr)R z;}  // handle sparse arrays separately.
  R 0;  // return to the caller, who will retry any retryable errors
 
 }    /* scalar fn primitive and f"r main control */
@@ -1789,7 +1740,6 @@ retryss0:;  // here when an atomic singleton fails.  self has not been touched s
  self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
 retryss:;  // here when a non-atomic singleton fails.  self has been advanced to the primitive, so we have to use the old selfranks and the updated self
  self=(A)((I)self+selfflags);  // insert arg-type flags into self
-// obsolete  I awm1=(AN(a)-1)|(AN(w)-1);  // awr is composite arg ranks; awm1 is 0 for singleton, - for empty
  // find frames
  UI awr=(ar<<RANKTX)+wr;  // composite ranks, needed by va2   0/0/anr/wnr
  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
@@ -1798,13 +1748,8 @@ if(likely((notoneatom|(selfflags&1))!=0)){
   // not singleton BID: carry on with normal setup
   afwf=selfranks==0?0:afwf;   // if ranks were 0 0, ignore them and shift down to working on frame wrt 0.  afwf=0 signals that case (& happens naturally if there is no frame wrt actual rank).    It uses simpler setup
   agreefr=afwf==0?awr:afwf; agreefr=MIN((UI1)agreefr,(UI1)(agreefr>>RANKTX));    // for agreement, we test shorter noun-rank if no frame, shorter frame if there is frame
-// obsolete   selfranks=af+wf==0?0:selfranks; af=af+wf==0?ar:af; wf=selfranks==0?wr:wf;  // the conditions had to be like this to prevent a jmp
-// obsolete   af=af<wf?af:wf;  // set af to short frame for agreement test
  }else{
   // singleton BID, rank>0.  we need the rank of the result.  Rare to come in this way (singletons with rank)
-// obsolete  af=(I)(ar-((UI)selfranks>>RANKTX)); af=af<0?0:af;  // framelen of a
-// obsolete  I wf=(I)(wr-((UI)selfranks&RANKTMSK)); wf=wf<0?0:wf;  // framelen of w
-// obsolete   ar-=af; wr-=wf; ar=ar>wr?ar:wr; af=af>wf?af:wf; af+=ar;   // set af to max len of frame, ar to max cell rank; then af=max framelen + max rank = resultrank
   {I awcr=awr-afwf; agreefr=MAX((UI1)awcr,(UI1)(awcr>>RANKTX))+MAX((UI1)afwf,(UI1)(afwf>>RANKTX));}   // af=max framelen + max rank = resultrank
 forcess:;  // branch point for rank-0 singletons from above, always with atomic result
   // any singleton.  agreefr is the rank of the result, with shape all 1s
@@ -1816,22 +1761,11 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
   ar=AR(a); wr=AR(w); at=AT(a); wt=AT(w); notoneatom=0; selfflags=1;  // restore aw vars so they won't be saved over the call; but set not BID to force the retry through va2.
   self=(A)((I)self&~0x3f);  // remove flags from self in case we need to use it
   if(likely(ar+wr==0)){selfranks=R2MAX; goto retryss0;} goto retryss;  // retry.  atomic singletons must advance self (selfranks max to have no frame); others must not, using the incumbent self & selfranks
-// obsolete   // Recalc values created in the main line.  This is very rare so use minimal registers.  self has been destroyed if ranks were not 0; self & selfranks survive the call then
-// obsolete   if(awr==0){
-// obsolete    // atomic args. self is at its initial value; realself and selfranks have not been created
-// obsolete    realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank
-// obsolete    selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
-// obsolete    jtranks=jt->ranks;  // fetch IRS ranks if any
-// obsolete    self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
-// obsolete    selfranks=jtranks==R2MAX?selfranks:jtranks;
-// obsolete   }
-// obsolete   // self, ar, wr, afwf, agreefr   are needed in the retry
  }
  // not singleton, or singleton needing retry
  afwf+=agreefr<<(2*RANKTX);  // put agreeaf into parm, freeing its register over the call.  afwf is now 0/framelen/af/wf
  NOUNROLL while(1){
   // Run the full dyad, retrying if a retryable error is returned.  self has been modified to point to the actual primitive rather than the rank block
-// obsolete    z=jtva2(jtfg,a,w,self,(awr<<RANK2TX)+selfranks,af);  // execute the verb
   z=jtva2(jtfg,a,w,self,afwf);  // execute the verb
   if(likely(z!=0)){RETF(z);}  // normal case is good return
   if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
@@ -1918,16 +1852,12 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    I apri=TYPEPRIORITYNUM(at), wpri=TYPEPRIORITYNUM(wt), pri=MAX(apri,wpri);  // conversion priority for each arg
    //  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F     // priorities
    // B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX
-// obsolete    //  0               4       10  11  8     15 16    13 14  9   routine indexes for homogeneous args (final pri)
    //  0               4       9   10  8     11 12       13 14   routine indexes for homogeneous args (final pri)
    //                          5   6   4      7  8        9 10   biased by 4, the smallest we use here (values stored in the shift constant)
    // (B)             (I)      X   Q   D     I2 I4    DS  E  Z   internal type for each precision 
    pri=4+(I)SHMSK8(0xa9ff87f465ffffffLL,pri<<2,0xf);  // 4 is II, lower than the lowest routine# we can call for here  f is unimplemented precision
    VA2 selva2 = vainfo->p2[pri];  // routine/flags for the top-priority arg
    if(unlikely(pri==8))selva2.cv|=VDD;      // We allow input conversion to be omitted for BID, so if we are using the DD line (necessarily with non-BID input) we have to install DD conversion
-// obsolete    I cvtflgs=(apri>wpri?VCOPYA:0)+(apri<wpri?VCOPYW:0);  // set the flag to cause conversion of low-pri arg to the upper.  This handles ALL mixed-mode conversions
-// obsolete    cvtflgs=selva2.cv&(VBB|VII|VDD|VZZ)?0:cvtflgs;  //  If the routine already forces a conversion, don't override.  Most DD, SP, QP specify no conversion, but +. or bitwise require bool or integer 
-// obsolete    selva2.cv|=cvtflgs;
    R selva2;
   }else{
    // No retry, but something is nonnumeric.  This will be a domain error except for = and ~:
@@ -1935,7 +1865,6 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    if(likely(((UC)FAV(self)->id&~1)==CEQ)){I opcode;  // CEQ or CNE
     // = or ~:, possibly inhomogeneous
     if(likely(HOMO(at,wt))){
-// obsolete      opcode=((at>>(C2TX-2))&0b1100)+((wt>>C2TX)&0b0011); opcode=at&BOX?0b0011:opcode; // bits are a4 a2 w4 w2 if char, 0011 if box.
      opcode=PEXT0((at<<2)+wt,C2TX,0xf); opcode=at&BOX?0b0011:opcode; // bits are a4 a2 w4 w2 if char, 0011 if box.
     }else opcode=7;  // inhomogeneous line
     retva2.f=eqnetbl[(UC)FAV(self)->id&1][opcode];  // return the comparison

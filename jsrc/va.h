@@ -37,12 +37,6 @@
 #define VI4I4           ((I)(15-INT4X)<<VICX)
 #define VEE             ((I)(15-QPX)<<VICX)
 #define VICMSK          ((I)15<<VICX) // mask for argument conversion 16-19, giving type to convert to.  0=no conversion
-// obsolete #define VUNCH           (0<<VRESX)  // leave result unchanged
-// obsolete #define VRESMSK         (VB|VI|VD|VZ|VX|VQ)  // mask for result-type - if all 0, take result type from the args
-// obsolete #define VCOPYWX         13  // set (by var) to indicate that a should be converted to type of w
-// obsolete #define VCOPYW          BIT(VCOPYWX)
-// obsolete #define VCOPYAX         29  // set (by var) to indicate that w should be converted to type of a
-// obsolete #define VCOPYA          BIT(VCOPYAX)
 // 20-21 free
 // the conversion info for Vxx is in bits 22-24:
 #define VXEX            (VXX|XMODETOCVT((I)XMEXACT))  // exact conversion
@@ -51,8 +45,6 @@
 #define VXFC            (VXX|XMODETOCVT((I)XMFLR))  /* convert to XNUM floor/ceiling       */
 #define VCANHALT        0  // BIT(VCANHALTX) was 25, but no longer used
 #define VFRCEXMT        XMODETOCVT((I)XMEXMT)   // set in arg to cvt() to do rounding for = ~:, if the conversion happens to be to XNUM
-// obsolete #define VXCHASVTYPEX    26  // set (by XMODETOCVT) if there is forced conversion to XNUM =CONW
-// obsolete #define VXCHASVTYPE     BIT(VXCHASVTYPEX)
 #define VOTX            25           // bit position for allocated result-type
 #define VRBPLGX         29   // 29-31, the top bits, hold bplg(output type)
 #define VB              (((I)B01X<<VOTX)+((I)bpctlg(B01X)<<VRBPLGX))
@@ -65,12 +57,6 @@
 #define VI4             (((I)INT4X<<VOTX)+((I)bpctlg(INT4X)<<VRBPLGX))
 #define VE              (((I)QPX<<VOTX)+((I)bpctlg(QPX)<<VRBPLGX))
 #define VOTMSK          (I)15 // mask for result type from function 25-28.  always present
-// obsolete #define VIPOKRNKWX         28      // filled internally by va2 if the ranks allow inplacing w
-// obsolete #define VIPOKRNKW          BIT(VIPOKRNKWX)
-// obsolete // bit 29 free
-// obsolete #define VIPOKRNKAX         30      // filled internally by va2 if the ranks allow inplacing a
-// obsolete #define VIPOKRNKA          BIT(VIPOKRNKAX)
-// obsolete // bit 31 must not be used - it may be a sign bit, which has a meaning
 
 // Extract the argument-conversion type from cv coming from the table
 #define isatype(x) (((x)&VICMSK)!=0)  // 1 if there is input conversion
@@ -80,7 +66,6 @@
 #define rbitno(x) PEXT0((x),VOTX,VOTMSK)
 #define rtype(x) BIT(rbitno(x))  // relies on output conversion being highest bits
 #define rtypebplg(x) ((x)>>VRBPLGX)  // relies on output conversion being highest bits; avoids CTTZ
-// obsolete #define rtypew(x,t) ({I z=(((x)>>VRESX)&(VRESMSK>>VRESX)); z=z?z:(t); })
 
 #define NOT(v) ((v)^VALIDBOOLEAN)
 

@@ -1451,7 +1451,6 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
  // This takes several cycles: type->bplg->bytes->CTLZI (and then fetch from [block] in the subroutine).  Unfortunately, stuck in this routine there's nothing to overlap with it.
  I bytes; if(likely(type&(BIT(LASTNOUNX+1)-1)))bytes=ALLOBYTESVSZLG(atoms,rank,bplg(type),(type)&C4T,0);else bytes=ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),0,0);
  ASSERT((UI)rank<=(UI)RMAX,EVLIMIT) ASSERT((UI)atoms<=2147483647,EVLIMIT) ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)   // verify size & rank are in limits
-/// obsolete  ASSERT(((atoms|ranktype)>>(32+LGRMAX))==0,EVLIMIT)
     // We never use GA for NAME types, so we don't need to check for it
  RZ(z=jtgaf(jt, CTLZI((UI)bytes)));   // allocate the block, filling in AC AFLAG AM
  AT(z)=type; ARINIT(z,rank); AK(z)=AKXR(rank);
@@ -1460,24 +1459,6 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
  if(unlikely(!((type&DIRECT)!=0))){z=zfillind(z,bytes);}  // unlikely is important!  compiler strains then to use one less temp reg
  R z;
 }
-#if 0  // obsolete 
-// like jtga0, but only for types that can be produced by an atomic cv, i. e. nouns
-// the type is encoded in cv, as the rtype
-RESTRICTF A jtga0cv(J jt,I cv,I rank,I atoms){A z;
- // Get the number of bytes needed-1, including the header, the atoms, and a full I appended for types that require a
- // trailing NUL (because boolean-op code needs it)
- I bytes=ALLOBYTESVSZLG(atoms,rank,rtypebplg(cv),(type)&C4T,0);
- ASSERT((UI)rank<=(UI)RMAX,EVLIMIT) ASSERT((UI)atoms<=2147483647,EVLIMIT) ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)   // verify size & rank are in limits
-/// obsolete  ASSERT(((atoms|ranktype)>>(32+LGRMAX))==0,EVLIMIT)
- RZ(z=jtgaf(jt, CTLZI((UI)bytes)));   // allocate the block, filling in AC AFLAG AM
- AT(z)=rtype(cv); ARINIT(z,rank); AK(z)=AKXR(rank);
- // Clear data for non-DIRECT types in case of later error
- // Since we allocate powers of 2, we can make the memset a multiple of 32 bytes.
- if(unlikely(!((AT(z)&DIRECT)!=0))){z=zfillind(z,bytes);}  // unlikely is important!  compiler strains then to use one less temp reg
- R z;
-}
-RESTRICTF A jtga0cv(J jt,I cv,I rank,I atoms){R jtga0(jt,rtype(cv),rank,atoms);}
-#endif
 #else
 A zfillind(A w, I bytes){AS(w)[0]=0; mvc((bytes-(offsetof(AD,s[1])-32))&-32,(C*)(AS(w)+1),MEMSET00LEN,MEMSET00); R w;}  // copy in 0s after the header, to the end of the block
 RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;

@@ -459,7 +459,6 @@ AT(fffz)=(ffft); AFLAGINIT(fffz,(ffft)&RECURSIBLE); /* install actual type.  Wai
 #define folknohfn(x,y,z)            jtfolk((J)((I)jt+JTFOLKNOHFN),(x),(y),(z))
 #define fong(x,y)                   jtfong(jt,(x),(y))
 #define foreign(x,y)                jtforeign(jt,(x),(y))
-// obsolete #define foreignextra(x,y)           jtforeignextra(jt,(x),(y))
 #define forinit(x,y)                jtforinit(jt,(x),(y))
 #define fplus(x,y)                  jtfplus(jt,(x),(y))
 #define fpoly(x,y)                  jtfpoly(jt,(x),(y))

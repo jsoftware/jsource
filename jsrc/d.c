@@ -405,8 +405,6 @@ static F2(jtdbsig){F12IP;I e;
  R 0;
 }    
 
-// obsolete DF1(jtdbsig1){F12IP;R dbsig(0L,w);}
-// obsolete DF2(jtdbsig2){F12IP;R dbsig(a, w);}
 DF2(jtdbsig12){F12IP; R jtdbsig(jt,w==self?(A)0:a, w==self?a:w);}     /* 13!:8  signal error bivalent, called as a, w, self  or w,self,self */
 
 // 9!:59 set emsgslvl, return previous

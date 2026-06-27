@@ -869,7 +869,6 @@ static DF1(jtreduce){F12IP;A z;I d,f,m,n,r,t,wr,*ws,zt;
  // if return is EWOV, it's an integer overflow and we must restart, after restoring the ranks
  // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
  // have to do is change the type of the result.
-// obsolete  if(unlikely((255&~EVNOCONV)&rc)){if(unlikely(rc==EVNOCONV))RETF(z); if(jt->jerr==EWOV1){AT(z)=FL;RETF(z);}else {jsignal(rc); RETF(rc>=EWOV?IRS1(w,self,r,jtreduce,z):0);}} else {RETF((adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z);}
  if(unlikely((255&~EVNOCONV)&rc)){if(unlikely(rc==EVNOCONV))RETF(z); if(jt->jerr==EWOV1){AT(z)=FL;RETF(z);}else {jsignal(rc); RETF(rc>=EWOV?IRS1(w,self,r,jtreduce,z):0);}} else {RETF(unlikely(((adocv.cv+VRD)&VRI))&&likely(rc!=EVNOCONV)?cvz(adocv.cv,z):z);}
 }    /* f/"r w main control */
 

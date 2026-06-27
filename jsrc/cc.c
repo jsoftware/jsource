@@ -902,7 +902,6 @@ DF2(jtcut2){F12IP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/S
     jsignal(rc);
     if(FAV(self)->id!=CCUT)CUTFRETCOUNT(a)=m;  // if we are going to retry, we have to reset the # frets indicator which has been destroyed
     R rc>=EWOV?cut2(a,w,self):0;
-// obsolete    }else R (adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,zz):zz;
    }else RETF(unlikely(((adocv.cv+VRD)&VRI))&&likely(rc!=EVNOCONV)?cvz(adocv.cv,zz):zz);
    break;
   }
@@ -1025,7 +1024,6 @@ DF2(jtrazecut2){F12IP;A fs,gs,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=
   }
   p-=q; v=u;  
  }
-// obsolete  AS(z)[0]=m; AN(z)=m*d; R (adocv.cv&VRI+VRD)&&rc!=EVNOCONV?cvz(adocv.cv,z):z;
  AS(z)[0]=m; AN(z)=m*d; RETF(unlikely(((adocv.cv+VRD)&VRI))&&likely(rc!=EVNOCONV)?cvz(adocv.cv,z):z);
 }   
 
@@ -1085,7 +1083,6 @@ static DF2(jttess2){F12IP;A z,zz=0,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   RETF(cut02(IRS2(za, zw,self,1L,1L,jtlamin2,z),w,self));  // ((|: ({.a) * |: (#: i.)p) ,:"1 ({:a)) u;.0 w    the self is for error display
  }
  V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; AF f1=FAV(fs)->valencefns[0];   // get the function pointers
-// obsolete  fauxblockINT(xfaux,5,1); // declare xpose arg where it has scope
  I *ws=AS(w);  // ws-> shape of w
  // get address of end+1 of the source data, so we can avoid out-of-bounds
  C *sdataend=CAV(w)+(AN(w)<<bplg(wt));  // addr+1 of source data

@@ -335,7 +335,6 @@ static GF(jtgrd){F1PREFJT;A x,y;int b;D*v,*wv;I *g,*h,nneg,*xv;US*u;void *yv;I c
   // in x, then the postpass ends in z
   g=b?xv:zv; h=b?zv:xv;
   // sort from LSB to MSB.  Sort in the order requested UNLESS all the values are negative; then reverse the order and save the postpass
-// obsolete   colflags=grcol(65536,0L,yv,n,0LL,h,sizeof(D)/sizeof(US),u,(((~(I)jtfg>>(JTDESCENDX-1))&2)^((nneg==n)<<1)));  // 'up' in bit 1, inverted if all neg
   colflags=grcol(65536,0L,yv,n,0LL,h,sizeof(D)/sizeof(US),u,(PEXT0((I)jtfg,JTDESCENDX,1)^SGNTO0(nneg-n))<<1);  // 'up' in bit 1, inverted if all neg (i. e. nneg-n==0)
   colflags=grcol(65536,0L,yv,n,h, g,sizeof(D)/sizeof(US),u+=WDINC,colflags);
   colflags=grcol(65536,0L,yv,n,g, h,sizeof(D)/sizeof(US),u+=WDINC,colflags);

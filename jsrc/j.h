@@ -1123,11 +1123,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #if C_AVX2 || EMU_AVX2
 // verify that shapes *x and *y match for l axes using AVX for rank<vector size, loop otherwise
 // Strains to stay in 3 registers
-// obsolete #define ASSERTAGREECOMMON(x,y,l,ASTYPE) 
-// obsolete  {C *aaa=(C*)(x), *aab=(C*)(y); I aai=(l)<<LGSZI;
-// obsolete   if(unlikely(aai>NPAR*SZI)){NOUNROLL do{ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)&(aaa[aai-NPAR*SZI])),_mm256_loadu_si256((__m256i *)&(aab[aai-NPAR*SZI]))),_mm256_loadu_si256((__m256i*)validitymask)),EVLENGTH)}while((aai-=NPAR*SZI)>NPAR*SZI);} 
-// obsolete   ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)(aaa+aai-NPAR*SZI)),_mm256_loadu_si256((__m256i *)(aab+aai-NPAR*SZI))),_mm256_loadu_si256((__m256i*)((C*)&validitymask+NPAR*SZI+aai))),EVLENGTH) /* result is 1 if all match */ 
-// obsolete  }
 #define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
  {C *aaa, *aab=(C*)&validitymask; I aai=(l)<<LGSZI; __m256i enbmask=_mm256_loadu_si256((__m256i*)(aab+NPAR*SZI+aai)); \
   if(unlikely(aai>NPAR*SZI)){aaa=(C*)(aai&(NPAR*SZI-1)); enbmask=_mm256_loadu_si256((__m256i*)(aab+NPAR*SZI+(I)aaa)); aaa=(C*)(x); aab=(C*)(y); \
@@ -1497,14 +1492,11 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 //  * for boolean operations, we are entitled to fetch an I from the start of any valid atom.  When creating result blocks we may write as much as an I into the address of any valid atom
 //  * for singleton operations, we fetch a D from the address of the argument; it must be mapped
 // to guarantee validity we allocate a tail area for everything we allocate, and insist that mapped files do the same.
-// obsolete #define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(NORMAH*SZI+sizeof(NM)+SZI-1-1):(NORMAH*SZI+SZI-1-1) : (NORMAH*SZI-1)) + (atoms)*(size)))  )  // # bytes to allocate allowing 1 I for string pad - include mem hdr - minus 1
-// obsolete #define ALLOBYTESVSZLG(atoms,rank,sizelg,islast,isname)      ( ((((rank)|(!SY_64))*SZI  + ((islast)? (isname)?(NORMAH*SZI+sizeof(NM)+SZI-1-1):(NORMAH*SZI+SZI-1-1) : (NORMAH*SZI-1)) + ((atoms)<<(sizelg))))  )  // this version when we have power-of-2 size
 #define ALLOBYTESVSZ(atoms,rank,size,islast,isname)      ( (((rank)|(!SY_64))*SZI + (SY_64?0:islast?SZI:0) + (NORMAH*SZI+SZI-1) + ((atoms)-1)*(size) + (unlikely((I)(size)-(I)SZI>0)?(size)-SZI:0))  )  // # bytes to allocate allowing 1 I for string pad - include mem hdr - minus 1
 #define ALLOBYTESVSZLG(atoms,rank,sizelg,islast,isname)      ( (((rank)|(!SY_64))*SZI + (SY_64?0:islast?SZI:0) + (NORMAH*SZI+SZI-1) + (((atoms)-1)<<(sizelg)) + (unlikely((sizelg)>LGSZI)?BIT(sizelg)-SZI:0))  )  // this version when we have power-of-2 size
 // the len-1 is (NORMAH*SZI) + (atoms)*(size) + MAX(0,SZI-size) - 1 => (NORMAH*SZI+SZI-1) + (atoms-1)*(size) + MAX(size-SZI,0)
 // here when size is constant.  The number of bytes, rounded up with overhead added, must not exceed 2^(PMINL+5)
 // All NAMEs use ALLOBYTES & thus ALLOBYTESVSZ without executing bpnonnoun()
-// obsolete #define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms)+!!(islast))-1))  // # bytes to allocate-1
 #define ALLOBYTES(atoms,rank,size,islast,isname)      ((size&(SZI-1))?ALLOBYTESVSZ(atoms,rank,size,islast,isname)+!!(isname)*sizeof(NM):(SZI*(((rank)|(!SY_64))+NORMAH+((size)>>LGSZI)*(atoms)+ (SY_64?0:islast?1:0))-1))  // # bytes to allocate-1
 #define ALLOBLOCK(n) ((n)<2*PMIN?((n)<PMIN?PMINL-1:PMINL) : (n)<8*PMIN?((n)<4*PMIN?PMINL+1:PMINL+2) : (n)<32*PMIN?((n)<16*PMIN?PMINL+3:PMINL+4) : *(volatile I*)0)   // lg2(#bytes to allocate)-1.  n is #bytes-1
 // gives errors in some versions #define ALLOBLOCK(n) MAX(PMINL-1,(31-__builtin_clzl((UI4)(n))))    // lg2(#bytes to allocate)-1.  n is #bytes-1
@@ -2127,10 +2119,6 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 #endif
 #define bplg(i) bpctlg(CTTZ(i))  //  010 001 010   000 000 100 010 001 010 001 000   011 010 010 100 011 010 000 000 =  0 1000 1010 0000 0010 0010 0010 1000 1000 0110 1001 0100 0110 1000 0000
 // bpnonnoun is like 1<<bplg but we know that the value is not a noun.  It can't be a NAME either
-// obsolete #define bpnonnoun(i) (I)SHMSK8((((I8)RPARSIZE<<5*(RPARX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(CONJX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(VERBX-(LASTNOUNX+1)))+((I8)LPARSIZE<<5*(LPARX-(LASTNOUNX+1)))+((I8)CONWSIZE<<5*(CONWX-(LASTNOUNX+1)))+ 
-// ((I8)SYMBSIZE<<5*(SYMBX-(LASTNOUNX+1)))+((I8)ASGNSIZE<<5*(ASGNX-(LASTNOUNX+1)))+((I8)INTSIZE<<5*(ADVX-(LASTNOUNX+1)))+((I8)MARKSIZE<<5*(MARKX-(LASTNOUNX+1)))+((I8)NAMESIZE<<5*(NAMEX-(LASTNOUNX+1))) ) 
-// ,5*(CTTZ(i)-(LASTNOUNX+1)),31)  // RPAR CONJ LPAR VERB CONW SYMB ASGN ADV MARK (NAME)   I I I I I I4 I I I (1) 
-// obsolete #define bpnonnoun(i) ((i)&SYMB?SYMBSIZE:INTSIZE)  // RPAR CONJ LPAR VERB CONW SYMB ASGN ADV MARK (NAME)   I I I I I I4 I I I (1) 
 #define bpnonnoun(i) (SZI==8?(unlikely(((i)&SYMB)!=0)?SYMBSIZE:INTSIZE):(unlikely(((i)&CONW)!=0)?CONWSIZE:INTSIZE))  // RPAR CONJ LPAR VERB CONW SYMB ASGN ADV MARK (NAME)   I I I I I8 I4 I I I (1) 
 
 // bpnoun is like bp but for NOUN types, and not sparse
@@ -2168,17 +2156,11 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // assign length first so we can sneak some computation into ain in va2.  DON'T call a subroutine, to keep registers free
 // This version uses only 3 registers
 #if 1||!defined(__wasm__)
-#if 0  // obsolete 
-#define PRODCOMMON(z,length,ain,LTYPE) {LTYPE _i=(LTYPE)(length); I * RESTRICT _zzt=(ain); \
-if(likely(_i<(LTYPE)3)){z=(I)&oneone; z=_i>(LTYPE)1?(I)_zzt:z; _zzt=_i<(LTYPE)1?(I*)z:_zzt; z=((I*)z)[1]; z*=_zzt[0];} \
-else{z=_zzt[--_i]; NOUNROLL do{z*=_zzt[--_i];}while(_i); } }
-#else
 #define PRODCOMMON(z,length,ain,LTYPE) {I _i=(LTYPE)(length); I * _zzt=(ain); z=_zzt[_i-1]; \
 if(likely(_i<3)){z=_i==1?_i:z; z*=_zzt[0]; _zzt=(I*)1; z=_i<1?(I)_zzt:z;} \
 else{--_i; NOUNROLL do{z*=_zzt[_i-1];}while(--_i); } \
  }
-#endif
-#else  // obsolete 
+#else  // obsolete if wasm works
 // the above original version confuse emscripten compiler when 1==length where zzt always becomes &oneone
 // but this version introduces mispredicted branches
 #define PRODCOMMON(z,length,ain,LTYPE) {LTYPE _i=(LTYPE)(length); I * _zzt=(ain); \

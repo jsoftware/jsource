@@ -27,8 +27,6 @@ typedef unsigned long long UI;
 #else
 typedef int                I;
 typedef unsigned int       UI;  // unsigned long fails (!)
-// obsolete typedef unsigned long long UIL;
-// obsolete typedef long long          IL;
 #endif
 typedef unsigned long long UIL;   /* for typecast 8 byte double */
 typedef long long          IL;
@@ -481,12 +479,6 @@ struct AD {
 #define C4TSIZE sizeof(C4)
 #define C4TEXTTYPEX  18
 _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
-// obsolete #define XDX 19
-// obsolete #define XD              ((I)1L<<XDX)        // DX extended floating point 
-// obsolete #define XDSIZE sizeof(DX)
-// obsolete #define XZX 20
-// obsolete #define XZ              ((I)1L<<XZX)        // ZX extended complex
-// obsolete #define XZSIZE sizeof(ZX)
 // 19-20 free
 #define LASTNOUNX 20    // index of last bit reserved for nouns.  Higher bits are non-noun
 
@@ -585,7 +577,6 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define XCVTXNUMORIDEMSK  (MARK+ADV+ASGN)   // in ccvt(), the override to use if XCVTXNUMORIDEX is set, otherwise 00
 #define XCVTXNUMORIDEX  MARKX   // in ccvt(), indicates that forced precision for result is present
 #define XCVTXNUMORIDE  BIT(XCVTXNUMORIDEX)   // in ccvt(), indicates that forced precision for result is present
-// obsolete #define XMODETOCVT(x) (((((x)+2)&5)<<MARKX)|CONW)  // convert XMODE to a request to cvt to convert to that mode
 #define XMODETOCVT(x) ((((x)&3)<<(XCVTXNUMORIDEX+1))|XCVTXNUMORIDE)  // convert XMODE to a request to cvt to convert to that mode
 #define CVTTOXMODE(x) (PEXT0((x),XCVTXNUMORIDEX+1,3)) // convert cvt request back to xmode
 // ** NOTE!! bit 28 are used in the call to cvt() (arg only) to indicate NOFUZZ
@@ -604,8 +595,6 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define FUNC            (VERB+ADV+CONJ)
 #define RHS             (NOUN+FUNC)
 #define IS1BYTE         (B01+LIT)
-// obsolete #define LAST0           0
-// obsolete (B01+LIT+C2T+C4T+NAME)
 #define SPARSABLE       (B01+INT+FL+CMPX+LIT)  // types that can be made sparse
 // Don't traverse for ra/fa unless one of these bits is set
 #define TRAVERSIBLE     (BOX|VERB|ADV|CONJ|RAT|XNUM|NAME|SYMB|SPARSE)
@@ -1226,37 +1215,6 @@ union{
 } lu2;
 } V;  // two cachelines in 64-bit (16 Is); 20 I4s in 32-bit
 // The AN and AR fields of functions are not used
-
-#if 0  // obsolete 
-// cut-down version of V, used only for executing atomic combinations
-typedef struct {
- // the localuse fields are not freed or counted for space, as the f/g/h fields are.  They are for local optimizations only.
- union {  // 8 bytes in the second (main) cacheline
-    D cct;  // for comparison tolerance, FIT conj  =!.n OR comparison combination (i.&1@:(e.[!.n])) OR [e. i. ([-.-.)]&n OR m&i[.:] the CCT, 0 for default (never in an actual prehash).  For 32-bit, this extends the union, but that's OK since it doesn't add a cacheline.
-    struct {
-     I4 cgerx; // For cyclic iterators, the index of the next gerund to execute.  Here to avoid conflict with cut
-     I4 cutn;  // for u;.n where n is nonzero, n.  u/. also goes through this code.  There could be cyclic iterators but not boxcut
-    } gercut;
-    VARPSA *redfn;  // for reductions (u/ u/\ u/\.) address of rps block (may be dummy block)
-    US uavandx[2];   // offset from start of va/va1tbl to VA/UA block for adocv [monad then dyad]
-    AF foldfn;  // for Fold final operator, pointer to the dyadic EP of the handler (xdefn or unquote)
-    A wvb;  // for u&.[:]v, the verb whose inverse is needed
-    I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function; for (compare[!.n] |), indicates which compare function
-    A cachedlkp;  //  for namerefs ('name'~), the cached value, or 0 if not cached
-    AF fork2hfn;   // for dyad fork that is NOT a comparison combination or jtintersect, the function to call to process h (might be in h@][)
-    I forcetask;  // for t., the flags extracted from n.  Bits 0-7=thread pool; bit 8=worker thread only
- } lu1;  // this is the high-use stuff in the second cacheline
- AF valencefns[2];   // function to call for monad,dayd
- A fgh[3];  // operands of modifiers.  h is used for forks and also as a storage spot for parms.  all 3 are freed when the V block is freed
- I4 flag;
- UI4 flag2;
- RANK2T lrr;  // combining dyad ranks: (left<<RANKTX)|right
- RANKT mr;  // combining monad rank
- C id;  // pseudochar for the function encoded here
- C lc;  // lc is a local-use byte.  Used in atomic verbs to indicate which singleton function to execute.  in the derived function from fold, lc has the original id byte of the fold op
-// 3 bytes free
-} exeV;  //one cacheline
-#endif
 
 #define IDD(f) FAV(AT(f)&FUNC?(f):FUNCID0)->id  // id of a value known to be defined but possibly not an ACV
 #define ID(f)  FAV(AT((f)?(f):FUNCTYPE0)&FUNC?(f):FUNCID0)->id  // id of possibly 0 value

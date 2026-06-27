@@ -1395,7 +1395,7 @@ RETF(z); \
 // bit8 is 1 when h is not given (@: &: hook) - h flags may be 0 or 8
 // bit12 is set to analyze all components fully (forks only - for reversion paths)
 // hook is 118
-// @: is 1c0
+// g@:h is 1c0
 // &: is 148
 #define FORK2(name,opt) \
 DF2(name){F12IP;PROLOG(0000); PUSHZOMB; ARGCHK2D(a,w) \
@@ -1473,7 +1473,7 @@ if(a=*tpopa){I c2=AC(a), c=(UI)c2>>!PTRSNE(a,hx); if((opt&0xc0)!=0xc0&&(opt&0x30
 /* pass flags from the next prim from the input flags */ \
 POPZOMB; A z; \
 if((opt&0xc0)==0xc0){ \
- RZEFCALL(z,(fghfn)(JPTROP(JPTROP(jtfg,&,(~(JTINPLACEW))),|,((I)hx&(JTINPLACEW))),PTR(hx),gs,gs),gs,PTR(hx),0); \
+ RZEFCALL(z,(fghfn)(JPTROP(JPTROP(jtfg,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW))),PTR(hx),gs,gs),gs,PTR(hx),0); \
 }else{ \
  RZEFCALL(z,(fghfn)(JPTROP(JPTROP(jtfg,&,(~(JTINPLACEA+JTINPLACEW))),|,((I)hx&(JTINPLACEW|JTINPLACEA))),fx,PTR(hx),gs),gs,fx,PTR(hx)); \
 } \

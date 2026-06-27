@@ -31,7 +31,7 @@
 
 
 // Return int version of d, with error if loss of significance
-static NOINLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so many ymm regs that the caller has to save them too, and it is little needed
+static INLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so many ymm regs that the caller has to save them too, and it is little needed
  q=jround(d); z=(I)q;
  ASSERT(ISFTOIOK(d,q),EVDOMAIN);
  R z;
@@ -41,7 +41,7 @@ static NOINLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so ma
 
 // we know that AN=1 in a and w, which are FL/INT/B01 types.  af is larger arg rank (=rank of result)
 // low 6 bits of self are the encoded operand types, i. e. the routine index to use
-NOINLINE static A jtssingleton(J jtfg,A a,A w,I af,A self){F12JT;  // scaf! lose at, wt
+INLINE static A jtssingleton(J jtfg,A a,A w,I af,A self){F12JT;
  I awip=2*SGNTO0(AC(a))+SGNTO0(AC(w));  // collect inplaceable status for a and w
  I bidcase=(I)self&0x3c; self=(A)((I)self&~0x3f); I opcode=(I)FAV(self)->lu2.lc;  // fetch bidcase from self; restore self; operation#
  A z=jt->zombieval;  // fetch address of assignand, which we presumptively make the result
@@ -912,12 +912,11 @@ printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i
 static VF repairip[4]={plusBIO, plusIIO, minusBIO, minusIIO};
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, self is the block for this primitive, with low 6 bits giving the index of adocv if args are BID (if LSB set, args are not BID)
 // afwfagreefr is 0/framelen for initial agreement test/af/wf 
-static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT self,I afwfagreefr){F12IP;  //   clang19: MUST BE NOINLINE to avoid register spills
+static INLINE A jtva2(J jtfg,AD *a,AD *w,AD * RESTRICT self,I afwfagreefr){F12IP;
  A z;I m,mf,n,nf,zn;UI cv;VF adocvfn;VA2 adocv;UI4 fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift  cv is flags value for function, with many local mods
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
  I vandx=__atomic_load_n(&FAV((A)((I)self&~0x3f))->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
- I ar=AR(a), wr=AR(w);   // noun types & ranks  scaf! lose types unless not BID
- I at=AT(a), wt=AT(w);
+ I ar=AR(a), wr=AR(w);   // noun types & ranks
  {
 // obsolete   if(likely(!((at|wt)&((SPARSE|NOUN)&~(B01|INT|FL))))&&likely(!((I)jtfg&JTRETRY))){  // no error, bool/int/fl nonsparse args
   if(likely(!((I)self&1))){  // bool/int/fl nonsparse args (always cleared on error retry)
@@ -925,12 +924,14 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
    VA *vainfo=(VA*)((I)va+vandx);  // extract table line from the primitive
    VA2 *aadocv=&vainfo->p2[((I)self&0x3c)>>INTX];   // test here to avoid the call overhead
    cv=aadocv->cv; adocvfn=aadocv->f;   // fetch the address of the function and the cv
-   self=0;  // indicate not sparse
   }else{
    // An arg is not BID.  Get the control vector and routine
+   I at=AT(a), wt=AT(w);
    self=(A)((I)self&~0x3f);  // remove flags from self
+   jtfg=(J)((I)jtfg|(SGNTO0(at|wt)<<JTSPARSEARGX));  // remember if an arg is sparse.
    adocv=var(self,at&~SPARSE,wt&~SPARSE);
    if(unlikely(adocv.f==0)){
+    at=AT(a), wt=AT(w);  // refetch type to save a reg
     // There is no routine for these argument types.  That's an error unless an argument is empty
     // If an operand is empty, or if the other operand is empty and this one is non-numeric, turn it to Boolean (leaving
     //  rank and shape untouched).  This change to the other operand is notional only - we won't actually convert
@@ -938,7 +939,8 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
     at=((-AN(a)&(-AN(w)|-(at&NUMERIC)))>=0)?B01:at;
     wt=((-AN(w)&(-AN(a)|-(wt&NUMERIC)))>=0)?B01:wt;
     adocv=var(self,at&~SPARSE,wt&~SPARSE);   // rerun the decode with safer types
-    if((-AN(a)&-AN(w))>=0)adocv.cv&=~VICMSK;  // disable input conversion if there is an empty
+// obsolete      if((-AN(a)&-AN(w))>=0)adocv.cv&=~VICMSK;  // disable input conversion if there is an empty
+    adocv.cv&=~VICMSK;  // disable input conversion: if there is an empty we need to; if not we are going to take an error
     adocv.cv|=VTYPECHGA+VTYPECHGW;  // we don't know whether the verb will change the original type.  Only an empty could be inplaced, so we warn the inplacing code to change the type
     forcetomemory(aawwzknfxrz);  // make sure we don't try to keep these values in registers
    }
@@ -948,7 +950,6 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
    // Don't signal domain error on the types yet, because domain has lower priority than agreement
    // If we switch a sparse nonnumeric matrix to boolean, that may be a space problem; but we don't
    // support nonnumeric sparse now
-   self=ISSPARSE(at|wt)?self:0;  // self=0 is our flag for 'dense'
   }
  }
 
@@ -960,7 +961,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
  // If op specifies forced input conversion AND if both arguments are non-sparse: convert them to the selected type.
  // Failed conversion are real errors, but they have priority below agreement errors.  If the conversion error is EVDOMAIN, we defer it by
  // clearing adocvfn to 0, which gives later domain error
- if(unlikely(isatype(cv))&&likely(self==0)){  // input conversion required (but not for sparse) (rare), which will predict correctly.  cv is not settled
+ if(unlikely(isatype(cv))&&likely(!((I)jtfg&JTSPARSEARG))){  // input conversion required (but not for sparse) (rare), which will predict correctly.  cv is not settled
   // Convert inputs to common type if needed by the primitive.  Don't keep much in registers, because we have a bottleneck in the function call here
   I t=atype(cv);   // the common type
   // Conversion failure is tricky.  We report rank errors before shape, shape before type, and type before value.  Thus, we defer the error report till after shape analysis, by clearing
@@ -978,7 +979,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
  A awlongcr,awlongfr;  // The arg with the longer-or-equal frame.
  {
   if(withprob((RANK2T)afwfagreefr==0,0.75)){ // rank 0 0 means no outer frames, sets up faster
-   if(likely(self==0)){  // nonsparse
+   if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
 #if 0  // obsolete 
     I an=AN(a); m=zn=AN(w);   // lengths
     fr=ar; UI shortr=wr;  // fr,shortr = ar,wr to begin with.  Changes later
@@ -1019,8 +1020,8 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
 // obsolete    {I af,wf;
     // Heavy register pressure here.
     // vbls needed: cv a w afwfagreefr self
-   UI4 afwfarwr=(afwfagreefr<<(2*RANKTX))+(ar<<RANKTX)+wr; wcr=afwfarwr-(US)afwfagreefr;   // afwfarwr=af/wf/anr/wnr, subtract 0/0/af/wf => af/wf/acr/wcr = wcr  afwfagreefr free
-   if(likely(self==0)){  // If not sparse...
+   UI4 afwfarwr=((UI4)afwfagreefr<<(2*RANKTX))+(ar<<RANKTX)+wr; wcr=afwfarwr-(US)afwfagreefr;   // afwfarwr=af/wf/anr/wnr, subtract 0/0/af/wf => af/wf/acr/wcr = wcr  afwfagreefr free
+   if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
 
     // wcr is afr/wfr/acr/wcr  afwfarwr is af/wf/anr/wnr
 #define LANE(v,l) SHMSK(v,v##l*RANKTX,v##l##MSK)
@@ -1089,7 +1090,7 @@ static NOINLINE A jtva2(J jtfg,AD * RESTRICT a,AD * RESTRICT w,AD * RESTRICT sel
     // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
     // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
 // this shows the fix   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
-    // vbls needed: a w ak wk cv fn nf mf [jt]
+    // vbls needed: a w ak wk cv n nf mf [jt]
 // obsolete     if(unlikely(a==w))cv&=~(JTINPLACEW+JTINPLACEA);  // 0-1=routine/rank/arg/input inplaceable; but never if args equal.
 // obsolete     {I f=LANE(fr,FS);  // recover (shorter frame len) from fr
 // obsolete     }
@@ -1137,8 +1138,8 @@ migrate1: ;  // here if there was 0-1 outer cell, i. e. mf=nf=1 or zn=0.  Rare b
      n=n+((UI1)(cv&VIPWFNOTLONG)<(UI1)((UI)1<(UI)nf));  // (nf!=1) repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus no flag set yet
     } 
     DPMULDE(zn,mf,zn)  // zn is total # atoms in result
-
     // m and n need a few cycles to settle
+
    }else{  // sparse case
     I af=LANE(wcr,AF), wf=LANE(wcr,WF); UI acr=LANE(wcr,AC); wcr=LANE(wcr,WC);   // separate cr and f for sparse
     fr=acr<wcr?wcr:acr; I f=(af<wf)?wf:af;
@@ -1861,8 +1862,8 @@ DF2(jtresidue){F12IP; ARGCHK2(a,w); I intmod; if(!((AT(a)|AT(w))&((NOUN|SPARSE)&
 // These are the unary ops that are implemented using a canned argument
 // NOTE that they pass through inplaceability
 
-// Shift the w-is-inplaceable flag to a.  Bit 1 is known to be 0 in any call to a monad
-#define IPSHIFTWA (jtfg = (J)(intptr_t)(((I)jtfg+JTINPLACEW)&-JTINPLACEA))
+// Shift the w-is-inplaceable flag to a.  Bit 1 is known to be 0 in any call to a monad, but we take an extra instruction to make sure
+#define IPSHIFTWA (jtfg = (J)(intptr_t)((((I)jtfg&~JTINPLACEA)+JTINPLACEW)&-JTINPLACEA))
 
 // We use the right type of singleton so that we engage AVX loops and avoid promotion of INT[124]
 #define SETCONPTR(n) A conptr=num(n); \

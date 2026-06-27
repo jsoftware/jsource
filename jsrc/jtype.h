@@ -112,6 +112,8 @@ typedef I SI;
 #define JTINPLACEW      (((I)1)<<JTINPLACEWX)
 #define JTINPLACEAX     1   // turn this on in jt to indicate that a can be inplaced.  Must be 1+JTINPLACEWX
 #define JTINPLACEA      (((I)1)<<JTINPLACEAX)
+#define JTSPARSEARGX    3  // used inside va2() to indicate that an arg was sparse.  Leave bit 3 as cordon sanitaire against inplaci\ng errors
+#define JTSPARSEARG     (((I)1)<<JTSPARSEARGX)
 
 // Flags in hook/fork and rank loops, therefore destroyed for any verb using F?RANK
 // Bit 3 in JT is unused, to allow for carry from PROP to WILLOPEN
@@ -128,7 +130,7 @@ typedef I SI;
 // following bit used as arg to parse
 #define JTFROMEXECX    0   // parser call from ". - makes some features unavailable
 #define JTFROMEXEC      (((I)1)<<JTFROMEXECX)
-// following bit used as arg to jtfolk
+// following bit used as arg to adverb jtfolk
 #define JTFOLKNOHFNX    2   // set to get the generic fork that does not expect the hfn in localuse
 #define JTFOLKNOHFN      (((I)1)<<JTFOLKNOHFNX)
 // following bit used as arg to jtope

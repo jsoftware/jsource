@@ -132,21 +132,6 @@ t =. t , '/integer1/integer2/integer4/floating2/floating4/floating16'
 n {~ (<;._1 t) i. < y
 }}
 
-NB. Parse attribute and set its value.  no longer used
-parse =: {{)m
-'attribute value' =: y
-if. (# short_param_names) > idx =. search_short_param_names attribute do.
-  attribute =. idx {:: long_param_names
-end.
-incorrect =. (# long_param_names) -: search_long_param_names < attribute
-13!:8&3^:incorrect attribute , ' parameter not supported'
-if. ('literal' -: datatype value) *. (attribute -: 'keytype') +. attribute -: 'valuetype' do.
-  value =. typeid_from_typename value
-end.
-(attribute) =: value
-EMPTY
-}}"1
-
 coclass'jsymbol'  NB. The only extra thing about the symbol class is the path
 issym=:1  NB. symbols are created through this locale
 coinsert'jdict'

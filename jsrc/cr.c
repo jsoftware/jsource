@@ -791,12 +791,10 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
    f1=cycr1; f2=cycr2;  // process this with the cyclic-gerund routines
    vf=gflg(ger)&~VNOLOCCHG;   // the cyclic processor does not inplace or IRS
    r[0]=r[1]=r[2]=RMAX;  // actual rank of gerund"n is _; the gerund is applied at rank n
-  } else {
-   RESETERR;  // the gerund check may have raised an error  scaf no longer needed
+  }else{   // gerund failed (quietly), use the noun value itself
+// obsolete    RESETERR;  // the gerund check may have raised an error  scaf no longer needed
    f1=cons1; f2=cons2;    // use the constant routines for nouns
-   // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be
-   // assigned to a name, which will protects values inside it.
-   ACIPNO(a);
+   ACIPNO(a);   // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be assigned to a name, which will protects values inside it.
    vf|=VNOLOCCHG;    // the noun can't mess up assignment, and does not support IRS or inplacing
   }
  }else{   // normal case where u is a verb

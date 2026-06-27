@@ -113,7 +113,7 @@ name##out: \
 A jtiosc(J jt,I mode,I n,I asct,I wsct,I ac,I wc,A a,A w,A z){I j,p,q; void *u,*v,*zv;
  p=ac>1?asct:0; q=REPSGN(1-(wc|wsct));  // q=1<wc||1<wsct; number of atoms to move between repeats p=*atoms of a to move between repeats
  zv=voidAV(z); u=voidAV(a); v=voidAV(w);
- // Create a pseudotype 19 (=XDX) for intolerant comparison.
+ // Create a pseudotype (XDX) for intolerant comparison.
  I at=AT(a), atexactflmsk=AT(a)&FL+CMPX+QP&~(I)((I4*)&jt->cct)[1]; at|=(at&C2T+C4T)>>(C2TX-INT2X); // leave float types only if exact comparison (cct bits 34-51=0); shift C2T/C4T (17/18) down to INT2/INT4 (9/10)
  I bit=CTTZ(at); n<<=(atexactflmsk&CMPX+QP)!=0; p*=n; q&=n; bit=(atexactflmsk!=0)?XDX:bit;  // switch intolerant E/CMPX to XDX double-length
  switch(IOSCCASE(bit,n>1,mode)){

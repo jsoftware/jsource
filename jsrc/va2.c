@@ -591,140 +591,140 @@ VA va[]={
  {{0,0}, {0,0}, {0,0},                                /* BB BI BD              */
   {0,0}, {0,0}, {0,0},                                /* IB II ID              */
   {0,0}, {0,0}, {0,0},                                /* DB DI DD              */
-  {0,0}, {0,0}, {0,0}, {0,0}, {0,0}, {0,0}},                        /* ZZ XX QQ x x E I2 I4         */
+  {0,0}, {0,0}, {0,0}, {0,0}, {0,0}, {0,0}},                        /* ZZ XX QQ SP E I2 I4     (SP not implemented)    */
   &rpsnull},
 
 /* 10    */ {
  {{(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, 
   {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VIP},     {(VF)bw0000II,VRNONE+VI+VII+VIP},
   {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP},
-  {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0000I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw0000II,VRNONE+VI+VII+VIP}, {(VF)bw0000I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0000I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsbw0000},
 
 /* 11    */ {
  {{(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, 
   {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VIP},     {(VF)bw0001II,VRNONE+VI+VII+VIP},
   {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP},
-  {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0001I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw0001II,VRNONE+VI+VII+VIP}, {(VF)bw0001I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0001I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsbw0001},
 
 /* 12    */ {
  {{(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, 
   {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VIP},     {(VF)bw0010II,VRNONE+VI+VII+VIP},
   {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP},
-  {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0010I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw0010II,VRNONE+VI+VII+VIP}, {(VF)bw0010I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0010I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsbw0010},
 
 /* 13    */ {
  {{(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, 
   {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VIP},     {(VF)bw0011II,VRNONE+VI+VII+VIP},
   {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP},
-  {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0011I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw0011II,VRNONE+VI+VII+VIP}, {(VF)bw0011I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0011I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsbw0011},
 
 /* 14    */ {
  {{(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, 
   {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VIP},     {(VF)bw0100II,VRNONE+VI+VII+VIP},
   {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP},
-  {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0100I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw0100II,VRNONE+VI+VII+VIP}, {(VF)bw0100I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0100I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsbw0100},
 
 /* 15    */ {
  {{(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, 
   {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VIP},     {(VF)bw0101II,VRNONE+VI+VII+VIP},
   {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP},
-  {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0101I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw0101II,VRNONE+VI+VII+VIP}, {(VF)bw0101I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0101I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsbw0101},
 
 /* 16    */ {
  {{(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, 
   {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VIP},     {(VF)bw0110II,VRNONE+VI+VII+VIP},
   {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP},
-  {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0110I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw0110II,VRNONE+VI+VII+VIP}, {(VF)bw0110I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0110I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsbw0110},
 
 /* 17    */ {
  {{(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, 
   {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VIP},     {(VF)bw0111II,VRNONE+VI+VII+VIP},
   {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP},
-  {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0111I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw0111II,VRNONE+VI+VII+VIP}, {(VF)bw0111I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw0111I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsbw0111},
 
 /* 18    */ {
  {{(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, 
   {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VIP},     {(VF)bw1000II,VRNONE+VI+VII+VIP},
   {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP},
-  {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1000I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw1000II,VRNONE+VI+VII+VIP}, {(VF)bw1000I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1000I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsbw1000},
 
 /* 19    */ {
  {{(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, 
   {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VIP},     {(VF)bw1001II,VRNONE+VI+VII+VIP},
   {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP},
-  {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1001I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw1001II,VRNONE+VI+VII+VIP}, {(VF)bw1001I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1001I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsbw1001},
 
 /* 1a    */ {
  {{(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, 
   {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VIP},     {(VF)bw1010II,VRNONE+VI+VII+VIP},
   {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP},
-  {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1010I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw1010II,VRNONE+VI+VII+VIP}, {(VF)bw1010I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1010I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsbw1010},
 
 /* 1b    */ {
  {{(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, 
   {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VIP},     {(VF)bw1011II,VRNONE+VI+VII+VIP},
   {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP},
-  {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1011I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw1011II,VRNONE+VI+VII+VIP}, {(VF)bw1011I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1011I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsbw1011},
 
 /* 1c    */ {
  {{(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, 
   {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VIP},     {(VF)bw1100II,VRNONE+VI+VII+VIP},
   {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP},
-  {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1100I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw1100II,VRNONE+VI+VII+VIP}, {(VF)bw1100I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1100I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsbw1100},
 
 /* 1d    */ {
  {{(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, 
   {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VIP},     {(VF)bw1101II,VRNONE+VI+VII+VIP},
   {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP},
-  {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1101I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw1101II,VRNONE+VI+VII+VIP}, {(VF)bw1101I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1101I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsbw1101},
 
 /* 1e    */ {
  {{(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, 
   {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VIP},     {(VF)bw1110II,VRNONE+VI+VII+VIP},
   {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP},
-  {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1110I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw1110II,VRNONE+VI+VII+VIP}, {(VF)bw1110I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1110I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsbw1110},
 
 /* 1f    */ {
  {{(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, 
   {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VIP},     {(VF)bw1111II,VRNONE+VI+VII+VIP},
   {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP},
-  {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1111I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw1111II,VRNONE+VI+VII+VIP}, {(VF)bw1111I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw1111I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsbw1111},
 
 /* 32 b.    */ {
  {{(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, 
   {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VIP},     {(VF)bw10000II,VRNONE+VI+VII+VIP},
   {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP},
-  {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw10000I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw10000II,VRNONE+VI+VII+VIP}, {(VF)bw10000I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw10000I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsnull},
 
 /* 33 b.    */ {
  {{(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, 
   {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VIP},     {(VF)bw10001II,VRNONE+VI+VII+VIP},
   {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP},
-  {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw10001I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw10001II,VRNONE+VI+VII+VIP}, {(VF)bw10001I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw10001I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsnull},
 
 /* 34 b.    */ {
  {{(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, 
   {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VIP},     {(VF)bw10010II,VRNONE+VI+VII+VIP},
   {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP},
-  {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, {0,0}, {0,0}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw10010I4I4,VRNONE+VI4I4+VI4+VIP}}, 
+  {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, {0,0}, {(VF)bw10010II,VRNONE+VI+VII+VIP}, {(VF)bw10010I2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)bw10010I4I4,VRNONE+VI4I4+VI4+VIP}}, 
   &rpsnull},
 
 
@@ -733,35 +733,35 @@ VA va[]={
  {{(VF)neBB,VRNONE+VB+VIP}, {(VF)neBI,VRNONE+VB+VIPOKA}, {(VF)neBD,VRNONE+VB+VIPOKA},
   {(VF)neIB,VRNONE+VB+VIPOKW}, {(VF)neII,VRNONE+VB}, {(VF)neID,VRNONE+VB},
   {(VF)neDB,VRNONE+VB+VIPOKW}, {(VF)neDI,VRNONE+VB}, {(VF)neDD,VRNONE+VB}, 
-  {(VF)neZZ,VRNONE+VB+VZZ}, {(VF)neXX,VRNONE+VB+VXEQ}, {(VF)neQQ,VRNONE+VB+VQQ}, {0,0}, {0,0}, {(VF)neEE,VRNONE+VEE+VB}, {(VF)neI2I2,VRNONE+VI2I2+VB}, {(VF)neI4I4,VRNONE+VI4I4+VB}},
+  {(VF)neZZ,VRNONE+VB+VZZ}, {(VF)neXX,VRNONE+VB+VXEQ}, {(VF)neQQ,VRNONE+VB+VQQ}, {0,0}, {(VF)neEE,VRNONE+VEE+VB}, {(VF)neI2I2,VRNONE+VI2I2+VB}, {(VF)neI4I4,VRNONE+VI4I4+VB}},
   &rpsne},
 
 /* 25 %  */ {
  {{(VF)divBB,VRNONE+VD}, {(VF)divBI,VRNONE+VD+VIP0I}, {(VF)divBD,VRNONE+VD+VIPOKW},
   {(VF)divIB,VRNONE+VD+VIPI0}, {(VF)divII,VRNONE+VD+VIPI0+VIP0I}, {(VF)divID,VRNONE+VD+VIPID},
   {(VF)divDB,VRNONE+VD+VIPOKA}, {(VF)divDI,VRNONE+VD+VIPDI}, {(VF)divDD,VRNONE+VD+VIP+VCANHALT}, 
-  {(VF)divZZ,VRNONE+VZ+VZZ+VIP}, {(VF)divXX,VRNONE+VX+VXEX}, {(VF)divQQ,VRNONE+VQ+VQQ}, {0,0}, {0,0}, {(VF)divEE,VRNONE+VIP+VEE+VE+VCANHALT}, {(VF)divII,VRNONE+VII+VD+VIPI0+VIP0I}, {(VF)divII,VRNONE+VII+VD+VIPI0+VIP0I}},
+  {(VF)divZZ,VRNONE+VZ+VZZ+VIP}, {(VF)divXX,VRNONE+VX+VXEX}, {(VF)divQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)divEE,VRNONE+VIP+VEE+VE+VCANHALT}, {(VF)divII,VRNONE+VII+VD+VIPI0+VIP0I}, {(VF)divII,VRNONE+VII+VD+VIPI0+VIP0I}},
   &rpsdiv},
 
 /* 89 +: */ {
  {{(VF)norBB,VRNONE+VB+VIP    }, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP},
   {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP},
   {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, 
-  {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {0,0}, {0,0}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}},
+  {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {0,0}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}, {(VF)norBB,VRNONE+VB+VBB+VIP}},
   &rpsnor},
 
 /* 88 +. */ {
  {{(VF)orBB,VRNONE+VB+VIP     }, {(VF)gcdII,VRNONE+VI+VII}, {(VF)gcdDD,VRNONE+VD+VDD+VIP},
   {(VF)gcdII,VRNONE+VI+VII}, {(VF)gcdII,VRNONE+VI}, {(VF)gcdDD,VRNONE+VD+VDD+VIP},
   {(VF)gcdDD,VRNONE+VD+VDD+VIP}, {(VF)gcdDD,VRNONE+VD+VDD+VIP}, {(VF)gcdDD,VRNONE+VD+VIP+VCANHALT}, 
-  {(VF)gcdZZ,VRNONE+VZ+VZZ}, {(VF)gcdXX,VRNONE+VX+VXEX}, {(VF)gcdQQ,VRNONE+VQ+VQQ}, {0,0}, {0,0}, {(VF)gcdDD,VRNONE+VD+VDD+VIP+VCANHALT}, {(VF)gcdII,VRNONE+VII+VI}, {(VF)gcdII,VRNONE+VII+VI}},
+  {(VF)gcdZZ,VRNONE+VZ+VZZ}, {(VF)gcdXX,VRNONE+VX+VXEX}, {(VF)gcdQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)gcdDD,VRNONE+VD+VDD+VIP+VCANHALT}, {(VF)gcdII,VRNONE+VII+VI}, {(VF)gcdII,VRNONE+VII+VI}},
   &rpsor},
 
 /* 2d -  */ {
  {{(VF)minusBB,VRNONE+VI    }, {(VF)minusBI,VRNONE+VI+VIPOKW}, {(VF)minusBD,VRNONE+VD+VIPOKW}, 
   {(VF)minusIB,VRNONE+VI+VIPOKA}, {(VF)minusII,VRNONE+VI+VIP}, {(VF)minusID,VRNONE+VD+VIPID},
   {(VF)minusDB,VRNONE+VD+VIPOKA    }, {(VF)minusDI,VRNONE+VD+VIPDI    }, {(VF)minusDD,VRNONE+VD+VIP+VCANHALT}, 
-  {(VF)minusZZ,VRNONE+VZ+VZZ+VIP}, {(VF)minusXX,VRNONE+VX+VXEX}, {(VF)minusQQ,VRNONE+VQ+VQQ}, {0,0}, {0,0}, {(VF)minusEE,VRNONE+VIP+VEE+VE+VCANHALT}, {(VF)minusI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)minusI4I4,VRNONE+VI4I4+VI4+VIP}},
+  {(VF)minusZZ,VRNONE+VZ+VZZ+VIP}, {(VF)minusXX,VRNONE+VX+VXEX}, {(VF)minusQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)minusEE,VRNONE+VIP+VEE+VE+VCANHALT}, {(VF)minusI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)minusI4I4,VRNONE+VI4I4+VI4+VIP}},
   &rpsminus},
 
    // For Booleans, VIP means 'inplace if rank not specified and there is no frame'  scaf is txhis right?
@@ -769,70 +769,70 @@ VA va[]={
  {{(VF)ltBB,VRNONE+VB+VIP}, {(VF)ltBI,VRNONE+VB+VIPOKA}, {(VF)ltBD,VRNONE+VB+VIPOKA},
   {(VF)ltIB,VRNONE+VB+VIPOKW}, {(VF)ltII,VRNONE+VB}, {(VF)ltID,VRNONE+VB},
   {(VF)ltDB,VRNONE+VB+VIPOKW}, {(VF)ltDI,VRNONE+VB}, {(VF)ltDD,VRNONE+VB}, 
-  {(VF)ltDD,VRNONE+VB+VDD}, {(VF)ltXX,VRNONE+VB+VXFC}, {(VF)ltQQ,VRNONE+VB+VQQ}, {0,0}, {0,0}, {(VF)ltEE,VRNONE+VEE+VB}, {(VF)ltI2I2,VRNONE+VI2I2+VB}, {(VF)ltI4I4,VRNONE+VI4I4+VB}},
+  {(VF)ltDD,VRNONE+VB+VDD}, {(VF)ltXX,VRNONE+VB+VXFC}, {(VF)ltQQ,VRNONE+VB+VQQ}, {0,0}, {(VF)ltEE,VRNONE+VEE+VB}, {(VF)ltI2I2,VRNONE+VI2I2+VB}, {(VF)ltI4I4,VRNONE+VI4I4+VB}},
   &rpslt},
 
 /* 3d =  */ {
  {{(VF)eqBB,VRNONE+VB+VIP}, {(VF)eqBI,VRNONE+VB+VIPOKA}, {(VF)eqBD,VRNONE+VB+VIPOKA},
   {(VF)eqIB,VRNONE+VB+VIPOKW}, {(VF)eqII,VRNONE+VB}, {(VF)eqID,VRNONE+VB},
   {(VF)eqDB,VRNONE+VB+VIPOKW}, {(VF)eqDI,VRNONE+VB}, {(VF)eqDD,VRNONE+VB}, 
-  {(VF)eqZZ,VRNONE+VB+VZZ}, {(VF)eqXX,VRNONE+VB+VXEQ}, {(VF)eqQQ,VRNONE+VB+VQQ}, {0,0}, {0,0}, {(VF)eqEE,VRNONE+VEE+VB}, {(VF)eqI2I2,VRNONE+VI2I2+VB}, {(VF)eqI4I4,VRNONE+VI4I4+VB}},
+  {(VF)eqZZ,VRNONE+VB+VZZ}, {(VF)eqXX,VRNONE+VB+VXEQ}, {(VF)eqQQ,VRNONE+VB+VQQ}, {0,0}, {(VF)eqEE,VRNONE+VEE+VB}, {(VF)eqI2I2,VRNONE+VI2I2+VB}, {(VF)eqI4I4,VRNONE+VI4I4+VB}},
   &rpseq},
 
 /* 3e >  */ {
  {{(VF)gtBB,VRNONE+VB+VIP}, {(VF)gtBI,VRNONE+VB+VIPOKA}, {(VF)gtBD,VRNONE+VB+VIPOKA},
   {(VF)gtIB,VRNONE+VB+VIPOKW}, {(VF)gtII,VRNONE+VB}, {(VF)gtID,VRNONE+VB},
   {(VF)gtDB,VRNONE+VB+VIPOKW}, {(VF)gtDI,VRNONE+VB}, {(VF)gtDD,VRNONE+VB}, 
-  {(VF)gtDD,VRNONE+VB+VDD}, {(VF)gtXX,VRNONE+VB+VXCF}, {(VF)gtQQ,VRNONE+VB+VQQ}, {0,0}, {0,0}, {(VF)gtEE,VRNONE+VEE+VB}, {(VF)gtI2I2,VRNONE+VI2I2+VB}, {(VF)gtI4I4,VRNONE+VI4I4+VB}},
+  {(VF)gtDD,VRNONE+VB+VDD}, {(VF)gtXX,VRNONE+VB+VXCF}, {(VF)gtQQ,VRNONE+VB+VQQ}, {0,0}, {(VF)gtEE,VRNONE+VEE+VB}, {(VF)gtI2I2,VRNONE+VI2I2+VB}, {(VF)gtI4I4,VRNONE+VI4I4+VB}},
   &rpsgt},
 
 /* 8a *. */ {
  {{(VF)andBB,VRNONE+VB+VIP    }, {(VF)lcmII,VRNONE+VI+VII}, {(VF)lcmDD,VRNONE+VD+VDD+VIP},
   {(VF)lcmII,VRNONE+VI+VII}, {(VF)lcmII,VRNONE+VI    }, {(VF)lcmDD,VRNONE+VD+VDD+VIP},
   {(VF)lcmDD,VRNONE+VD+VDD+VIP}, {(VF)lcmDD,VRNONE+VD+VDD+VIP}, {(VF)lcmDD,VRNONE+VD+VIP+VCANHALT}, 
-  {(VF)lcmZZ,VRNONE+VZ+VZZ}, {(VF)lcmXX,VRNONE+VX+VXEX}, {(VF)lcmQQ,VRNONE+VQ+VQQ}, {0,0}, {0,0}, {(VF)lcmDD,VRNONE+VD+VDD+VIP+VCANHALT}, {(VF)lcmII,VRNONE+VII+VI}, {(VF)lcmII,VRNONE+VII+VI}},
+  {(VF)lcmZZ,VRNONE+VZ+VZZ}, {(VF)lcmXX,VRNONE+VX+VXEX}, {(VF)lcmQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)lcmDD,VRNONE+VD+VDD+VIP+VCANHALT}, {(VF)lcmII,VRNONE+VII+VI}, {(VF)lcmII,VRNONE+VII+VI}},
   &rpsand},
 
 /* 8b *: */ {
  {{(VF)nandBB,VRNONE+VB+VIP},     {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP},
   {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP},
   {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, 
-  {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {0,0}, {0,0}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}},
+  {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {0,0}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}, {(VF)nandBB,VRNONE+VB+VBB+VIP}},
   &rpsnand},
 
 /* 85 >: */ {
  {{(VF)geBB,VRNONE+VB+VIP}, {(VF)geBI,VRNONE+VB+VIPOKA}, {(VF)geBD,VRNONE+VB+VIPOKA},
   {(VF)geIB,VRNONE+VB+VIPOKW}, {(VF)geII,VRNONE+VB}, {(VF)geID,VRNONE+VB},
   {(VF)geDB,VRNONE+VB+VIPOKW}, {(VF)geDI,VRNONE+VB}, {(VF)geDD,VRNONE+VB}, 
-  {(VF)geDD,VRNONE+VB+VDD}, {(VF)geXX,VRNONE+VB+VXFC}, {(VF)geQQ,VRNONE+VB+VQQ}, {0,0}, {0,0}, {(VF)geEE,VRNONE+VEE+VB}, {(VF)geI2I2,VRNONE+VI2I2+VB}, {(VF)geI4I4,VRNONE+VI4I4+VB}},
+  {(VF)geDD,VRNONE+VB+VDD}, {(VF)geXX,VRNONE+VB+VXFC}, {(VF)geQQ,VRNONE+VB+VQQ}, {0,0}, {(VF)geEE,VRNONE+VEE+VB}, {(VF)geI2I2,VRNONE+VI2I2+VB}, {(VF)geI4I4,VRNONE+VI4I4+VB}},
   &rpsge},
 
 /* 83 <: */ {
  {{(VF)leBB,VRNONE+VB+VIP}, {(VF)leBI,VRNONE+VB+VIPOKA}, {(VF)leBD,VRNONE+VB+VIPOKA},
   {(VF)leIB,VRNONE+VB+VIPOKW}, {(VF)leII,VRNONE+VB}, {(VF)leID,VRNONE+VB},
   {(VF)leDB,VRNONE+VB+VIPOKW}, {(VF)leDI,VRNONE+VB}, {(VF)leDD,VRNONE+VB}, 
-  {(VF)leDD,VRNONE+VB+VDD}, {(VF)leXX,VRNONE+VB+VXCF}, {(VF)leQQ,VRNONE+VB+VQQ}, {0,0}, {0,0}, {(VF)leEE,VRNONE+VEE+VB}, {(VF)leI2I2,VRNONE+VI2I2+VB}, {(VF)leI4I4,VRNONE+VI4I4+VB}},
+  {(VF)leDD,VRNONE+VB+VDD}, {(VF)leXX,VRNONE+VB+VXCF}, {(VF)leQQ,VRNONE+VB+VQQ}, {0,0}, {(VF)leEE,VRNONE+VEE+VB}, {(VF)leI2I2,VRNONE+VI2I2+VB}, {(VF)leI4I4,VRNONE+VI4I4+VB}},
   &rpsle},
 
 /* 82 <. */ {
  {{(VF)andBB,VRNONE+VB+VIP}, {(VF)minBI,VRNONE+VI+VIPOKW}, {(VF)minBD,VRNONE+VD+VIPOKW},
   {(VF)minIB,VRNONE+VI+VIPOKA}, {(VF)minII,VRNONE+VI+VIP}, {(VF)minID,VRNONE+VD+VIPID},
   {(VF)minDB,VRNONE+VD+VIPOKA}, {(VF)minDI,VRNONE+VD+VIPDI}, {(VF)minDD,VRNONE+VD+VIP}, 
-  {(VF)minDD,VRNONE+VD+VDD+VIP}, {(VF)minXX,VRNONE+VX+VXEX}, {(VF)minQQ,VRNONE+VQ+VQQ}, {0,0}, {0,0}, {(VF)minEE,VRNONE+VEE+VE+VIP}, {(VF)minI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)minI4I4,VRNONE+VI4I4+VI4+VIP}},  // always VIP a forced conversion
+  {(VF)minDD,VRNONE+VD+VDD+VIP}, {(VF)minXX,VRNONE+VX+VXEX}, {(VF)minQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)minEE,VRNONE+VEE+VE+VIP}, {(VF)minI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)minI4I4,VRNONE+VI4I4+VI4+VIP}},  // always VIP a forced conversion
   &rpsmin},
 
 /* 84 >. */ {
  {{(VF)orBB,VRNONE+VB+VIP}, {(VF)maxBI,VRNONE+VI+VIPOKW}, {(VF)maxBD,VRNONE+VD+VIPOKW},
   {(VF)maxIB,VRNONE+VI+VIPOKA}, {(VF)maxII,VRNONE+VI+VIP}, {(VF)maxID,VRNONE+VD+VIPID},
   {(VF)maxDB,VRNONE+VD+VIPOKA}, {(VF)maxDI,VRNONE+VD+VIPDI}, {(VF)maxDD,VRNONE+VD+VIP}, 
-  {(VF)maxDD,VRNONE+VD+VDD+VIP}, {(VF)maxXX,VRNONE+VX+VXEX}, {(VF)maxQQ,VRNONE+VQ+VQQ}, {0,0}, {0,0}, {(VF)maxEE,VRNONE+VEE+VE+VIP}, {(VF)maxI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)maxI4I4,VRNONE+VI4I4+VI4+VIP}},
+  {(VF)maxDD,VRNONE+VD+VDD+VIP}, {(VF)maxXX,VRNONE+VX+VXEX}, {(VF)maxQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)maxEE,VRNONE+VEE+VE+VIP}, {(VF)maxI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)maxI4I4,VRNONE+VI4I4+VI4+VIP}},
   &rpsmax},
 
 /* 2b +  */ {
  {{(VF)plusBB,VRNONE+VI    }, {(VF)plusBI,VRNONE+VI+VIPOKW}, {(VF)plusBD,VRNONE+VD+VIPOKW}, 
   {(VF)plusIB,VRNONE+VI+VIPOKA}, {(VF)plusII,VRNONE+VI+VIP}, {(VF)plusID,VRNONE+VD+VIPID}, 
   {(VF)plusDB,VRNONE+VD+VIPOKA}, {(VF)plusDI,VRNONE+VD+VIPDI}, {(VF)plusDD,VRNONE+VD+VIP+VCANHALT}, 
-  {(VF)plusZZ,VRNONE+VZ+VZZ+VIP}, {(VF)plusXX,VRNONE+VX+VXEX}, {(VF)plusQQ,VRNONE+VQ+VQQ}, {0,0}, {0,0}, {(VF)plusEE,VRNONE+VEE+VE+VIP+VCANHALT}, {(VF)plusI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)plusI4I4,VRNONE+VI4I4+VI4+VIP}},
+  {(VF)plusZZ,VRNONE+VZ+VZZ+VIP}, {(VF)plusXX,VRNONE+VX+VXEX}, {(VF)plusQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)plusEE,VRNONE+VEE+VE+VIP+VCANHALT}, {(VF)plusI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)plusI4I4,VRNONE+VI4I4+VI4+VIP}},
   &rpsplus},
 
 /* 2a *  */ {
@@ -843,35 +843,35 @@ VA va[]={
  {{(VF)andBB,VRNONE+VB+VIP}, {(VF)tymesBI,VRNONE+VI+VIPOKW}, {(VF)tymesBD,VRNONE+VD+VIPOKW},
   {(VF)tymesIB,VRNONE+VI+VIPOKA}, {(VF)tymesII,VRNONE+VI+VIP}, {(VF)tymesID,VRNONE+VD+VIPID},
   {(VF)tymesDB,VRNONE+VD+VIPOKA}, {(VF)tymesDI,VRNONE+VD+VIPDI}, {(VF)tymesDD,VRNONE+VD+VIP}, 
-  {(VF)tymesZZ,VRNONE+VZ+VZZ+VIP}, {(VF)tymesXX,VRNONE+VX+VXEX}, {(VF)tymesQQ,VRNONE+VQ+VQQ}, {0,0}, {0,0}, {(VF)tymesEE,VRNONE+VEE+VE+VIP}, {(VF)tymesI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)tymesI4I4,VRNONE+VI4I4+VI4+VIP}},
+  {(VF)tymesZZ,VRNONE+VZ+VZZ+VIP}, {(VF)tymesXX,VRNONE+VX+VXEX}, {(VF)tymesQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)tymesEE,VRNONE+VEE+VE+VIP}, {(VF)tymesI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)tymesI4I4,VRNONE+VI4I4+VI4+VIP}},
   &rpstymes},
 
 /* 5e ^  */ {   // may produce complex numbers
  {{(VF)geBB,VRNONE+VB+VIP}, {(VF)powBI,VRNONE+VD}, {(VF)powBD,VRNONE+VD},
   {(VF)powIB,VRNONE+VI}, {(VF)powII,VRNONE+VD}, {(VF)powID,VRNONE+VD+VCANHALT},
   {(VF)powDB,VRNONE+VD}, {(VF)powDI,VRNONE+VD}, {(VF)powDD,VRNONE+VD+VCANHALT}, 
-  {(VF)powZZ,VRNONE+VZ+VZZ}, {(VF)powXX,VRNONE+VX+VXEX}, {(VF)powQQ,VRNONE+VQ+VQQ}, {0,0}, {0,0}, {(VF)powEE,VRNONE+VEE+VE+VCANHALT}, {(VF)powII,VRNONE+VII+VD+VCANHALT}, {(VF)powII,VRNONE+VII+VD+VCANHALT}},
+  {(VF)powZZ,VRNONE+VZ+VZZ}, {(VF)powXX,VRNONE+VX+VXEX}, {(VF)powQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)powEE,VRNONE+VEE+VE+VCANHALT}, {(VF)powII,VRNONE+VII+VD+VCANHALT}, {(VF)powII,VRNONE+VII+VD+VCANHALT}},
   &rpsge},
 
 /* 7c |  */ {
  {{(VF)ltBB,VRNONE+VB+VIP    }, {(VF)remII,VRNONE+VI+VII+VIP}, {(VF)remDD,VRNONE+VD+VDD+VIP},
   {(VF)remII,VRNONE+VI+VII+VIP}, {(VF)remII,VRNONE+VI+VIP}, {(VF)remID,VRNONE+VI+VCANHALT    },   // remID can 'overflow' if result is nonintegral
   {(VF)remDD,VRNONE+VD+VDD+VIP}, {(VF)remDD,VRNONE+VD+VDD+VIP}, {(VF)remDD,VRNONE+VD+VIP+VCANHALT}, 
-  {(VF)remZZ,VRNONE+VZ+VZZ}, {(VF)remXX,VRNONE+VX+VXEX}, {(VF)remQQ,VRNONE+VQ+VQQ}, {0,0}, {0,0}, {(VF)remDD,VRNONE+VD+VDD+VIP+VCANHALT}, {(VF)remI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)remI4I4,VRNONE+VI4I4+VI4+VIP}},
+  {(VF)remZZ,VRNONE+VZ+VZZ}, {(VF)remXX,VRNONE+VX+VXEX}, {(VF)remQQ,VRNONE+VQ+VQQ}, {0,0}, {(VF)remDD,VRNONE+VD+VDD+VIP+VCANHALT}, {(VF)remI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)remI4I4,VRNONE+VI4I4+VI4+VIP}},
   &rpslt},
 
 /* 21 !  */ {
  {{(VF)leBB,VRNONE+VB+VIP            }, {(VF)binDD,VRI+VD+VDD+VIP}, {(VF)binDD,VRNONE+VD+VDD+VIP}, 
   {(VF)binDD,VRI+VD+VDD+VIP}, {(VF)binDD,VRI+VD+VDD+VIP}, {(VF)binDD,VRNONE+VD+VDD+VIP}, 
   {(VF)binDD,VRNONE+VD+VDD+VIP    }, {(VF)binDD,VRNONE+VD+VDD+VIP    }, {(VF)binDD,VRNONE+VD+VIP}, 
-  {(VF)binZZ,VRNONE+VZ+VZZ}, {(VF)binXX,VRNONE+VX+VXEX}, {(VF)binQQ,VRNONE+VX+VQQ}, {0,0}, {0,0}, {(VF)binDD,VRNONE+VD+VDD+VIP}, {(VF)binDD,VRNONE+VD+VDD+VIP}, {(VF)binDD,VRNONE+VD+VDD+VIP}}, 
+  {(VF)binZZ,VRNONE+VZ+VZZ}, {(VF)binXX,VRNONE+VX+VXEX}, {(VF)binQQ,VRNONE+VX+VQQ}, {0,0}, {(VF)binDD,VRNONE+VD+VDD+VIP}, {(VF)binDD,VRNONE+VD+VDD+VIP}, {(VF)binDD,VRNONE+VD+VDD+VIP}}, 
   &rpsle},
 
 /* d1 o. */ {
  {{(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirBD,VRNONE+VD},
   {(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirID,VRNONE+VD},
   {(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirDD,VRNONE+VD}, 
-  {(VF)cirZZ,VRD+VZ+VZZ}, {(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirDD,VRNONE+VD+VDD}, {0,0}, {0,0}, {(VF)cirEE,VRNONE+VEE+VE+VCANHALT}, {(VF)cirDD,VRNONE+VDD+VD}, {(VF)cirDD,VRNONE+VDD+VD}},
+  {(VF)cirZZ,VRD+VZ+VZZ}, {(VF)cirDD,VRNONE+VD+VDD}, {(VF)cirDD,VRNONE+VD+VDD}, {0,0}, {(VF)cirEE,VRNONE+VEE+VE+VCANHALT}, {(VF)cirDD,VRNONE+VDD+VD}, {(VF)cirDD,VRNONE+VDD+VD}},
   &rpsnull},
 
 
@@ -880,7 +880,7 @@ VA va[]={
  {{0,0}, {0,0}, {0,0},
   {(VF)eqabsDD,VRNONE+VB}, {(VF)neabsDD,VRNONE+VB}, {(VF)ltabsDD,VRNONE+VB},
   {(VF)leabsDD,VRNONE+VB}, {(VF)geabsDD,VRNONE+VB}, {(VF)gtabsDD,VRNONE+VB}, 
-  {0,0}, {0,0}, {0,0}, {0,0}},
+  {0,0}, {0,0}, {0,0}},
   &rpsnull},
 
 
@@ -1172,8 +1172,8 @@ migrate1: ;  // here if there was 0-1 outer cell, i. e. mf=nf=1 or zn=0.  Rare b
   if(unlikely(a==w))goto allocate;   // If a==w suppress inplacing, in case the operation must be retried (we could check which ones but they are just not likely to be used reflexively)
   // we are reusing an argument (ipw is neg if it's w, which has priority); make sure the type is updated to the result type
   z=ipw<0?w:a;  // z=inplaceable arg; in test suite, most inplaceables are inplaceable on both w and a, somewhat more on w
-// obsolete if(!((!(AT(z)&rtype(cv))==!!(cv&(VTYPECHGA>>SGNTO0(ipw))))||AN(z)==0))SEGFAULT;  // scaf
-// obsolete ASSERTSYS((!(AT(z)&rtype(cv))==!!(cv&(VTYPECHGA>>SGNTO0(ipw))))||AN(z)==0,"surprise type change")  // scaf
+// obsolete if(!((!(AT(z)&rtype(cv))==!!(cv&(VTYPECHGA>>SGNTO0(ipw))))||AN(z)==0))SEGFAULT;
+// obsolete ASSERTSYS((!(AT(z)&rtype(cv))==!!(cv&(VTYPECHGA>>SGNTO0(ipw))))||AN(z)==0,"surprise type change")
 // obsolete   if(unlikely(!(AT(z)&rtype(cv)))){   // if type changes (zt!=incumbent)...  zt does not have upper flag bits
   if(unlikely(cv&(VTYPECHGA>>SGNTO0(ipw)))){   // if result type is not the (possibly converted) argument type...
    // the type of inplaceable z must (or might, if it was empty) change.  But if z is UNINCORPABLE, it might be virtual.  Realizing it is a losing move.  And, we don't change the type of an UNINCORPABLE so that the caller
@@ -1249,7 +1249,7 @@ allocate:;  // come here if no inplaceable block could have the type changed
    I jj=aawwzknfxrz[6], n=aawwzknfxrz[5];  // number of outer-outer loops, number of outer-inner loops
    // vbls needed over loop: [adocvfn] m av wv zv [mend] jj jt
    do{
-    // loop unroll: start calculating the values for the next iteration.  This can run while args are being fetched.   scaf! do 1 less iter, then fall through to no-loop case, save 1 setup.  Must handle error code
+    // loop unroll: start calculating the values for the next iteration.  This can run while args are being fetched.
     C *avu=av, *wvu=wv, *zvu=zv;  // the values for this iteration
     aawwzknfxrz[7]=--jj; jj=REPSGN(jj); zv+=aawwzknfxrz[4]; av+=aawwzknfxrz[1+jj]; wv+=aawwzknfxrz[3+jj]; jj=aawwzknfxrz[7+jj]; // jj is -1 on the last inner iter, where we use outer incr
     I lrc=((AHDR2FN*)adocvfn)AH2A(n,m,avu,wvu,zvu,jt);    // run one section.  Result is EOK normally, otherwise error code, as examined below.  After the first time it doesn't matter whether adocvfn is in a reg, since the branch is predicted
@@ -1908,7 +1908,7 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
   // then [17-25] are for verb/, with precisions B I D Z X Q x INT2 INT4
   // [26-34] for verb\, and [35-43] for verb\.
   VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
-  if(withprob(!((t=(at|wt))&(NOUN&~(B01|INT|FL))),0.1)){  // the normal case was tested for in va2()
+  if(withprob(!((t=(at|wt))&(NOUN&~(B01|INT|FL))),0.1)){  // this normal case was tested for in va2()
    // Here for the fast and important case, where the arguments are both B01/INT/FL
    R vainfo->p2[(at*3+(wt&INT+FL))>>INTX];
 
@@ -1917,10 +1917,11 @@ VA2 jtvar(J jt,A self,I at,I wt){I t;
    I apri=TYPEPRIORITYNUM(at), wpri=TYPEPRIORITYNUM(wt), pri=MAX(apri,wpri);  // conversion priority for each arg
    //  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F     // priorities
    // B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX
-   //  0               4       10  11  8     15 16    13 14  9   routine indexes for homogeneous args (final pri)
-   //                          6   7   4     11 12    9  10  5   biased by 4, the smallest we use here (values stored in the shift constant)
+// obsolete    //  0               4       10  11  8     15 16    13 14  9   routine indexes for homogeneous args (final pri)
+   //  0               4       10  11  8     14 15    12 13  9   routine indexes for homogeneous args (final pri)
+   //                          6   7   4     10 11    8   9  5   biased by 4, the smallest we use here (values stored in the shift constant)
    // (B)             (I)      X   Q   D     I2 I4    DS  E  Z   internal type for each precision 
-   pri=4+(I)SHMSK8(0x5affcbf476ffffffLL,pri<<2,0xf);  // 4 is II, lower than the lowest routine# we can call for here
+   pri=4+(I)SHMSK8(0x59ffbaf476ffffffLL,pri<<2,0xf);  // 4 is II, lower than the lowest routine# we can call for here  f is unimplemented precision
    VA2 selva2 = vainfo->p2[pri];  // routine/flags for the top-priority arg
    if(unlikely(pri==8))selva2.cv|=VDD;      // We allow input conversion to be omitted for BID, so if we are using the DD line we have to install DD conversion
 // obsolete    I cvtflgs=(apri>wpri?VCOPYA:0)+(apri<wpri?VCOPYW:0);  // set the flag to cause conversion of low-pri arg to the upper.  This handles ALL mixed-mode conversions

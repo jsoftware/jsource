@@ -854,10 +854,10 @@ A jtccvt(J jt,I tflagged,A w,I natoms){A d,z;I n,r,*s,wt; void *wv,*yv;I t=tflag
  // Perform the conversion based on data types
  // For branch-table efficiency, we split the literal conversions into one block, and
  // the rest in another
- if(unlikely((t|wt)&(LIT+C2T+C4T+XD+XZ))) {   // there are no XD+XZ conversions, but we have to show domain error  scaf ???
+ if(unlikely((t|wt)&(LIT+C2T+C4T))) {
    // one of the types is literal.
    // we must account for all NOUN types.  If there is a non-char, that's an error
-  ASSERT(!((t|wt)&(XD+XZ+NUMERIC+BOX)),EVINHOMO);  // No conversions for these types
+  ASSERT(!((t|wt)&(NUMERIC+BOX)),EVINHOMO);  // No conversions for these types
 #define CVCASECHAR(a,b) ((2*(C2T>>(a))+(C2T>>(b))))  // distinguish character cases - note last case is impossible (equal types)
   switch (CVCASECHAR(CTTZ(t),CTTZ(wt))){
   case CVCASECHAR(LITX, C2TX): R (C1fromC2(w, yv))?z:0;

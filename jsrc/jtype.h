@@ -470,6 +470,7 @@ struct AD {
 #define QPSIZE sizeof(E)
 #define QPEXTTYPE 11
 // 14-16 free
+#define XDX 14   //   used to represent intolerant compare in jtiosc.  Could use a higher type, but we choose this to shorten a branch table
 #define C2TX 17
 #define C2T             ((I)1L<<C2TX)       // C2 unicode (2-byte characters)
 #define C2TSIZE sizeof(US)
@@ -480,14 +481,14 @@ struct AD {
 #define C4TSIZE sizeof(C4)
 #define C4TEXTTYPEX  18
 _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
-#define XDX 19
-#define XD              ((I)1L<<XDX)        // DX extended floating point   used to represent intolerant compare in jtiosc
-#define XDSIZE sizeof(DX)
-#define XZX 20
-#define XZ              ((I)1L<<XZX)        // ZX extended complex
-#define XZSIZE sizeof(ZX)
-
-#define LASTNOUNX XZX    // index of last noun bit
+// obsolete #define XDX 19
+// obsolete #define XD              ((I)1L<<XDX)        // DX extended floating point 
+// obsolete #define XDSIZE sizeof(DX)
+// obsolete #define XZX 20
+// obsolete #define XZ              ((I)1L<<XZX)        // ZX extended complex
+// obsolete #define XZSIZE sizeof(ZX)
+// 19-20 free
+#define LASTNOUNX 20    // index of last bit reserved for nouns.  Higher bits are non-noun
 
 // upper flags may be used, except for RPAR and CONJ (used as stack count in parser), LPAR and ASGN (used in parser to calculate initial stack count), CONW (always means ASGNTONAME in parser), NAME
 // VERB/ADV/CONJ should not be used as flags in NOUN types.  The main flags are MARK/SYMB/CONW
@@ -597,7 +598,7 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define ANY             -1L
 #define NUMERIC         (B01+INT+FL+CMPX+XNUM+RAT+INT2+INT4+SP+QP)
 #define EXACTNUMERIC    (B01+INT+XNUM+RAT+INT2+INT4)
-#define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+INT2+INT4+SP+QP+CONW)|SPARSE)  // AND must be >0  scaf why CONW?
+#define DIRECT          ((LIT+C2T+C4T+B01+INT+FL+CMPX+INT2+INT4+SP+QP+CONW)|SPARSE)  // AND must be >0
 #define JCHAR           (LIT+C2T+C4T)
 #define NOUN            (NUMERIC+JCHAR+BOX)
 #define FUNC            (VERB+ADV+CONJ)
@@ -1169,8 +1170,8 @@ typedef struct {VA1F f;I cv;} VA1;  // for monads
 typedef struct {VARPSF f;I cv;} VARPS;  // for reduce/prefix/suffix
 
 typedef struct {I nprec; VARPS actrtns[];} VARPSA;
-typedef struct {VA2 p2[17];VARPSA *rps;} VA;  // 9 main types (B01/INT/FL), CMPX, XNUM, RAT, x, SP, QP, INT2, INT4  scaf! close up & simplify order
-typedef struct {VA1 p1[10];} UA;  // B01, INT, FL, CMPX, XNUM, RAT, SP, QP, INT2, INT4
+typedef struct {VA2 p2[16];VARPSA *rps;} VA;  // 9 main types (B01/INT/FL), CMPX, XNUM, RAT, SP, QP, INT2, INT4  // scaf make routine order follow priority order [B01 INT] XNUM RAT [FL] [INT1] INT2 INT4 [SP] QP CMPX 
+typedef struct {VA1 p1[10];} UA;  // B01, INT, FL, CMPX, XNUM, RAT, SP, QP, INT2, INT4  // scaf make routine order follow VA2 order
 // ********************** layout of a FUNC (starts at AS[0]) ************************************
 typedef struct {
  // the localuse fields are not freed or counted for space, as the f/g/h fields are.  They are for local optimizations only.

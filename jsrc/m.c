@@ -1000,7 +1000,7 @@ if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
   if(unlikely(v->id==CTILDE))if(v->fgh[0]&&AT(v->fgh[0])&NAME)NAV(v->fgh[0])->bucket=0;
   //  Recur on each component
   DO(3, if(v->fgh[i])ra(v->fgh[i]);)  // ra f, g, h
- } else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
+ } else if(t&(RAT|XNUM)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
   DQ(t&RAT?2*n:n, if(*v)ACINCR(*v); ++v;);  // not INCRPOS, because EPILOG is used in connum to make invalid blocks recursive (kludge)
  } else if(ISSPARSE(t)){P* RESTRICT v=PAV(wd); A x;
@@ -1095,7 +1095,7 @@ finbox:;
   }
  // SYMB must free as a monolith, with the symbols returned when the hashtables are
  }else if(t&SYMB){wd=jtfreesymtab(jt,wd,AR(wd));  // SYMB is used as a flag; we test here AFTER NAME and ADV which are lower bits
- }else if(t&(RAT|XNUM|XD)) {A* RESTRICT v=AAV(wd);
+ }else if(t&(RAT|XNUM)) {A* RESTRICT v=AAV(wd);
   // single-level indirect forms.  handle each block
   DQ(t&RAT?2*n:n, if(*v)fr(*v); ++v;);
  }else if(ISSPARSE(t)){P* RESTRICT v=PAV(wd);

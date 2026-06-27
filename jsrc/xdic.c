@@ -583,8 +583,7 @@ static INLINE A jtget1(DIC *dic,void *k,A z,J jt,A adyad){
  hsz=dic->bloc.hashsiz; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz  prototype required to get arg converted to I
  C *kbase=CAV(dic->bloc.keys);  // address corresponding to hash value of 0.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
 
- // convert the hash slot#s to index into kvs.  Prefetch each value to get a leg up on moving the data.  We don't prefetch more to avoid needless bus bandwidth; perhaps we should check the length   scaf
-    // the only advantage of the prefetch is that the value reads will clear earlier, allowing the fence when we end our lock to finish earlier
+ // convert the hash slot#s to index into kvs.
  I curslot=(((UI8)hsh*(UI4)hsz)>>32)*(hsz>>56); I hval; // convert hash to slot# and then to byte offset;  place where biased kv slot# is read into
  while(1){
   hval=_bzhi_u64(*(UI4*)&hashtbl[curslot],(hsz>>53));   // point to field beginning with hash value, clear higher bits. remember the hash value, which will be the index of the kv
@@ -631,7 +630,7 @@ static INLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT vi
 
  if(unlikely(!(hsz&(DICFICF<<DICFBASE))))biasforcomp
 
- // convert the hash slot#s to index into kvs.  Prefetch each value to get a leg up on moving the data.  We don't prefetch more to avoid needless bus bandwidth; perhaps we should check the length
+ // convert the hash slot#s to index into kvs.  Prefetch each value to get a leg up on moving the data.  We don't prefetch more to avoid needless bus bandwidth; perhaps we should check the length scaf
     // the only advantage of the prefetch is that the value reads will clear earlier, allowing the fence when we end our lock to finish earlier
  for(i=n;--i>=0;){
   k=(void*)((I)k-(kib>>32));  // back up to next key

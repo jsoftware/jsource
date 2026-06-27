@@ -14,8 +14,8 @@ on:
 
 env:
  DEBUGLEVEL: 0
- OPTL: -O2
- OPTLD: -O2
+ OPTL: -O0
+ OPTLD: -O0
  NO_UNDEFINED: 1
 
 jobs:

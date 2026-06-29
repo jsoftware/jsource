@@ -45,8 +45,8 @@ jobs:
     - run: echo "Run deprecated jobs"
 
  disabled:
-  if: false
-  #if: true
+  #if: false
+  if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Run disabled jobs"
@@ -1421,6 +1421,8 @@ jobs:
       update: true
       # Install necessary packages (e.g., your build tools, gcc, make)
       install: >-
+        mingw-w64-x86_64-gcc
+        mingw-w64-x86_64-gdb
         mingw-w64-i686-gcc
         mingw-w64-i686-gdb
         make
@@ -1429,8 +1431,10 @@ jobs:
     # Run your build commands within the MSYS2 shell
      shell: msys2 {0}
      env:
-      CC: i686-w64-mingw32-gcc
-      CXX: i686-w64-mingw32-g++
+#      CC: i686-w64-mingw32-gcc
+#      CXX: i686-w64-mingw32-g++
+      CC: x86_64-w64-mingw32-gcc -m32
+      CXX: x86_64-w64-mingw32-g++ -m32
       WINDRES: windres
       USE_SLEEF: 1
       USE_OPENMP: 0

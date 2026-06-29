@@ -12,10 +12,9 @@ else.
 end.
 
 NB. Names of params, and defaults
-long_param_names =. ;: 'keytype keyshape valuetype valueshape    keyhash    keycompare   initcapacity name'
-(long_param_names) =.      4   ; (i. 0) ;    4    ;  (i. 0)  ; (16!:0`'') ; (16!:0`'') ;       100   ; ''
-short_param_names =. _2 <\ 'ktksvtvs'
-occupancy=. 0.5   NB. hash only
+long_param_names =. ;: 'valuetype valueshape keytype keyshape    keyhash    keycompare   initcapacity name occupancy'
+(long_param_names) =.      4   ;   (i. 0) ;     4  ;  (i. 0)  ; (16!:0`'') ; (16!:0`'') ;       100   ; '' ; 0.5
+short_param_names =. _2 <\ 'vtvsktks'
 
 if. (-: (index_type {.~ -@#)) 'concurrent' do.
   singlethreaded =. 0
@@ -25,8 +24,8 @@ else.
 end.
 
 if. #creation_parameters do. names =. {."1 creation_parameters [ values =. {:"1 creation_parameters else. names =. values =. 0$a: end.  NB. requests
-if. index_type -: 'hash' do. long_param_names =. long_param_names , <'occupancy' end.  NB. occupancy supported only for hash type
 names =. (((#short_param_names){.long_param_names),names) {~ (short_param_names,names) i. names  NB. xlate short names to long equivs
+long_param_names =. 2 }.^:(issym) }:^:(index_type -.@-: 'hash') long_param_names  NB. disallow value for symbols, and occupancy for tree
 namex =. long_param_names i. names
 if. (#long_param_names) e. namex do.  13!:8&3 'incorrect attribute: ' , ;:^:_1 names #~ (#long_param_names) e. namex end.
 (,names) =. ,values  NB. assign values to local names (, to unbox if singleton)
@@ -81,12 +80,12 @@ else.
   ('items',name) =: dict {{
     (0 0) 16!:_9 m NB. read-lock.
     r =. memu (<<<0 (16!:_5) m) { 1 (16!:_8) m
-    if. -. y -: 0 do.
+    if. y do.
       r =. r ,&< memu (<<<0 (16!:_5) m) { 2 (16!:_8) m
     end.
     (1 0) 16!:_9 m
     r
-  }}@valueshape
+  }}@(0~:valueshape)    NB. values only if they are not empty
 end.
   ('close',name) =: (4!:55@;:@(,&name&.>&.;: clsnms)) , (dict 16!:_5~ 1:)  NB. clear the empty chain in the keys to avoid errors freeing it
 dict  NB. We never use the dict itself, but in case a user wants to, this is a hook that they can use to get to it

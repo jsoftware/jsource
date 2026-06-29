@@ -1421,10 +1421,19 @@ jobs:
       update: true
       # Install necessary packages (e.g., your build tools, gcc, make)
       install: >-
-        mingw-w64-x86_64-gcc
-        mingw-w64-x86_64-gdb
         mingw-w64-i686-gcc
         mingw-w64-i686-gdb
+        make
+
+   - name: Setup Environment (Windows MSYS2 x64)
+     uses: msys2/setup-msys2@v2
+     with:
+      msystem: MINGW64
+      update: true
+      # Install necessary packages (e.g., your build tools, gcc, make)
+      install: >-
+        mingw-w64-x86_64-gcc
+        mingw-w64-x86_64-gdb
         make
 
    - name: Build JE (Windows MSYS2 x86)
@@ -1433,8 +1442,8 @@ jobs:
      env:
 #      CC: i686-w64-mingw32-gcc
 #      CXX: i686-w64-mingw32-g++
-      CC: x86_64-w64-mingw32-gcc -m32
-      CXX: x86_64-w64-mingw32-g++ -m32
+      CC: "x86_64-w64-mingw32-gcc -m32"
+      CXX: "x86_64-w64-mingw32-g++ -m32"
       WINDRES: windres
       USE_SLEEF: 1
       USE_OPENMP: 0

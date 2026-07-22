@@ -172,7 +172,7 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
  UI jtr=jt->ranks; //  fetch early
  if(unlikely(ISSPARSE(AT(a)|AT(w)))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
  // Examine args for compatibility.  Treat empty arg as boolean if the other is nonempty.  Do not convert until we know whether we have fill, to avoid a second conversion
- if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|((UI)-AN(a)<(UI)AN(w)),t|((UI)-AN(w)<(UI)AN(a))); t=LOWESTBIT(t)+RPAR; t+=t&AT(a)?0:CONJ;}  // t is result type; if it contains RPAR, a conversion is needed, CONJ is set if a must convert
+ I an=AN(a); if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|((UI)-an<(UI)AN(w)),t|((UI)-AN(w)<(UI)an)); t=LOWESTBIT(t)+RPAR; t+=t&AT(a)?0:CONJ;}  // t is result type; if it contains RPAR, a conversion is needed, CONJ is set if a must convert
  ar=AR(a); wr=AR(w);
  acr=jtr>>RANKTX; acr=ar<acr?ar:acr; I af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape
  wcr=(RANKT)jtr; wcr=wr<wcr?wr:wcr; I wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape
@@ -202,15 +202,15 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
     // The rank is the rank of the long argument, unless both arguments are atoms; then it's 1
     // The itemcount is the sum of the itemcounts; but if the ranks are different, use 1 for the shorter; and if both ranks are 0, the item count is 2
     // empty items are OK: they just have 0 length but their shape follows the normal rules
-    I si=__atomic_load_n(&AS(s)[0],__ATOMIC_ACQUIRE); si=ar==wr?si:1; si+=__atomic_load_n(&AS(l)[0],__ATOMIC_ACQUIRE); si=lr==0?2:si; lr=lr==0?1:lr; ASSERT(si>=0,EVLIMIT);  // get short item count; adjust to 1 if lower rank; add long item count; check for overflow; adjust if atom+atom
-      // The a block may be being extended in another thread.  We ensure that AS[0] is incremented AFTER AN to ensure that our allocation is adequate.  This can happen only if the apip started before we locked the block for this thread
-    I alen=__atomic_load_n(&AN(a),__ATOMIC_ACQUIRE);  // ensure our copy matches the allocation even if AN incremented during allocation
-    if(lr==1)alen=si-AN(w);  // if lr==1, the atom count calculated from the shapes (si) may lag behind that from the atom counts (AN(a)+AN(w)).  Override AN
-      // this is questionable, since a is malformed and we leave it that way.  But there is no real alternative.  We hope the user will realize that the lengthening a is invalid.
-    GA(z,t&NOUN,alen+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAVn(lr,z);   // install # items after copying shape, mark result in tstack
+    I si=AS(s)[0]; si=ar==wr?si:1; si+=AS(l)[0]; si=lr==0?2:si; lr=lr==0?1:lr; ASSERT(si>=0,EVLIMIT);  // get short item count; adjust to 1 if lower rank; add long item count; check for overflow; adjust if atom+atom
+// obsolete       // The a block may be being extended in another thread.  We ensure that AS[0] is incremented AFTER AN to ensure that our allocation is adequate.  This can happen only if the apip started before we locked the block for this thread
+// obsolete     I alen=AN(a);  // ensure our copy matches the allocation even if AN incremented during allocation
+// obsolete     if(lr==1)alen=si-AN(w);  // if lr==1, the atom count calculated from the shapes (si) may lag behind that from the atom counts (AN(a)+AN(w)).  Override AN
+// obsolete       // this is questionable, since a is malformed and we leave it that way.  But there is no real alternative.  We hope the user will realize that the lengthening a is invalid.
+    GA(z,t&NOUN,an+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAVn(lr,z);   // install # items after copying shape, mark result in tstack
     if(unlikely(t&RPAR)){A zt; RZ(zt=cvt(t&NOUN,t&CONJ?a:w)) a=t&CONJ?zt:a; w=t&CONJ?w:zt;}   // convert the discrepant argument to type t
-    I klg=bplg(t); alen<<=klg; I wlen=AN(w)<<klg;  // arg sizes in bytes
-    JMC(x,CAV(a),alen,0); JMC(x+alen,CAV(w),wlen,0);
+    I klg=bplg(t); an<<=klg; I wlen=AN(w)<<klg;  // arg sizes in bytes
+    JMC(x,CAV(a),an,0); JMC(x+an,CAV(w),wlen,0);
     if(withprob(t&NOUN&RECURSIBLE,0.2)){   //  recursive/pristine processing applies only to RECURSIBLEs 
      // If a & w are both recursive abandoned non-virtual, we can take ownership of the contents by marking them nonrecursive and marking z recursive.
      // We could also zap a & w, but we don't because it's just a box header and it will be freed by a caller anyway
@@ -430,21 +430,7 @@ F2(jtapip){F12IP;A h;
  // In both cases we require the inplaceable bit in jt, so that a =: (, , ,) a  , which has zombieval set, will inplace only the last append
  // Allow only DIRECT and BOX types, to simplify usecounting (we don't have to EPILOG for RAT/XNUM)
  if((SGNIF((I)jtfg,JTINPLACEAX)&-ar&~(ar-wr)&~jtrm)<0){  // inplaceable, ar!=0, wr<=ar, ranks=MAX, all close at hand
-  UI virtreqd=0;  // the inplacing test sets this if the result must be virtual
-  I lgk=bplg(at); I lgatomsini=MAX(LGSZI-lgk,0);  // lg of size of atom of a; lg of number of atoms in an I (0 if <1)
-  // Because the test for inplaceability is rather lengthy, start with a quick check of the atom counts.  If adding the atoms in w to those in a
-  // would push a over a power-of-2 boundary, skip the rest of the testing.  We detect this by absence of carry out of the high bit
-  I nlo=AN(a)+((NORMAH+1)<<lgatomsini)-1, nhi=nlo+AN(w), ncmp=(UI)REPSGN(AC(a))>=((UI)jtzv^(UI)a)?nlo:-1;  // sizes in Is, before & after append
-  if((nhi^nlo)<=ncmp)goto pipok;// if not NJA, ok if MSB doesn't change (XOR<nlo).  We force test failure (by comparing < 0) if AC not neg and zval!=a   (<= important to avoid misbranch)
-  if(unlikely(AFLAG(a)&AFNJA+AFRO+AFVIRTUAL)){if(likely(AFLAG(a)&AFRO+AFVIRTUAL)||jtzv!=a)goto noapip; goto pipok;}    // never if VIRTUAL or AFRO (which are not possible if AC or zval).
-      // otherwise NJA will always extend if zombieval, because assignment would copy the data
-  ncmp=((virtreqd=(AFLAG(a)>>AFKNOWNNAMEDX)&SGNTO0((AC(a)^ACUC2)-1))>(UI)jtzv)?nlo:-1;  // virt extension is (x { (a , item)).  We require a to be named so that we know that usecount of 2 means value
-       // is stacked only once (scaf unfortunately, if it's local that could be twice). we require zombieval=0 so that (a =. b , 5) will not create a virtual that must immediately be realized
-  if(likely((nhi^nlo)>ncmp))goto noapip;
-// obsolete     ;  /* OK to inplace assignment/virtual */ 
-// obsolete   if(EXTENDINPLACENJA(a,w) && 
-pipok:;  // 
-if(likely(at&(DIRECT|BOX)) && likely(!ISSPARSE(AT(w)))){  // We need DIRECT or BOX args, and not sparse (a cannot be sparse
+// obsolete   UI virtreqd=0;  // the inplacing test sets this if the result must be virtual
    // collect some values into a flags register
 #define FGLGK 0x7
 #define FGVIRTREQDX 3    // if virtual extension required
@@ -459,7 +445,22 @@ if(likely(at&(DIRECT|BOX)) && likely(!ISSPARSE(AT(w)))){  // We need DIRECT or B
 #define FGWPRIST BIT(FGWPRISTX)
 #define FGARMINUSWRX 25    // ar minus wr, never negative.  Must be highest field
 #define FGARMINUSWR (RMAX<<FGARMINUSWRX)
-      I fgwd= ((ar-wr)<<FGARMINUSWRX) + FGWNOCELLFILL + FGWNOFILL + ((wr-1)&FGWATOMIC) + (virtreqd<<FGVIRTREQDX) + lgk;  // collect flags.  If item of a has higher rank than w, force fill
+  I fgwd=bplg(at); I lgatomsini=MAX(LGSZI-fgwd,0);  // lg of size of atom of a; lg of number of atoms in an I (0 if <1)
+  // Because the test for inplaceability is rather lengthy, start with a quick check of the atom counts.  If adding the atoms in w to those in a
+  // would push a over a power-of-2 boundary, skip the rest of the testing.  We detect this by absence of carry out of the high bit
+  I nlo=AN(a)+((NORMAH+1)<<lgatomsini)-1, nhi=nlo+AN(w), ncmp=(UI)REPSGN(AC(a))>=((UI)jtzv^(UI)a)?nlo:-1;  // sizes in Is, before & after append
+  if((nhi^nlo)<=ncmp)goto pipok;// if not NJA, ok if MSB doesn't change (XOR<nlo).  We force test failure (by comparing < 0) if AC not neg and zval!=a   (<= important to avoid misbranch)
+  if(unlikely(AFLAG(a)&AFNJA+AFRO+AFVIRTUAL)){if(likely(AFLAG(a)&AFRO+AFVIRTUAL)||jtzv!=a)goto noapip; goto pipok;}    // never if VIRTUAL or AFRO (which are not possible if AC or zval).
+      // otherwise NJA will always extend if zombieval, because assignment would copy the data
+  ncmp=((AFLAG(a)>>AFKNOWNNAMEDX)&SGNTO0((AC(a)^ACUC1)-1))>(UI)jtzv?nlo:-1;  // virt extension is (x { (a , item)).  We restrict it to private names because (1) their usecount is not incremented when stacked, so
+      // if we supported public names, whose usecount is 2 after stacking, we would NOT support private names and in fact would give invalid extensions on them; (2) virt extension is not threadsafe because it does not lock
+      // the block it is extending
+  if(likely((nhi^nlo)>ncmp))goto noapip; fgwd|=FGVIRTREQD;   // skip if virt extension not allowed; remember if it is
+// obsolete     ;  /* OK to inplace assignment/virtual */ 
+// obsolete   if(EXTENDINPLACENJA(a,w) && 
+pipok:;  // 
+  if(likely(at&(DIRECT|BOX)) && likely(!ISSPARSE(AT(w)))){  // We need DIRECT or BOX args, and not sparse (a cannot be sparse
+   fgwd|=((ar-wr)<<FGARMINUSWRX) + FGWNOCELLFILL + FGWNOFILL + ((wr-1)&FGWATOMIC);  // collect flags.  If item of a has higher rank than w, force fill
    // if w is boxed, we have some more checking to do.  We have to make sure we don't end up with a box of a pointing to a itself.  The only way
    // this can happen is if w is (<a) or (<<a) or the like, where w does not have a recursive usecount.  The fastest way to check this would be to
    // crawl through w looking for a.
@@ -469,9 +470,10 @@ if(likely(at&(DIRECT|BOX)) && likely(!ISSPARSE(AT(w)))){  // We need DIRECT or B
     // result is pristine if a and w both are, and they are not the same block, and there is no fill, w is abandoned and not atomic
     fgwd|=((((I)jtfg>>JTINPLACEWX)&SGNTO0(AC(w)&-wr))<<AFPRISTINEX)&AFLAG(w);  // set if w qualifies as pristine before extension
     if(unlikely(a==w))fgwd&=~AFPRISTINE;   // not pristine if the other block is the same
-    an&=virtreqd-1;  // turn off inplacing if the result must be virtual
+// obsolete     an&=virtreqd-1;  // turn off inplacing if the result must be virtual
+    if(unlikely(fgwd&FGVIRTREQD))goto noapip;  // box cannot be virtual extension, because no one would free the extension boxes
     ra0(w);  // ensure w is recursive usecount.  This will be fast if w has 1=L.
-    an=(AC(a)>ac)?0:an;  // turn off inplacing if w referred to a
+    if(unlikely(AC(a)>ac))goto noapip;    // turn off inplacing if w referred to a
    }
    // Here the usecount indicates inplaceability.  We have to see if the argument ranks and shapes permit it also
    // We disqualify inplacing if a is empty (because we wouldn't know what type to make the result, and anyway there may be axes
@@ -482,7 +484,7 @@ if(likely(at&(DIRECT|BOX)) && likely(!ISSPARSE(AT(w)))){  // We need DIRECT or B
    // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
    // We use type priority to decide whether a would have to be converted
    I zt=maxtyped(at,AT(w));  // the type of the result
-   if((((an-1)|-(at^zt))>=0)){  // a not empty, atype = resulttype.
+   if(likely(((an-1)|-(at^zt))>=0)){  // a not empty, atype = resulttype.
     //  Check the item sizes.  Set p<0 if the items of w require fill (ecch - can't go inplace), p=0 if no padding needed, p>0 if items of w require internal fill
     // If there are extra axes in a, they are created as unit axes of w with no action needed.  Check the axes of w that are beyond the first axis
     // of a, because the first axis of a tells how many items there are - that number doesn't matter, it's the shape of an item of result that matters

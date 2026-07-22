@@ -291,44 +291,29 @@ IGNOREIFFVI 40000 < 7!:2 'a =: a , <<<<a'  NB. Would loop, not inplace
 0 = 16777216 (17 b.) 1 { 13!:_4 (<"0 i. 2 5) , <memu 100   NB. scalar replication removes pristinity
 0 = 16777216 (17 b.) 1 { 13!:_4 (<"0 i. 2 5) ,!.(<memu 100) <"0 i. 3  NB. installing user fill loses pristinity
 
-NB. Verify that virtual extension inplaces
-a =: i. 1e6
-2000 > 7!:2 '_5 {. a , _1'
-a -: i. 1e6
+NB. Verify that virtual extension inplaces (only on private names)
+{{ a =. i. 1e6
+assert. 2000 > 7!:2 '_5 {. a , _1'
+a =. i. 1e6
 999996 999997 999998 999999 _1 -: _5 {. a , _1
 NB. float
-a =: 0.5 + i. 1e5
-2000 > 7!:2 '_5 {. a , _1'
-a -: 0.5 + i. 1e5
+a =. 0.5 + i. 1e5
+assert. 2000 > 7!:2 '_5 {. a , _1'
+a =. 0.5 + i. 1e5
 99996.5 99997.5 99998.5 99999.5 _1 -: _5 {. a , _1
 NB. Not boxed
-a =: <"0 i. 1e5
-2000 < 7!:2 '_5 {. a , a:'
-a -: <"0 i. 1e5
+a =. <"0 i. 1e5
+assert. 2000 < 7!:2 '_5 {. a , a:'
+a =. <"0 i. 1e5
 NB. Not extended
-a =: i. 100000x
-2000 < 7!:2 '_5 {. a , _1'
-NB. Even if name is on the stack
-a =: i. 1e6
-f10=:{{ _5 {. a , 6 }}
-999996 999997 999998 999999 6 -: f10 a
-a =: i. 1e6
-1e6 -: # ([ f10@5) a
-20000 > 7!:2 'f10 5 [ a'
-NB. asgn-in-place still allowed if name has been taken off the stack
-a =: i. 1e6
-f10=:{{ _5 {. a =: a , 6 }}
-999996 999997 999998 999999 6 -: f10 a
-a =: i. 1e6
-1e6 -: # ([ f10@5) a
-20000 > 7!:2 'f10 5 [ a'
-NB. asgn-in-place not allowed if name is on the stack
-a =: i. 1e6
-f10=:{{ _5 {. a =: a , 6 }}
-999996 999997 999998 999999 6 -: f10 a
-a =: i. 1e6
-1e6 -: # ([ f10@5) a
-20000 < 7!:2 '([ f10@5) a'
+a =. i. 100000x
+assert. 2000 < 7!:2 '_5 {. a , _1'
+NB. Not public name
+aa =: i. 1e6
+assert. 2000 < 7!:2 '_5 {. aa , _1'
+aa =: i. 1e6
+999996 999997 999998 999999 _1 -: _5 {. aa , _1
+1 }} ''
 
 NB. Verify forms for indexing
 a =: i. 1e6
@@ -585,12 +570,12 @@ NB. u@v
 'b' -: (10000#'a') {:@, 'b'
 IGNOREIFFVI 20000 > 7!:2 '(10000#''a'') {:@, ''b'''         
 9!:53 (0)
-a =: 10000#'c'
-IGNOREIFFVI 5000 < 7!:2 'a =: ]@(({.''b'') ,~ ]) a'  NB. name is virtually extended, then realized
-a =: 10000#'c'
-IGNOREIFFVI 5000 > 7!:2 'a =: {.@(({.''b'') ,~ ]) a'  NB. name is virtually extended, then truncated
-a =: 10000#'c'
-IGNOREIFFVI 3000 < 7!:2 'a =: a ]@, ''b'''
+{{ a =. 10000#'c'
+IGNOREIFFVI 5000 < 7!:2 'a =. ]@(({.''b'') ,~ ]) a'  NB. name is virtually extended, then realized
+a =. 10000#'c'
+IGNOREIFFVI 5000 > 7!:2 'a =. {.@(({.''b'') ,~ ]) a'  NB. name is virtually extended, then truncated
+a =. 10000#'c'
+IGNOREIFFVI 3000 < 7!:2 'a =. a ]@, ''b''' }} ''
 
 f =: 3 : 0
 9!:53 (1)
@@ -611,12 +596,12 @@ NB. u@:v
 'b' -: (10000#'a') {:@:, 'b'
 IGNOREIFFVI 20000 > 7!:2 '(10000#''a'') {:@:, ''b'''         
 9!:53 (0)
-a =: 10000#'c'
-IGNOREIFFVI 5000 < 7!:2 'a =: ]@:(({.''b'') ,~ ]) a'
-a =: 10000#'c'
-IGNOREIFFVI 5000 > 7!:2 'a =: {.@:(({.''b'') ,~ ]) a'
-a =: 10000#'c'
-IGNOREIFFVI 3000 < 7!:2 'a =: a ]@:, ''b'''
+{{ a =. 10000#'c'
+IGNOREIFFVI 5000 < 7!:2 'a =. ]@:(({.''b'') ,~ ]) a'
+a =. 10000#'c'
+IGNOREIFFVI 5000 > 7!:2 'a =. {.@:(({.''b'') ,~ ]) a'
+a =. 10000#'c'
+IGNOREIFFVI 3000 < 7!:2 'a =. a ]@:, ''b''' }} ''
 
 f =: 3 : 0
 9!:53 (1)

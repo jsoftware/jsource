@@ -837,13 +837,15 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
          if(unlikely(AFLAG(zval)&AFANCHORED))goto anchoredip; // if the target is anchored, we accept it as inplaceable regardless of its usecount
         }
         // to save time in the verbs (which execute more often than this assignment-parse), see if the assignment target is suitable for inplacing.  Set zombieval to point to the value if so
-        // We require flags indicate not read-only, and correct usecount: 1 if local, 2 if global since we have raised the count of this block already if it is named and to be operated on inplace; +1 if NJA to account for the mapping reference.
+        // We require flags indicate not read-only, and correct usecount: 1 if local, 2 if global since we have raised the count of this block already if it is named and to be operated on inplace.
+        // For NJA, any usecount (in an inplaceable context) is OK since the value will be assigned immediately anyway
         // The block can be virtual, if it is x/y to xdefn, but we must never inplace to a virtual block or to readonly (xxx_index_ =: xxx_index_ + 1)
         // It might seem sound to take a branch on zval since initialization assignment tend to come in batches.  This is an incomplete analysis.  The most likely
         // path to here is to mispredict the assignment and then correctly predict the local path.  In that path we have loaded the symbol number followed by zval, and it will
         // not settle for 10 clocks.  We very much want to keep executing during the settlement so we don't want to risk a misprediction.  We should be executing
         // well into tpop* before zval settles.
-        I af=AFLAG(zval); zval=AC(zval)==((I)PEXT0(af,AFNJAX,1)+targc)?zval:0; zval=af&(AFRO|AFVIRTUAL)?0:zval;  // OK if count right, and not R-O/VIRT
+        if(unlikely(AFLAG(zval)&AFVIRTUAL+AFRO+AFNJA)){zval=AFLAG(zval)&AFVIRTUAL+AFRO?0:zval;} else zval=AC(zval)==targc?zval:0;  // never if r/o or virtual; always if NJA; otherwise if AC right
+// obsolete         I af=AFLAG(zval); zval=AC(zval)==((I)PEXT0(af,AFNJAX,1)+targc)?zval:0; zval=af&(AFRO|AFVIRTUAL)?0:zval;  // OK if count right, and not R-O/VIRT
 anchoredip:;  // here when we have detected that an anchored name is inplaceable
         jt->zombieval=zval;
        }

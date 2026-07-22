@@ -32,7 +32,7 @@ F1(jtravel){F12IP;A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
    }
    // Not self-virtual.  Create a (noninplace) virtual copy, but not if NJA memory (because we avoid virtualing from NJA, which makes the NJA unmodifiable)
    // Transfer pristinity from w to z, if w is abandoned.  Taking the virtual block will clear prist from w
-   if(likely(!(AFLAG(w)&(AFNJA)))){I wprist=PRISTFROMW(w); RZ(z=virtual(w,0,1+f)); AN(z)=AN(w); MCISH(AS(z),AS(w),f) AS(z)[f]=m; AFLAGORLOCAL(z,wprist) RETF(z);}
+   if(likely(!(AFLAG(w)&AFNJA))){I wprist=PRISTFROMW(w); RZ(z=virtual(w,0,1+f)); AN(z)=AN(w); MCISH(AS(z),AS(w),f) AS(z)[f]=m; AFLAGORLOCAL(z,wprist) RETF(z);}
   }else m=1;  // if w is an atom, that's just one atom
 
   // If we have to allocate a new block, do so.  In that rare case, revoke pristinity of w

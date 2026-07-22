@@ -175,7 +175,7 @@ fi
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  # gcc
- common="$OPENMP -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions -ffp-contract=off -fno-finite-math-only \
+ common="$OPENMP -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fno-stack-protector -flax-vector-conversions -ffp-contract=off -fno-finite-math-only \
  -Werror -Wextra -Wno-unknown-warning-option \
  -fsignaling-nans \
  -Wno-attributes \
@@ -214,7 +214,7 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 
 else
  # clang
- common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-finite-math-only \
+ common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing -fno-finite-math-only \
  -Werror -Wextra -Wno-unknown-warning-option \
  -Wconstant-conversion \
  -Wsign-compare \
@@ -316,18 +316,8 @@ if [ $USE_PYXES -eq 1 ]; then
    LDTHREAD=" -pthread "
    ;;
  esac
- case "$j64x" in
-  j32*) NORMAHX="${NORMAHX:=1}" ;;
- esac
 else
  common="$common -DPYXES=0"
-fi
-
-NORMAHX="${NORMAHX:=0}"
-if [ $NORMAHX -ne 0 ]; then
- common="$common -DNORMAHX=${NORMAHX}"
-else
- common="$common -DNORMAHX=0"
 fi
 
 case "$jplatform/$j64x" in
@@ -586,7 +576,7 @@ case "$jplatform/$j64x" in
 
  raspberry/j64*) # linux arm64
   TARGET=libj.so
-  CFLAGS="$common -march=armv8-a+crc -DRASPI " # mno-outline-atomics unavailable on clang-7
+  CFLAGS="$common -march=armv8-a+crc -DRASPI -fwrapv " # mno-outline-atomics unavailable on clang-7
   LDFLAGS=" -shared -Wl,-soname,libj.so -lm -ldl $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
@@ -714,7 +704,7 @@ case "$jplatform/$j64x" in
 
  darwin/j64arm*) # darwin arm
   TARGET=libj.dylib
-  CFLAGS="$common $macmin -march=armv8-a+crc -mno-outline-atomics "
+  CFLAGS="$common $macmin -march=armv8-a+crc -mno-outline-atomics -fwrapv "
   LDFLAGS=" -dynamiclib -install_name libj.dylib -lm -ldl $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_IOS}"

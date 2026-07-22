@@ -1370,7 +1370,7 @@ if((I)jt&3)SEGFAULT;
  }
 #if MEMAUDIT&8
 // NOTE!! z[i] dependency on struct AD
- I fv=lfsr++; DO((((I)1)<<(1+blockx-LGSZI)), if(i!=(NORMAHX+2)&&i!=(NORMAHX+6))((I*)z)[i] = fv;);   // fill block with garbage - but not the allocation word or zaploc
+ I fv=lfsr++; DO((((I)1)<<(1+blockx-LGSZI)), if(i!=(0+2)&&i!=(0+6))((I*)z)[i] = fv;);   // fill block with garbage - but not the allocation word or zaploc
 #endif
 #if MEMAUDIT&1
  if(z->h==0)SEGFAULT;  // h field must be valid
@@ -1399,9 +1399,6 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
  bytes|=(I)1<<(PMINL-1);  // if the memory header itself doesn't meet the minimum buffer length, insert a minimum
 #endif
  j=CTLZI((UI)bytes);  // 3 or 4 should return 2; 5 should return 3
-#if NORMAHX
- j=(PMINL>j)?PMINL:j;
-#endif
  ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)
  R jtgaf(jt,(I)j);
 }
@@ -1570,7 +1567,7 @@ printf("%p-\n",w);
  if(FHRHBINISPOOL(hrh)){   // allocated from subpool
   I allocsize = FHRHPOOLBINTOSIZE(blockx);
 #if MEMAUDIT&4
-  I fv=frfillvalue++; DO((allocsize>>LGSZI), if(i!=(NORMAHX+6))((I*)w)[i] = fv;);   // wipe the block clean before we free it - but not the reserved area
+  I fv=frfillvalue++; DO((allocsize>>LGSZI), if(i!=(0+6))((I*)w)[i] = fv;);   // wipe the block clean before we free it - but not the reserved area
 #endif
 #if PYXES
   if(unlikely(w->origin!=(US)THREADID1(jt))){jtrepat1(jt,w,allocsize); R;}  // if block was allocated from a different thread, pass it back to that thread where it can be garbage collected
@@ -1586,7 +1583,7 @@ printf("%p-\n",w);
  }else{    // buffer allocated from malloc
   I allocsize = FHRHSYSSIZE(hrh);
 #if MEMAUDIT&4
-  I fv=frfillvalue++; DO((MEMAUDIT&1?8:(allocsize>>LGSZI)), if(i!=(NORMAHX+6))((I*)w)[i] = fv;);   // wipe the block clean before we free it - but not the reserved area
+  I fv=frfillvalue++; DO((MEMAUDIT&1?8:(allocsize>>LGSZI)), if(i!=(0+6))((I*)w)[i] = fv;);   // wipe the block clean before we free it - but not the reserved area
 #endif
   allocsize+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // the actual allocation had a tail pad and boundary
 #if PYXES

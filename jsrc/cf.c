@@ -261,12 +261,12 @@ static DF2(jthklvl2){F12IP;
 // table of verbs for executing (compare |).  We back the address to the phantom start of the verb block.
 // each verb is valid ONLY for DD operands, and the pointers to those functions are next to each other in the block nominally for (=|)
 #define PRIMASSIGN(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc) \
- ={{Xrh0 0,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,(ar)},{{.valencefns={f0,f1},.fgh={f,g,h},.localuse={initpm1,initpm2},.flag=(vflg),.flag2=(vflg2),.lrr=(RANK2T)((rl<<RANKTX)+rr),.mr=(RANKT)rm,.id=idd,.lu2.lc=lcc}}}
+ ={{0,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,(ar)},{{.valencefns={f0,f1},.fgh={f,g,h},.localuse={initpm1,initpm2},.flag=(vflg),.flag2=(vflg2),.lrr=(RANK2T)((rl<<RANKTX)+rr),.mr=(RANKT)rm,.id=idd,.lu2.lc=lcc}}}
 #define PRIMALL(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc) [idda]PRIMASSIGN(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc)
 #define PRIMATOMIC2(vaid,id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(vaid,id,t,f0,f1,0,0,0,.lu1.uavandx=0,VA2##vaid*sizeof(VA),rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
  VA2##vaid+0x80*(vaid==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
 #define PRIMCOMPAREABS(ctype) \
- {{Xrh0 0,0,0,0,ACPERMANENT,0,0},{{.valencefns={0,0},.fgh={0,0,0},.localuse={.lu1.uavandx={0,(sizeof(VA)*VA2CEQABS+sizeof(VA2)*((ctype)-VA2CGTABS))},},.flag=0,.flag2=0,.lrr=0,.mr=0,.id=0,.lu2.lc=(ctype)}}}
+ {{0,0,0,0,ACPERMANENT,0,0},{{.valencefns={0,0},.fgh={0,0,0},.localuse={.lu1.uavandx={0,(sizeof(VA)*VA2CEQABS+sizeof(VA2)*((ctype)-VA2CGTABS))},},.flag=0,.flag2=0,.lrr=0,.mr=0,.id=0,.lu2.lc=(ctype)}}}
 PRIM cmpabsblk[6] = {
  PRIMCOMPAREABS(VA2CEQABS), //
  PRIMCOMPAREABS(VA2CNEABS), //

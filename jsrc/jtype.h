@@ -191,18 +191,6 @@ typedef I SI;
 #define JTALIGNBDY      MAX(8192,(MAXTHREADSRND<<LGTHREADBLKSIZE))  // jt is aligned on this boundary - all lower bits are 0 (the value is the size of an SDRAM page, to avoid row precharges while accessing jt)
 
 struct AD {
-#if NORMAHX
-#if SY_64 || !PYXES
- I p[NORMAHX];
-#else
- I p[NORMAHX-1];
-#if C_LE
- US origin;S lock;
-#else
- S lock;US origin;
-#endif
-#endif
-#endif
  union {
   I k;  // 0
   A chain;   // used when block is on free chain
@@ -303,8 +291,8 @@ struct AD {
 #else
 #define ARINIT(x,v)     *(US*)&((x)->r)=(v);        /* Rank, clearing the high byte for initialization                           */
 #endif
-#define SMMAH           (7L+NORMAHX)   // number of header words in old-fashioned SMM alloc
-#define NORMAH          (7L+NORMAHX)   // number of header words in new system
+#define SMMAH           (7L+0)   // number of header words in old-fashioned SMM alloc
+#define NORMAH          (7L+0)   // number of header words in new system
 #define AS(x)           ((x)->s)        // Because s is an array, AS(x) is a pointer to the shape, which is in s.  The shape is stored in the fixed position s.
 
 // The following fields are used for private communication between /. and ;. and inside ;. for the fret buffer.
@@ -317,14 +305,9 @@ struct AD {
 #define AKXR(x)         (SZI*(NORMAH+(x)))
 #define WP(t,n,r)       (SMMAH+ r   +(((t&NAME?sizeof(NM):0)+((n)<<bplg(t))+SZI-1)>>LGSZI))  // # I to allocate
 #else
-#if NORMAHX==0 || NORMAHX==2 || NORMAHX==4 || NORMAHX==6 || NORMAHX==8   // even number, then NORMAH is odd
 #define AKXR(x)         (SZI*(NORMAH+((x)|1)))
 #define WP(t,n,r)       (SMMAH+(r|1)    +(((t&NAME?sizeof(NM):0)+((n)<<bplg(t))+SZI-1)>>LGSZI))
 /* r|1 to make sure array values are double-word aligned */
-#else
-#define AKXR(x)         (SZI*(NORMAH+(x)))
-#define WP(t,n,r)       (SMMAH+ r   +(((t&NAME?sizeof(NM):0)+((n)<<bplg(t))+SZI-1)>>LGSZI))
-#endif
 #endif
 #define AKX(x)          AKXR(AR(x))
 #define RCALIGN         1   // the rank to use to put the data on a cacheline boundary
@@ -911,11 +894,7 @@ typedef DST* DC;
 // type of 0000 is reserved to indicate 'no value'; 1-11 are the type bits (following LASTNOUNX) in order
 // in the words of an explicit definition the words have QCNAMELKP semantics in bit 4-5:
 #define QCMASK 0x3fLL   // all the LSB flags
-#if 0 && NORMAHX
-#define QCMASK2 0x7fLL  // for NORMAHX
-#else
 #define QCMASK2 QCMASK
-#endif
 #define QCCHECK(x) {if(((I)(x)&QCMASK2))SEGFAULT;}
 #define QCWORD(x) ((A)((I)(x)&~QCMASK))  // the word pointer part of the QC
 #define QCTYPE(x) ((I)(x)&QCMASK)  // the type-code part plus semantics-dependent bits

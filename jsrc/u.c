@@ -349,6 +349,7 @@ void jtlogtrace(J jt,C *fmt, void *a0, void *a1, void *a2){
   DO(3, A a=(A)a0; a0=a1; a1=a2; l0=l1; l1=l2;
    if(a){if(AT(a)&SYMB){a2=fmtlocnm(jt,a,wkarea[i]); l2=strlen((C*)a2);}else{a2=AT(a)&NAME?NAV(a)->s:CAV(a); l2=AN(a);}}else a2=0;
   )
+  l0=strlen(a0); // 32-bit raspberry gcc 4.7 needs this line
  }
  if(BETWEENC((I)jt->usertracefn1,1,2)){   // writing to stdout or stderr
 #ifdef ANDROID

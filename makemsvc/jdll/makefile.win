@@ -70,11 +70,6 @@ COPTION = $(COPTION) /DEMU_AVX2=0
 !else
 COPTION = $(COPTION) /DEMU_AVX2=1
 !endif
-!if ""!="$(NORMAHX)"
-COPTION = $(COPTION) /DNORMAHX=$(NORMAHX)
-!else
-COPTION = $(COPTION) /DNORMAHX=0
-!endif
 
 !if "1"=="$(USE_OPENMP)"
 COPTION = $(COPTION) -Xclang -fopenmp

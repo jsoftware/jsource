@@ -54,6 +54,8 @@ fi
 echo "jplatform=$jplatform"
 echo "j64x=$j64x"
 
+LIBBACKTRACE="${LIBBACKTRACE:=1}"
+USE_READLINE="${USE_READLINE:=1}"
 USE_LINENOISE="${USE_LINENOISE:=1}"
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
@@ -63,6 +65,9 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 
 case "$jplatform/$j64x" in
  darwin/j64iphoneos)
+  LIBBACKTRACE=0
+  USE_READLINE=0
+  USE_LINENOISE=0
   USE_OPENMP=0
   LDTHREAD=" -pthread "
   if [ -z "$CC" ]; then
@@ -74,6 +79,9 @@ case "$jplatform/$j64x" in
   fi
   ;;
  darwin/j64iphonesimulator)
+  LIBBACKTRACE=0
+  USE_READLINE=0
+  USE_LINENOISE=0
   USE_OPENMP=0
   LDTHREAD=" -pthread "
   if [ -z "$CC" ]; then
@@ -104,10 +112,20 @@ case "$jplatform/$j64x" in
   ;;
  openbsd/*)
   NO_SHA_ASM=1
+  LIBBACKTRACE=0
   make=gmake
   ;;
- freebsd/*) make=gmake ;;
+ freebsd/*)
+  LIBBACKTRACE=0
+  make=gmake
+  ;;
+ windows/*)
+  LIBBACKTRACE=0
+  USE_READLINE=0
+  ;;
  wasm*)
+  LIBBACKTRACE=0
+  USE_READLINE=0
   USE_LINENOISE=0
   USE_OPENMP=0
   LDTHREAD=" -pthread "
@@ -175,7 +193,7 @@ fi
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  # gcc
- common="$OPENMP -std=gnu17 -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-stack-protector -flax-vector-conversions -ffp-contract=off -fno-finite-math-only \
+ common="$OPENMP -std=gnu17 -fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -fno-strict-aliasing -fno-stack-protector -flax-vector-conversions -ffp-contract=off -fno-finite-math-only \
  -Werror -Wextra -Wno-unknown-warning-option \
  -fsignaling-nans \
  -Wno-attributes \
@@ -207,7 +225,7 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
 
 else
  # clang
- common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing -fwrapv -fno-finite-math-only \
+ common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing -fno-finite-math-only \
  -Werror -Wextra -Wno-unknown-warning-option \
  -Wconstant-conversion \
  -Wsign-compare \
@@ -311,19 +329,8 @@ if [ $USE_PYXES -eq 1 ]; then
    LDTHREAD=" -pthread "
    ;;
  esac
- case "$j64x" in
-  j32*) NORMAHX="${NORMAHX:=1}" ;;
- esac
 else
  common="$common -DPYXES=0"
- NORMAHX="${NORMAHX:=0}"
-fi
-
-NORMAHX="${NORMAHX:=0}"
-if [ $NORMAHX -ne 0 ]; then
- common="$common -DNORMAHX=${NORMAHX}"
-else
- common="$common -DNORMAHX=0"
 fi
 
 case "$jplatform/$j64x" in
@@ -356,13 +363,14 @@ fi
 
 if [ $jplatform = wasm ]; then
  true
-elif [ "$USE_LINENOISE" -ne 1 ]; then
+elif [ "$USE_READLINE" -eq 1 ]; then
  common="$common -DREADLINE"
-else
+elif [ "$USE_LINENOISE" -eq 1 ]; then
  common="$common -DREADLINE -DUSE_LINENOISE"
  OBJSLN="linenoise.o"
 fi
 
+if [ $LIBBACKTRACE -eq 1 ]; then
 # elf.o
 # pecoff.o
 # alloc.o -- alternative to mmap.o
@@ -377,10 +385,6 @@ fi
 #  testlib.o
 
 case "$jplatform/$j64x" in
- freebsd/*) BACKTRACE_OBJS="" ;;
- openbsd/*) BACKTRACE_OBJS="" ;;
- wasm/*) BACKTRACE_OBJS="" ;;
- windows/*) BACKTRACE_OBJS="" ;;
  darwin/*)
   BACKTRACE_OBJS=" \
    ../libbacktrace/atomic.o \
@@ -412,6 +416,7 @@ case "$jplatform/$j64x" in
    ../libbacktrace/elf.o "
   ;;
 esac
+fi
 
 if [ -n "$_MEMAUDIT" ]; then
  common="$common -DMEMAUDIT=$_MEMAUDIT"
@@ -637,7 +642,7 @@ case "$jplatform/$j64x" in
 
  raspberry/j64*) # linux arm64
   TARGET=jamalgam
-  CFLAGS="$common -march=armv8-a+crc -DRASPI " # mno-outline-atomics unavailable on clang-7
+  CFLAGS="$common -march=armv8-a+crc -DRASPI -fwrapv " # mno-outline-atomics unavailable on clang-7
   LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP"
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
@@ -765,7 +770,7 @@ case "$jplatform/$j64x" in
 
  darwin/j64arm*) # darwin arm
   TARGET=jamalgam
-  CFLAGS="$common $macmin -march=armv8-a+crc -mno-outline-atomics "
+  CFLAGS="$common $macmin -march=armv8-a+crc -mno-outline-atomics -fwrapv "
   LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_IOS}"
@@ -969,7 +974,7 @@ if [ ! -f ../jsrc/jversion.h ]; then
 fi
 
 mkdir -p ../bin/$jplatform/$j64x
-export BACKTRACE_OBJS CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES WINDRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SIMDUTF8 OBJS_PTHREADS4W WOBJS_ASM SRC_ASM OBJSLN jplatform j64x
+export LIBBACKTRACE BACKTRACE_OBJS CFLAGS CPPFLAGS LDFLAGS TARGET CFLAGS_SIMD GASM_FLAGS NASM NASM_FLAGS FLAGS_BASE64 DLLOBJS LIBJDEF LIBJRES WINDRES OBJS_BASE64 OBJS_FMA OBJS_AESNI OBJS_AESARM OBJS_SIMDUTF8 OBJS_PTHREADS4W WOBJS_ASM SRC_ASM OBJSLN jplatform j64x
 if [ "x$MAKEFLAGS" = x'' ]; then
  if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then
   par=$(nproc)

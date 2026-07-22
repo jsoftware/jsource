@@ -147,9 +147,7 @@ typedef struct ADic {
   I filler3[SY_64?6:1];  // pad to cacheline (24 words on each system).
  } bloc;
 } DIC;
-#if !NORMAHX
 _Static_assert(sizeof(DIC)==32*SZI,"DIC not 32 Is");
-#endif
 #if 0
 /*
 // temp for debugging

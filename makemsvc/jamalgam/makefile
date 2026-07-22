@@ -54,11 +54,6 @@ ifeq (0,$(USE_EMU_AVX))
 else
  COPTION := $(COPTION) /DEMU_AVX2=1
 endif
-ifneq ($(NORMAHX),)
- COPTION := $(COPTION) /DNORMAHX=$(NORMAHX)
-else
- COPTION := $(COPTION) /DNORMAHX=0
-endif
 
 ifeq (1,$(USE_OPENMP))
  COPTION := $(COPTION) -Xclang -fopenmp

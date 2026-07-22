@@ -47,23 +47,11 @@ void jmpn_com (mp_ptr rp, mp_srcptr up, mp_size_t n)
 
 #define XFIXED0(nam, typ,val) \
  struct AD __attribute__((aligned(ABDY))) B##nam= \
- {Xrh1 AKXR(0),typ,0,typ,ACPERMANENT,1,Xrh,(I)val}; \
+ {AKXR(0),typ,0,typ,ACPERMANENT,1,Xrh,(I)val}; \
  X nam= (X)&B##nam
 
 /* like struct AD but a data element */
 struct BDV1 {
-#if NORMAHX
-#if SY_64 || !PYXES
- I p[NORMAHX];
-#else
- I p[NORMAHX-1];
-#if C_LE
- US origin;S lock;
-#else
- S lock;US origin;
-#endif
-#endif
-#endif
  I k;I f;I m;I t;I c;I n;
 #if C_LE
  RANKT r;UC filler;US h;
@@ -80,7 +68,7 @@ struct BDV1 {
 
 #define XFIXED1(nam, typ,sgn,val) \
  struct BDV1 __attribute__((aligned(ABDY))) B##nam= \
- {Xrh1 XHSZ,typ,0,typ,ACPERMANENT,1,Xrh,sgn,(UI)val}; \
+ {XHSZ,typ,0,typ,ACPERMANENT,1,Xrh,sgn,(UI)val}; \
  X nam= (X)&B##nam
 
 XFIXED1(X_1,LIT,-1,1);  // _1x (not an array)
@@ -203,7 +191,7 @@ void jgmpguard(X x) {
  */
 #if MEMAUDIT&8
  static I lfsr= 1;
- DO(size/SZI, lfsr= (lfsr<<1) ^ (lfsr<0 ?0x1b :0); if (i!=(NORMAHX+2)&&i!=(NORMAHX+6))((I*)(XHSZ+(C*)z))[i]= lfsr;);
+ DO(size/SZI, lfsr= (lfsr<<1) ^ (lfsr<0 ?0x1b :0); if (i!=(0+2)&&i!=(0+6))((I*)(XHSZ+(C*)z))[i]= lfsr;);
 #endif
  R CAV1(z);
 }
@@ -254,7 +242,7 @@ static void*jrealloc4gmp(void*ptr, size_t old, size_t new){
 #if MEMAUDIT&8
  static I lfsr= 1;
  if (new > old) {
-  DO((new-old)/SZI, lfsr= (lfsr<<1)^(lfsr<0 ?0x1b :0); if (i!=(NORMAHX+2)&&i!=(NORMAHX+6))((I*)(old+XHSZ+(C*)z))[i]= lfsr;);
+  DO((new-old)/SZI, lfsr= (lfsr<<1)^(lfsr<0 ?0x1b :0); if (i!=(0+2)&&i!=(0+6))((I*)(old+XHSZ+(C*)z))[i]= lfsr;);
  }
 #endif
  R CAV1(z);

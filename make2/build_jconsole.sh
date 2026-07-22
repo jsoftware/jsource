@@ -53,7 +53,10 @@ fi
 echo "jplatform=$jplatform"
 echo "j64x=$j64x"
 
+LIBBACKTRACE="${LIBBACKTRACE:=1}"
+USE_READLINE="${USE_READLINE:=1}"
 USE_LINENOISE="${USE_LINENOISE:=1}"
+echo "USE_READLINE=$USE_READLINE"
 
 # gcc 5 vs 4 - killing off linux asm routines (overflow detection)
 # new fast code uses builtins not available in gcc 4
@@ -62,6 +65,9 @@ USE_LINENOISE="${USE_LINENOISE:=1}"
 
 case "$jplatform/$j64x" in
  darwin/j64iphoneos)
+  LIBBACKTRACE=0
+  USE_READLINE=0
+  USE_LINENOISE=0
   USE_OPENMP=0
   LDTHREAD=" -pthread "
   if [ -z "$CC" ]; then
@@ -73,6 +79,9 @@ case "$jplatform/$j64x" in
   fi
   ;;
  darwin/j64iphonesimulator)
+  LIBBACKTRACE=0
+  USE_READLINE=0
+  USE_LINENOISE=0
   USE_OPENMP=0
   LDTHREAD=" -pthread "
   if [ -z "$CC" ]; then
@@ -101,9 +110,21 @@ case "$jplatform/$j64x" in
    macmin="-arch x86_64 -mmacosx-version-min=10.6"
   fi
   ;;
- openbsd/*) make=gmake ;;
- freebsd/*) make=gmake ;;
+ openbsd/*)
+  LIBBACKTRACE=0
+   make=gmake
+   ;;
+ freebsd/*)
+  LIBBACKTRACE=0
+   make=gmake
+   ;;
+ windows/*)
+  LIBBACKTRACE=0
+  USE_READLINE=0
+  ;;
  wasm*)
+  LIBBACKTRACE=0
+  USE_READLINE=0
   USE_LINENOISE=0
   USE_OPENMP=0
   USE_PYXES=0
@@ -192,20 +213,8 @@ fi
 
 if [ $USE_PYXES -eq 1 ]; then
  common="$common -DPYXES=1"
- case "$j64x" in
-  j32*) NORMAHX=1 ;;
-  *) NORMAHX="${NORMAHX:=0}" ;;
- esac
 else
  common="$common -DPYXES=0"
- NORMAHX="${NORMAHX:=0}"
-fi
-
-NORMAHX="${NORMAHX:=0}"
-if [ $NORMAHX -eq 1 ]; then
- common="$common -DNORMAHX=1"
-else
- common="$common -DNORMAHX=0"
 fi
 
 if [ "${USE_GMP_H:=1}" -eq 1 ]; then
@@ -220,13 +229,16 @@ if [ -n "$MAX_ERRORS" ]; then
   fi
 fi
 
-if [ "$USE_LINENOISE" -ne "1" ]; then
+if [ $jplatform = wasm ]; then
+ true
+elif [ "$USE_READLINE" -eq 1 ]; then
  common="$common -DREADLINE"
-else
+elif [ "$USE_LINENOISE" -eq 1 ]; then
  common="$common -DREADLINE -DUSE_LINENOISE"
  OBJSLN="linenoise.o"
 fi
 
+if [ $LIBBACKTRACE -eq 1 ]; then
 # elf.o
 # pecoff.o
 # alloc.o -- alternative to mmap.o
@@ -241,10 +253,6 @@ fi
 #  testlib.o
 
 case "$jplatform/$j64x" in
- freebsd/*) BACKTRACE_OBJS="" ;;
- openbsd/*) BACKTRACE_OBJS="" ;;
- wasm/*) BACKTRACE_OBJS="" ;;
- windows/*) BACKTRACE_OBJS="" ;;
  darwin/*)
   BACKTRACE_OBJS=" \
    ../libbacktrace/atomic.o \
@@ -276,6 +284,7 @@ case "$jplatform/$j64x" in
    ../libbacktrace/elf.o "
   ;;
 esac
+fi
 
 case "$jplatform/$j64x" in
 
@@ -352,7 +361,7 @@ if [ ! -f ../jsrc/jversion.h ]; then
 fi
 
 mkdir -p ../bin/$jplatform/$j64x
-export AR BACKTRACE_OBJS CC CFLAGS LDFLAGS TARGET OBJSLN LIBJRES jplatform j64x
+export AR LIBBACKTRACE BACKTRACE_OBJS CC CFLAGS LDFLAGS TARGET OBJSLN LIBJRES jplatform j64x
 if [ "x$MAKEFLAGS" = x'' ]; then
  if ([ "$unameop" = "Linux" ] || [ "$unameop" = "GNU/Linux" ]); then
   par=$(nproc)

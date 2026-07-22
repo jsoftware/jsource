@@ -1129,11 +1129,7 @@ extern I Biv1[];
 #define iv1 ((A)&Biv1)
 extern A        mnuvxynam[6];
 extern void     moveparseinfotosi(J);
-#if NORMAHX
-extern I Bnum[][((8-NORMAHX)+NORMAH+1)*(2-SY_64)];
-#else
 extern I Bnum[][(NORMAH+1)*(2-SY_64)];
-#endif
 #define zeroionei(n) ((A)(Bnum+(n)))
 #define num(n) ((A)(Bnum+2+(n)-NUMMIN))
 #define I1mem (iotavec-IOTAVECBEGIN+1)  // 1 stored in memory

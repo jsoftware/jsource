@@ -414,6 +414,8 @@ F2(jtapip){F12IP;A h;
  // and items have the same rank, and the empty item has no axis larger than the nonempty: return the nonempty
  // here we require no frame as well
  I at=AT(a), ar=AR(a), wr=AR(w), ac=AC(a), an=AN(a), jtrm=(I)jt->ranks-(I)R2MAX;  // unchanging values
+ A jtzv=__atomic_load_n(&jt->zombieval,__ATOMIC_RELAXED);  // extract table line from the primitive
+
  I ai=AS(a)[0], wi=AS(w)[0]; wi=wr?wi:ai;  // item counts of args; force miscompare if both atoms
  if(unlikely((I)SGNTO0(-ai^-wi)>((ar^wr)-jtrm))){  // appending empty to nonempty, no frame, equal rank (not 0), no rank given
   if(likely(!ISSPARSE(at|AT(w)))){   // sparse blocks have weird shape - we can't handle them
@@ -431,8 +433,18 @@ F2(jtapip){F12IP;A h;
   UI virtreqd=0;  // the inplacing test sets this if the result must be virtual
   I lgk=bplg(at); I lgatomsini=MAX(LGSZI-lgk,0);  // lg of size of atom of a; lg of number of atoms in an I (0 if <1)
   // Because the test for inplaceability is rather lengthy, start with a quick check of the atom counts.  If adding the atoms in w to those in a
-  // would push a over a power-of-2 boundary, skip the rest of the testing.  We detect this by absence of carry out of the high bit (inside EXTENDINPLACE)
-  if(EXTENDINPLACENJA(a,w) && ((at&(DIRECT|BOX))|(AT(w)&SPARSE))>0){
+  // would push a over a power-of-2 boundary, skip the rest of the testing.  We detect this by absence of carry out of the high bit
+  I nlo=AN(a)+((NORMAH+1)<<lgatomsini)-1, nhi=nlo+AN(w), ncmp=(UI)REPSGN(AC(a))>=((UI)jtzv^(UI)a)?nlo:-1;  // sizes in Is, before & after append
+  if((nhi^nlo)<=ncmp)goto pipok;// if not NJA, ok if MSB doesn't change (XOR<nlo).  We force test failure (by comparing < 0) if AC not neg and zval!=a   (<= important to avoid misbranch)
+  if(unlikely(AFLAG(a)&AFNJA+AFRO+AFVIRTUAL)){if(likely(AFLAG(a)&AFRO+AFVIRTUAL)||jtzv!=a)goto noapip; goto pipok;}    // never if VIRTUAL or AFRO (which are not possible if AC or zval).
+      // otherwise NJA will always extend if zombieval, because assignment would copy the data
+  ncmp=((virtreqd=(AFLAG(a)>>AFKNOWNNAMEDX)&SGNTO0((AC(a)^ACUC2)-1))>(UI)jtzv)?nlo:-1;  // virt extension is (x { (a , item)).  We require a to be named so that we know that usecount of 2 means value
+       // is stacked only once (scaf unfortunately, if it's local that could be twice). we require zombieval=0 so that (a =. b , 5) will not create a virtual that must immediately be realized
+  if(likely((nhi^nlo)>ncmp))goto noapip;
+// obsolete     ;  /* OK to inplace assignment/virtual */ 
+// obsolete   if(EXTENDINPLACENJA(a,w) && 
+pipok:;  // 
+if(likely(at&(DIRECT|BOX)) && likely(!ISSPARSE(AT(w)))){  // We need DIRECT or BOX args, and not sparse (a cannot be sparse
    // collect some values into a flags register
 #define FGLGK 0x7
 #define FGVIRTREQDX 3    // if virtual extension required
@@ -484,7 +496,7 @@ F2(jtapip){F12IP;A h;
      // (this will be 1 if w has to be rank-extended, otherwise the number of items in w); wk, the number of bytes in
      // items of w (after its conversion to the precision of a)
      I wn; PROD(wn,ar-1,AS(a)+1) fgwd&=((wn>AN(w))?~FGWNOFILL:~0);  // wn starts as size of cell of a; if w is smaller than that, it will have to fill, either internal or external
-     // There will be a delay in settling the value of fgwd.  To reduce the latency if fill is required we could move some computation here.  But the compiler would defer it anyway
+     // There will be a delay in settling the value of fgwd.  To reduce the latency if fill is required we could move some computation here.
      if(likely(fgwd&FGWNOFILL)||likely(!jt->fill)||(fgwd&=~AFPRISTINE,TYPESEQ(at,AT(jt->fill)))){  // OK if we won't fill, or there is no user fill; if user fill, must not change precision of a
       I wm=AS(w)[0]; wm=fgwd&FGARMINUSWR?1:wm; wn*=wm;  // if ar=wr, wm=#w and wn=#atoms in w cells of a; if ar>wr, wm=1 and wn=#atoms in 1 cell of a
       I ak=an<<(fgwd&FGLGK),wk=wn<<(fgwd&FGLGK);  // get length of a and w in bytes
@@ -535,6 +547,7 @@ F2(jtapip){F12IP;A h;
    }  // end 'a and w compatible in rank and type'
   }   // end 'inplaceable usecount'
  }  // end 'inplaceable'
+noapip:;
  RETF(a=jtover(jtfg,a,w,ds(CCOMMA)))  // if there was trouble, failover to non-in-place code
 
 }    /* append in place if possible */

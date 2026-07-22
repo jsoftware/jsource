@@ -709,17 +709,17 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #endif
 #define ASGNINPLACESGN(s,w)  (ASGNINPLACENEG(s,w)<0)
 #define ASGNINPLACESGNNJA(s,w)  ASGNINPLACESGN(s,w)
-// define virtreqd and set it to 0 to start, and lgatomsini to lg(#atoms of type in an I)
-// This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
-#define EXTENDINPLACENJA(a,w) \
-  ( ((AC(a)&((((AN(a)+((NORMAH+1)<<lgatomsini)-1)+AN(w))^(AN(a)+((NORMAH+1)<<lgatomsini)-1))-(AN(a)+((NORMAH+1)<<lgatomsini)-1)))<0) || /* inplaceable value that will probably fit */ \
-    ( ((((((AN(a)+((NORMAH+1)<<lgatomsini)-1)+AN(w))^(AN(a)+((NORMAH+1)<<lgatomsini)-1))-(AN(a)+((NORMAH+1)<<lgatomsini)-1))|SGNIF(AFLAG(a),AFNJAX))<0) &&  /* value will probably fit OR is NJA, where any fit MUST be used */\
-      (jt->zombieval==a || (virtreqd=(AFLAG(a)>>AFKNOWNNAMEDX)&(((AC(a)^ACUC2)|(AFLAG(a)&(AFRO|AFVIRTUAL)))==0))>(UI)jt->zombieval) /* asg-in-place or virt extension.  Remember if virt extension  */ \
-        /* virt extension is (x { (a , item)).  We require a to be named so that we know that usecount of 2 means value is stacked only once */ \
-        /* we require zombieval=0 so that (a =. b , 5) will not create a virtual that must immediately be realized */ \
-        /* the other requirements for inplacing are AC=2 and not VIRTUAL or RO */ \
-    )  /* OK to inplace assignment/virtual */ \
-  )
+// obsolete // define virtreqd and set it to 0 to start, and lgatomsini to lg(#atoms of type in an I)
+// obsolete // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
+// obsolete #define EXTENDINPLACENJA(a,w) 
+// obsolete   ( ((AC(a)&((((AN(a)+((NORMAH+1)<<lgatomsini)-1)+AN(w))^(AN(a)+((NORMAH+1)<<lgatomsini)-1))-(AN(a)+((NORMAH+1)<<lgatomsini)-1)))<0) || /* inplaceable value that will probably fit */ 
+// obsolete     (     ((((((AN(a)+((NORMAH+1)<<lgatomsini)-1)+AN(w))^(AN(a)+((NORMAH+1)<<lgatomsini)-1))-(AN(a)+((NORMAH+1)<<lgatomsini)-1))|SGNIF(AFLAG(a),AFNJAX))<0) &&  /* value will probably fit OR is NJA, where any fit MUST be used */
+// obsolete       (jt->zombieval==a || (virtreqd=(AFLAG(a)>>AFKNOWNNAMEDX)&SGNTO0(((AC(a)^ACUC2)|(AFLAG(a)&(AFRO|AFVIRTUAL)))-1),virtreqd>(UI)jt->zombieval)) /* asg-in-place or virt extension.  Remember if virt extension  */ 
+// obsolete         /* virt extension is (x { (a , item)).  We require a to be named so that we know that usecount of 2 means value is stacked only once */ 
+// obsolete         /* we require zombieval=0 so that (a =. b , 5) will not create a virtual that must immediately be realized */ 
+// obsolete         /* the other requirements for inplacing are AC=2 and not VIRTUAL or RO */ 
+// obsolete     )  /* OK to inplace assignment/virtual */ 
+// obsolete   )
 
 // ************************************ Values for AFLAG(x) field of type A ***********************************
 

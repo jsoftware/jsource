@@ -895,7 +895,6 @@ typedef DST* DC;
 // in the words of an explicit definition the words have QCNAMELKP semantics in bit 4-5:
 #define QCMASK 0x3fLL   // all the LSB flags
 #define QCMASK2 QCMASK
-#define QCCHECK(x) {if(((I)(x)&QCMASK2))SEGFAULT;}
 #define QCWORD(x) ((A)((I)(x)&~QCMASK))  // the word pointer part of the QC
 #define QCTYPE(x) ((I)(x)&QCMASK)  // the type-code part plus semantics-dependent bits
 #define QCPTYPE(x) ((I)(x)&0xf)  // the type-code part only, 0-15 for the syntax units including assignment

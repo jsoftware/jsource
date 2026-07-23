@@ -988,7 +988,7 @@ fi
 echo "MAKEFLAGS=$MAKEFLAGS"
 if [ $jplatform != wasm ]; then
  cd ../jsrc/
- if [ "1" != "$NOCLEAN" ]; then
+ if [ "1" != "$NOCLEAN" ] && [ "$1" != "noclean" ]; then
   $make -f ../make2/makefile-jamalgam clean
  fi
  $make -f ../make2/makefile-jamalgam

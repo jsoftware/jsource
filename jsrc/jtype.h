@@ -500,7 +500,7 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define ADVSIZE sizeof(V)
 // NOTE: SYMB is set in an ADV value to indicate that the value is nameless, see below
 #define ASGNX 24
-#define ASGN            ((I)1L<<ASGNX)     // I  assignment  also used in jmf.ijs
+#define ASGN            ((I)1L<<ASGNX)     // I  assignment
 #define ASGNSIZE sizeof(I)     // only 1 byte, but all non-DIRECT are fullword multiples
 // BOTE: SYMB and CONW are used as flags in ASGN, see below
 #define SYMBX 25

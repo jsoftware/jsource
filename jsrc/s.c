@@ -801,7 +801,6 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
   ASSERTGOTO(!(e->flag&LREADONLY),EVRO,exitlock)  // if writing read-only name (xxx_index) with new value, fail
   I xaf;  // holder for nvr/free flags
   {A aaf=AFLAG0; aaf=x?x:aaf; xtype=x?xtype:QCNOUN; xaf=AFLAG(aaf);}  // flags from x, or 0 if there is no x.
-
   if(likely(!(xaf&AFNJA+AFANCHORED))){  // normal case...
    e->fval=w;  // store the new flagged value to free w before ra()
    SYMVALFA1(*e,x);  // fa the value unless it was never ra()d to begin with, and handle AC for the caller in that case; repurpose x to point to any residual value to be fa()d later
@@ -831,19 +830,21 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
    }
   }else if(unlikely(xaf&AFANCHORED)){  // attempt to reassign a ANCHORED value
    ASSERTGOTO(0,EVRO,exitlock)  // user must unencumber the value first
-  }else{  // x is memory-mapped, and is not rewriting an incumbent value
+  }else{  // x is memory-mapped, and is not rewriting the same incumbent value
    w=QCWORD(w);  // remove type that was stored in w
-   ASSERTGOTO(!(AFRO&xaf),EVRO,exitlock);   // error if read-only value
-   if(unlikely(AT(w)&ASGN))AFLAG(a)|=AFNJA;  // if value is flagged as =., it is the mapping assignment: mark the name as NJA, meaning it is deleted only when the mapping is deleted
-   // no need to store valtype - that can't change from noun (because must be DIRECT below)
-   I wt=AT(w); I wn=AN(w); I wr=AR(w); I m=wn<<bplg(wt);  // we will move the flags/data from w to the preallocated area x
-   ASSERTGOTO((wt&DIRECT)>0,EVDOMAIN,exitlock);  // boxed, extended, etc can't be assigned to memory-mapped array
-   ASSERTGOTO(AM(x)>=m,EVALLOC,exitlock);  // ensure the file area can hold the data.  AM of NJA is allosize
-   AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCISH(AS(x),AS(w),wr); MC(AV(x),AV(w),m);  // copy in the data.  Can't release the lock while we are copying data in.
+   if(unlikely(w==ds(CSELF))){AFLAG(e->name)|=AFNJA;  // $: is the mapping assignment: mark the symbol's name as NJA, meaning it is deleted only when the mapping is deleted.  The value was installed previously
+   }else{
+    ASSERTGOTO(!(AFRO&xaf),EVRO,exitlock);   // error if read-only value
+    // no need to store valtype - that can't change from noun (because must be DIRECT below)
+    I wt=AT(w); I wn=AN(w); I wr=AR(w); I m=wn<<bplg(wt);  // we will move the flags/data from w to the preallocated area x
+    ASSERTGOTO((wt&DIRECT)>0,EVDOMAIN,exitlock);  // boxed, extended, etc can't be assigned to memory-mapped array
+    ASSERTGOTO(AM(x)>=m,EVALLOC,exitlock);  // ensure the file area can hold the data.  AM of NJA is allosize
+    AT(x)=wt; AN(x)=wn; AR(x)=(RANKT)wr; MCISH(AS(x),AS(w),wr); MC(AV(x),AV(w),m);  // copy in the data.  Can't release the lock while we are copying data in.
+   }
    x=0;  // repurpose x to be the value needing fa - indicate no further fa needed
   }
  }else x=0;  // (x==w) repurpose x to be the value needing fa - none
- // x here is the value that needs to be freed
+ // x here is the value that needs to be freed, if any
  if(!((I)g&JTASGNWASLOCAL))WRITEUNLOCK(QCWORD(g)->lock);
  // ************* we have released the write lock
  // If this is a reassignment, we need to decrement the use count in the old value, since that value is no longer used.  Do so after the new value is raised,

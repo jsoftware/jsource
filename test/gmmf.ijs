@@ -129,7 +129,26 @@ JINT map_jmf_ 'jdata';f
 jdata -: ((<.(#x)%10),2 5)$x
 0 -: unmap_jmf_ 'jdata'
 
+
+{{
+JCHAR map_jmf_ 'jdata';f
+assert. 2 -: 4 { 13!:_4 jdata  NB. 2 because the value is stacked
+4!:55 <'jdata'
+assert. 2 -: 4 { 13!:_4 jdata
+t =. jdata
+assert. 2 -: 4 { 13!:_4 t
+assert. 3 -: 4 { 13!:_4 jdata
+4!:55 <'jdata'
+assert. 3 -: 4 { 13!:_4 jdata
+assert. 2 -: unmap_jmf_ 'jdata'
+4!:55 <'t'
+assert. 2 -: 4 { 13!:_4 jdata
+assert. 0 -: unmap_jmf_ 'jdata'
+}} ''
+
 ferase f
+
+
 
 (271828) 18!:55 <'jmf'
 epilog''

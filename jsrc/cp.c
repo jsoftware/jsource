@@ -330,7 +330,8 @@ DF2(jtpowop){F12IP;B b;V*v;
    // Boxed v.  It could be <n or [v0`]v1`v2 or <''.
    if(!AR(w)&&(x=C(AAV(w)[0]),!AR(x)&&NUMERIC&AT(x)||1==AR(x)&&!AN(x))){  // scalar box whose contents are numeric atom or empty list   <numatom or a:
     // here for <numatom or a: .  That will be handled as an integer power with multiple results, usually
-    n=AN(x)?i0(x):IMAX; RE(0);  // get power, using _ for <''
+    n=AN(x)?rei0(x):IMAX;  // get power, using _ for <''
+// obsolete  RE(0);
     flag=FAV(a)->flag&VNONAME+VNOSELF;  // No inplacing allowed for multiple-result types
     ASSERT(n!=0,EVDOMAIN);  // <0 arg not allowed: would be nothing
     f1=f2=jtpowatom12; v=FAV(a);   // use atomic-power handler

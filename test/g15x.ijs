@@ -1,8 +1,7 @@
 prolog './g15x.ijs'
 NB. 15!: ----------------------------------------------------------------
 
-NB. a small memory leak is expected on the next line
-2 = {:15!:1 ((15!:8) 10),0 5 4  NB. reference count
+0 = ((15!:9 ] (01) memw ,&((3*SZI),1,4)) ] {:@(15!:1)@(,&0 5 4)) ((15!:8) 10)  NB. reference count
 
 test=: 3 : 0   NB. windows only
 1

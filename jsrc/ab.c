@@ -171,7 +171,7 @@ DF2(jtbitwisechar){F12IP;A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A p,z;I
  b=ar<=wr; I minr=b?ar:wr; A longs=b?w:a; zn=b?wn:an; m=b?an:wn;  // b = 'x is repeated'  m=length of low-rank arg 
  ASSERTAGREE(AS(a),AS(w),minr)
  PROD(n,AR(longs)-minr,AS(longs)+minr)  // n=#repeats of low-rank arg
- j=i0(FAV(fs)->fgh[1])-16;  // fetch boolean fn #
+ j=IAV(FAV(fs)->fgh[1])[0]-16;  // fetch boolean fn #
  if(unlikely(a==w))jtfg=(J)((I)jtfg&~(JTINPLACEW+JTINPLACEA));  // remove inplaceability if blocks identical
  // allocate result area, inplace if possible
  if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&~(wr-ar),w))z=w;  // try inplacing w, unless a is longer
@@ -189,14 +189,14 @@ static AHDRRFN* bwinsI[16]={(AHDRRFN*)bw0000insI,(AHDRRFN*)bw0001insI,(AHDRRFN*)
 
 /* m b./&.(a.&i.) w */
 /* m b./&.(a.i.]) w */
-/* m e. 16+i.16     */
+// where  m e. 16+i.16
 
 DF1(jtunderh1);
 DF1(jtbitwiseinsertchar){F12IP;A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;AHDRRFN* ado;
  ARGCHK2(w,self);
- wr=AR(w); wn=AN(w); SETIC(w,n); z=FAV(self)->fgh[0]; fs=FAV(z)->fgh[0];
+ wr=AR(w); wn=AN(w); SETIC(w,n); z=FAV(self)->fgh[0]; fs=FAV(z)->fgh[0];  // z=(m b./), fs=m
  if((-(wn)&(SZI-n)&SGNIF(AT(w),LITX))>=0)R jtunderh1(jt,w,self);  // revert if not wn!=0 & n>SZI & LIT
- PROD(d,wr-1,AS(w)+1); zatoms=d; wv=CAV(w); j=i0(FAV(fs)->fgh[1])-16; ado=(AHDRRFN*)bwinsC[j];  // d=#atoms in an item of a cell.  There is only 1 cell here (rank _)
+ PROD(d,wr-1,AS(w)+1); zatoms=d; wv=CAV(w); j=IAV(FAV(fs)->fgh[1])[0]-16; ado=(AHDRRFN*)bwinsC[j];  // d=#atoms in an item of a cell.  There is only 1 cell here (rank _)
  if(1==wr)
   switch(j){   // d==1 here
   case  0: R scc(0);

@@ -50,7 +50,7 @@ static DF1(jtbdot1){F12IP;R bdot2(num(0),w,self);}
 // (a b.) w
 static DF1(jtbasis1){F12IP;A fs=FAV(self)->fgh[0]; A z;D*x;I j;V*v;
  F1RANK(0,jtbasis1,self);
- RZ(w=vi(w));
+ RZ(w=vi(w));  // force to INT type
  switch(AV(w)[0]){   // switch on arg
  case 0:  // rank
   GAT0(z,FL,3,1); x=DAV1(z); v=FAV(fs);
@@ -68,8 +68,8 @@ static DF1(jtbasis1){F12IP;A fs=FAV(self)->fgh[0]; A z;D*x;I j;V*v;
 F1(jtbdot){F12IP;A b,h=0;I j=0,n,*v;
  ARGCHK1(w);
  A z; fdefallo(z)
- if(VERB&AT(w)){fdeffill(z,0,CBDOT,VERB,(AF)(jtbasis1),jtvalenceerr,w,0L,0L,VNONAME+VNOSELF,0,0,0) RETF(z);}
- RZ(w=vi(w));
+ if(VERB&AT(w)){fdeffill(z,0,CBDOT,VERB,(AF)(jtbasis1),jtvalenceerr,w,0L,0L,VNONAME+VNOSELF,0,0,0) RETF(z);}  // if u b., prepare to run that
+ RZ(w=vi(w));  // force function# to INT
  n=AN(w); v=AV(w);
  if(1==n){j=*v; ASSERT(BETWEENC(j,-16,34),EVINDEX);}
  else DQ(n, j=*v++; ASSERT(BETWEENC(j,-16,15),EVINDEX););  // j must be initialized because the loop might not run

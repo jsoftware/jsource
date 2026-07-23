@@ -34,7 +34,8 @@ static A jtssdo(J jt,A a,A w,C c){DC d,e;I n;
  ASSERT(d!=0,EVDOMAIN);                        /* must have a suspension          */
  NOUNROLL while(d&&DCCALL!=d->dctype)d=d->dclnk;     /* find topmost call               */
  ASSERT(d!=0,EVDOMAIN);                        /* must have a call                */
- if(a)RE(n=lnumcw(i0(a),d->dcc));           // for dyad, source line # to cw line #
+// obsolete  if(a)RE(n=lnumcw(i0(a),d->dcc));           // for dyad, source line # to cw line #
+ if(a)n=lnumcw(rei0(a),d->dcc);           // for dyad, source line # to cw line #
  switch(c){
  case SSSTEPOVER: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;  // rerun stop line (executing it), then stop in this function
  case SSSTEPINTO: DGOTO(d,a?n:d->dcix) d->dcss=c;    break;  // rerun stop line(executing it), then stop next time a CALL frame is added to the stack

@@ -217,7 +217,7 @@ xco:
   break;
  case CBDOT:   // b.
   n=rei0(x);
-  switch(i0(FAV(h)->fgh[1])){
+  switch(IAV(FAV(h)->fgh[1])[0]){
   case 22: case 25:          R fampg?fampg:amp(f,g);
   case 19: case 28:          if(!nf)R fampg?fampg:amp(f,g); break;
   case 21: case 26:          if(nf)R fampg?fampg:amp(f,g); break;
@@ -231,7 +231,7 @@ xco:
   }
   break;
  case CCUT:;   // <;.[12]
-  if(nf&&FAV(FAV(g)->fgh[0])->id==CBOX&&BETWEENC(i0(FAV(g)->fgh[1]),1,2))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, fampg,num(-1), 0L,VNONAME+VNOSELF, RMAX,RMAX,RMAX);
+  if(nf&&FAV(FAV(g)->fgh[0])->id==CBOX&&BETWEENC(IAV(FAV(g)->fgh[1])[0],1,2))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, fampg,num(-1), 0L,VNONAME+VNOSELF, RMAX,RMAX,RMAX);
   break;
  }
  ASSERT(0,EVDOMAIN);
@@ -331,7 +331,7 @@ xco:
   }
   break;
  case CCUT:   // <;.[12]
-  if(CBOX==IDD(f)&&ng&&(p=i0(g),((p-1)&~1)==0))R ds(CRAZE);
+  if(CBOX==IDD(f)&&ng&&(p=IAV(g)[0],((p-1)&~1)==0))R ds(CRAZE);
   break;
  case CIBEAM:   // inverse of 3!:1/3 is 3!:2; inverse of 3!:2 is 3!:1
   if(FAV(w)->localuse.lu1.foreignmn[0]==3 && BETWEENC(FAV(w)->localuse.lu1.foreignmn[1],1,3))R foreign(num(3),num((FAV(w)->localuse.lu1.foreignmn[1]&1)+1));  // 1 2 3 -> 2 1 2
@@ -368,7 +368,7 @@ static F1(jtneutral){F12IP;A x,y;B b;V*v;
 // return neutral element for verb, if known
 F1(jtiden){F12IP;A f,g,x=0;V*u,*v;
  RZ(w=fix(w,zeroionei(0))); ASSERT(VERB&AT(w),EVDOMAIN);
- v=FAV(w); f=v->fgh[0]; g=v->fgh[1];
+ v=FAV(w); f=v->fgh[0]; g=v->fgh[1];   // f, g = args to modifier, if any
  switch(v->id){
  default:      RZ(x=neutral(w)); break;
  case CCOMMA:  R eval("i.@(0&,)@(2&}.)@$");
@@ -394,7 +394,7 @@ F1(jtiden){F12IP;A f,g,x=0;V*u,*v;
    }
   break;
  case CBDOT: ;  // canned inverses for (bt b.)
-  I bt=i0(g);
+  I bt=IAV(g)[0];
 #define INVM1 BIT(25)
 #define INV0 (BIT(2)+BIT(4)+BIT(5)+BIT(6)+BIT(7)+BIT(18)+BIT(20)+BIT(21)+BIT(22)+BIT(23))
 #define INV1 (BIT(1)+BIT(9)+BIT(11)+BIT(13)+BIT(17)+BIT(27)+BIT(29))

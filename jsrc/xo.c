@@ -172,7 +172,7 @@ F jtstdf(J jt,A w){A y;F f;I n,r,t;
   if(t&B01+INT)R stdf(y);
   ASSERT(0,EVDOMAIN);
  }
- RE(f=(F)i0(w));   // extract integer
+ f=(F)rei0(w);   // extract integer
  ASSERT(f!=0,EVFNUM); 
  R f;
 }    /* 0 if w is a boxed file name; n if w is integer or boxed integer */

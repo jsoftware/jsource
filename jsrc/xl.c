@@ -124,5 +124,5 @@ DF1(jtjunlock){F12IP;
  F1RANK(1,jtjunlock,self); 
  ASSERT(INT&AT(w),EVDOMAIN); 
  WRITELOCK(JT(jt,flock))
- R unlj(i0(indexof(JT(jt,flkd),w))); 
+ R unlj(i0(indexof(JT(jt,flkd),w)));   // default to 0
 }    /* w is (number,index,length); unlock the specified region */

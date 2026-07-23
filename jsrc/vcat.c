@@ -429,7 +429,7 @@ F2(jtapip){F12IP;A h;
  // one of the uses is for the mapping header.
  // In both cases we require the inplaceable bit in jt, so that a =: (, , ,) a  , which has zombieval set, will inplace only the last append
  // Allow only DIRECT and BOX types, to simplify usecounting (we don't have to EPILOG for RAT/XNUM)
- if((SGNIF((I)jtfg,JTINPLACEAX)&-ar&~(ar-wr)&~jtrm)<0){  // inplaceable, ar!=0, wr<=ar, ranks=MAX, all close at hand
+ if((SGNIF((I)jtfg,JTINPLACEAX)&-ar&~(ar-wr)&~jtrm)<0){  // inplaceable, ar!=0, wr<=ar, ranks=MAX, all close at hand  scaf! but virt exten is OK even if noninplaceable
 // obsolete   UI virtreqd=0;  // the inplacing test sets this if the result must be virtual
    // collect some values into a flags register
 #define FGLGK 0x7

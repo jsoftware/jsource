@@ -1535,14 +1535,14 @@ F1(jtmemu) {F12IP;  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE) if(!((I)jtfg&JTI
 F2(jtmemu2) {F12IP; ASSERT(!JT(jt,seclev),EVSECURE) RETF(ca(w)); }  // dyad - force copy willy-nilly
 
 // 15!:8 w  get header block, rank w
-F1(jtgh15){F12IP;A z;I k; ASSERT(!JT(jt,seclev),EVSECURE) k=rei0(w); RZ(z=gah(k,0L)); ACINIT(z,ACUC2); R sc((I)z);}   // ra the header
-// post 9.8 F1(jtgh15){F12IP;A z;I k; ASSERT(!JT(jt,seclev),EVSECURE) k=rei0(w); RZ(z=gah(k,0L)); *AZAPLOC(z)=0; ACINIT(z,0); R sc((I)z);}   // allocate header, usecount 0
+// pre 9.8 F1(jtgh15){F12IP;A z;I k; ASSERT(!JT(jt,seclev),EVSECURE) k=rei0(w); RZ(z=gah(k,0L)); ACINIT(z,ACUC2); R sc((I)z);}   // ra the header
+F1(jtgh15){F12IP;A z;I k; ASSERT(!JT(jt,seclev),EVSECURE) k=rei0(w); RZ(z=gah(k,0L)); *AZAPLOC(z)=0; ACINIT(z,0); R sc((I)z);}   // allocate header, usecount 0.  Must be filled in & assigned
 
-F1(jtfh15){F12IP;A k; ASSERT(!JT(jt,seclev),EVSECURE) RE(k=(A)i0(w)); ASSERT(AT(k)==LOWESTBIT(AT(k))&&(AT(k)&DIRECT),EVDOMAIN) fr(k); R num(0);}
+F1(jtfh15){F12IP; ASSERT(!JT(jt,seclev),EVSECURE) A k=(A)rei0(w); ASSERT(AT(k)==LOWESTBIT(AT(k))&&(AT(k)&DIRECT),EVDOMAIN) fr(k); R num(0);}
      /* 15!:9 w free header */  // not used 9.8 and later
 
 // 15!:7 w.  w has the address of a header.  Put that address in play as an A block
-F1(jtdllsymset){F12IP;ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE) R (A)i0(w);}      /* do some validation here */
+F1(jtdllsymset){F12IP;ARGCHK1(w); A k=(A)rei0(w); ASSERT(!JT(jt,seclev),EVSECURE) ASSERT(AT(k)&DIRECT&&(AT(k)&DIRECT)==LOWESTBIT((AT(k)&DIRECT)),EVDOMAIN) R k;}   // lightly audit type
 
 /* dll callback routines */
 static J cbjt; /* callbacks require jt and can only use the one */
@@ -1933,7 +1933,7 @@ F2(jtcddlsym){F12IP;C*proc;FARPROC f;HMODULE h;
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(AN(w),EVLENGTH);
  proc=CAV(str0(w));
- RE(h=(HMODULE)i0(a));  // a must be an atomiic integer
+ h=(HMODULE)rei0(a);  // a must be an atomiic integer
 #ifdef _WIN32
  f=GetProcAddress(h,(LPCSTR)proc);
 #else
@@ -1956,7 +1956,7 @@ F2(jtcddlsym){F12IP;C*proc;FARPROC f;HMODULE h;
 
 F1(jtcddlclose){F12IP;HMODULE h;I rc;
  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
- RE(h=(HMODULE)i0(w));
+ h=(HMODULE)rei0(w);
 #ifdef _WIN32
  rc= !FREELIB(h);       /* FreeLibrary return non-zero on success */
 #else

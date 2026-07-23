@@ -312,7 +312,7 @@ F2(jtunparsem){F12IP;A h,*hv,dc,ds,mc,ms,z,*zu,*zv;I dn,m,mn,n,p;V*wv;
  mc=hv[0];    ms=hv[2];    m=mn=CWNC(mc)-1;  // mc->control words ms->commented text  m,mn = #control words
  dc=hv[0+HN]; ds=hv[2+HN]; n=dn=CWNC(dc)-1;
  m=AN(mc)==0?-1:m; n=AN(dc)==0?-1:n;  // mc is normally a compiled defn (boxed rank 1), but it can also be an empty list of boxes if the valence is not defined.  Make mc/nc=-1 in that case.
- p=!((I)jtfg&JTEXPVALENCEOFF)&&(n>=0)&&((m>=0)||3==i0(wv->fgh[0])||VXOPR&wv->flag);  // p=2 valences present: no suppressed valence, dyad given, and  it's a verb or an operator referring to x 
+ p=!((I)jtfg&JTEXPVALENCEOFF)&&(n>=0)&&((m>=0)||3==IAV(wv->fgh[0])[0]||VXOPR&wv->flag);  // p=2 valences present: no suppressed valence, dyad given, and  it's a verb or an operator referring to x 
  if(equ(mtv,hv[2])&&equ(mtv,hv[2+HN])){
   // no comments: recover the original by unparsing
   // if there is a definition (even if there are no control words), set mn to the inferred #source lines

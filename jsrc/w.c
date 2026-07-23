@@ -370,7 +370,7 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
  ARGCHK2(a,w);
  if(chka)RZ(a=fsmvfya(a)); 
  av=AAV(a); 
- f=i0(C(av[0])); s=C(av[1]); m=C(av[2]); ijrd=AV(C(av[3]));
+ f=i0(C(av[0])); s=C(av[1]); m=C(av[2]); ijrd=AV(C(av[3]));   // default f to 0
  n=AN(w); v=AS(s);
  q=v[1];
  ASSERT((UI)ijrd[0]<=(UI)n,EVINDEX);

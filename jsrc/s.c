@@ -250,7 +250,7 @@ B jtprobedel(J jtfg,C*string,UI4 hash,A g){F12JT;B ret;
   if(!delblockx){ret=0; break;}  // if chain empty or ended, not found
   L *sym=sympv+delblockx;  // address of next in chain, before we delete it
   LX nextdelblockx=sym->next;  // unroll loop once
-  if(likely(!(AFLAG(sym->name)&AFRO+AFNJA))||(likely(!(AFLAG(sym->name)&AFRO)))&&(I)jtfg&JTNJADEL){   // ignore request to delete readonly name (cocurrent), or the mapped name for a mapped file, unless deleting mapname
+  if(likely(!(AFLAG(sym->name)&AFRO+AFNJA))){   // ignore request to delete readonly name (cocurrent), or the mapped name for a mapped file
    IFCMPNAME(NAV(sym->name),string,(I)jtfg&0xff,hash,     // (1) exact match - if there is a value, use this slot, else say not found
      {
       ret=sym->fval==0?0:~(I)sym->fval&QCNOUN;  // return value: value was defined & not a noun
@@ -832,7 +832,7 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
    ASSERTGOTO(0,EVRO,exitlock)  // user must unencumber the value first
   }else{  // x is memory-mapped, and is not rewriting the same incumbent value
    w=QCWORD(w);  // remove type that was stored in w
-   if(unlikely(w==ds(CSELF))){AFLAG(e->name)|=AFNJA;  // $: is the mapping assignment: mark the symbol's name as NJA, meaning it is deleted only when the mapping is deleted.  The value was installed previously
+   if(unlikely(w==ds(CSELF))){AFLAG(e->name)^=AFNJA;  // $: is the mapping assignment: toggle the symbol's name as NJA, meaning it is deleted only when the mapping is deleted.  The value was installed previously
    }else{
     ASSERTGOTO(!(AFRO&xaf),EVRO,exitlock);   // error if read-only value
     // no need to store valtype - that can't change from noun (because must be DIRECT below)

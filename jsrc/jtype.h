@@ -152,8 +152,6 @@ typedef I SI;
 #define JTEXPVALENCEOFFD  (((I)2)<<JTEXPVALENCEOFFX)  // dyad flag
 #define JTOUTERPARENSX       5   // create fully parenthesized output
 #define JTOUTERPARENS     (((I)1)<<JTOUTERPARENSX)
-// following is input to jtprobedel
-#define JTNJADEL          (I)0x100   // OK to delete an NJA mapping name
 
 // following is passed from ^:_. to u^:v which is the only thing ^:_. can call
 #define JTDOWHILEX 2   // return A(1) if v returns false

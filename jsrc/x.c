@@ -250,7 +250,7 @@ void jtforeigninit(J jt){UI i;
  MN(4,6)   XPRIM(VERB, jtscriptstring, 0,          VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(4,7)   XPRIM(VERB, jtscriptnum,  0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(4,8)   XPRIM(ADV, jtcreatecachedref,jtvalenceerr,   VNONAME+VNOSELF,VF2NONE,0L,  0L,  0L  );
- MN(4,55)  XPRIM(VERB, jtex,         jtex,            VNONAME+VNOSELF,VF2NONE,0,   RMAX,RMAX);
+ MN(4,55)  XPRIM(VERB, jtex,         jtvalenceerr, VNONAME+VNOSELF,VF2NONE,0,   RMAX,RMAX);
  MN(5,0)   XPRIM(ADV, jtfxx,jtvalenceerr,          VNONAME+VNOSELF,VF2NONE,0L,  0L,  0L  );
  MN(5,1)   XPRIM(VERB, jtarx,        0,            VNONAME+VNOSELF,VF2NONE,0,   RMAX,RMAX);
  MN(5,2)   XPRIM(VERB, jtdrx,        0,            VNONAME+VNOSELF,VF2NONE,0,   RMAX,RMAX);

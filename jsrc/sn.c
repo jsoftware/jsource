@@ -238,14 +238,13 @@ static F1(jtnch2){F12IP;A ch;B b;LX *e;I i,m,n;L*d;
 
 F1(jtnch){F12IP;READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock)) A z=jtnch2(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock)) R z;}
 
-// [x] 4!:55 y.  y is boxed names.  Delete names in y
+// 4!:55 y.  y is boxed names.  Delete names in y
 // Result is array of booleans, 1 if name OK
-// If x is given, mark the name as NJA, which signals probedel to allow deleting an NJA name
-DF2(jtex){F12IP;jtfg=jt;A*wv,y,z;B*zv;I i,n;  // clear all jt flags in jtfg
- ARGCHK2(a,w);
+DF1(jtex){F12IP;jtfg=jt;A*wv,y,z;B*zv;I i,n;  // clear all jt flags in jtfg
+ ARGCHK1(w);
  PROLOG(000);
  protectlocals(jt,0);  // we must ra() any local names on the current sentence's stack, since we may be about to delete them
- if(likely(w==self))w=a; else{ASSERT(271828==rei0(a),EVDOMAIN) jtfg=(J)((I)jtfg|JTNJADEL);} n=AN(w); wv=AAV(w);  // if dyad, set flag for probedel (require magic a)
+ n=AN(w); wv=AAV(w);  // if dyad, set flag for probedel (require magic a)
  ASSERT(((n-1)|SGNIF(AT(w),BOXX))<0,EVDOMAIN);
  I zr=AR(w); GATV(z,B01,n,AR(w),AS(w)); zv=BAVn(zr,z);
  for(i=0;i<n;++i){

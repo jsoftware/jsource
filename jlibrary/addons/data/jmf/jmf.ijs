@@ -432,13 +432,14 @@ m=. row{mappings
 'sn fh mh fad had jmf ts'=. (MAPSN,MAPFH,MAPMH,MAPADDRESS,MAPHEADER,MAPJMF,,MAPFSIZE){m
 ac =. getHADC had
 if. *./(-.x),(0=#sn),(initc+1)<ac do. 2 return. end.
+if. -. initc do. (n) =: $: end.
 (2 (20 b.) memr had,HADFLAG,1,JINT) memw had,HADFLAG,1,JINT
 if. jmf do.
  (>:ac) setHADC had
- if. initc do. 4!:55 ::] n else. (271828) 4!:55 ::] n end.
+ 4!:55 ::] n
  (<:ac) setHADC had
 else.
- if. initc do. 4!:55 ::] n else. (271828) 4!:55 ::] n end.
+ 4!:55 ::] n
  if. initc do. freehdr had end.
 end.
 if. _1=newsize do.

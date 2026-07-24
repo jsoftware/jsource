@@ -115,7 +115,7 @@ extern F1(jtdx_test);
 extern F1(jtemend);
 extern F1(jtevmq);
 extern F1(jtevms);
-extern DF2(jtex);
+extern DF1(jtex);
 extern DF1(jtexec1);
 extern F1(jtexg);
 // extern F1(jtexpn1);

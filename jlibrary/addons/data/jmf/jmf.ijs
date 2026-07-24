@@ -394,9 +394,7 @@ end.
 m=. (had;0=type) (MAPHEADER,MAPJMF)}m
 mappings=: mappings,m
 (name)=: 15!:7 had
-if. -. initc do. (1{a.) memw had,(3 3 p. SZI),1,JCHAR end.
-(name)=: 15!:7 had
-if. -. initc do. (0{a.) memw had,(3 3 p. SZI),1,JCHAR end.
+if. -. initc do. (name) =: $: end.
 i.0 0
 )
 remap=: 3 : 0

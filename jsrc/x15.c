@@ -1532,7 +1532,14 @@ F1(jtmemu) {F12IP;  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE) if(!((I)jtfg&JTI
 #endif
  RETF(w);
 }
-F2(jtmemu2) {F12IP; ASSERT(!JT(jt,seclev),EVSECURE) RETF(ca(w)); }  // dyad - force copy willy-nilly
+// x 15!:15 y - always copy if x is ''; otherwise copy if usecount is not equal to y
+F2(jtmemu2) {F12IP; ASSERT(!JT(jt,seclev),EVSECURE)
+ ASSERT(AR(a)<=1,EVRANK)
+ if(AN(a)==0){w=ca(w);  // '' - force copy willy-nilly
+ }else{I av=rei0(a); ASSERT(BETWEENC(av,1,2),EVDOMAIN) if(AC(w)!=av)w=ca(w);  // 1/2 - copy if a isn't the usecount of w
+ }
+RETF(w);  // return the possibly copied value
+}
 
 // 15!:8 w  get header block, rank w
 // pre 9.8 F1(jtgh15){F12IP;A z;I k; ASSERT(!JT(jt,seclev),EVSECURE) k=rei0(w); RZ(z=gah(k,0L)); ACINIT(z,ACUC2); R sc((I)z);}   // ra the header

@@ -1532,11 +1532,11 @@ F1(jtmemu) {F12IP;  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE) if(!((I)jtfg&JTI
 #endif
  RETF(w);
 }
-// x 15!:15 y - always copy if x is ''; otherwise copy if usecount is not equal to y
+// x 15!:15 y - always copy if x is ''; otherwise copy if usecount is greater than y
 F2(jtmemu2) {F12IP; ASSERT(!JT(jt,seclev),EVSECURE)
  ASSERT(AR(a)<=1,EVRANK)
  if(AN(a)==0){w=ca(w);  // '' - force copy willy-nilly
- }else{I av=rei0(a); ASSERT(BETWEENC(av,1,2),EVDOMAIN) if(AC(w)!=av)w=ca(w);  // 1/2 - copy if a isn't the usecount of w
+ }else{I av=rei0(a); ASSERT(BETWEENC(av,1,2),EVDOMAIN) if(AC(w)>av)w=ca(w);  // 1/2 - copy if the usecount of w exceeds a
  }
 RETF(w);  // return the possibly copied value
 }

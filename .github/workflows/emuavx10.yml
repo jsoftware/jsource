@@ -1,4 +1,4 @@
-name: JE
+name: EMUAVX10
 
 on:
  push:
@@ -18,8 +18,8 @@ env:
  OPTLD: -O2
  NO_UNDEFINED: 1
  USE_PYXES: 1
- USE_EMU_AVX: 1
- RELEASE: ${{ true }}
+ USE_EMU_AVX: 0
+ RELEASE: ${{ false }}
 
 jobs:
 

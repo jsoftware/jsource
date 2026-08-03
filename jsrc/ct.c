@@ -6,6 +6,21 @@
 #define _GNU_SOURCE
 #include "j.h"
 
+#if PYXES && (defined(__aarch64__) || defined(__arm__)) && !EMU_AVX2
+INLINE void _mm_pause(void)
+{
+#if defined(_MSC_VER) && !defined(__clang__)
+    __isb(_ARM64_BARRIER_SY);
+#else
+#if defined(__aarch64__)
+    __asm__ __volatile__("isb\n");
+#else
+    __asm__ __volatile__("nop" ::: "memory");
+#endif
+#endif
+}
+#endif
+
 // burn some time, approximately n nanoseconds
 NOINLINE I johnson(I n){I johnson=0x1234; if(n<0)R n; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson&-256;}  // return low byte 0
 #if PYXES

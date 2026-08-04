@@ -430,9 +430,69 @@ static size_t srchr4(unsigned int* str, unsigned int ch, size_t len){
 // -------------------------------------------------------
 // tolower toupper
 
-/* A SIMD function for SSE2 which changes all uppercase ASCII digits to lowercase. */
+/* A SIMD function for NEON,AVX2,SSE2 which changes all uppercase ASCII digits to lowercase. */
 void StringToLower(char *str,size_t len){
-#if C_AVX2 || EMU_AVX2
+#if defined(__aarch64__)
+    size_t i = 0;
+
+    // Pre-load constants for comparison and transformation
+    // 'A' - 1 = 64 (0x40)
+    // 'Z' = 90 (0x5a)
+    uint8x16_t upper_min = vdupq_n_u8('A' - 1);
+    uint8x16_t upper_max = vdupq_n_u8('Z');
+    uint8x16_t add_mask  = vdupq_n_u8(0x20);
+
+    // Process 16 bytes at a time
+    while (len >= 16) { // Check if 16 bytes are available
+        // Load 16 bytes from memory
+        // Using vld1q_u8 for unaligned access safety
+        uint8x16_t data = vld1q_u8((const uint8_t *)(str + i));
+
+        // Create a mask where elements are 1 if char is in [A, Z]
+        // mask = (data > 'A'-1) AND (data <= 'Z')
+        uint8x16_t gt_min = vcgtq_u8(data, upper_min);
+        uint8x16_t le_max = vcleq_u8(data, upper_max);
+        uint8x16_t mask   = vandq_u8(gt_min, le_max);
+
+        // Select the transformation: 
+        // If mask is true, char | 0x20, else keep original char
+//      uint8x16_t transformed = vorrq_u8(data, vandq_u8(mask, add_mask));
+        
+        // Wait, the logic above is slightly flawed for \"keep original\". 
+        // Let's use the bitwise selection method:
+        // result = mask? (data + 32) : data
+        // Since we can't branch, we use the mask to zero out bits in the add_mask 
+        // or use bitwise logic.
+        
+        // Correct Bitwise Method:
+        // We only want to add 0x20 if the char is in [A-Z].
+        // We create a mask of 0x20 where true, and 0x00 where false.
+        uint8x16_t val_to_add = vandq_u8(mask, add_mask);
+        uint8x16_t final_data = vaddq_u8(data, val_to_add);
+
+        vst1q_u8((uint8_t *)(str + i), final_data);
+        len -= 16;
+        i += 16;
+
+        // Safety break if we've reached end of string (if string is not multiple of 16)
+    }
+    str+=i;
+    // remember to handle the remainder (elements that don't fit in a 16-byte chunk)
+
+/*
+### How it works:
+
+1.  **Vectorization**: Instead of checking one character at a time, we load 16 characters into a single `uint8x16_t` register.
+2.  **Parallel Comparison**: 
+    *   `vcgtq_u8`: Performs a \"Greater Than\" comparison across all 16 bytes simultaneously.
+    *   `vcleq_u8`: Performs a \"Less Than or Equal\" comparison.
+    *   `vandq_u8`: Performs a bitwise `AND`. This creates a bitmask where a byte is `0xFF` (all 1s) if the character is uppercase, and `0x00` if it is not.
+3.  **Conditional Addition**: 
+    *   We create a vector `val_to_add` which is `0x20` where the character is uppercase and `0x00` where it isn't.
+    *   By adding this to the original data, we effectively perform `char + 32` for uppercase letters and `char + 0` for everything else.
+4.  **Complexity**: The algorithm is $O(n)$ and significantly faster on large strings because it utilizes the wide execution units of the ARM core, reducing the number of conditional branches (which are expensive due to potential mispredictions).
+*/
+#elif C_AVX2 || EMU_AVX2
 
  // align to 32 bytes
  while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
@@ -453,9 +513,7 @@ void StringToLower(char *str,size_t len){
   len -= 32;
   str += 32;
  }
-#endif
-
-#if defined(__SSE2__) || EMU_AVX2
+#elif defined(__SSE2__)
 
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
@@ -477,6 +535,7 @@ void StringToLower(char *str,size_t len){
  }
 #endif
 
+// Handle the remainder (elements that don't fit in a 32/16-byte chunk)
  while (len-- > 0) {
   *str = tolower(*str);
   ++str;

@@ -1333,6 +1333,7 @@ jobs:
       CC: x86_64-w64-mingw32-clang
       CXX: x86_64-w64-mingw32-clang++
       WINDRES: windres
+      __MSYS__: 1
       _SSE4_2: 1
       USE_SLEEF: 1
       USE_OPENMP: 0
@@ -1401,6 +1402,7 @@ jobs:
       CC: x86_64-w64-mingw32-gcc
       CXX: x86_64-w64-mingw32-g++
       WINDRES: windres
+      __MSYS__: 1
       _SSE4_2: 1
       USE_SLEEF: 1
       USE_OPENMP: 0
@@ -1469,6 +1471,7 @@ jobs:
       CC: i686-w64-mingw32-gcc
       CXX: i686-w64-mingw32-g++
       WINDRES: windres
+      __MSYS__: 1
       USE_SLEEF: 1
       USE_OPENMP: 0
       USE_PYXES: 0
@@ -1536,6 +1539,7 @@ jobs:
       CC: aarch64-w64-mingw32-clang
       CXX: aarch64-w64-mingw32-clang++
       WINDRES: windres
+      __MSYS__: 1
       USE_SLEEF: 1
       USE_OPENMP: 0
       USE_PYXES: ${{ env.USE_PYXES }}

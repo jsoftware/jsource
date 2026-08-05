@@ -455,6 +455,10 @@ if [ -n "$MAX_ERRORS" ]; then
   fi
 fi
 
+if [ -n "$__MSYS__" ]; then
+ common="$common -D__MSYS__ "
+fi
+
 case "$jplatform/$j64x" in
  *32*) USE_EMU_AVX=0 ;;
  wasm*) USE_EMU_AVX=0 ;;

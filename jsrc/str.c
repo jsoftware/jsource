@@ -429,7 +429,10 @@ void StringToLower(char *str,size_t len){
 #if defined(__aarch64__)
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
-  *str = tolower(*str);
+// tolower toupper unreliable in some compiler
+//  *str = tolower(*str);
+  char c = *str;
+  *str = (c >= 'A' && c <= 'Z') ? (c | 0x20) : c;
   len--;
   ++str;
  }
@@ -487,10 +490,12 @@ void StringToLower(char *str,size_t len){
     *   By adding this to the original data, we effectively perform `char + 32` for uppercase letters and `char + 0` for everything else.
 4.  **Complexity**: The algorithm is $O(n)$ and significantly faster on large strings because it utilizes the wide execution units of the ARM core, reducing the number of conditional branches (which are expensive due to potential mispredictions).
 */
-#elif (C_AVX2 || EMU_AVX2) && !defined(__MSYS__)
+#elif (C_AVX2 || EMU_AVX2)
  // align to 32 bytes
  while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
-  *str = tolower(*str);
+//  *str = tolower(*str);
+  char c = *str;
+  *str = (c >= 'A' && c <= 'Z') ? (c | 0x20) : c;
   len--;
   ++str;
  }
@@ -510,7 +515,9 @@ void StringToLower(char *str,size_t len){
 #elif defined(__SSE2__)
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
-  *str = tolower(*str);
+//  *str = tolower(*str);
+  char c = *str;
+  *str = (c >= 'A' && c <= 'Z') ? (c | 0x20) : c;
   len--;
   ++str;
  }
@@ -529,7 +536,9 @@ void StringToLower(char *str,size_t len){
 #endif
 
  while (len-- > 0) {
-  *str = tolower(*str);
+//  *str = tolower(*str);
+  char c = *str;
+  *str = (c >= 'A' && c <= 'Z') ? (c | 0x20) : c;
   ++str;
  }
 }
@@ -539,7 +548,9 @@ void StringToUpper(char *str,size_t len){
 #if defined(__aarch64__)
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
-  *str = toupper(*str);
+//  *str = toupper(*str);
+  char c = *str;
+  *str = (c >= 'a' && c <= 'z') ? (c & ~0x20) : c;
   len--;
   ++str;
  }
@@ -584,10 +595,12 @@ void StringToUpper(char *str,size_t len){
     str+=i;
     // remember to handle the remainder (elements that don't fit in a 16-byte chunk)
 
-#elif (C_AVX2 || EMU_AVX2) && !defined(__MSYS__)
+#elif (C_AVX2 || EMU_AVX2)
  // align to 32 bytes
  while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
-  *str = toupper(*str);
+//  *str = toupper(*str);
+  char c = *str;
+  *str = (c >= 'a' && c <= 'z') ? (c & ~0x20) : c;
   len--;
   ++str;
  }
@@ -607,7 +620,9 @@ void StringToUpper(char *str,size_t len){
 #elif defined(__SSE2__)
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
-  *str = toupper(*str);
+//  *str = toupper(*str);
+  char c = *str;
+  *str = (c >= 'a' && c <= 'z') ? (c & ~0x20) : c;
   len--;
   ++str;
  }
@@ -626,7 +641,9 @@ void StringToUpper(char *str,size_t len){
 #endif
 
  while (len-- > 0) {
-  *str = toupper(*str);
+//  *str = toupper(*str);
+  char c = *str;
+  *str = (c >= 'a' && c <= 'z') ? (c & ~0x20) : c;
   ++str;
  }
 }
@@ -680,7 +697,7 @@ void StringToLowerUCS2(unsigned short *str,size_t len){
     len -= i;
     // --- Tail Handling: Process remaining 1-7 characters scalar ---
 
-#elif (C_AVX2 || EMU_AVX2) && !defined(__MSYS__)
+#elif (C_AVX2 || EMU_AVX2)
  // align to 32 bytes
  while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
   *str = (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
@@ -776,7 +793,7 @@ void StringToUpperUCS2(unsigned short *str,size_t len){
     len -= i;
     // --- Tail Handling: Process remaining 1-7 characters scalar ---
 
-#elif (C_AVX2 || EMU_AVX2) && !defined(__MSYS__)
+#elif (C_AVX2 || EMU_AVX2)
  // align to 32 bytes
  while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
   *str = (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
@@ -872,7 +889,7 @@ void StringToLowerUCS4(unsigned int *str,size_t len){
     len -= i;
     // --- Tail Handling: Process remaining 1-3 characters scalar ---
 
-#elif (C_AVX2 || EMU_AVX2) && !defined(__MSYS__)
+#elif (C_AVX2 || EMU_AVX2)
  // align to 32 bytes
  while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
   *str = (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
@@ -968,7 +985,7 @@ void StringToUpperUCS4(unsigned int *str,size_t len){
     len -= i;
     // --- Tail Handling: Process remaining 1-3 characters scalar ---
 
-#elif (C_AVX2 || EMU_AVX2) && !defined(__MSYS__)
+#elif (C_AVX2 || EMU_AVX2)
  // align to 32 bytes
  while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
   *str = (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;

@@ -217,10 +217,6 @@ else
  common="$common -DPYXES=0"
 fi
 
-if [ "${USE_GMP_H:=1}" -eq 1 ]; then
- common="$common -I../mpir/include"
-fi
-
 if [ -n "$MAX_ERRORS" ]; then
   if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
    common="$common -fmax-errors=$MAX_ERRORS "

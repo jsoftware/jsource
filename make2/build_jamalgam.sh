@@ -357,10 +357,6 @@ else
  common="$common -DSLEEFQUAD=0"
 fi
 
-if [ "${USE_GMP_H:=1}" -eq 1 ]; then
- common="$common -I../mpir/include"
-fi
-
 if [ $jplatform = wasm ]; then
  true
 elif [ "$USE_READLINE" -eq 1 ]; then

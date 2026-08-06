@@ -123,7 +123,7 @@ There are several shorthands for built-in types.
 #ifdef _WIN32
 #undef MSC_BUILD_DLL
 #define MSC_USE_DLL
-#include <mpir.h>
+#include "../mpir/include/mpir.h"
 #else
 #include <gmp.h>
 #endif

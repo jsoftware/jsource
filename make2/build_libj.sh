@@ -344,10 +344,6 @@ else
  common="$common -DSLEEFQUAD=0"
 fi
 
-if [ "${USE_GMP_H:=1}" -eq 1 ]; then
- common="$common -I../mpir/include"
-fi
-
 if [ -n "$_MEMAUDIT" ]; then
  common="$common -DMEMAUDIT=$_MEMAUDIT"
 fi

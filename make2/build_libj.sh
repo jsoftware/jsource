@@ -317,6 +317,14 @@ if [ $USE_PYXES -eq 1 ]; then
    ;;
  esac
 else
+ case "$jplatform/$j64x" in
+  openbsd/*)
+   LDTHREAD=" -pthread "
+   ;;
+  freebsd/*)
+   LDTHREAD=" -pthread "
+   ;;
+ esac
  common="$common -DPYXES=0"
 fi
 

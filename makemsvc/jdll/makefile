@@ -40,7 +40,6 @@ else
   COPTION := $(COPTION) $(OPTL)
  endif
 endif
-CINCLUDE = -I../mpir/include
 ifeq (1,$(USE_PYXES))
  ifeq (arm64,$(TARGET_CPU))
   ifneq ($(PTHREADS4WSRC),)

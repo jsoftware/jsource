@@ -36,7 +36,6 @@ else
   COPTION := $(COPTION) $(OPTL)
  endif
 endif
-CINCLUDE = -I../mpir/include
 ifeq (1,$(USE_PYXES))
  COPTION := $(COPTION) /DPYXES=1
 else

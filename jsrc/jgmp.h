@@ -125,7 +125,7 @@ There are several shorthands for built-in types.
 #define MSC_USE_DLL
 #include "../mpir/include/mpir.h"
 #else
-#include <gmp.h>
+#include "../mpir/include/gmp.h"
 #endif
 #ifdef _WIN64
 typedef unsigned long long int	mpir_ui;

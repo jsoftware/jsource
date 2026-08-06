@@ -1777,7 +1777,7 @@ static __emu_inline __emu__m256d _MM256_FMADD_PD(__emu__m256d a, __emu__m256d b,
 #define MUL_ACC(addend,mplr1,mplr2) _mm_add_pd(addend , _mm_mul_pd(mplr1,mplr2))
 #endif
 #define NAN0            (_clearfp())
-#if defined(MMSC_VER) && _MSC_VER==1800 && !SY_64 // bug in some versions of VS 2013
+#if (defined(__MSYS__) || (defined(MMSC_VER) && _MSC_VER==1800)) && !SY_64 // bug in some versions of VS 2013
 #define NAN1            {if(_SW_INVALID&_statusfp()){_clearfp();jsignal(EVNAN); R 0;}}
 #define NAN1V           {if(_SW_INVALID&_statusfp()){_clearfp();jsignal(EVNAN); R  ;}}
 #define NANTEST         (_SW_INVALID&_statusfp())

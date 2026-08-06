@@ -1447,7 +1447,7 @@ jobs:
 # windows msys2 x86 ----------------------------------------------------
  jewin-msys2-x86:
   name: JE (Windows MSYS2 x86)
-  needs: [all, disabled]
+  needs: all
   runs-on: windows-2022
   steps:
    - name: Checkout Git repository
@@ -1603,7 +1603,7 @@ jobs:
    - jeopenbsd
    - jewin-msys2-x64-clang
    - jewin-msys2-x64
-#   - jewin-msys2-x86
+   - jewin-msys2-x86
    - jewin-msys2-arm64
   steps:
    - name: Checkout Git repository
@@ -1648,7 +1648,7 @@ jobs:
    - jeopenbsd
    - jewin-msys2-x64-clang
    - jewin-msys2-x64
-#   - jewin-msys2-x86
+   - jewin-msys2-x86
    - jewin-msys2-arm64
   steps:
    - name: update server

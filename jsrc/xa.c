@@ -405,7 +405,7 @@ F1(jtcpufeature){F12IP;
  } else if (!strcasecmp(CAV(w),"CORES")) {
   R sc(numberOfCores);
  } else if (!strcasecmp(CAV(w),"MAXTHREADS")) {
-  R sc(MAXTHREADS);
+  R sc(PYXES?MAXTHREADS:1);
  } else if (!strcasecmp(CAV(w),"CBLAS")) {
   R sc(hascblas&&libcblas);
  } else if (!strcasecmp(CAV(w),"CBLASFILE")) {

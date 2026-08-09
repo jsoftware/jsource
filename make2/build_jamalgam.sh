@@ -122,6 +122,7 @@ case "$jplatform/$j64x" in
  windows/*)
   LIBBACKTRACE=0
   USE_READLINE=0
+  USE_LINENOISE=0
   ;;
  wasm*)
   LIBBACKTRACE=0

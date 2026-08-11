@@ -442,7 +442,11 @@ F2(jtlocnl2){F12IP;UC*u;
  R locnlx(tmp,w,0); 
 }    /* 18!:1 locale name list */
 
+#if defined(__clang__) && (defined(DEBUG) || defined(__OpenBSD__))
+static A NOOPTIMIZE jtlocale(J jt,B b,A w){A g=0,*wv,y;
+#else
 static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
+#endif
  if(((AR(w)-1) & -(AT(w)&(INT|B01)))<0){  // atomic integer is OK
   if(!((g=(b?jtstfindcre:jtstfind)(jt,-1,0,BIV0(w)))&&LOCPATH(g)))R 0;  // error if name not found/created or if name was found but deleted
  }else{

@@ -865,8 +865,10 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // if we are not multithreading, report the master thread only
 #if !PYXES
+#if !defined(__OpenBSD__)
 #undef MAXTHREADS
 #define MAXTHREADS 1  // override to no tasks if no pyxes
+#endif
 #endif
 #if defined(ANDROID) && defined(__x86_64__)
 #undef MAXTHREADS

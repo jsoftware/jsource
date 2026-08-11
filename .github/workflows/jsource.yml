@@ -17,6 +17,7 @@ env:
  OPTL: -O2
  OPTLD: -O2
  NO_UNDEFINED: 1
+ _MEMAUDIT: 0
  USE_PYXES: 1
  USE_EMU_AVX: 1
  RELEASE: ${{ true }}
@@ -68,8 +69,8 @@ jobs:
       script/install-lnx.sh
       sudo mkdir -p /usr/lib/x86_64-linux-gnu
       sudo mkdir -p /usr/lib/i386-linux-gnu
-      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
-      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5 || true
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5 || true
 
    - name: Commit
      run: script/commit.sh ${{ github.sha }} ${{ github.actor }}
@@ -85,6 +86,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script/buildga.sh linux x86_64 || exit 1
 
@@ -132,8 +134,8 @@ jobs:
       script/install-lnx.sh
       sudo mkdir -p /usr/lib/x86_64-linux-gnu
       sudo mkdir -p /usr/lib/i386-linux-gnu
-      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
-      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5 || true
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5 || true
 
    - name: Build JE (Linux gcc)
      env:
@@ -146,6 +148,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script/buildga.sh linux x86_64 || exit 1
 
@@ -172,8 +175,8 @@ jobs:
       script/install-lnx.sh
       sudo mkdir -p /usr/lib/x86_64-linux-gnu
       sudo mkdir -p /usr/lib/i386-linux-gnu
-      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
-      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5 || true
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5 || true
 
    - name: Build JE (Linux32)
      env:
@@ -186,6 +189,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script/buildga.sh linux i386 || exit 1
 
@@ -233,8 +237,8 @@ jobs:
       script/install-lnx.sh
       sudo mkdir -p /usr/lib/x86_64-linux-gnu
       sudo mkdir -p /usr/lib/i386-linux-gnu
-      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5
-      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5
+      sudo cp openmp/obj/linux/x86_64/libomp.so.5 /usr/lib/x86_64-linux-gnu/libomp.so.5 || true
+      sudo cp openmp/obj/linux/i386/libomp.so.5 /usr/lib/i386-linux-gnu/libomp.so.5 || true
 
    - name: Build JE (Linux32 gcc)
      env:
@@ -247,6 +251,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script/buildga.sh linux i386 || exit 1
 
@@ -283,6 +288,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script/buildga.sh darwin x86_64 || exit 1
 
@@ -341,6 +347,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script/buildga.sh darwin arm64 || exit 1
 
@@ -399,6 +406,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script/buildga.sh raspberry arm64 || exit 1
 
@@ -459,6 +467,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
 #      OPTLD: -O0
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script/buildga.sh raspberry armv6l || exit 1
 
@@ -523,6 +532,7 @@ jobs:
        export OPTL=${{ env.OPTL }}
        export OPTLD=${{ env.OPTLD }}
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
+       export _MEMAUDIT=${{ env._MEMAUDIT }}
        script/buildga.sh raspberry arm64 || exit 1
        script/testga.sh raspberry arm64 || exit 1
        cp jlibrary/bin/* j64 || true
@@ -590,6 +600,7 @@ jobs:
        export OPTL=${{ env.OPTL }}
        export OPTLD=${{ env.OPTLD }}
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
+       export _MEMAUDIT=${{ env._MEMAUDIT }}
        script/buildga.sh raspberry armv6l || exit 1
        script/testga.sh raspberry armv6l || exit 1
        find j32 -type d -exec chmod a+rwx {} \;
@@ -662,11 +673,12 @@ jobs:
        export USE_SLEEF=1
        export USE_OPENMP=0
        export USE_PYXES=${{ env.USE_PYXES }}
-       export USE_EMU_AVX=${{ env.USE_PYXES }}
+       export USE_EMU_AVX=${{ env.USE_EMU_AVX }}
        export _DEBUG=${{ env.DEBUGLEVEL }}
        export OPTL=${{ env.OPTL }}
        export OPTLD=${{ env.OPTLD }}
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
+       export _MEMAUDIT=${{ env._MEMAUDIT }}
        script/buildga.sh openbsd x86_64 || exit 1
        script/testga.sh openbsd x86_64 || exit 1
        cp jlibrary/bin/* j64 || true
@@ -727,11 +739,12 @@ jobs:
        export USE_SLEEF=1
        export USE_OPENMP=0
        export USE_PYXES=${{ env.USE_PYXES }}
-       export USE_EMU_AVX=${{ env.USE_PYXES }}
+       export USE_EMU_AVX=${{ env.USE_EMU_AVX }}
        export _DEBUG=${{ env.DEBUGLEVEL }}
        export OPTL=${{ env.OPTL }}
        export OPTLD=${{ env.OPTLD }}
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
+       export _MEMAUDIT=${{ env._MEMAUDIT }}
        script/buildga.sh openbsd arm64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
@@ -794,11 +807,12 @@ jobs:
        export USE_SLEEF=1
        export USE_OPENMP=0
        export USE_PYXES=${{ env.USE_PYXES }}
-       export USE_EMU_AVX=${{ env.USE_PYXES }}
+       export USE_EMU_AVX=${{ env.USE_EMU_AVX }}
        export _DEBUG=${{ env.DEBUGLEVEL }}
        export OPTL=${{ env.OPTL }}
        export OPTLD=${{ env.OPTLD }}
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
+       export _MEMAUDIT=${{ env._MEMAUDIT }}
        script/buildga.sh freebsd x86_64 || exit 1
        script/testga.sh freebsd x86_64 || exit 1
        cp jlibrary/bin/* j64 || true
@@ -862,11 +876,12 @@ jobs:
        export USE_SLEEF=1
        export USE_OPENMP=0
        export USE_PYXES=${{ env.USE_PYXES }}
-       export USE_EMU_AVX=${{ env.USE_PYXES }}
+       export USE_EMU_AVX=${{ env.USE_EMU_AVX }}
        export _DEBUG=${{ env.DEBUGLEVEL }}
        export OPTL=${{ env.OPTL }}
        export OPTLD=${{ env.OPTLD }}
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
+       export _MEMAUDIT=${{ env._MEMAUDIT }}
        script/buildga.sh freebsd arm64 || exit 1
        script/testga.sh freebsd arm64 || exit 1
        cp jlibrary/bin/* j64 || true
@@ -917,6 +932,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script/buildga.sh android arm64 || exit 1
 
@@ -957,6 +973,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script/buildga.sh wasm wasm32 || exit 1
       script/testga.sh wasm wasm32 || exit 1
@@ -1001,6 +1018,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script\buildga.cmd x64
 
@@ -1085,6 +1103,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script\buildga.cmd x86
 
@@ -1169,6 +1188,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script\buildga.cmd arm64
 
@@ -1190,14 +1210,14 @@ jobs:
       copy jlibrary/bin/* j64
       del j64/profile.ijs
       del j64/libopenblas*.dll
-      Compress-Archive j64 warm64.zip
+      Compress-Archive j64 warm64old.zip
 
    - name: Release JE (Windows arm64 old)
      if: ${{ false }}
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "warm64.zip"
+      artifacts: "warm64old.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -1234,6 +1254,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script\buildga.cmd arm64
 
@@ -1344,6 +1365,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
@@ -1413,6 +1435,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
@@ -1481,6 +1504,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script/buildga.sh windows i386 || exit 1
 
@@ -1549,6 +1573,7 @@ jobs:
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
+      _MEMAUDIT: ${{ env._MEMAUDIT }}
      run: |
       script/buildga.sh windows arm64 || exit 1
 

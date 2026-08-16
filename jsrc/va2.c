@@ -2,8 +2,8 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: Atomic (Scalar) Dyadic                                           */
-#define takestats(s) s
-// normal #define takestats(s)
+// normal #define takestats(s) s
+#define takestats(s)
 
 takestats(static int scafstats[40]={0};)
 
@@ -987,7 +987,7 @@ takestats(if(afwfagreefr>>(2*RANKTX))++scafstats[0x12];)
  // We detect agreement error before domain error
  A awlongcr,awlongfr;  // The arg with the longer-or-equal frame.
  {
-  if(withprob((RANK2T)afwfagreefr==0,0.98)){ // rank 0 0 means no outer frames, sets up faster
+  if(withprob((RANK2T)afwfagreefr==0,0.98)||unlikely(((ar<<RANKTX)+wr-0x0101)&0x8080)){ // rank 0 0 means no outer frames, sets up faster.  If either arg atomic, take this path since rank can't matter.  We anticipate next step
 takestats(++scafstats[0x13];)
    if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
     awlongcr=(UI)ar<(UI)wr?w:a; awlongfr=(UI)ar<(UI)wr?a:w;   // point to long cell and short cell.  short cell could be either, since it is not used, but it must be mapped to avoid uprogram check and we need short cell here
@@ -1144,8 +1144,6 @@ takestats(++scafstats[0x18];)
  m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
  m=n>3?n:m;  // if #inner-loops>1, switch m
 
- aawwzknfxrz[8]=cv&VRMSK;  // init good composite rc, and transfer output conversion to it.  scaf float as high as possible
-
  union {UI4 fr; UI1 lanes[4];} fru;  // place to save the lanes of fr separately
   // vbls needed: a w ak wk cv fr jt
  // Allocate or reuse a result area of the right type, and copy in its cell-shape after the frame
@@ -1209,7 +1207,7 @@ takestats(++scafstats[0x21];)
  // We want m, mend, av, wv, zv, jj to be in registers  (m and zv so that the action routine can test them and do boundary alignment right away; mend so that the misprediction
  // of the last loop, if it happens, will be detected right away).  It might be better to have n (aawwzknfxrz[9]) in a register as well.
  {
-  I mulofloloc;   // number of good results before we encountered integer overflow on multiply
+  I mulofloloc, lrc;   // number of good results before we encountered integer overflow on multiply; overall return code, including conversion on exit
   // we want to execute the action routine nf times.  We could execute the loop-with-unroll nf-1 times followed by the code for the last loop, but that would misbranch to the action routine twice when there is rank, plus one misbranch at loop-end
   // Alternatively, we could execute the loop-with-unroll nf times.  This would misbranch once for the action routine, once at start when there is rank, and at loopend; and would execute the unroll needlessly on the non-loops.
 //   We actually have two versions: no loop/no unroll, and loop nf times.  Each branch misbranches once for the action routine, and 0, 1, or 2 times when there is rank, with no unroll for no-rank. 
@@ -1219,13 +1217,14 @@ noallonoloop:;  // when we inplace, here to bypass allo
 takestats(++scafstats[0x23];)
    if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all   zn free
    // no outer loops.  execute once.  This adds a misbranch when the # outer loops changes, but it is made up for by the unrolling of the awz update.  The indirect call will misbranch, usually
-   I lrc=((AHDR2FN*)adocvfn)AH2A(aawwzknfxrz[5],m,CAV(a),CAV(w),CAV(z),jt);    // run.  Result is EOK normally, otherwise error code, as examined below.  adocvfn could be in a register, or fetched early enough to mispredict fast
-   if(unlikely(lrc!=EVOK)){   // scaf can make EVOK=0
-    // section did not complete normally.
+   lrc=((AHDR2FN*)adocvfn)AH2A(aawwzknfxrz[5],m,CAV(a),CAV(w),CAV(z),jt);    // run.  Result is EOK normally, otherwise error code, as examined below.  adocvfn could be in a register, or fetched early enough to mispredict fast
+   if(likely(lrc==EVOK))lrc=cv&VRMSK;  // good return: switch it to output conversion+good rc
+   else{
+    // section did not complete normally.  Error stays in lrc
     aawwzknfxrz[9]=0;  // retry needs the ending offset of result
-//obsolete     if(unlikely(lrc<0)){mulofloloc=((zv-CAV(z))>>LGSZI)+~lrc; aawwzknfxrz[8]=EWOVIP+EWOVIPMULII;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
-    if(unlikely(lrc<0)){mulofloloc=~lrc; aawwzknfxrz[8]=EWOVIP+EWOVIPMULII;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
-    else{aawwzknfxrz[8]=lrc;}   // remember any other error, which may be retryable
+// obsolete     if(unlikely(lrc<0)){mulofloloc=((zv-CAV(z))>>LGSZI)+~lrc; aawwzknfxrz[8]=EWOVIP+EWOVIPMULII;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
+    if(unlikely(lrc<0)){mulofloloc=~lrc; lrc=EWOVIP+EWOVIPMULII;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
+// obsolete     aawwzknfxrz[8]=lrc;   // remember any other error, which may be retryable.  If error, aa..[8] has the code as well as lrc
    }
   }else{
    MCISH(AS(z),AS(awlongfr),fru.lanes[frFL]);  // finish copying outer shape   &long frame  len(long frame)     
@@ -1235,6 +1234,7 @@ takestats(++scafstats[0x25];)
 noalloloop:;  // when we inplace, here to bypass allo
 takestats(++scafstats[0x26];)
    if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all   zn free
+   aawwzknfxrz[8]=cv&VRMSK;  // init good composite rc, and transfer output conversion to it.  scaf float as high as possible
    C *zv=CAV(z); C *av=CAV(a); C *wv=CAV(w);   // point to the data.  Get zv settled first because it's tested for boundary in the action routine.
    C *mend=aawwzknfxrz[9]+zv;   // add addr to offset to get addr of last block of z
    // Call the action routines:
@@ -1250,24 +1250,26 @@ takestats(++scafstats[0x26];)
     // loop unroll: start calculating the values for the next iteration.  This can run while args are being fetched.
     C *avu=av, *wvu=wv, *zvu=zv;  // the values for this iteration
     aawwzknfxrz[7]=--jj; jj=REPSGN(jj); zv+=aawwzknfxrz[4]; av+=aawwzknfxrz[1+jj]; wv+=aawwzknfxrz[3+jj]; jj=aawwzknfxrz[7+jj]; // jj is -1 on the last inner iter, where we use outer incr
-    I lrc=((AHDR2FN*)adocvfn)AH2A(n,m,avu,wvu,zvu,jt);    // run one section.  Result is EOK normally, otherwise error code, as examined below.  After the first time it doesn't matter whether adocvfn is in a reg, since the branch is predicted
+    lrc=((AHDR2FN*)adocvfn)AH2A(n,m,avu,wvu,zvu,jt);    // run one section.  Result is EOK normally, otherwise error code, as examined below.  After the first time it doesn't matter whether adocvfn is in a reg, since the branch is predicted
     if(unlikely(lrc!=EVOK)){   // scaf can make EVOK=0
      // section did not complete normally.
-     if(unlikely(lrc<0)){mulofloloc=((zv-aawwzknfxrz[4]-CAV(z))>>LGSZI)+~lrc; aawwzknfxrz[8]=EWOVIP+EWOVIPMULII; break;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
-     if(lrc<aawwzknfxrz[8])aawwzknfxrz[8]=lrc;   // set rc to worst error found so far
-     if(lrc<EWOVIP)break;  // error not recoverable in-place.  fail or retry, but no reason to continue loop
+     if(unlikely(lrc<0)){mulofloloc=((zv-aawwzknfxrz[4]-CAV(z))>>LGSZI)+~lrc; lrc=EWOVIP+EWOVIPMULII; goto retrylrc;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
+     if(lrc<EWOVIP)goto retrylrc;  // error not recoverable in-place.  fail or retry, but no reason to continue loop
      // here error is correctable in place.  Continue loop
+     aawwzknfxrz[8]=MIN(aawwzknfxrz[8],lrc);   // set rc to worst error found so far
     }
    }while(zv<=mend);
+   lrc=aawwzknfxrz[8];  // fetch the composite error/conversion code
+retrylrc:;  // exit to here with lrc set to error code when there is an error
   }
 
   // The work has been done.  If there was no error, check for optional conversion-if-possible or -if-necessary
-  if(likely(aawwzknfxrz[8]==VRNONE)){RETF(z) // normal return is here, either success or failure.  If NOCONV or error happened we lost VRI+VRD+VRNONE.
-  }else if(aawwzknfxrz[8]&VRI+VRD){RETF(cvz(aawwzknfxrz[8],z))   // if result conversion still required, do it
-  }else if(aawwzknfxrz[8]&EVNOCONV){RETF(z)   // if no true error (but only suppression of conversion), OK (extremely rare)
+  if(likely(lrc==VRNONE)){RETF(z) // normal return is here, either success or failure.  If NOCONV or error happened we lost VRI+VRD+VRNONE.
+  }else if(lrc&VRI+VRD){RETF(cvz(lrc,z))   // if result conversion still required, do it
+  }else if(lrc&EVNOCONV){RETF(z)   // if no true error (but only suppression of conversion), OK (extremely rare)
 
   // ********* error recovery starts here **********
-  }else if(aawwzknfxrz[8]-EWOVIP>=0){A zz;C *zzv;I zzk;
+  }else if(lrc-EWOVIP>=0){A zz;C *zzv;I zzk;
    // Here for overflow that can be corrected in place.  The routines use the old semantics for m and n, so we convert them back
    n=(m>>1)^-(m&1); n=m<0?1:n;  // original n is 1 if m is complementary; otherwise m>>1, complemented if x is repeated
    m=aawwzknfxrz[5];  // original m
@@ -1278,7 +1280,7 @@ takestats(++scafstats[0x26];)
   // restore pointers to beginning of arguments
   zzv=CAV(zz);  // point to new-result data
   // Set up pointers etc for the overflow handling.  Set b=1 if w is taken for the x argument to repair
-   if(aawwzknfxrz[8]==EWOVIP+EWOVIPMULII){D *zzvd=(D*)zzv; I *zvi=IAV(z);
+   if(lrc==EWOVIP+EWOVIPMULII){D *zzvd=(D*)zzv; I *zvi=IAV(z);
     // Integer-multiply repair.  We have to convert all the pre-overflow results to float, and then finish the multiplies
     DQ(mulofloloc, *zzvd++=(D)*zvi++;);  // convert the multiply results to float.  mulofloloc is known negative, and must be complemented
     // Now repeat the processing.  Unlike with add/subtract overflow, we have to match up all the argument atoms
@@ -1289,9 +1291,9 @@ takestats(++scafstats[0x26];)
       if((I)zzv==mend)break; mulofloloc-=m*(n^REPSGN(n)); aawwzknfxrz[7]=--jj; jj=REPSGN(jj); zzv+=zzk; av+=aawwzknfxrz[1+jj]; wv+=aawwzknfxrz[3+jj]; jj=aawwzknfxrz[7+jj];  // jj1 is -1 on the last inner iter, where we use outer incr
      }
     }
-   } else {   // not multiply repair, but something else to do inplace
-    AHDR2FN *repairfn=(AHDR2FN*)repairip[(aawwzknfxrz[8]-EWOVIP)&3];   // fetch ep from table
-    I nipw=((z!=w) & (aawwzknfxrz[8]-EWOVIP)) ^ PEXT0((aawwzknfxrz[8]-EWOVIP),2,1);  // nipw from z!=w if bits2,0==01; 1 if 10; 0 if 00
+   }else{   // not multiply repair, but something else to do inplace
+    AHDR2FN *repairfn=(AHDR2FN*)repairip[(lrc-EWOVIP)&3];   // fetch ep from table
+    I nipw=((z!=w) & (lrc-EWOVIP)) ^ PEXT0((lrc-EWOVIP),2,1);  // nipw from z!=w if bits2,0==01; 1 if 10; 0 if 00
     // nipw means 'use w as not-in-place'; c means 'repeat cells of a'; so if nipw!=c we repeat cells of not-in-place, if nipw==c we set nf to 1
     // if we are repeating cells of the not-in-place, we leave the repetition count in nf, otherwise subsume it in mf
     // b means 'repeat atoms inside a'; so if nipw!=b we repeat atoms of not-in-place, if nipw==b we set n to 1
@@ -1311,7 +1313,7 @@ takestats(++scafstats[0x26];)
   }
   // retry required, not inplaceable.  Signal the error code to the caller.  If the error is not retryable, set the error message.
   // The caller will call again with the error set, which will change our selection of processing routines
-  if(aawwzknfxrz[8]<=NEVM)jsignal(aawwzknfxrz[8]);else jt->jerr=(UC)aawwzknfxrz[8];
+  if(lrc<=NEVM)jsignal(lrc);else jt->jerr=(UC)lrc;
  }
 
  R 0;  // return to the caller, who will retry any retryable errors
@@ -1776,7 +1778,7 @@ takestats(++scafstats[0x0];)
  I at=AT(a), wt=AT(w); UI ar=AR(a), wr=AR(w); I agreefr; I afwf;
  // Retries of singletons branch back to points at the top.  We must take care to save only what's needed, refetching the rest to save reg spills
  UI jtranks=jt->ranks;  // fetch IRS ranks if any.  Destroyed by the function & thus must be saved
- A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank
+ A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank.  scaf float up?
  // singletons dominate the testcases.  We check them before any non-singleton fetches
  I selfflags=(3*at+(wt&FL+INT))&0x3c; I densbid0=((UI)0<(UI)((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL))));  // arg type info; bit0=not singleable
  if(withprob((ar+wr+densbid0)==0,0.7)){takestats(++scafstats[0x1];) agreefr=0; self=(A)((I)self|selfflags); goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
@@ -1797,8 +1799,6 @@ takestats(if(notoneatom)++scafstats[0x3];) takestats(if(densbid0)++scafstats[0x4
   afwf=selfranks==0?0:afwf;   // if ranks were 0 0, ignore them and shift down to working on frame wrt 0.  afwf=0 signals that case (& happens naturally if there is no frame wrt actual rank).    It uses simpler setup
   agreefr=afwf==0?awr:afwf; agreefr=MIN((UI1)agreefr,(UI1)(agreefr>>RANKTX));    // for agreement, we test shorter noun-rank if no frame, shorter frame if there is frame
   afwf+=agreefr<<(2*RANKTX);  // put agreeaf into parm, freeing its register over the call.  afwf is now 0/framelen/af/wf
-takestats(if((ar==0||wr==0)&&(RANK2T)afwf!=0)++scafstats[0x5];)
-// scaf testing  afwf=ar==0?ar:afwf; afwf=wr==0?wr:afwf; // if either arg is atomic, we can short-circuit all rank processing, treating ranks as 0 with no frame (there can be no disagreement)
   NOUNROLL while(1){
    // Run the full dyad, retrying if a retryable error is returned.  self has been modified to point to the actual primitive rather than the rank block
    z=jtva2(jtfg,a,w,self,afwf);  // execute the verb

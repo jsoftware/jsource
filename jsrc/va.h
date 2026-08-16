@@ -18,7 +18,7 @@
 #define VIPOLOOPREQD    BIT(5)    // set in va2 to indicate outer loop needed
 #define VTYPECHGW       BIT(6)   // w arg (after conversion if any) is NOT the same type as the result (dyads only).  Required only if the arg is also marked VIPOKW
 #define VTYPECHGA       BIT(7)   // a arg (after conversion if any) is NOT the same type as the result (dyads only).  Required only if the arg is also marked VIPOKA  Must be next to VTYPECHGW
-// bit 8 free
+#define VIPOFRAMEREQD   BIT(8)    // set in va2 to indicate outer frame needed
 #define VRCX            9           // bit position for optional final result-conversion 9-10 must be higher than the RC bits 0-8
 #define VRD             ((I)1<<VRCX) // convert result to D if possible   must be 1 bit below VRI
 #define VRI             ((I)2<<VRCX) // convert result to I if possible

@@ -122,6 +122,7 @@ case "$jplatform/$j64x" in
  windows/*)
   LIBBACKTRACE=0
   USE_READLINE=0
+  USE_LINENOISE=0
   ;;
  wasm*)
   LIBBACKTRACE=0
@@ -357,10 +358,6 @@ else
  common="$common -DSLEEFQUAD=0"
 fi
 
-if [ "${USE_GMP_H:=1}" -eq 1 ]; then
- common="$common -I../mpir/include"
-fi
-
 if [ $jplatform = wasm ]; then
  true
 elif [ "$USE_READLINE" -eq 1 ]; then
@@ -453,6 +450,10 @@ if [ -n "$MAX_ERRORS" ]; then
   else
    common="$common -ferror-limit=$MAX_ERRORS "
   fi
+fi
+
+if [ -n "$__MSYS__" ]; then
+ common="$common -D__MSYS__ "
 fi
 
 case "$jplatform/$j64x" in

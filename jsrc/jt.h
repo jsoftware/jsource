@@ -446,7 +446,15 @@ typedef struct JSTstruct {
 // end of cacheline 7
  C _cl8[0];
 
+#if defined(__FreeBSD__)
+#if PYXES
  JTT threaddata[MAXTHREADS] __attribute__((aligned(JTFLAGMSK+1)));
+#else
+ JTT threaddata[8] __attribute__((aligned(JTFLAGMSK+1)));
+#endif
+#else
+ JTT threaddata[MAXTHREADS] __attribute__((aligned(JTFLAGMSK+1)));
+#endif
 } JST;   // __attribute__((aligned(JTALIGNBDY))) not allowed on windows
 typedef JST* JS;  // shared part of struct
 

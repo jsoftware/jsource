@@ -60,9 +60,8 @@ static size_t slchr(char* str, char ch, size_t len){
   }
   i += 32;
  }
-#endif
 
-#if defined(__SSE2__) || EMU_AVX2
+#elif defined(__SSE2__)
  // align to 16 bytes
  while ((i<len) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i]) return i; else ++i;}
  const __m128i xmm0 = _mm_set1_epi8( ch );
@@ -124,9 +123,8 @@ static size_t slchr2(unsigned short* str, unsigned short ch, size_t len){
   }
   i += 16;
  }
-#endif
 
-#if defined(__SSE2__) || EMU_AVX2
+#elif defined(__SSE2__)
  // align to 16 bytes
  while ((i<len) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i]) return i; else ++i;}
  const __m128i xmm0 = _mm_set1_epi16( ch );
@@ -188,9 +186,8 @@ static size_t slchr4(unsigned int* str, unsigned int ch, size_t len){
   }
   i += 8;
  }
-#endif
 
-#if defined(__SSE2__) || EMU_AVX2
+#elif defined(__SSE2__)
  // align to 16 bytes
  while ((i<len) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i]) return i; else ++i;}
  const __m128i xmm0 = _mm_set1_epi32( ch );
@@ -255,9 +252,8 @@ static size_t srchr(char* str, char ch, size_t len){
   }
   i -= 32;
  }
-#endif
 
-#if defined(__SSE2__) || EMU_AVX2
+#elif defined(__SSE2__)
  // align to 16 bytes
  while ((i>0) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i-1]) return i; else --i;}
  const __m128i xmm0 = _mm_set1_epi8( ch );
@@ -324,9 +320,8 @@ static size_t srchr2(unsigned short* str, unsigned short ch, size_t len){
   }
   i -= 16;
  }
-#endif
 
-#if defined(__SSE2__) || EMU_AVX2
+#elif defined(__SSE2__)
  // align to 16 bytes
  while ((i>0) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i-1]) return i; else --i;}
  const __m128i xmm0 = _mm_set1_epi16( ch );
@@ -393,9 +388,8 @@ static size_t srchr4(unsigned int* str, unsigned int ch, size_t len){
   }
   i -= 8;
  }
-#endif
 
-#if defined(__SSE2__) || EMU_AVX2
+#elif defined(__SSE2__)
  // align to 16 bytes
  while ((i>0) && ((((intptr_t)(str+i)) & 15) != 0)){if (ch!=str[i-1]) return i; else --i;}
  const __m128i xmm0 = _mm_set1_epi32( ch );
@@ -432,34 +426,98 @@ static size_t srchr4(unsigned int* str, unsigned int ch, size_t len){
 
 /* A SIMD function for SSE2 which changes all uppercase ASCII digits to lowercase. */
 void StringToLower(char *str,size_t len){
-#if C_AVX2 || EMU_AVX2
-
- // align to 32 bytes
- while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
-  *str = tolower(*str);
+#if defined(__aarch64__)
+ // align to 16 bytes
+ while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
+// tolower toupper unreliable in some compiler
+//  *str = tolower(*str);
+  char c = *str;
+  *str = (c >= 'A' && c <= 'Z') ? (c | 0x20) : c;
   len--;
   ++str;
  }
- const __m256i mm1 = _mm256_set1_epi8( 'A'-1 );
+    size_t i = 0;
+
+    // Pre-load constants for comparison and transformation
+    // 'A' - 1 = 64 (0x40)
+    // 'Z' = 90 (0x5a)
+    uint8x16_t upper_min = vdupq_n_u8('A' - 1);
+    uint8x16_t upper_max = vdupq_n_u8('Z');
+    uint8x16_t add_mask  = vdupq_n_u8(0x20);
+
+    // Process 16 bytes at a time
+    while (len >= 16) { // Check if 16 bytes are available
+        // Load 16 bytes from memory
+        // Using vld1q_u8 for unaligned access safety
+        uint8x16_t data = vld1q_u8((const uint8_t *)(str + i));
+
+        // Create a mask where elements are 1 if char is in [A, Z]
+        // mask = (data > 'A'-1) AND (data <= 'Z')
+        uint8x16_t gt_min = vcgtq_u8(data, upper_min);
+        uint8x16_t le_max = vcleq_u8(data, upper_max);
+        uint8x16_t mask   = vandq_u8(gt_min, le_max);
+
+        // Let's use the bitwise selection method:
+        // result = mask? (data + 32) : data
+        // Since we can't branch, we use the mask to zero out bits in the add_mask 
+        // or use bitwise logic.
+        
+        // Correct Bitwise Method:
+        // We only want to add 0x20 if the char is in [A-Z].
+        // We create a mask of 0x20 where true, and 0x00 where false.
+        uint8x16_t val_to_add = vandq_u8(mask, add_mask);
+        uint8x16_t final_data = vaddq_u8(data, val_to_add);
+
+        vst1q_u8((uint8_t *)(str + i), final_data);
+        len -= 16;
+        i += 16;
+
+        // Safety break if we've reached end of string (if string is not multiple of 16)
+    }
+    str+=i;
+    // remember to handle the remainder (elements that don't fit in a 16-byte chunk)
+
+/*
+### How it works:
+
+1.  **Vectorization**: Instead of checking one character at a time, we load 16 characters into a single `uint8x16_t` register.
+2.  **Parallel Comparison**: 
+    *   `vcgtq_u8`: Performs a \"Greater Than\" comparison across all 16 bytes simultaneously.
+    *   `vcleq_u8`: Performs a \"Less Than or Equal\" comparison.
+    *   `vandq_u8`: Performs a bitwise `AND`. This creates a bitmask where a byte is `0xFF` (all 1s) if the character is uppercase, and `0x00` if it is not.
+3.  **Conditional Addition**: 
+    *   We create a vector `val_to_add` which is `0x20` where the character is uppercase and `0x00` where it isn't.
+    *   By adding this to the original data, we effectively perform `char + 32` for uppercase letters and `char + 0` for everything else.
+4.  **Complexity**: The algorithm is $O(n)$ and significantly faster on large strings because it utilizes the wide execution units of the ARM core, reducing the number of conditional branches (which are expensive due to potential mispredictions).
+*/
+#elif (C_AVX2 || EMU_AVX2)
+ // align to 32 bytes
+ while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
+//  *str = tolower(*str);
+  char c = *str;
+  *str = (c >= 'A' && c <= 'Z') ? (c | 0x20) : c;
+  len--;
+  ++str;
+ }
+ const __m256i mm1 = _mm256_set1_epi8( 'A' );
  const __m256i mm2 = _mm256_set1_epi8( 'Z' );
  const __m256i mm3 = _mm256_set1_epi8( 0x20 );
- const __m256i mm4 = _mm256_cmpeq_epi8( mm3, mm3 );
  while (len >= 32) {
   __m256i r0 = _mm256_load_si256((__m256i*)str);
   // maskaz contains 0x00 where character between 'A' and 'Z', 0xff otherwise.
-  __m256i maskaz = _mm256_or_si256(_mm256_andnot_si256(_mm256_cmpgt_epi8(r0, mm1),mm4), _mm256_cmpgt_epi8(r0, mm2));
+  __m256i maskaz = _mm256_or_si256(_mm256_cmpgt_epi8(mm1,r0), _mm256_cmpgt_epi8(r0, mm2));
   // flip the 6th bit to 0 only for uppercase characters.
   _mm256_store_si256((__m256i*)str, _mm256_xor_si256(r0, _mm256_andnot_si256(maskaz, mm3)));
   len -= 32;
   str += 32;
  }
-#endif
 
-#if defined(__SSE2__) || EMU_AVX2
-
+#elif defined(__SSE2__)
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
-  *str = tolower(*str);
+//  *str = tolower(*str);
+  char c = *str;
+  *str = (c >= 'A' && c <= 'Z') ? (c | 0x20) : c;
   len--;
   ++str;
  }
@@ -478,41 +536,93 @@ void StringToLower(char *str,size_t len){
 #endif
 
  while (len-- > 0) {
-  *str = tolower(*str);
+//  *str = tolower(*str);
+  char c = *str;
+  *str = (c >= 'A' && c <= 'Z') ? (c | 0x20) : c;
   ++str;
  }
 }
 
 /* Same, but to uppercase. */
 void StringToUpper(char *str,size_t len){
-#if C_AVX2 || EMU_AVX2
-
- // align to 32 bytes
- while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
-  *str = toupper(*str);
+#if defined(__aarch64__)
+ // align to 16 bytes
+ while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
+//  *str = toupper(*str);
+  char c = *str;
+  *str = (c >= 'a' && c <= 'z') ? (c & ~0x20) : c;
   len--;
   ++str;
  }
- const __m256i mm1 = _mm256_set1_epi8( 'a'-1 );
+    size_t i = 0;
+
+    // Pre-load constants for comparison and transformation
+    // 'a' - 1 = 64 (0x60)
+    // 'z' = 90 (0x7a)
+    uint8x16_t upper_min = vdupq_n_u8('a' - 1);
+    uint8x16_t upper_max = vdupq_n_u8('z');
+    uint8x16_t add_mask  = vdupq_n_u8(0x20);
+
+    // Process 16 bytes at a time
+    while (len >= 16) { // Check if 16 bytes are available
+        // Load 16 bytes from memory
+        // Using vld1q_u8 for unaligned access safety
+        uint8x16_t data = vld1q_u8((const uint8_t *)(str + i));
+
+        // Create a mask where elements are 1 if char is in [a, z]
+        // mask = (data > 'a'-1) AND (data <= 'z')
+        uint8x16_t gt_min = vcgtq_u8(data, upper_min);
+        uint8x16_t le_max = vcleq_u8(data, upper_max);
+        uint8x16_t mask   = vandq_u8(gt_min, le_max);
+
+        // Let's use the bitwise selection method:
+        // result = mask? (data - 32) : data
+        // Since we can't branch, we use the mask to zero out bits in the add_mask 
+        // or use bitwise logic.
+        
+        // Correct Bitwise Method:
+        // We only want to subtract 0x20 if the char is in [a-z].
+        // We create a mask of 0x20 where true, and 0x00 where false.
+        uint8x16_t val_to_add = vandq_u8(mask, add_mask);
+        uint8x16_t final_data = vsubq_u8(data, val_to_add);
+
+        vst1q_u8((uint8_t *)(str + i), final_data);
+        len -= 16;
+        i += 16;
+
+        // Safety break if we've reached end of string (if string is not multiple of 16)
+    }
+    str+=i;
+    // remember to handle the remainder (elements that don't fit in a 16-byte chunk)
+
+#elif (C_AVX2 || EMU_AVX2)
+ // align to 32 bytes
+ while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
+//  *str = toupper(*str);
+  char c = *str;
+  *str = (c >= 'a' && c <= 'z') ? (c & ~0x20) : c;
+  len--;
+  ++str;
+ }
+ const __m256i mm1 = _mm256_set1_epi8( 'a' );
  const __m256i mm2 = _mm256_set1_epi8( 'z' );
  const __m256i mm3 = _mm256_set1_epi8( 0x20 );
- const __m256i mm4 = _mm256_cmpeq_epi8( mm3, mm3 );
  while (len >= 32) {
   __m256i r0 = _mm256_load_si256((__m256i*)str);
   // maskaz contains 0x00 where character between 'a' and 'z', 0xff otherwise.
-  __m256i maskaz = _mm256_or_si256(_mm256_andnot_si256(_mm256_cmpgt_epi8(r0, mm1),mm4), _mm256_cmpgt_epi8(r0, mm2));
+  __m256i maskaz = _mm256_or_si256(_mm256_cmpgt_epi8(mm1,r0), _mm256_cmpgt_epi8(r0, mm2));
   // flip the 6th bit to 0 only for lowercase characters.
   _mm256_store_si256((__m256i*)str, _mm256_xor_si256(r0, _mm256_andnot_si256(maskaz, mm3)));
   len -= 32;
   str += 32;
  }
-#endif
 
-#if defined(__SSE2__) || EMU_AVX2
-
+#elif defined(__SSE2__)
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
-  *str = toupper(*str);
+//  *str = toupper(*str);
+  char c = *str;
+  *str = (c >= 'a' && c <= 'z') ? (c & ~0x20) : c;
   len--;
   ++str;
  }
@@ -531,7 +641,9 @@ void StringToUpper(char *str,size_t len){
 #endif
 
  while (len-- > 0) {
-  *str = toupper(*str);
+//  *str = toupper(*str);
+  char c = *str;
+  *str = (c >= 'a' && c <= 'z') ? (c & ~0x20) : c;
   ++str;
  }
 }
@@ -539,31 +651,73 @@ void StringToUpper(char *str,size_t len){
 /* A SIMD function for SSE2 which changes all uppercase ASCII digits to lowercase. */
 void StringToLowerUCS2(unsigned short *str,size_t len){
  const char OFFSET = 'a' - 'A';
-#if C_AVX2 || EMU_AVX2
+#if defined(__aarch64__)
+ // align to 16 bytes
+ while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
+  *str = (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
+  len--;
+  ++str;
+ }
+    // Constants for ASCII 'A' (0x0041), 'Z' (0x005A), and the case flip bit (0x0020)
+    const uint16x8_t v_a = vdupq_n_u16(0x0041);
+    const uint16x8_t v_z = vdupq_n_u16(0x005A);
+    const uint16x8_t v_case_bit = vdupq_n_u16(0x0020);
 
+    size_t i = 0;
+    
+    // --- Main Loop: Process 8 characters (16 bytes) per iteration ---
+    for (; i + 7 < len; i += 8) {
+        // 1. Load 8 x uint16_t (128 bits / 16 bytes). 
+        // vld1q_u16 handles unaligned access safely on ARMv8-A.
+        uint16x8_t chunk = vld1q_u16(str + i);
+
+        // 2. Create mask for range [A, Z]
+        // vcgeq_u16: Sets lane to 0xFFFF if chunk >= 'A', else 0x0000
+        // vcleq_u16: Sets lane to 0xFFFF if chunk <= 'Z', else 0x0000
+        // Note: vcleq = !(chunk > 'Z'). NEON has vcgeq/vcleq but not vcltq directly for unsigned 
+        // in some intrinsic versions, but vcleq_u16 is standard in arm_neon.h.
+        uint16x8_t mask_ge_a = vcgeq_u16(chunk, v_a);
+        uint16x8_t mask_le_z = vcleq_u16(chunk, v_z);
+
+        // 3. Combine masks: is_upper = (c >= 'A') & (c <= 'Z')
+        // Result lanes are 0xFFFF (true) or 0x0000 (false)
+        uint16x8_t mask_upper = vandq_u16(mask_ge_a, mask_le_z);
+
+        // 4. Calculate addition: 0x20 if upper, 0x00 otherwise
+        uint16x8_t add_val = vandq_u16(mask_upper, v_case_bit);
+
+        // 5. Add to original chunk. 
+        // Saturated add (vqaddq) not needed here as 0x5A + 0x20 = 0x7A < 0xFFFF.
+        uint16x8_t result = vaddq_u16(chunk, add_val);
+
+        // 6. Store back
+        vst1q_u16(str + i, result);
+    }
+    str += i;
+    len -= i;
+    // --- Tail Handling: Process remaining 1-7 characters scalar ---
+
+#elif (C_AVX2 || EMU_AVX2)
  // align to 32 bytes
  while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
   *str = (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
   len--;
   ++str;
  }
- const __m256i mm1 = _mm256_set1_epi16( 'A'-1 );
+ const __m256i mm1 = _mm256_set1_epi16( 'A' );
  const __m256i mm2 = _mm256_set1_epi16( 'Z' );
  const __m256i mm3 = _mm256_set1_epi16( 0x20 );
- const __m256i mm4 = _mm256_cmpeq_epi16( mm3, mm3 );
  while (len >= 16) {
   __m256i r0 = _mm256_load_si256((__m256i*)str);
   // maskaz contains 0x00 where character between 'A' and 'Z', 0xff otherwise.
-  __m256i maskaz = _mm256_or_si256(_mm256_andnot_si256(_mm256_cmpgt_epi16(r0, mm1),mm4), _mm256_cmpgt_epi16(r0, mm2));
+  __m256i maskaz = _mm256_or_si256(_mm256_cmpgt_epi16(mm1,r0), _mm256_cmpgt_epi16(r0, mm2));
   // flip the 6th bit to 0 only for uppercase characters.
   _mm256_store_si256((__m256i*)str, _mm256_xor_si256(r0, _mm256_andnot_si256(maskaz, mm3)));
   len -= 16;
   str += 16;
  }
-#endif
 
-#if defined(__SSE2__) || EMU_AVX2
-
+#elif defined(__SSE2__)
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
   *str = (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
@@ -593,31 +747,73 @@ void StringToLowerUCS2(unsigned short *str,size_t len){
 /* Same, but to uppercase. */
 void StringToUpperUCS2(unsigned short *str,size_t len){
  const char OFFSET = 'a' - 'A';
-#if C_AVX2 || EMU_AVX2
+#if defined(__aarch64__)
+ // align to 16 bytes
+ while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
+  *str = (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
+  len--;
+  ++str;
+ }
+    // Constants for ASCII 'a' (0x0061), 'z' (0x007A), and the case flip bit (0x0020)
+    const uint16x8_t v_a = vdupq_n_u16(0x0061);
+    const uint16x8_t v_z = vdupq_n_u16(0x007A);
+    const uint16x8_t v_case_bit = vdupq_n_u16(0x0020);
 
+    size_t i = 0;
+    
+    // --- Main Loop: Process 8 characters (16 bytes) per iteration ---
+    for (; i + 7 < len; i += 8) {
+        // 1. Load 8 x uint16_t (128 bits / 16 bytes). 
+        // vld1q_u16 handles unaligned access safely on ARMv8-A.
+        uint16x8_t chunk = vld1q_u16(str + i);
+
+        // 2. Create mask for range [a, z]
+        // vcgeq_u16: Sets lane to 0xFFFF if chunk >= 'a', else 0x0000
+        // vcleq_u16: Sets lane to 0xFFFF if chunk <= 'z', else 0x0000
+        // Note: vcleq = !(chunk > 'Z'). NEON has vcgeq/vcleq but not vcltq directly for unsigned 
+        // in some intrinsic versions, but vcleq_u16 is standard in arm_neon.h.
+        uint16x8_t mask_ge_a = vcgeq_u16(chunk, v_a);
+        uint16x8_t mask_le_z = vcleq_u16(chunk, v_z);
+
+        // 3. Combine masks: is_upper = (c >= 'a') & (c <= 'z')
+        // Result lanes are 0xFFFF (true) or 0x0000 (false)
+        uint16x8_t mask_upper = vandq_u16(mask_ge_a, mask_le_z);
+
+        // 4. Calculate addition: 0x20 if lower, 0x00 otherwise
+        uint16x8_t sub_val = vandq_u16(mask_upper, v_case_bit);
+
+        // 5. Add to original chunk. 
+        // Saturated add (vqsubq) not needed here as 0x7A - 0x20 = 0x5A < 0xFFFF.
+        uint16x8_t result = vsubq_u16(chunk, sub_val);
+
+        // 6. Store back
+        vst1q_u16(str + i, result);
+    }
+    str += i;
+    len -= i;
+    // --- Tail Handling: Process remaining 1-7 characters scalar ---
+
+#elif (C_AVX2 || EMU_AVX2)
  // align to 32 bytes
  while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
   *str = (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
   len--;
   ++str;
  }
- const __m256i mm1 = _mm256_set1_epi16( 'a'-1 );
+ const __m256i mm1 = _mm256_set1_epi16( 'a' );
  const __m256i mm2 = _mm256_set1_epi16( 'z' );
  const __m256i mm3 = _mm256_set1_epi16( 0x20 );
- const __m256i mm4 = _mm256_cmpeq_epi16( mm3, mm3 );
  while (len >= 16) {
   __m256i r0 = _mm256_load_si256((__m256i*)str);
   // maskaz contains 0x00 where character between 'a' and 'z', 0xff otherwise.
-  __m256i maskaz = _mm256_or_si256(_mm256_andnot_si256(_mm256_cmpgt_epi16(r0, mm1),mm4), _mm256_cmpgt_epi16(r0, mm2));
+  __m256i maskaz = _mm256_or_si256(_mm256_cmpgt_epi16(mm1,r0), _mm256_cmpgt_epi16(r0, mm2));
   // flip the 6th bit to 0 only for lowercase characters.
   _mm256_store_si256((__m256i*)str, _mm256_xor_si256(r0, _mm256_andnot_si256(maskaz, mm3)));
   len -= 16;
   str += 16;
  }
-#endif
 
-#if defined(__SSE2__) || EMU_AVX2
-
+#elif defined(__SSE2__)
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
   *str = (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
@@ -647,31 +843,73 @@ void StringToUpperUCS2(unsigned short *str,size_t len){
 /* A SIMD function for SSE2 which changes all uppercase ASCII digits to lowercase. */
 void StringToLowerUCS4(unsigned int *str,size_t len){
  const char OFFSET = 'a' - 'A';
-#if C_AVX2 || EMU_AVX2
+#if defined(__aarch64__)
+ // align to 16 bytes
+ while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
+  *str = (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
+  len--;
+  ++str;
+ }
+    // Constants for ASCII 'A' (0x0041), 'Z' (0x005A), and the case flip bit (0x0020)
+    const uint32x4_t v_a = vdupq_n_u32(0x0041);
+    const uint32x4_t v_z = vdupq_n_u32(0x005A);
+    const uint32x4_t v_case_bit = vdupq_n_u32(0x0020);
 
+    size_t i = 0;
+    
+    // --- Main Loop: Process 4 characters (16 bytes) per iteration ---
+    for (; i + 3 < len; i += 4) {
+        // 1. Load 4 x uint32_t (128 bits / 16 bytes). 
+        // vld1q_u32 handles unaligned access safely on ARMv8-A.
+        uint32x4_t chunk = vld1q_u32(str + i);
+
+        // 2. Create mask for range [A, Z]
+        // vcgeq_u32: Sets lane to 0xFFFF if chunk >= 'A', else 0x0000
+        // vcleq_u32: Sets lane to 0xFFFF if chunk <= 'Z', else 0x0000
+        // Note: vcleq = !(chunk > 'Z'). NEON has vcgeq/vcleq but not vcltq directly for unsigned 
+        // in some intrinsic versions, but vcleq_u32 is standard in arm_neon.h.
+        uint32x4_t mask_ge_a = vcgeq_u32(chunk, v_a);
+        uint32x4_t mask_le_z = vcleq_u32(chunk, v_z);
+
+        // 3. Combine masks: is_upper = (c >= 'A') & (c <= 'Z')
+        // Result lanes are 0xFFFF (true) or 0x0000 (false)
+        uint32x4_t mask_upper = vandq_u32(mask_ge_a, mask_le_z);
+
+        // 4. Calculate addition: 0x20 if upper, 0x00 otherwise
+        uint32x4_t add_val = vandq_u32(mask_upper, v_case_bit);
+
+        // 5. Add to original chunk. 
+        // Saturated add (vqaddq) not needed here as 0x5A + 0x20 = 0x7A < 0xFFFF.
+        uint32x4_t result = vaddq_u32(chunk, add_val);
+
+        // 6. Store back
+        vst1q_u32(str + i, result);
+    }
+    str += i;
+    len -= i;
+    // --- Tail Handling: Process remaining 1-3 characters scalar ---
+
+#elif (C_AVX2 || EMU_AVX2)
  // align to 32 bytes
  while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
   *str = (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
   len--;
   ++str;
  }
- const __m256i mm1 = _mm256_set1_epi32( 'A'-1 );
+ const __m256i mm1 = _mm256_set1_epi32( 'A' );
  const __m256i mm2 = _mm256_set1_epi32( 'Z' );
  const __m256i mm3 = _mm256_set1_epi32( 0x20 );
- const __m256i mm4 = _mm256_cmpeq_epi32( mm3, mm3 );
  while (len >= 8) {
   __m256i r0 = _mm256_load_si256((__m256i*)str);
   // maskaz contains 0x00 where character between 'A' and 'Z', 0xff otherwise.
-  __m256i maskaz = _mm256_or_si256(_mm256_andnot_si256(_mm256_cmpgt_epi32(r0, mm1),mm4), _mm256_cmpgt_epi32(r0, mm2));
+  __m256i maskaz = _mm256_or_si256(_mm256_cmpgt_epi32(mm1,r0), _mm256_cmpgt_epi32(r0, mm2));
   // flip the 6th bit to 0 only for uppercase characters.
   _mm256_store_si256((__m256i*)str, _mm256_xor_si256(r0, _mm256_andnot_si256(maskaz, mm3)));
   len -= 8;
   str += 8;
  }
-#endif
 
-#if defined(__SSE2__) || EMU_AVX2
-
+#elif defined(__SSE2__)
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
   *str = (*str>= 'A' && *str<= 'Z') ? *str += OFFSET : *str;
@@ -701,31 +939,73 @@ void StringToLowerUCS4(unsigned int *str,size_t len){
 /* Same, but to uppercase. */
 void StringToUpperUCS4(unsigned int *str,size_t len){
  const char OFFSET = 'a' - 'A';
-#if C_AVX2 || EMU_AVX2
+#if defined(__aarch64__)
+ // align to 16 bytes
+ while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
+  *str = (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
+  len--;
+  ++str;
+ }
+    // Constants for ASCII 'a' (0x0061), 'z' (0x007A), and the case flip bit (0x0020)
+    const uint32x4_t v_a = vdupq_n_u32(0x0061);
+    const uint32x4_t v_z = vdupq_n_u32(0x007A);
+    const uint32x4_t v_case_bit = vdupq_n_u32(0x0020);
 
+    size_t i = 0;
+    
+    // --- Main Loop: Process 4 characters (16 bytes) per iteration ---
+    for (; i + 3 < len; i += 4) {
+        // 1. Load 4 x uint32_t (128 bits / 16 bytes). 
+        // vld1q_u32 handles unaligned access safely on ARMv8-A.
+        uint32x4_t chunk = vld1q_u32(str + i);
+
+        // 2. Create mask for range [a, z]
+        // vcgeq_u32: Sets lane to 0xFFFF if chunk >= 'a', else 0x0000
+        // vcleq_u32: Sets lane to 0xFFFF if chunk <= 'z', else 0x0000
+        // Note: vcleq = !(chunk > 'Z'). NEON has vcgeq/vcleq but not vcltq directly for unsigned 
+        // in some intrinsic versions, but vcleq_u32 is standard in arm_neon.h.
+        uint32x4_t mask_ge_a = vcgeq_u32(chunk, v_a);
+        uint32x4_t mask_le_z = vcleq_u32(chunk, v_z);
+
+        // 3. Combine masks: is_upper = (c >= 'a') & (c <= 'z')
+        // Result lanes are 0xFFFF (true) or 0x0000 (false)
+        uint32x4_t mask_upper = vandq_u32(mask_ge_a, mask_le_z);
+
+        // 4. Calculate addition: 0x20 if upper, 0x00 otherwise
+        uint32x4_t sub_val = vandq_u32(mask_upper, v_case_bit);
+
+        // 5. Add to original chunk. 
+        // Saturated add (vqaddq) not needed here as 0x7A - 0x20 = 0x5A < 0xFFFF.
+        uint32x4_t result = vsubq_u32(chunk, sub_val);
+
+        // 6. Store back
+        vst1q_u32(str + i, result);
+    }
+    str += i;
+    len -= i;
+    // --- Tail Handling: Process remaining 1-3 characters scalar ---
+
+#elif (C_AVX2 || EMU_AVX2)
  // align to 32 bytes
  while ((len>0) && ((((intptr_t)str) & 31) != 0)) {
   *str = (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;
   len--;
   ++str;
  }
- const __m256i mm1 = _mm256_set1_epi32( 'a'-1 );
+ const __m256i mm1 = _mm256_set1_epi32( 'a' );
  const __m256i mm2 = _mm256_set1_epi32( 'z' );
  const __m256i mm3 = _mm256_set1_epi32( 0x20 );
- const __m256i mm4 = _mm256_cmpeq_epi32( mm3, mm3 );
  while (len >= 8) {
   __m256i r0 = _mm256_load_si256((__m256i*)str);
   // maskaz contains 0x00 where character between 'a' and 'z', 0xff otherwise.
-  __m256i maskaz = _mm256_or_si256(_mm256_andnot_si256(_mm256_cmpgt_epi32(r0, mm1),mm4), _mm256_cmpgt_epi32(r0, mm2));
+  __m256i maskaz = _mm256_or_si256(_mm256_cmpgt_epi32(mm1,r0), _mm256_cmpgt_epi32(r0, mm2));
   // flip the 6th bit to 0 only for lowercase characters.
   _mm256_store_si256((__m256i*)str, _mm256_xor_si256(r0, _mm256_andnot_si256(maskaz, mm3)));
   len -= 8;
   str += 8;
  }
-#endif
 
-#if defined(__SSE2__) || EMU_AVX2
-
+#elif defined(__SSE2__)
  // align to 16 bytes
  while ((len>0) && ((((intptr_t)str) & 15) != 0)) {
   *str = (*str>= 'a' && *str<= 'z') ? *str -= OFFSET : *str;

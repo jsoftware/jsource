@@ -498,12 +498,12 @@ xx =: (#yy) $ 1.0
 0 = # -.!.1e_12&xx yy
 (#yy) = # -.!.1e_16&xx yy
 t =: 7!:2 'f yy'
-(QKTEST+.-.IF64) +. (7!:2 'yy  -.!.1e_12 yy') > 1.5 * t
+THRESHOLD +. (QKTEST+.-.IF64) +. (7!:2 'yy  -.!.1e_12 yy') > 1.5 * t
 (#yy) = # yy ([ -. -.!.1e_12) xx
 0 = # yy ([ -.!.0 -.!.1e_16) xx
 (#yy) = # ([ -.!.0 -.!.1e_12)&xx yy
 0 = # ([ -.!.0 -.!.1e_16)&xx yy
-(QKTEST+.-.IF64) +. (7!:2 'yy ([ -. -.!.1e_16) yy') > 1.5 * t
+THRESHOLD +. (QKTEST+.-.IF64) +. (7!:2 'yy ([ -. -.!.1e_16) yy') > 1.5 * t
 
 NB. empty-arg detection
 ((+/"]@:= S: 0 <"0@i.@#) -: (+/@:= S: 0 <"0@i.@#)) '' ; 1

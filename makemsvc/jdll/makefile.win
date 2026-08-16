@@ -40,7 +40,6 @@ COPTION = $(COPTION) /Od /DOPTMO0
 COPTION = $(COPTION) $(OPTL)
 !endif
 !endif
-CINCLUDE = -I../mpir/include
 !if "1"=="$(USE_PYXES)"
 !if "arm64"=="$(TARGET_CPU)"
 !if ""!="$(PTHREADS4WSRC)"
@@ -113,6 +112,9 @@ COPTION = $(COPTION) /D_NAN
 !endif
 !if ""!="$(_NAMETRACK)"
 COPTION = $(COPTION) /DNAMETRACK=$(_NAMETRACK)
+!endif
+!if ""!="$(__MSYS__)"
+COPTION = $(COPTION) /D__MSYS__
 !endif
 !if "1"=="$(NO_UNDEFINED)"
 COPTION = $(COPTION) /DNO_UNDEFINED=1

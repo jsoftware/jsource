@@ -6,6 +6,21 @@
 #define _GNU_SOURCE
 #include "j.h"
 
+#if PYXES && (defined(__aarch64__) || defined(__arm__)) && !EMU_AVX2
+INLINE void _mm_pause(void)
+{
+#if defined(_MSC_VER) && !defined(__clang__)
+    __isb(_ARM64_BARRIER_SY);
+#else
+#if defined(__aarch64__)
+    __asm__ __volatile__("isb\n");
+#else
+    __asm__ __volatile__("nop" ::: "memory");
+#endif
+#endif
+}
+#endif
+
 // burn some time, approximately n nanoseconds
 NOINLINE I johnson(I n){I johnson=0x1234; if(n<0)R n; do{johnson ^= (johnson<<1) ^ johnson>>(BW-1);}while(--n); R johnson&-256;}  // return low byte 0
 #if PYXES
@@ -934,7 +949,7 @@ ASSERT(0,EVNONCE)
   break;}
  case 8:  { // system info: (number of cores),(max number of threads including master)
   ASSERT(AR(w)==1,EVRANK) ASSERT(AN(w)==0,EVLENGTH)  // only '' is allowed as an argument for now
-  z=v2(numberOfCores,MAXTHREADS);
+  z=v2(numberOfCores,PYXES?MAXTHREADS:1);
   break;}
  case 14:  { // threadpool keepwarm (in sec): set to y, return previous value
 #if PYXES

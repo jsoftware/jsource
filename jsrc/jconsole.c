@@ -343,7 +343,7 @@ int main(int argc, char* argv[])
    }
   }
 #ifdef _WIN32
-  if(!norl) norl|=!!getenv("SHELL");  // only works on real windows terminals
+  if(!norl) norl|=!getenv("SHELL");  // only works on real windows terminals
 #endif
 #endif
   if(!norl&&_isatty(_fileno(stdin))){
@@ -395,7 +395,6 @@ int main(int argc, char* argv[])
 	 type=0;
  addargv(argc,argv,input+strlen(input));
 #if !defined(READLINE) && defined(__MINGW32__)
-  if(!norl)
   _setmode( _fileno( stdin ), _O_TEXT ); //readline filters '\r' (so does this)
 #endif
  if(runjscript)type|=256;

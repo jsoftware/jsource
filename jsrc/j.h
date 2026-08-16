@@ -865,8 +865,10 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // if we are not multithreading, report the master thread only
 #if !PYXES
+#if !defined(__OpenBSD__)
 #undef MAXTHREADS
 #define MAXTHREADS 1  // override to no tasks if no pyxes
+#endif
 #endif
 #if defined(ANDROID) && defined(__x86_64__)
 #undef MAXTHREADS
@@ -1777,7 +1779,7 @@ static __emu_inline __emu__m256d _MM256_FMADD_PD(__emu__m256d a, __emu__m256d b,
 #define MUL_ACC(addend,mplr1,mplr2) _mm_add_pd(addend , _mm_mul_pd(mplr1,mplr2))
 #endif
 #define NAN0            (_clearfp())
-#if defined(MMSC_VER) && _MSC_VER==1800 && !SY_64 // bug in some versions of VS 2013
+#if (defined(__MSYS__) || (defined(MMSC_VER) && _MSC_VER==1800)) && !SY_64 // bug in some versions of VS 2013
 #define NAN1            {if(_SW_INVALID&_statusfp()){_clearfp();jsignal(EVNAN); R 0;}}
 #define NAN1V           {if(_SW_INVALID&_statusfp()){_clearfp();jsignal(EVNAN); R  ;}}
 #define NANTEST         (_SW_INVALID&_statusfp())
@@ -2435,21 +2437,6 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #define C_VIAVX 1
 #else
 #define C_VIAVX 0
-#endif
-
-#if PYXES && (defined(__aarch64__) || defined(__arm__)) && !EMU_AVX2
-INLINE void _mm_pause(void)
-{
-#if defined(_MSC_VER) && !defined(__clang__)
-    __isb(_ARM64_BARRIER_SY);
-#else
-#if defined(__aarch64__)
-    __asm__ __volatile__("isb\n");
-#else
-    __asm__ __volatile__("nop" ::: "memory");
-#endif
-#endif
-}
 #endif
 
 #define J struct JSTstruct *

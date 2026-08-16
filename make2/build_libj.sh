@@ -317,6 +317,14 @@ if [ $USE_PYXES -eq 1 ]; then
    ;;
  esac
 else
+ case "$jplatform/$j64x" in
+  openbsd/*)
+   LDTHREAD=" -pthread "
+   ;;
+  freebsd/*)
+   LDTHREAD=" -pthread "
+   ;;
+ esac
  common="$common -DPYXES=0"
 fi
 
@@ -342,10 +350,6 @@ if [ $USE_SLEEFQUAD -eq 1 ]; then
  common="$common -DSLEEFQUAD=1"
 else
  common="$common -DSLEEFQUAD=0"
-fi
-
-if [ "${USE_GMP_H:=1}" -eq 1 ]; then
- common="$common -I../mpir/include"
 fi
 
 if [ -n "$_MEMAUDIT" ]; then
@@ -383,6 +387,10 @@ if [ -n "$MAX_ERRORS" ]; then
   else
    common="$common -ferror-limit=$MAX_ERRORS "
   fi
+fi
+
+if [ -n "$__MSYS__" ]; then
+ common="$common -D__MSYS__ "
 fi
 
 case "$jplatform/$j64x" in

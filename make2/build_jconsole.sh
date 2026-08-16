@@ -112,15 +112,16 @@ case "$jplatform/$j64x" in
   ;;
  openbsd/*)
   LIBBACKTRACE=0
-   make=gmake
-   ;;
+  make=gmake
+  ;;
  freebsd/*)
   LIBBACKTRACE=0
-   make=gmake
-   ;;
+  make=gmake
+  ;;
  windows/*)
   LIBBACKTRACE=0
   USE_READLINE=0
+  USE_LINENOISE=0
   ;;
  wasm*)
   LIBBACKTRACE=0
@@ -215,10 +216,6 @@ if [ $USE_PYXES -eq 1 ]; then
  common="$common -DPYXES=1"
 else
  common="$common -DPYXES=0"
-fi
-
-if [ "${USE_GMP_H:=1}" -eq 1 ]; then
- common="$common -I../mpir/include"
 fi
 
 if [ -n "$MAX_ERRORS" ]; then

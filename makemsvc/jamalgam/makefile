@@ -43,7 +43,6 @@ else
   COPTION := $(COPTION) $(OPTL)
  endif
 endif
-CINCLUDE = -I../mpir/include
 ifeq (1,$(USE_PYXES))
  COPTION := $(COPTION) /DPYXES=1
 else
@@ -119,6 +118,9 @@ ifneq ($(_NAN),)
 endif
 ifneq ($(_NAMETRACK),)
  COPTION := $(COPTION) /DNAMETRACK=$(_NAMETRACK)
+endif
+ifneq ($(__MSYS__),)
+ COPTION := $(COPTION) /D__MSYS__
 endif
 ifeq (1,$(NO_UNDEFINED))
  COPTION := $(COPTION) /DNO_UNDEFINED=1

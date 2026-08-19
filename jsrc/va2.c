@@ -5,7 +5,8 @@
 // normal #define takestats(s) s
 #define takestats(s)
 
-takestats(static int scafstats[40]={0};)
+takestats(static int stats[40]={0};)
+takestats(int statsoldcaseno=-1;)
 
 #include "j.h"
 #include "ve.h"
@@ -46,51 +47,62 @@ static INLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so many
 // we know that AN=1 in a and w, which are FL/INT/B01 types.  af is larger arg rank (=rank of result)
 // low 6 bits of self are the encoded operand types, i. e. the routine index to use
 INLINE static A jtssingleton(J jtfg,A a,A w,I af,A self){F12JT;
- I awip=2*SGNTO0(AC(a))+SGNTO0(AC(w));  // collect inplaceable status for a and w
+ void *av=voidAV(a), *wv=voidAV(w), *zv;  // point to the argument values and result.  2 fetches to op addrs, 3 to op values
+// obsolete  I awip=2*SGNTO0(AC(a))+SGNTO0(AC(w));  // collect inplaceable status for a and w
  I bidcase=(I)self&0x3c; self=(A)((I)self&~0x3f); I opcode=(I)FAV(self)->lu2.lc;  // fetch bidcase from self; restore self; operation#
- A z=jt->zombieval;  // fetch address of assignand, which we presumptively make the result
- void *av=voidAV(a), *wv=voidAV(w), *zv;  // point to the argument values and result
+ // We are waiting for opcode and data pointers to settle.  We use the idle time to start the reads to calculate inplaceability.  We also start the calculation, to save registers
+ I ac=AC(a), aflag=AFLAG(a), ar=AR(a);  // fetch a inplaceability
+ I wc=AC(w), wflag=AFLAG(w), wr=AR(w);  // fetch w inplaceability
  I caseno=opcode-VA2CBW1111; caseno=caseno<0?0:caseno; caseno&=31; caseno=SSINGCASE(caseno,bidcase>>INTX);  // case # for eventual switch.  Lump all Booleans at 0. &31 to remove comparison flag and to help the compiler
- // Start loading everything we will need as values before the pipeline break.
- I aiv=*(I*)av; I wiv=*(I*)wv; D adv,wdv;  // arg values, as I and D
-#if ALIGNREQ & 0xf
- adv=*(D*)(intptr_t)((I)av&-SZD); wdv=*(D*)(intptr_t)((I)wv&-SZD);   // all atoms are aligned to a boundary of their size.  avoid spec check if loading an FL from a non-FL boundary (which must be invalid)
-#else
- adv=*(D*)av,wdv=*(D*)wv;
-#endif
-takestats(++scafstats[0x8];)
+takestats(++stats[0x8];)
+ // probabilities are those observed from the tests
  // if the operation is a rank-0 comparison that can return num[result], don't bother with inplacing.  Inplacing would be
  // a potential gain if the result can itself be inplaced, but it is a certain loser when deciding where the result is
- if((opcode>>7)>af){z=0; goto nozv;}  // true if 0x80 (comparison op) and af=0.  Set z=0 as a flag to return num(result)
-takestats(++scafstats[0x9];)
+ A z;   // result addr, or 0 for comparisons that return num[0/1]
+ if(withprob((opcode>>7)>af,0.3)){z=0; goto nozv;}  // true if 0x80 (comparison op) and af=0.  Set z=0 as a flag to return num(result)
+takestats(++stats[0x9];)
  // See if we can inplace.  We let some chances get away because they aren't worth testing for.  There are two main possibilities: assignment (checked above)
  // and abandoned arg (checked presently).  If either passes, it must further be not VIRTUAL if assigned (lest it overwrite the backer of a virtual x/y arg)
  // and not AFRO if bare; and never UNINCORPABLE since we may change the type and we don't want callers to bear the burden of checking that.  Assign in place is best,
  // because it makes the assignment skip the free
+ // Inplacing is fairly common (30% of the non-comparisons), so we make sure there is only one branch to be predicted.
 // obsolete  if(awip&=(I)jtfg){z=awip&JTINPLACEW?w:a; zv=awip&JTINPLACEW?wv:av;   // block is abandoned inplaceable, pick it.  Priority to w
 // obsolete   if(withprob((AFLAG(z)&AFUNINCORPABLE+AFRO)+(af^AR(z))==0,0.9)){goto haszv;}  // not disallowed and correct rank: use it
 // obsolete   if(awip==3){if(withprob((AFLAG(a)&AFUNINCORPABLE+AFRO)+(af^AR(a))==0,0.9)){z=a; zv=av; goto haszv;}}  // if a & w both eligible, check a if w failed
 // obsolete  }
- for(awip&=(I)jtfg;awip;awip&=~LOWESTBIT(awip)){   // args eligible for inplacing
-  A zz=awip&JTINPLACEW?w:a; zv=awip&JTINPLACEW?wv:av;  // select the lowest enabled arg
-  if(likely(!(AFLAG(zz)&AFUNINCORPABLE+AFRO))&&likely(af==AR(zz))){z=zz; goto haszv;}  // use it if inplaceable
- }
-takestats(++scafstats[0xa];)
- // See if we can inplace an assignment (z still=zombieval).  That is always a good idea, but in the test suite it's very rare so we check after other inplaceability.  Might be more common in user code.
+ z=jt->zombieval;  // fetch address of assignand, which we presumptively make the result
+ I awip=2*SGNTO0(ac&((aflag&AFUNINCORPABLE+AFRO)+((af-1)-ar)))  // a inplaceability: AC, not (unincorp/AFRO or awr<af)
+       +SGNTO0(wc&((wflag&AFUNINCORPABLE+AFRO)+((af-1)-wr)));  // aw inplaceability
+ if(withprob(awip&=(I)jtfg,0.3)){z=awip&JTINPLACEW?w:a; zv=awip&JTINPLACEW?wv:av; goto haszv;}
+// obsolete  for(awip&=(I)jtfg;awip;awip&=~LOWESTBIT(awip)){   // args eligible for inplacing
+// obsolete   A zz=awip&JTINPLACEW?w:a; zv=awip&JTINPLACEW?wv:av;  // select the lowest enabled arg
+// obsolete   if(likely(!(AFLAG(zz)&AFUNINCORPABLE+AFRO))&&likely(af==AR(zz))){z=zz; goto haszv;}  // use it if inplaceable
+// obsolete  }
+takestats(++stats[0xa];)
+ // See if we can inplace an assignment (z=zombieval).  That is always a good idea, but in the test suite it's very rare so we check after other inplaceability.  Might be more common in user code.
  I asginplacemsk=(2*(a==z)+(w==z))&(I)jtfg;  // mask of reassigned inplaceable args
- if(asginplacemsk){   // one of the args is being reassigned
-takestats(++scafstats[0xb];)
-  if(likely(!(AFLAG(z)&AFVIRTUAL+AFUNINCORPABLE))&&likely(af==AR(z))){zv=asginplacemsk&1?wv:av; goto haszv;}   // mustn't modify type of VIRTUAL or INCORPABLE, and reassigned value must have the higher rank
+ if(withprob(asginplacemsk,0.05)){   // one of the args is being reassigned
+takestats(++stats[0xb];)
+// obsolete   if(likely(!(AFLAG(z)&AFVIRTUAL+AFUNINCORPABLE))&&likely(af==AR(z))){zv=asginplacemsk&1?wv:av; goto haszv;}   // mustn't modify type of VIRTUAL or INCORPABLE, and reassigned value must have the higher rank
+  if(likely(af==AR(z))){zv=asginplacemsk&1?wv:av; goto haszv;}   // reassigned value must have the higher rank; zombieval must not be VIRT (or UNINCORP)
  }
-takestats(++scafstats[0xc];)
- // fall through: no inplacing, allocate the result, usually an atom.  If not atom, make the shape all 1s
+takestats(++stats[0xc];)
+ // fall through: no inplacing, allocate the result as FL, usually an atom.  If not atom, make the shape all 1s
  if(likely(af==0)){GAT0(z,FL,1,0); zv=voidAV0(z);}else{GATV1(z,FL,1,af); zv=voidAVn(af,z);}  // af persists over call, then freed
 haszv:;  // here when we are operating inplace on z/zv
 nozv:;  // here when we have zv or don't need it
  // z is 0 ONLY for comparisons with no rank.
  I ziv; D zdv;
- 
- // Huge switch statement to handle every case.  Lump all the booleans together at 0.  Expect pipeline break here.
+  // Start loading everything we will need as values before the pipeline break.  Setup for the switch takes several cycles
+ I aiv=*(I*)av; I wiv=*(I*)wv; D adv,wdv;  // arg values, as I and D.  Still waiting for 2nd fetch to finish
+#if ALIGNREQ & 0xf
+ adv=*(D*)(intptr_t)((I)av&-SZD); wdv=*(D*)(intptr_t)((I)wv&-SZD);   // all atoms are aligned to a boundary of their size.  avoid spec check if loading an FL from a non-FL boundary (which must be invalid)
+#else
+ adv=*(D*)av,wdv=*(D*)wv;
+#endif
+
+ // Huge switch statement to handle every case.  Lump all the booleans together at 0.  In the testcases this is a pipeline break 80% of the time
+takestats(stats[0xd]+=caseno==statsoldcaseno; statsoldcaseno=caseno;)
  switch(caseno){
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv+(B)wiv,z,INT,I) R z;  // NV because B01 is never virtual inplace
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBD): SSSTORENV((B)aiv+wdv,z,FL,D) R z;
@@ -922,7 +934,7 @@ static VF repairip[4]={plusBIO, plusIIO, minusBIO, minusIIO};
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, self is the block for this primitive, with low 6 bits giving the index of adocv if args are BID (if LSB set, args are not BID)
 // afwfagreefr is 0/framelen for initial agreement test/af/wf.  It may be settling. 
 static INLINE A jtva2(J jtfg,AD *a,AD *w,AD * RESTRICT self,I afwfagreefr){F12IP;
-takestats(++scafstats[0x10];)
+takestats(++stats[0x10];)
  A z;I m,mf,n,nf,zn;UI cv;VF adocvfn;VA2 adocv;UI4 fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift  cv is flags value for function, with many local mods
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
  I vandx=__atomic_load_n(&FAV((A)((I)self&~0x3f))->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
@@ -933,7 +945,7 @@ takestats(++scafstats[0x10];)
    VA2 *aadocv=&((VA*)((I)va+vandx))->p2[((I)self&0x3c)>>INTX];   // read table[primitive][argtype]
    cv=aadocv->cv; adocvfn=aadocv->f;   // fetch the address of the function and the cv
   }else{
-takestats(++scafstats[0x11];)
+takestats(++stats[0x11];)
    // An arg is not BID.  Get the control vector and routine
    I at=AT(a), wt=AT(w);
    self=(A)((I)self&~0x3f);  // remove flags from self
@@ -963,7 +975,7 @@ takestats(++scafstats[0x11];)
  // vbls in use: a w allranks cv jt
  // cv is going to take ~6 cycles to settle, or more if it missed D1$.  We want to do as much as we can before needing to use it.  We can do the agreement test first, and then any input conversions
 
-takestats(if(afwfagreefr>>(2*RANKTX))++scafstats[0x12];)
+takestats(if(afwfagreefr>>(2*RANKTX))++stats[0x12];)
  ASSERTAGREE(AS(a),AS(w),afwfagreefr>>(2*RANKTX));  // outermost (or only) agreement check.  frame is 0 30% of the time, not worth a test for 10 inst
 
  // If op specifies forced input conversion AND if both arguments are non-sparse: convert them to the selected type.
@@ -988,7 +1000,7 @@ takestats(if(afwfagreefr>>(2*RANKTX))++scafstats[0x12];)
  A awlongcr,awlongfr;  // The arg with the longer-or-equal frame.
  {
   if(withprob((RANK2T)afwfagreefr==0,0.98)||unlikely(((ar<<RANKTX)+wr-0x0101)&0x8080)){ // rank 0 0 means no outer frames, sets up faster.  If either arg atomic, take this path since rank can't matter.  We anticipate next step
-takestats(++scafstats[0x13];)
+takestats(++stats[0x13];)
    if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
     awlongcr=(UI)ar<(UI)wr?w:a; awlongfr=(UI)ar<(UI)wr?a:w;   // point to long cell and short cell.  short cell could be either, since it is not used, but it must be mapped to avoid uprogram check and we need short cell here
     zn=AN(awlongcr); m=AN(awlongfr);   // fetch lengths of result and the short arg
@@ -1006,7 +1018,7 @@ takestats(++scafstats[0x13];)
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
     // Heavy register pressure here.
     // vbls needed: cv a w afwfagreefr self
-takestats(++scafstats[0x14];)
+takestats(++stats[0x14];)
    UI4 afwfarwr=((UI4)afwfagreefr<<(2*RANKTX))+(ar<<RANKTX)+wr; wcr=afwfarwr-(US)afwfagreefr;   // afwfarwr=af/wf/anr/wnr, subtract 0/0/af/wf => af/wf/acr/wcr = wcr  afwfagreefr free
    if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
 
@@ -1071,7 +1083,7 @@ takestats(++scafstats[0x14];)
     }
     // vbls needed: a w ak wk cv shortr n nf mf [jt]
     ASSERTAGREE(AS(a)+LANE(wcr,AF), AS(w)+LANE(wcr,WF), LANE(shortr,CSC))  // offset to each cellshape, and cellrank(short cell)  Delay till here to get nf/mf started shortr free
-takestats(++scafstats[0x15];)
+takestats(++stats[0x15];)
     // vbls needed: a w ak wk cv n nf mf  [jt]
     // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
     // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
@@ -1106,7 +1118,7 @@ takestats(++scafstats[0x15];)
      DPMULDE(nf,mf,mf);  // mf is total # iterations
      I zendofst=(mf-1)*(aawwzknfxrz[4]=zn<<rtypebplg(cv));   // set byte offset to z location of last iteration, length of each major z cell
      if(unlikely(zendofst<=0))goto migrate1;  // 0-1 outer loops needed, skip setup for it
-takestats(++scafstats[0x16];)
+takestats(++stats[0x16];)
      aawwzknfxrz[9]=zendofst;
      ak<<=bplg(AT(a)); aawwzknfxrz[0]=ak; wk<<=bplg(AT(w)); aawwzknfxrz[2]=wk;  // convert cell counts to bytes, set cell size
      ak=(cv&VIPWFNOTLONG)?ak:0; aawwzknfxrz[1]=ak; wk=(cv&VIPWFNOTLONG)?0:wk; aawwzknfxrz[3]=wk;  // ak, wk free
@@ -1117,9 +1129,9 @@ takestats(++scafstats[0x16];)
      // migration is possible
      m*=mf; n*=nf;   // propagate mf and nf down
      DPMULDE(nf,mf,mf);  // mf is total # outer loops, to get z length
-takestats(++scafstats[0x17];)
+takestats(++stats[0x17];)
 migrate1: ;  // here if there was 0-1 outer cell, i. e. mf=nf=1 or zn=0.  Rare but worth testing for.
-takestats(++scafstats[0x18];)
+takestats(++stats[0x18];)
      cv|=VIPOFRAMEREQD;  // indicate that the outer frame is needed, even if outer loop is not
      n=n+n+((UI)neq1m<(UI)(cv&VIPWCRLONG));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  Should generate ADC
      n=n+((UI1)(cv&VIPWFNOTLONG)<(UI1)((UI)1<(UI)nf));  // (nf!=1) repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus no flag set yet
@@ -1167,11 +1179,11 @@ takestats(++scafstats[0x18];)
    }else AT(z)=rtype(cv);  // OK to change type of z to match the result, do so
   }
   // Here we are running inplace (25% of the time, in testcases).  Skip over the allocation and its overhead
-takestats(++scafstats[0x20];)
+takestats(++stats[0x20];)
   ASSERT(adocvfn,EVDOMAIN) if(withprob(!(cv&VIPOLOOPREQD),0.8))goto noallonoloop; else goto noalloloop;
  }else{
 allocate:;  // come here if no inplaceable block could have the type changed
-takestats(++scafstats[0x21];)
+takestats(++stats[0x21];)
    // vbls needed: a w zn m cv fr [jt]
   // allocate the result area.  We avoid the subroutine call for the overhead, and to save regs and to avoid needing to calculate zt->bplg->bytes
   I bytes=ALLOBYTESVSZLG(zn,LANE(fr,ZRANK),rtypebplg(cv),0,0);   // never allo C4T
@@ -1212,9 +1224,9 @@ takestats(++scafstats[0x21];)
   // Alternatively, we could execute the loop-with-unroll nf times.  This would misbranch once for the action routine, once at start when there is rank, and at loopend; and would execute the unroll needlessly on the non-loops.
 //   We actually have two versions: no loop/no unroll, and loop nf times.  Each branch misbranches once for the action routine, and 0, 1, or 2 times when there is rank, with no unroll for no-rank. 
   if(withprob(!(cv&VIPOLOOPREQD+VIPOFRAMEREQD),0.8)){   // see if outer loop/frame needed
-takestats(++scafstats[0x22];)
+takestats(++stats[0x22];)
 noallonoloop:;  // when we inplace, here to bypass allo
-takestats(++scafstats[0x23];)
+takestats(++stats[0x23];)
    if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all   zn free
    // no outer loops.  execute once.  This adds a misbranch when the # outer loops changes, but it is made up for by the unrolling of the awz update.  The indirect call will misbranch, usually
    lrc=((AHDR2FN*)adocvfn)AH2A(aawwzknfxrz[5],m,CAV(a),CAV(w),CAV(z),jt);    // run.  Result is EOK normally, otherwise error code, as examined below.  adocvfn could be in a register, or fetched early enough to mispredict fast
@@ -1228,11 +1240,11 @@ takestats(++scafstats[0x23];)
    }
   }else{
    MCISH(AS(z),AS(awlongfr),fru.lanes[frFL]);  // finish copying outer shape   &long frame  len(long frame)     
-takestats(++scafstats[0x24];)
+takestats(++stats[0x24];)
    if(unlikely(!(cv&VIPOLOOPREQD)))goto noallonoloop;  // if we needed frame but no outer loop, go back to no-loop
-takestats(++scafstats[0x25];)
+takestats(++stats[0x25];)
 noalloloop:;  // when we inplace, here to bypass allo
-takestats(++scafstats[0x26];)
+takestats(++stats[0x26];)
    if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all   zn free
    aawwzknfxrz[8]=cv&VRMSK;  // init good composite rc, and transfer output conversion to it.  scaf float as high as possible
    C *zv=CAV(z); C *av=CAV(a); C *wv=CAV(w);   // point to the data.  Get zv settled first because it's tested for boundary in the action routine.
@@ -1774,14 +1786,14 @@ DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 // This entry point supports inplacing
 DF2(jtatomic2){F12IP;A z;
  ARGCHK2(a,w);
-takestats(++scafstats[0x0];)
+takestats(++stats[0x0];)
  I at=AT(a), wt=AT(w); UI ar=AR(a), wr=AR(w); I agreefr; I afwf;
  // Retries of singletons branch back to points at the top.  We must take care to save only what's needed, refetching the rest to save reg spills
  UI jtranks=jt->ranks;  // fetch IRS ranks if any.  Destroyed by the function & thus must be saved
  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank.  scaf float up?
  // singletons dominate the testcases.  We check them before any non-singleton fetches
  I selfflags=(3*at+(wt&FL+INT))&0x3c; I densbid0=((UI)0<(UI)((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL))));  // arg type info; bit0=not singleable
- if(withprob((ar+wr+densbid0)==0,0.7)){takestats(++scafstats[0x1];) agreefr=0; self=(A)((I)self|selfflags); goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
+ if(withprob((ar+wr+densbid0)==0,0.7)){takestats(++stats[0x1];) agreefr=0; self=(A)((I)self|selfflags); goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
  UI selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
  I notoneatom=(AN(a)-1)|(AN(w)-1);  // 0 if both ANs=1
 retryss0:;  // here when an atomic singleton fails.  self has not been touched so we must advance it to the primitive.  We must process as non-rank array, so we have set selfranks=0x3f3f to go through no-rank code, and notoneatom=1
@@ -1793,7 +1805,7 @@ retryss:;  // here when a non-atomic singleton fails.  self has been advanced to
  UI awr=(ar<<RANKTX)+wr;  // composite ranks, needed by va2   0/0/anr/wnr
  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
  // check for non-atomic singletons, which are rare (4% in testcases)
-takestats(if(notoneatom)++scafstats[0x3];) takestats(if(densbid0)++scafstats[0x4];)
+takestats(if(notoneatom)++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
  if(likely((notoneatom|densbid0)!=0)){
   // either not singleton BID, or singleton needing retry: carry on with normal setup
   afwf=selfranks==0?0:afwf;   // if ranks were 0 0, ignore them and shift down to working on frame wrt 0.  afwf=0 signals that case (& happens naturally if there is no frame wrt actual rank).    It uses simpler setup
@@ -1824,7 +1836,7 @@ takestats(if(notoneatom)++scafstats[0x3];) takestats(if(densbid0)++scafstats[0x4
   jteformat(jt,self,a,w,0); RESETRANK;
   RETF(z);
  }else{
-takestats(++scafstats[0x2];)
+takestats(++stats[0x2];)
   // singleton BID, rank>0.  we need the rank of the result.  Rare to come in this way (singletons with rank)
   {I awcr=awr-afwf; agreefr=MAX((UI1)awcr,(UI1)(awcr>>RANKTX))+MAX((UI1)afwf,(UI1)(afwf>>RANKTX));}   // af=max framelen + max rank = resultrank
 forcess:;  // branch point for rank-0 singletons from above, always with atomic result

@@ -987,7 +987,7 @@ A jtra(AD* RESTRICT wd,I t,A sv){I n=AN(wd);
    np0=*++wv;  // fetch next box address.  This fetch settles while the ra() is running
    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 #if AUDITEXECRESULTS
-// if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
+if(np&&AC(np)<0)SEGFAULT;  // contents are never inplaceable
 #endif
    if((np=QCWORD(np))!=0){racontents(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags.
      // a pyx is always recursive; we can increment the pyx's usecount here but we will never go to the contents

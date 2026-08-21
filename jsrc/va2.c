@@ -1788,13 +1788,13 @@ DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 DF2(jtatomic2){F12IP;A z;
  ARGCHK2(a,w);
 takestats(++stats[0x0];)
- I at=AT(a), wt=AT(w); UI ar=AR(a), wr=AR(w); I agreefr; I afwf;
+ I at=AT(a), wt=AT(w); UI awr=(AR(a)<<RANKTX)+AR(w); I agreefr; I afwf;
  // Retries of singletons branch back to points at the top.  We must take care to save only what's needed, refetching the rest to save reg spills
  UI jtranks=jt->ranks;  // fetch IRS ranks if any.  Destroyed by the function & thus must be saved
  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank.
  // singletons dominate the testcases.  We check them before any non-singleton fetches
- I bidcase=3*at+(wt&FL+INT); UI densbid0=(UI)((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL)));  // arg type info (low 2 bits garb.); bit0=not singleable  scaf 0x3c
- if(withprob((ar+wr+densbid0)==0,0.7)){takestats(++stats[0x1];) agreefr=0; goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
+ UI densbid0=(UI)((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL))); I bidcase=3*at+(wt&FL+INT);  // arg type info (low 2 bits garb.); bit0=not singleable  scaf 0x3c
+ if(withprob((awr+densbid0)==0,0.7)){takestats(++stats[0x1];) agreefr=0; goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
  UI selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
  UI notoneatom=(AN(a)-1)|(AN(w)-1);  // 0 if both ANs=1
 retryss0:;  // here when an atomic singleton fails.  self has not been touched so we must advance it to the primitive.  We must process as non-rank array, so we have set selfranks=0x3f3f to go through no-rank code, and notoneatom=1
@@ -1802,7 +1802,7 @@ retryss0:;  // here when an atomic singleton fails.  self has not been touched s
  self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
 retryss:;  // here when a non-atomic singleton fails.  self has been advanced to the primitive, so we have to use the old selfranks and the updated self
  // find frames
- UI awr=(ar<<RANKTX)+wr;  // composite ranks, needed by va2   0/0/anr/wnr
+// obsolete  UI awr=(ar<<RANKTX)+wr;  // composite ranks, needed by va2   0/0/anr/wnr
  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
  // check for non-atomic singletons, which are rare (4% in testcases)
 takestats(if(notoneatom)++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
@@ -1848,10 +1848,10 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
   jtfg=(J)((I)jtfg|JTRETRY);  // indicate that we are retrying the operation.  We must, because jt->jerr is set with the retry code
-  ar=AR(a); wr=AR(w); at=AT(a); wt=AT(w); // restore aw vars so they won't be saved over the call
+  awr=(AR(a)<<RANKTX)+AR(w); // restore aw vars so they won't be saved over the call
   notoneatom=1; bidcase=0; densbid0=1; // disable atomic; set not BID to force the retry through va2.  bidcase immaterial, set to prevent save
-  self=(A)((I)self&~0x3f); // remove flags from self in case we need to use it
-  if(likely(ar+wr==0)){selfranks=R2MAX; goto retryss0;} goto retryss;  // retry.  atomic singletons must advance self (selfranks max to have no frame); others must not, using the incumbent self & selfranks
+// obsolete   self=(A)((I)self&~0x3f); // remove flags from self in case we need to use it
+  if(likely(awr==0)){selfranks=R2MAX; goto retryss0;} goto retryss;  // retry.  atomic singletons must advance self (selfranks max to have no frame); others must not, using the incumbent self & selfranks
   // (no fallthrough here)
  }
 

@@ -43,16 +43,18 @@ static INLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so many
 }
 
 #define SSINGCASE(id,bidenc) ((bidenc)*32+(id))   // encode case/args into one branch value.  To reduce cache footprint of branch table, collect the arg combinations together.  ids are grouped by usage
+#define SSINGCASE4(id,bidenc4) ((bidenc4)*8+(id))   // Same, when case# is * 4
 
 // we know that AN=1 in a and w, which are FL/INT/B01 types.  af is larger arg rank (=rank of result)
-// low 6 bits of self are the encoded operand types, i. e. the routine index to use
-INLINE static A jtssingleton(J jtfg,A a,A w,I af,A self){F12JT;
- void *av=voidAV(a), *wv=voidAV(w), *zv;  // point to the argument values and result.  2 fetches to op addrs, 3 to op values
+// bidcase is the routine index to use * 4
+INLINE static A jtssingleton(J jtfg,A a,A w,I af,A self,I bidcase){F12JT;
 // obsolete  I awip=2*SGNTO0(AC(a))+SGNTO0(AC(w));  // collect inplaceable status for a and w
- I bidcase=(I)self&0x3c; self=(A)((I)self&~0x3f); I opcode=(I)FAV(self)->lu2.lc;  // fetch bidcase from self; restore self; operation#
+// obsolete  I bidcase=(I)self&0x3c; self=(A)((I)self&~0x3f);
+ I opcode=(I)FAV(self)->lu2.lc;  // fetch bidcase from self; restore self; operation#
+ void *av=voidAV(a), *wv=voidAV(w), *zv;  // point to the argument values and result.  2 fetches to op addrs, 3 to op values
  // We are waiting for opcode and data pointers to settle.  We use the idle time to start the reads to calculate inplaceability.  We also start the calculation, to save registers
  I ar=AR(a), wr=AR(w), aflag=AFLAG(a), wflag=AFLAG(w), ac=AC(a), wc=AC(w);  // fetch aw inplaceability
- I caseno=opcode-VA2CBW1111; caseno=caseno<0?0:caseno; caseno&=31; caseno=SSINGCASE(caseno,bidcase>>INTX);  // case # for eventual switch.  Lump all Booleans at 0. &31 to remove comparison flag and to help the compiler
+ I caseno=opcode-VA2CBW1111; caseno=caseno<0?0:caseno; caseno&=31; caseno=SSINGCASE4(caseno,bidcase);  // case # for eventual switch.  Lump all Booleans at 0. &31 to remove comparison flag and to help the compiler
 takestats(++stats[0x8];)
  // probabilities are those observed from the tests
  // if the operation is a rank-0 comparison that can return num[result], don't bother with inplacing.  Inplacing would be
@@ -1791,21 +1793,21 @@ takestats(++stats[0x0];)
  UI jtranks=jt->ranks;  // fetch IRS ranks if any.  Destroyed by the function & thus must be saved
  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank.  scaf float up?
  // singletons dominate the testcases.  We check them before any non-singleton fetches
- I selfflags=(3*at+(wt&FL+INT))&0x3c; I densbid0=((UI)0<(UI)((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL))));  // arg type info; bit0=not singleable
- if(withprob((ar+wr+densbid0)==0,0.7)){takestats(++stats[0x1];) agreefr=0; self=(A)((I)self|selfflags); goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
+ I selfflags=(3*at+(wt&FL+INT))&0x3c; I densbid0=((UI)0<(UI)((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL))));  // arg type info; bit0=not singleable  scaf 0x3c
+ if(withprob((ar+wr+densbid0)==0,0.7)){takestats(++stats[0x1];) agreefr=0; goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
  UI selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
  I notoneatom=(AN(a)-1)|(AN(w)-1);  // 0 if both ANs=1
 retryss0:;  // here when an atomic singleton fails.  self has not been touched so we must advance it to the primitive.  We must process as non-rank array, so we have set selfranks=0x3f3f to go through no-rank code, and notoneatom=1
  selfranks=jtranks==R2MAX?selfranks:jtranks;   // ignore IRS if not given, to get the rank to be used for the execution
  self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
 retryss:;  // here when a non-atomic singleton fails.  self has been advanced to the primitive, so we have to use the old selfranks and the updated self
- self=(A)((I)self+selfflags+densbid0);  // insert arg-type flags into self
  // find frames
  UI awr=(ar<<RANKTX)+wr;  // composite ranks, needed by va2   0/0/anr/wnr
  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
  // check for non-atomic singletons, which are rare (4% in testcases)
 takestats(if(notoneatom)++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
  if(likely((notoneatom|densbid0)!=0)){
+  self=(A)((I)self+selfflags+densbid0);  // insert arg-type flags into self
   // either not singleton BID, or singleton needing retry: carry on with normal setup
   afwf=selfranks==0?0:afwf;   // if ranks were 0 0, ignore them and shift down to working on frame wrt 0.  afwf=0 signals that case (& happens naturally if there is no frame wrt actual rank).    It uses simpler setup
   agreefr=afwf==0?awr:afwf; agreefr=MIN((UI1)agreefr,(UI1)(agreefr>>RANKTX));    // for agreement, we test shorter noun-rank if no frame, shorter frame if there is frame
@@ -1840,7 +1842,7 @@ takestats(++stats[0x2];)
   {I awcr=awr-afwf; agreefr=MAX((UI1)awcr,(UI1)(awcr>>RANKTX))+MAX((UI1)afwf,(UI1)(afwf>>RANKTX));}   // af=max framelen + max rank = resultrank
 forcess:;  // branch point for rank-0 singletons from above, always with atomic result
   // any singleton.  agreefr is the rank of the result, with shape all 1s
-  z=jtssingleton(jtfg,a,w,agreefr,self);   // scaf pass selfflags as parm
+  z=jtssingleton(jtfg,a,w,agreefr,self,selfflags);
   if(likely(z!=0)){RETF(z);}  // normal case is good return; the rest is retry for singletons
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code

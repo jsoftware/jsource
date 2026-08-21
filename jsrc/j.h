@@ -789,6 +789,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define MEMAUDITPCALLENABLE 1     // expression for enabling stack auditing - enable auditing when true and enabled by MEMAUDIT&0x20 || jt->peekdata
 #ifndef AUDITEXECRESULTS
 #define AUDITEXECRESULTS 0    // When set, we go through all execution results to verify recursive and virtual bits are OK, and m nonzero if AC<0
+   // NOTE: when set, this check contents of pyxes and thus interferes with threading tests
+   // Set to 2 to performs scheck on all sparse blocks.  This causes failures in tests that check memory usage
 #endif
 #ifndef FORCEVIRTUALINPUTS
 #define FORCEVIRTUALINPUTS 0  // When 1 set, we make all non-inplaceable noun inputs to executions VIRTUAL.  Tests should still run
@@ -1528,6 +1530,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
  AK(name)=akx; AT(name)=(type); AN(name)=atoms;   \
  ARINIT(name,rank);     \
  if(!(((type)&DIRECT))>0){if(rank==0)AS(name)[0]=0; if((bytes-(offsetof(AD,s[1])-32))&-32)mvc((bytes-(offsetof(AD,s[1])-32))&-32,&AS(name)[1],MEMSET00LEN,MEMSET00);}  \
+      /* bytes is known; the if((bytes is evaluated at compile time */ \
  shapecopier(name,type,atoms,rank,shaape)   \
     \
  }else{erraction;} \
@@ -2158,7 +2161,7 @@ if(likely(_i<3)){z=(_i<1)?1:(_i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else{z=1; NOUNROLL 
 
 // RETF is the normal function return.  For debugging we hook into it
 #if AUDITEXECRESULTS && (FORCEVIRTUALINPUTS==2)
-#define RETF(exp)       A ZZZz = (exp); if (!ZZZz && !jt->jerr) SEGFAULT; auditblock(ZZZz,1,1); ZZZz = virtifnonip(jt,0,ZZZz); R ZZZz;
+#define RETF(exp)       A ZZZz = (exp); if (!ZZZz && !jt->jerr) SEGFAULT; auditblock(jt,ZZZz,1,1); ZZZz = virtifnonip(jt,0,ZZZz); R ZZZz;
 #else
 #if MEMAUDIT&0x3e
 #define RETF(exp)       {A ZZZz = (exp); DEADARG(ZZZz); AUDITZAP(ZZZz) R ZZZz;}

@@ -2,7 +2,7 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: Atomic (Scalar) Dyadic                                           */
-// normal #define takestats(s) s
+// gather stats #define takestats(s) s
 #define takestats(s)
 
 takestats(static int stats[40]={0};)
@@ -51,8 +51,7 @@ INLINE static A jtssingleton(J jtfg,A a,A w,I af,A self){F12JT;
 // obsolete  I awip=2*SGNTO0(AC(a))+SGNTO0(AC(w));  // collect inplaceable status for a and w
  I bidcase=(I)self&0x3c; self=(A)((I)self&~0x3f); I opcode=(I)FAV(self)->lu2.lc;  // fetch bidcase from self; restore self; operation#
  // We are waiting for opcode and data pointers to settle.  We use the idle time to start the reads to calculate inplaceability.  We also start the calculation, to save registers
- I ac=AC(a), aflag=AFLAG(a), ar=AR(a);  // fetch a inplaceability
- I wc=AC(w), wflag=AFLAG(w), wr=AR(w);  // fetch w inplaceability
+ I ar=AR(a), wr=AR(w), aflag=AFLAG(a), wflag=AFLAG(w), ac=AC(a), wc=AC(w);  // fetch aw inplaceability
  I caseno=opcode-VA2CBW1111; caseno=caseno<0?0:caseno; caseno&=31; caseno=SSINGCASE(caseno,bidcase>>INTX);  // case # for eventual switch.  Lump all Booleans at 0. &31 to remove comparison flag and to help the compiler
 takestats(++stats[0x8];)
  // probabilities are those observed from the tests
@@ -1813,7 +1812,7 @@ takestats(if(notoneatom)++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
   afwf+=agreefr<<(2*RANKTX);  // put agreeaf into parm, freeing its register over the call.  afwf is now 0/framelen/af/wf
   NOUNROLL while(1){
    // Run the full dyad, retrying if a retryable error is returned.  self has been modified to point to the actual primitive rather than the rank block
-   z=jtva2(jtfg,a,w,self,afwf);  // execute the verb
+   z=jtva2(jtfg,a,w,self,afwf);  // execute the verb  scaf parms: selfflags, densbid0, unshifted agreefr
    if(likely(z!=0)){RETF(z);}  // normal case is good return
    if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
    jtfg=(J)((I)jtfg|JTRETRY);  // indicate that we are retrying the operation
@@ -1841,7 +1840,7 @@ takestats(++stats[0x2];)
   {I awcr=awr-afwf; agreefr=MAX((UI1)awcr,(UI1)(awcr>>RANKTX))+MAX((UI1)afwf,(UI1)(afwf>>RANKTX));}   // af=max framelen + max rank = resultrank
 forcess:;  // branch point for rank-0 singletons from above, always with atomic result
   // any singleton.  agreefr is the rank of the result, with shape all 1s
-  z=jtssingleton(jtfg,a,w,agreefr,self);
+  z=jtssingleton(jtfg,a,w,agreefr,self);   // scaf pass selfflags as parm
   if(likely(z!=0)){RETF(z);}  // normal case is good return; the rest is retry for singletons
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code

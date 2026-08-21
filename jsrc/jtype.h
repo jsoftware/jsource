@@ -760,6 +760,8 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
    // MUST BE GREATER THAN ANY DIRECT FLAG (not including the SPARSE flag)
 #define AFUPPERTRIX RPARX      // matches RPAR 30
 #define AFUPPERTRI  BIT(AFUPPERTRIX)  // (used in cip.c) This is an upper-triangular matrix
+#define AFUNAUDITABLEX RPARX      // matches RPAR 30 used only when AUDITEXECRESULTS
+#define AFUNAUDITABLE  BIT(AFUNAUDITABLEX)  // set in xdic in values that cannot be audited (always virtual results)
 // NOTE: bit 28 (LPAR) is used to check for freed bufs in DEADARG
 
 #define AFAUDITUCX      32   // this & above is used for auditing the stack (you must run stack audits on a 64-bit system)

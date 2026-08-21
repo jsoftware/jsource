@@ -2009,8 +2009,8 @@ DF2(jtdicstats){F12IP;A z;I r;
  I type=rei0(a);  // get the stat arg
  switch(type){
  case 0: GAT0(z,INT,4,1) IAV1(z)[0]=dic->bloc.cardinality; IAV1(z)[1]=(I)1<<dic->bloc.lgminsiz; IAV1(z)[2]=dic->bloc.maxeles; IAV1(z)[3]=(I)(dic->bloc.hashsiz&0xffffffffff); break; // nkeys
- case 1: r=AR(dic->bloc.keys); RZ(z=virtual(dic->bloc.keys,0,r)) AN(z)=dic->bloc.maxeles*dic->bloc.kaii; AS(z)[0]=dic->bloc.maxeles; MCISH(AS(z)+1,AS(dic->bloc.keys)+1,r-1) break;  // virtual for all keys
- case 2: ASSERT(dic->bloc.vals!=0,EVDOMAIN) r=AR(dic->bloc.vals); RZ(z=virtual(dic->bloc.vals,0,r)) AN(z)=dic->bloc.maxeles*dic->bloc.vaii; AS(z)[0]=dic->bloc.maxeles; MCISH(AS(z)+1,AS(dic->bloc.vals)+1,r-1) break;  // virtual for all vals
+ case 1: r=AR(dic->bloc.keys); RZ(z=virtual(dic->bloc.keys,0,r)) AN(z)=dic->bloc.maxeles*dic->bloc.kaii; AS(z)[0]=dic->bloc.maxeles; MCISH(AS(z)+1,AS(dic->bloc.keys)+1,r-1) if(AUDITEXECRESULTS)AFLAGORLOCAL(z,AFUNAUDITABLE) break;  // virtual for all keys.  block has gaps and cannot be audited
+ case 2: ASSERT(dic->bloc.vals!=0,EVDOMAIN) r=AR(dic->bloc.vals); RZ(z=virtual(dic->bloc.vals,0,r)) AN(z)=dic->bloc.maxeles*dic->bloc.vaii; AS(z)[0]=dic->bloc.maxeles; MCISH(AS(z)+1,AS(dic->bloc.vals)+1,r-1) if(AUDITEXECRESULTS)AFLAGORLOCAL(z,AFUNAUDITABLE) break;  // virtual for all vals
  default: ASSERT(0,EVDOMAIN)
  }
  RETF(z);

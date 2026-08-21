@@ -256,9 +256,9 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
  if(AT(w)==(I)0xdeadbeefdeadbeef)SEGFAULT;
  switch(CTTZ(AT(w))){
  case RATX:  
-  {A*v=AAV(w); DO(2*AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT;);} break;
+  {A*v=AAV(w); DO(2*AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==LIT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT;);} break;
  case XNUMX:
-  {A*v=AAV(w); DO(AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT;);} break;
+  {A*v=AAV(w); DO(AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==LIT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT;);} break;
  case BOXX:
   if(STACKPOS<jt->cstackmin)R;  // boxing may go beyond the stack limit.  Stop auditing then
   if(ISSPARSE(AT(w)))R;  // Sparse boxed is problematical
@@ -284,6 +284,7 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
   break;
  case ASGNX: break;
  default: break; SEGFAULT;
+ }
 }
 
 #endif
@@ -1081,7 +1082,7 @@ RECURSIVERESULTSCHECK
      auditmemchains();  // trap here while we still have the parseline
 #endif
 #if AUDITEXECRESULTS
-     if(pline<=6)auditblock(jt,stack[1].a,1,1);  // () and asgn have already been audited
+     if(pmask567&0b001111111)auditblock(jt,stack[1].a,1,1);  // () and asgn have already been audited
 #endif
 #if MEMAUDIT&0x2
      if((US)pt0ecam!=0 && (AC(QCWORD(stack[0].a))==0 || (AC(QCWORD(stack[0].a))<0 && AC(QCWORD(stack[0].a))!=ACINPLACE+ACUC1)))SEGFAULT; 

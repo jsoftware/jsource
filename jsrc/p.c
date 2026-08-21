@@ -285,6 +285,7 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
  case ASGNX: break;
  default: break; SEGFAULT;
 }
+}
 
 #endif
 
@@ -1081,7 +1082,7 @@ RECURSIVERESULTSCHECK
      auditmemchains();  // trap here while we still have the parseline
 #endif
 #if AUDITEXECRESULTS
-     if(pline<=6)auditblock(jt,stack[1].a,1,1);  // () and asgn have already been audited
+//     if(pline<=6)auditblock(jt,stack[1].a,1,1);  // () and asgn have already been audited
 #endif
 #if MEMAUDIT&0x2
      if((US)pt0ecam!=0 && (AC(QCWORD(stack[0].a))==0 || (AC(QCWORD(stack[0].a))<0 && AC(QCWORD(stack[0].a))!=ACINPLACE+ACUC1)))SEGFAULT; 

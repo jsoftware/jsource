@@ -248,24 +248,21 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
  if(!w)R;
  if(AC(w)<0&&AZAPLOC(w)==0)SEGFAULT;
 // if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&AZAPLOC(w)>=jt->tnextpushp)SEGFAULT;  // requires large NTSTACK
-// if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&((I)AZAPLOC(w)<0x100000||(*AZAPLOC(w)!=0&&*AZAPLOC(w)!=w)))SEGFAULT;  // if no zaploc for inplaceable block, error
+ if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&((I)AZAPLOC(w)<0x100000||(*AZAPLOC(w)!=0&&*AZAPLOC(w)!=w)))SEGFAULT;  // if no zaploc for inplaceable block, error
  I nonrecur = (AT(w)&RECURSIBLE) && ((AT(w)^AFLAG(w))&RECURSIBLE);  // recursible type, but not marked recursive
-// if(AFLAG(w)&AFVIRTUAL && !(AFLAG(w)&AFUNINCORPABLE))if(AFLAG(ABACK(w))&AFVIRTUAL)SEGFAULT;  // make sure e real backer is valid and not virtual
- // if(nonrecur&&!nonrecurok)SEGFAULT;
-// if(AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE)&&!virtok)SEGFAULT;
+ if(AFLAG(w)&AFVIRTUAL && !(AFLAG(w)&AFUNINCORPABLE))if(AFLAG(ABACK(w))&AFVIRTUAL)SEGFAULT;  // make sure e real backer is valid and not virtual
+ if(nonrecur&&!nonrecurok)SEGFAULT;
+ if(AFLAG(w)&(AFVIRTUAL|AFUNINCORPABLE)&&!virtok)SEGFAULT;
  if(AT(w)==(I)0xdeadbeefdeadbeef)SEGFAULT;
  switch(CTTZ(AT(w))){
  case RATX:  
-//  {A*v=AAV(w); DO(2*AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT;);} break;
-  break;
+  {A*v=AAV(w); DO(2*AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT;);} break;
  case XNUMX:
-//  {A*v=AAV(w); DO(AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT;);} break;
-   break;
+  {A*v=AAV(w); DO(AN(w), if(v[i])if(!(((AT(v[i])&NOUN)==INT) && !(AFLAG(v[i])&AFVIRTUAL)))SEGFAULT;);} break;
  case BOXX:
   if(STACKPOS<jt->cstackmin)R;  // boxing may go beyond the stack limit.  Stop auditing then
   if(ISSPARSE(AT(w)))R;  // Sparse boxed is problematical
   if(!(AFLAG(w)&AFNJA)&&!(AUDITEXECRESULTS&&(AFLAG(w)&AFUNAUDITABLE)&&(AFLAG(w)&AFVIRTUAL))){A*wv=AAV(w);
-//   DO(AN(w), if(wv[i]&&(AC(C(wv[i]))<0))SEGFAULT;)
    I acbias=(AFLAG(w)&BOX)!=0;  // subtract 1 if recursive
      // AT of ) looks like a pyx, so we have to test
    if(AFLAG(w)&AFPRISTINE){DO(AN(w), if(QCWORD(wv[i])&&AT(QCWORD(wv[i]))!=RPAR)if(!((AT(CNOERR(QCWORD(wv[i])))&DIRECT)>0))SEGFAULT;)}  // wv[i]&&(AC(w)-acbias)>1|| can't because other uses may be not deleted yet
@@ -283,13 +280,10 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
 #endif
    x = SPA(v,a); if(!(AT(x)&DIRECT))SEGFAULT; x = SPA(v,e); if(!((AT(x)&DIRECT)>0))SEGFAULT; x = SPA(v,i); if(!(AT(x)&DIRECT))SEGFAULT; x = SPA(v,x); if(!(AT(x)&DIRECT))SEGFAULT;
    auditblock(jt,SPA(v,a),nonrecur,0); auditblock(jt,SPA(v,e),nonrecur,0); auditblock(jt,SPA(v,i),nonrecur,0); auditblock(jt,SPA(v,x),nonrecur,0);
-  }else
-//   if(NOUN & (AT(w) ^ (AT(w) & -AT(w))))SEGFAULT;
-  ;
+  }else if(NOUN & (AT(w) ^ (AT(w) & -AT(w))))SEGFAULT;
   break;
  case ASGNX: break;
  default: break; SEGFAULT;
-}
 }
 
 #endif
@@ -1087,7 +1081,7 @@ RECURSIVERESULTSCHECK
      auditmemchains();  // trap here while we still have the parseline
 #endif
 #if AUDITEXECRESULTS
-//     if(pline<=6)auditblock(jt,stack[1].a,1,1);  // () and asgn have already been audited
+     if(pline<=6)auditblock(jt,stack[1].a,1,1);  // () and asgn have already been audited
 #endif
 #if MEMAUDIT&0x2
      if((US)pt0ecam!=0 && (AC(QCWORD(stack[0].a))==0 || (AC(QCWORD(stack[0].a))<0 && AC(QCWORD(stack[0].a))!=ACINPLACE+ACUC1)))SEGFAULT; 

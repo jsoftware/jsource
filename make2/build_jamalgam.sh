@@ -428,6 +428,10 @@ if [ -n "$_ASSERT2" ]; then
  common="$common -D_ASSERT2"
 fi
 
+if [ -n "$AUDITEXECRESULTS" ]; then
+ common="$common -DAUDITEXECRESULTS=$AUDITEXECRESULTS"
+fi
+
 if [ -n "$C_CRC32C" ]; then
  common="$common -DC_CRC32C=$C_CRC32C"
 fi

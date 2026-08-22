@@ -13,9 +13,9 @@ on:
 # if: ${{ false }}
 
 env:
- DEBUGLEVEL: 0
+ DEBUGLEVEL: 3
  OPTL: -O2
- OPTLD: -O2
+ OPTLD: -O0
  NO_UNDEFINED: 1
  _MEMAUDIT: 0
  AUDITEXECRESULTS: 1

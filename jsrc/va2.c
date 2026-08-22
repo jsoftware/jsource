@@ -1794,7 +1794,8 @@ takestats(++stats[0x0];)
  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank.
  // singletons dominate the testcases.  We check them before any non-singleton fetches
  UI densbid0=(UI)((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL))); I bidcase=3*at+(wt&FL+INT);  // arg type info (low 2 bits garb.); bit0=not singleable  scaf 0x3c
- if(withprob((awr+densbid0)==0,0.7)){takestats(++stats[0x1];) agreefr=0; goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
+ if(withprob((awr+densbid0)==0,0.7)){takestats(++stats[0x1];) goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
+ // falling trough, not atomic singleton.
  UI selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
  UI notoneatom=(AN(a)-1)|(AN(w)-1);  // 0 if both ANs=1
 retryss0:;  // here when an atomic singleton fails.  self has not been touched so we must advance it to the primitive.  We must process as non-rank array, so we have set selfranks=0x3f3f to go through no-rank code, and notoneatom=1
@@ -1840,10 +1841,10 @@ takestats(if(notoneatom)++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
  }else{
 takestats(++stats[0x2];)
   // singleton BID, rank>0.  we need the rank of the result.  Rare to come in this way (singletons with rank)
-  {I awcr=awr-afwf; agreefr=MAX((UI1)awcr,(UI1)(awcr>>RANKTX))+MAX((UI1)afwf,(UI1)(afwf>>RANKTX));}   // af=max framelen + max rank = resultrank
-forcess:;  // branch point for rank-0 singletons from above, always with atomic result
-  // any singleton.  agreefr is the rank of the result, with shape all 1s
-  z=jtssingleton(jtfg,a,w,agreefr,self,bidcase);
+  {I awcr=awr-afwf; awr=MAX((UI1)awcr,(UI1)(awcr>>RANKTX))+MAX((UI1)afwf,(UI1)(afwf>>RANKTX));}   // af=max framelen + max rank = resultrank
+forcess:;  // branch point for rank-0 singletons from above, always with atomic result (awr puns to 0)
+  // any singleton.  awr is the rank of the result, with shape all 1s
+  z=jtssingleton(jtfg,a,w,awr,self,bidcase);
   if(likely(z!=0)){RETF(z);}  // normal case is good return; the rest is retry for singletons
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code

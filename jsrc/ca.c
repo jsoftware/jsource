@@ -198,6 +198,13 @@ static DF1(jttallyatopopen){F12IP; A z; ARGCHK1(w); I an=AN(w); I zr=AR(w); GATV
  RETF(z);
 }
 
+// #@$@> y
+static DF1(jtrankatopopen){F12IP; A z; ARGCHK1(w); I an=AN(w); I zr=AR(w); GATV(z,INT,an,AR(w),AS(w)) I *zv=IAVn(zr,z);
+ if(likely(AT(w)&BOX)){A *wv=AAV(w); DO(an, zv[i]=AR(C(wv[i]));)}  // boxed w, copy item ranks
+ else{mvc(an*SZI, zv, SZI, (iotavec-IOTAVECBEGIN));}  // all other like 0:"0
+ RETF(z);
+}
+
 
 // u@v and u@:v
 FORK1(on1cell,0x160)   // u@:v monad
@@ -306,7 +313,7 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
  // special cases of u
  UI mrecip=0;  // used only for m&|@^, where it is non0
 #define IDBIT(c) ((UI8)1<<((c)&0x3f))   // mask for c
-#define SPECAT (IDBIT(CFIT)|IDBIT(CBOX)|IDBIT(CNOT)|IDBIT(CGRADE)|IDBIT(CSLASH)|IDBIT(CPOUND)|IDBIT(CCEIL)|IDBIT(CFLOOR)|IDBIT(CRAZE)|IDBIT(CQUERY)|IDBIT(CQRYDOT)|IDBIT(CICAP)|IDBIT(CAMP)|IDBIT(CSTAR)|IDBIT(CSLDOT)|IDBIT(CQQ)|IDBIT(CEXP))  // mask for all special cases
+#define SPECAT (IDBIT(CFIT)|IDBIT(CBOX)|IDBIT(CNOT)|IDBIT(CGRADE)|IDBIT(CSLASH)|IDBIT(CPOUND)|IDBIT(CCEIL)|IDBIT(CFLOOR)|IDBIT(CRAZE)|IDBIT(CQUERY)|IDBIT(CQRYDOT)|IDBIT(CICAP)|IDBIT(CAMP)|IDBIT(CSTAR)|IDBIT(CSLDOT)|IDBIT(CQQ)|IDBIT(CEXP)|IDBIT(CAT))  // mask for all special cases
  if((I)(SPECAT>>(c&0x3f))&BETWEENC(c,CFIT,CQQ)){
   switch(c&0x3f){   // **** DO NOT add cases without adding them to the SPECAT test above! ****
   case CBOX&0x3f:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f
@@ -318,6 +325,7 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
    if(unlikely((wv->lrr|wv->mr|(~wv->flag&(VISATOMIC1)))==0))if(unlikely(JT(jt,deprecct)!=0))RZ(jtdeprecmsg(jt,8,"(008) f/@g is the same as g when g is atomic\n"));
    break;
   case CPOUND&0x3f:  f1=d==CCOMMA?jtnatoms:f1; f1=d==CDOLLAR?jtrank:f1; f1=d==COPE?jttallyatopopen:f1; break;    // #@,  #@$    #@>
+  case CAT&0x3f:     f1=d==COPE&&FAV(av->fgh[0])->id==CPOUND&&FAV(av->fgh[1])->id==CDOLLAR?jtrankatopopen:f1; break;  // (#@$)@>
   case CSTAR&0x3f:   f1=d==CPOUND?jtisitems:f1; break;  // *@#
   case CFIT&0x3f:
    if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG && (FAV(av->fgh[0])->id&~1)==CFLOOR){  // if w is 2&v, v must be a verb

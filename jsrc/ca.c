@@ -198,6 +198,13 @@ static DF1(jttallyatopopen){F12IP; A z; ARGCHK1(w); I an=AN(w); I zr=AR(w); GATV
  RETF(z);
 }
 
+// #@,@> and #@:,@> y
+static DF1(jtnatomsatopopen){F12IP; A z; ARGCHK1(w); I an=AN(w); I zr=AR(w); GATV(z,INT,an,AR(w),AS(w)) I *zv=IAVn(zr,z);
+ if(likely(AT(w)&BOX)){A *wv=AAV(w); DO(an, zv[i]=AN(C(wv[i]));)}  // boxed w, copy atom counts
+ else{mvc(an*SZI, zv, SZI, (iotavec-IOTAVECBEGIN+1));}  // all other like 1:"0
+ RETF(z);
+}
+
 // #@$@> and #@:$@> y
 static DF1(jtrankatopopen){F12IP; A z; ARGCHK1(w); I an=AN(w); I zr=AR(w); GATV(z,INT,an,AR(w),AS(w)) I *zv=IAVn(zr,z);
  if(likely(AT(w)&BOX)){A *wv=AAV(w); DO(an, zv[i]=AR(C(wv[i]));)}  // boxed w, copy item ranks
@@ -326,7 +333,7 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
    break;
   case CPOUND&0x3f:  f1=d==CCOMMA?jtnatoms:f1; f1=d==CDOLLAR?jtrank:f1; f1=d==COPE?jttallyatopopen:f1; break;    // #@,  #@$    #@>
   case CAT&0x3f:
-  case CATCO&0x3f:   f1=d==COPE&&FAV(av->fgh[0])->id==CPOUND&&FAV(av->fgh[1])->id==CDOLLAR?jtrankatopopen:f1; break;  // (#@$)@>  (#@:$)@>
+  case CATCO&0x3f:   f1=d==COPE&&FAV(av->fgh[0])->id==CPOUND&&FAV(av->fgh[1])->id==CDOLLAR?jtrankatopopen:f1; f1=d==COPE&&FAV(av->fgh[0])->id==CPOUND&&FAV(av->fgh[1])->id==CCOMMA?jtnatomsatopopen:f1; break;  // (#@$)@>  (#@:$)@>  (#@,)@>  (#@:,)@>
   case CSTAR&0x3f:   f1=d==CPOUND?jtisitems:f1; break;  // *@#
   case CFIT&0x3f:
    if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG && (FAV(av->fgh[0])->id&~1)==CFLOOR){  // if w is 2&v, v must be a verb

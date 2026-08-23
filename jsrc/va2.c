@@ -934,14 +934,14 @@ printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i
 static VF repairip[4]={plusBIO, plusIIO, minusBIO, minusIIO};
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, self is the block for this primitive
 // afwf is af/wf, agreefr is frame for outer agreement test, bidcase is combined arg types, densbid0 is 0 if we can use bidcase 
-static INLINE A jtva2(J jtfg,AD *a,AD *w,AD * RESTRICT self,I afwf,I agreefr,I bidcase,UI densbid0){F12IP;
+static INLINE A jtva2(J jtfg,AD *a,AD *w,AD * RESTRICT self,I afwf,I agreefr,I bidcase,UI densbid0,I awr){F12IP;
 takestats(++stats[0x10];)
  A z;I m,mf,n,nf,zn;UI cv;VF adocvfn;VA2 adocv;UI4 fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift  cv is flags value for function, with many local mods
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
  I vandx=__atomic_load_n(&FAV(self)->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
- I ar=AR(a), wr=AR(w);   // noun types & ranks
+// obsolete  I ar=AR(a), wr=AR(w);   // noun types & ranks
  {
-  if(likely(!densbid0)){  // bool/int/fl nonsparse args (always cleared on error retry)
+  if(withprob(!densbid0,0.95)){  // bool/int/fl nonsparse args (always cleared on error retry)
    // Here for the fast and important case, where the arguments are both dense B01/INT/FL
    VA2 *aadocv=&((VA*)((I)va+vandx))->p2[bidcase>>INTX];   // read table[primitive][argtype]
    cv=aadocv->cv; adocvfn=aadocv->f;   // fetch the address of the function and the cv
@@ -1000,19 +1000,27 @@ takestats(if(agreefr)++stats[0x12];)
  // We detect agreement error before domain error
  A awlongcr,awlongfr;  // The arg with the longer-or-equal frame.
  {
-  if(withprob(afwf==0,0.98)||unlikely(((ar<<RANKTX)+wr-0x0101)&0x8080)){ // rank 0 0 means no outer frames, sets up faster.  If either arg atomic, take this path since rank can't matter.  We anticipate next step
+  if(withprob(afwf==0,0.98)||unlikely((awr-0x0101)&0x8080)){ // rank 0 0 means no outer frames, sets up faster.  If either arg atomic, take this path since rank can't matter.  We anticipate next step
 takestats(++stats[0x13];)
    if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
+#if 1
+    fr=awr>>RANKTX; I shortr=(RANKT)awr; I wl=fr-shortr;  // separate ar and wr; wl neg if w long rank
+    awlongcr=wl<0?w:a; awlongfr=wl<0?a:w; shortr=wl<0?fr:shortr; fr=wl<0?(RANKT)awr:fr;  // arg with long cell; other arg
+    zn=AN(awlongcr); m=AN(awlongfr);  // long cell gives len of result, other gives short-arg len
+    I mf=SGNTO0(wl); nf=2*mf+SGNTO0(-wl);  // each arg uninplaceable if short rank
+#else   // obsolete 
     awlongcr=(UI)ar<(UI)wr?w:a; awlongfr=(UI)ar<(UI)wr?a:w;   // point to long cell and short cell.  short cell could be either, since it is not used, but it must be mapped to avoid uprogram check and we need short cell here
     zn=AN(awlongcr); m=AN(awlongfr);   // fetch lengths of result and the short arg
     fr=(UI)ar<(UI)wr?wr:ar; UI shortr=(UI)ar<(UI)wr?ar:wr;   // long frame and short frame
     mf=(UI)(0+((UI)ar<(UI)wr)); nf=(UI)(mf+mf+((UI)wr<(UI)ar));   // set a non-inplaceable if repeated, similar for w   should be ADDC
+#endif
     PRODRNK(n,fr-shortr,AS(awlongcr)+shortr);  // treat the entire operands as one big cell
     cv&=~nf;  // bit 0-1=routine/rank/arg/input inplaceable
     n=2*n+mf;   // parm m if there are multiple inner loops.  The value is 2 * (length of inner loop), with LSB set if x is the repeated value (i. e. w has long frame)
     // frZRANK is fr, frFL and frFLC are both 0
    }else{
     // Sparse setup
+    I ar=awr>>RANKTX, wr=(RANKT)awr;
     R vasp(a,w,FAV(self)->id,adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),0,ar,0,wr,0,MAX(ar,wr));
    }
   }else{I ak,wk;UI wcr;
@@ -1020,7 +1028,7 @@ takestats(++stats[0x13];)
     // Heavy register pressure here.
     // vbls needed: cv a w afwfagreefr self
 takestats(++stats[0x14];)
-   UI4 afwfarwr=(afwf<<(2*RANKTX))+(ar<<RANKTX)+wr; wcr=afwfarwr-afwf;   // afwfarwr=af/wf/anr/wnr, subtract 0/0/af/wf => af/wf/acr/wcr = wcr  afwfagreefr free
+   UI4 afwfarwr=(afwf<<(2*RANKTX))+awr; wcr=afwfarwr-afwf;   // afwfarwr=af/wf/anr/wnr, subtract 0/0/af/wf => af/wf/acr/wcr = wcr  afwfagreefr free
    if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
 
     // wcr is afr/wfr/acr/wcr  afwfarwr is af/wf/anr/wnr
@@ -1795,7 +1803,7 @@ takestats(++stats[0x0];)
  // singletons dominate the testcases.  We check them before any non-singleton fetches
  UI densbid0=(UI)((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL))); I bidcase=3*at+(wt&FL+INT);  // arg type info (low 2 bits garb.); bit0=not singleable  scaf 0x3c
  if(withprob((awr+densbid0)==0,0.7)){takestats(++stats[0x1];) goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
- // falling trough, not atomic singleton.
+ // falling through, not atomic singleton.
  UI selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
  UI notoneatom=(AN(a)-1)|(AN(w)-1);  // 0 if both ANs=1
 retryss0:;  // here when an atomic singleton fails.  self has not been touched so we must advance it to the primitive.  We must process as non-rank array, so we have set selfranks=0x3f3f to go through no-rank code, and notoneatom=1
@@ -1807,7 +1815,7 @@ retryss:;  // here when a non-atomic singleton fails.  self has been advanced to
  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
  // check for non-atomic singletons, which are rare (4% in testcases)
 takestats(if(notoneatom)++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
- if(likely((notoneatom|densbid0)!=0)){
+ if(withprob((notoneatom|densbid0)!=0,0.95)){
 // obsolete   self=(A)((I)self+bidcase+densbid0);  // insert arg-type flags into self
   // either not singleton BID, or singleton needing retry: carry on with normal setup
   afwf=selfranks==0?0:afwf;   // if ranks were 0 0, ignore them and shift down to working on frame wrt 0.  afwf=0 signals that case (& happens naturally if there is no frame wrt actual rank).    It uses simpler setup
@@ -1815,7 +1823,7 @@ takestats(if(notoneatom)++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
 // obsolete   afwf+=agreefr<<(2*RANKTX);  // put agreeaf into parm, freeing its register over the call.  afwf is now 0/framelen/af/wf
   NOUNROLL while(1){
    // Run the full dyad, retrying if a retryable error is returned.  self has been modified to point to the actual primitive rather than the rank block
-   z=jtva2(jtfg,a,w,self,afwf,agreefr,bidcase,densbid0);  // execute the verb  scaf parms: bidcase, densbid0, unshifted agreefr
+   z=jtva2(jtfg,a,w,self,afwf,agreefr,bidcase,densbid0,awr);  // execute the verb  scaf parms: bidcase, densbid0, unshifted agreefr
    if(likely(z!=0)){RETF(z);}  // normal case is good return
    if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
    jtfg=(J)((I)jtfg|JTRETRY);  // indicate that we are retrying the operation

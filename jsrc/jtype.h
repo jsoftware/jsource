@@ -672,9 +672,14 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define ACSET(a,v)      __atomic_store_n(&AC(a),(v),__ATOMIC_RELEASE);  // used when a might be shared, but atomic not needed
 #define ACFAUX(a,v)     AC(a)=(v);  // used when a is known to be a faux block
 #define ACINITZAP(a)    {*AZAPLOC(a)=0; ACINIT(a,ACUC1)}  // effect ra() after allocation, by zapping: used when we are not sure the most-recent value on the stack is a
+// ra() immediately after allocation, when it is known to be the top of the tstack
 #define ACINITUNPUSH(a) {A *pushp=jt->tnextpushp; --pushp; \
                           if(unlikely(((I)pushp&(NTSTACKBLOCK-1))==0)){A *nextp=(A*)*pushp; if(unlikely(nextp!=pushp-1))freetstackallo(jt); pushp=nextp;} /* check start of block and start of allo */ \
                           jt->tnextpushp=pushp; ACINIT(a,ACUC1)}  // effect ra() immediately after allocation, by backing the tpush pointer (like a ZAP but without AM)
+// same, but leave usecount 0.  To be used when the block is to be owned by another block
+#define ACINITUNPUSH0(a) {A *pushp=jt->tnextpushp; --pushp; \
+                          if(unlikely(((I)pushp&(NTSTACKBLOCK-1))==0)){A *nextp=(A*)*pushp; if(unlikely(nextp!=pushp-1))freetstackallo(jt); pushp=nextp;} /* check start of block and start of allo */ \
+                          jt->tnextpushp=pushp; ACINIT(a,0)}  // effect ra() immediately after allocation, by backing the tpush pointer (like a ZAP but without AM)
 #define ACINITZAPRECUR(a,t) {*AZAPLOC(a)=0; ACINIT(a,ACUC1); AFLAG(a)|=(t)&RECURSIBLE;}  // effect ra() immediately after allocation, by zapping, and make the block recursive if possible
 #define ACZAPRA(x)      {if(likely(AC(x)<0)){*AZAPLOC(x)=0 ACIPNO(x);}else ra(x);}
 #define ACX(a)          {AC(a)=ACPERMANENT; AFLAGORLOCAL(a,AT(a)&RECURSIBLE);}   // used only in initializations

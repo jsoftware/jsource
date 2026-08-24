@@ -789,7 +789,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define MEMAUDITPCALLENABLE 1     // expression for enabling stack auditing - enable auditing when true and enabled by MEMAUDIT&0x20 || jt->peekdata
 #ifndef AUDITEXECRESULTS
 #define AUDITEXECRESULTS 0    // When set, we go through all execution results to verify recursive and virtual bits are OK, and m nonzero if AC<0
-   // NOTE: when set, this check contents of pyxes and thus interferes with threading tests
    // Set to 2 to performs scheck on all sparse blocks.  This causes failures in tests that check memory usage
 #endif
 #ifndef FORCEVIRTUALINPUTS

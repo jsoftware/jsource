@@ -1,4 +1,3 @@
-(9!:51) 2    NB. trace execution to stderr
 (9!:14'') 1!:2 [2
 
 GITHUBCI=: 'true'-:2!:5'GITHUB_ACTIONS'

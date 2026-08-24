@@ -238,6 +238,7 @@ C jtjinitt(J jt){
  RZ(jtrnginit(jt)); // thread only
  RZ(jtecvtinit(jt));
  RZ(jtinitfinis(jt));
+ jttraceexc(jt,sc(2));   // debug
  R 1;}
 
 // initialize the master thread for a new instance.  This fills in the JS block, which will remain

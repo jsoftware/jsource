@@ -515,6 +515,12 @@ F1(jtcpufeature){F12IP;
  } else if(!strcasecmp(CAV(w),"INFINITY")) {
   UC dh[2*8];
   R str(16, tohex(dh,(UC*)XINF,8));
+ } else if(!strcasecmp(CAV(w),"AUDITEXECRESULTS")) {
+#ifdef AUDITEXECRESULTS
+  R sc(AUDITEXECRESULTS);
+#else
+  R sc(0);
+#endif
  } else if(!strcasecmp(CAV(w),"DEBUG")) {
 #ifdef DEBUG
   R sc(1);

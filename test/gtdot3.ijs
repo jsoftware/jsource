@@ -65,7 +65,7 @@ wthr nwthreads
 wthr nwthreads
 (>: i. nwthreads) *./@e. > ({.@(3&T.)@'')@(6!:3) t.'' "(0)  (0.6 #~ <:nwthreads), 0.1
 wthr nwthreads
-(((<_1000) #~ <: nwthreads),(>: i. nwthreads);_1001) e.~&> 4 T. ({.@(3&T.)@'')@(6!:3) t.'' "(0) (0.3 #~ <: nwthreads), 2 1  NB. last thread should run in master; earlier ones complete first
+(*9!:56'AUDITEXECRESULTS') +. (((<_1000) #~ <: nwthreads),(>: i. nwthreads);_1001) e.~&> 4 T. ({.@(3&T.)@'')@(6!:3) t.'' "(0) (0.3 #~ <: nwthreads), 2 1  NB. last thread should run in master; earlier ones complete first
 wthr nwthreads
 setth nwthreads=: N   NB. Back to testing many threads
 (nwthreads-1) = 1 T. '' [ 55 T. ''

@@ -263,10 +263,10 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
   if(STACKPOS<jt->cstackmin)R;  // boxing may go beyond the stack limit.  Stop auditing then
   if(ISSPARSE(AT(w)))R;  // Sparse boxed is problematical
   if(!(AFLAG(w)&AFNJA)&&!((AFLAG(w)&AFUNAUDITABLE)&&(AFLAG(w)&AFVIRTUAL))){A*wv=AAV(w);
-   I acbias=(AFLAG(w)&BOX)!=0;  // subtract 1 if recursive
+   I acbias=(AFLAG(w)&BOX)!=0; A bv;  // subtract 1 if recursive; value of 
      // AT of ) looks like a pyx, so we have to test
-   if(AFLAG(w)&AFPRISTINE){DO(AN(w), if(QCWORD(wv[i])&&AT(QCWORD(wv[i]))!=RPAR)if(!((AT(CNOERR(QCWORD(wv[i])))&DIRECT)>0))SEGFAULT;)}  // wv[i]&&(AC(w)-acbias)>1|| can't because other uses may be not deleted yet
-   {DO(AN(w), if(QCWORD(wv[i])&&AT(QCWORD(wv[i]))!=RPAR)auditblock(jt,CNOERR(QCWORD(wv[i])),nonrecur,0););}
+   if(AFLAG(w)&AFPRISTINE){DO(AN(w), if((bv=CNULLNOERR(QCWORD(wv[i])))&&AT(bv)!=RPAR)if(!((AT(bv)&DIRECT)>0))SEGFAULT;)}  // wv[i]&&(AC(w)-acbias)>1|| can't because other uses may be not deleted yet
+   {DO(AN(w), if((bv=CNULLNOERR(QCWORD(wv[i])))&&AT(bv)!=RPAR)auditblock(jt,bv,nonrecur,0););}
   }
   break;
  case VERBX: case ADVX:  case CONJX: 

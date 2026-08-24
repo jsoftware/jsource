@@ -934,7 +934,7 @@ printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i
 static VF repairip[4]={plusBIO, plusIIO, minusBIO, minusIIO};
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, self is the block for this primitive
 // afwf is af/wf, agreefr is frame for outer agreement test, bidcase is combined arg types, densbid0 is 0 if we can use bidcase 
-static INLINE A jtva2(J jtfg,AD *a,AD *w,AD * RESTRICT self,I afwf,I agreefr,I bidcase,UI densbid0,I awr){F12IP;
+static INLINE A jtva2(J jtfg,AD *a,AD *w,AD * RESTRICT self,I afwf,I bidcase,UI densbid0,I awr){F12IP;
 takestats(++stats[0x10];)
  A z;I m,mf,n,nf,zn;UI cv;VF adocvfn;VA2 adocv;UI4 fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift  cv is flags value for function, with many local mods
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
@@ -976,6 +976,7 @@ takestats(++stats[0x11];)
  // vbls in use: a w allranks cv jt
  // cv is going to take ~6 cycles to settle, or more if it missed D1$.  We want to do as much as we can before needing to use it.  We can do the agreement test first, and then any input conversions
 
+ I agreefr=afwf==0?awr:afwf; agreefr=MIN((UI1)agreefr,(UI1)(agreefr>>RANKTX));    // for agreement, we test shorter noun-rank if no frame, shorter frame if there is frame
 takestats(if(agreefr)++stats[0x12];)
  ASSERTAGREE(AS(a),AS(w),agreefr);  // outermost (or only) agreement check.  frame is 0 30% of the time, not worth a test for 10 inst
 
@@ -1026,7 +1027,7 @@ takestats(++stats[0x13];)
   }else{I ak,wk;UI wcr;
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
     // Heavy register pressure here.
-    // vbls needed: cv a w afwfagreefr self
+    // vbls needed: cv a w afwf awr self
 takestats(++stats[0x14];)
    UI4 afwfarwr=(afwf<<(2*RANKTX))+awr; wcr=afwfarwr-afwf;   // afwfarwr=af/wf/anr/wnr, subtract 0/0/af/wf => af/wf/acr/wcr = wcr  afwfagreefr free
    if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
@@ -1796,7 +1797,7 @@ DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 DF2(jtatomic2){F12IP;A z;
  ARGCHK2(a,w);
 takestats(++stats[0x0];)
- I at=AT(a), wt=AT(w); UI awr=(AR(a)<<RANKTX)+AR(w); I agreefr; I afwf;
+ I at=AT(a), wt=AT(w); UI awr=(AR(a)<<RANKTX)+AR(w); I afwf;
  // Retries of singletons branch back to points at the top.  We must take care to save only what's needed, refetching the rest to save reg spills
  UI jtranks=jt->ranks;  // fetch IRS ranks if any.  Destroyed by the function & thus must be saved
  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank.
@@ -1819,16 +1820,15 @@ takestats(if(notoneatom)++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
 // obsolete   self=(A)((I)self+bidcase+densbid0);  // insert arg-type flags into self
   // either not singleton BID, or singleton needing retry: carry on with normal setup
   afwf=selfranks==0?0:afwf;   // if ranks were 0 0, ignore them and shift down to working on frame wrt 0.  afwf=0 signals that case (& happens naturally if there is no frame wrt actual rank).    It uses simpler setup
-  agreefr=afwf==0?awr:afwf; agreefr=MIN((UI1)agreefr,(UI1)(agreefr>>RANKTX));    // for agreement, we test shorter noun-rank if no frame, shorter frame if there is frame
 // obsolete   afwf+=agreefr<<(2*RANKTX);  // put agreeaf into parm, freeing its register over the call.  afwf is now 0/framelen/af/wf
   NOUNROLL while(1){
    // Run the full dyad, retrying if a retryable error is returned.  self has been modified to point to the actual primitive rather than the rank block
-   z=jtva2(jtfg,a,w,self,afwf,agreefr,bidcase,densbid0,awr);  // execute the verb  scaf parms: bidcase, densbid0, unshifted agreefr
+   z=jtva2(jtfg,a,w,self,afwf,bidcase,densbid0,awr);  // execute the verb  scaf parms: bidcase, densbid0, unshifted agreefr
    if(likely(z!=0)){RETF(z);}  // normal case is good return
    if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
    jtfg=(J)((I)jtfg|JTRETRY);  // indicate that we are retrying the operation
-//   self=(A)((I)self|1);  // set 'not BID' flag so we don't use the routine# from self
-   densbid0=1; bidcase=0;  // set 'not BID' flag so we don't use the routine# from self, and clear unneeded bidcase
+// obsolete  self=(A)((I)self|1);  // set 'not BID' flag so we don't use the routine# from self
+   densbid0=1; bidcase=0; awr=(AR(a)<<RANKTX)+AR(w);   // set 'not BID' flag so we don't use the routine# from self, clear unneeded bidcase, reload awr to avoid save
   }
   // We hit an error.  We will format it now because we have the IRS ranks that were used in selfranks.  It might be possible to get the ranks from the self?
   // convert 0 rank back to R2MAX to avoid "0 0 in msg

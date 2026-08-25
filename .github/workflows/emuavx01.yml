@@ -18,6 +18,7 @@ env:
  OPTLD: -O2
  NO_UNDEFINED: 1
  _MEMAUDIT: 0
+ AUDITEXECRESULTS: 0
  USE_PYXES: 0
  USE_EMU_AVX: 1
  RELEASE: ${{ false }}
@@ -87,6 +88,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script/buildga.sh linux x86_64 || exit 1
 
@@ -149,6 +151,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script/buildga.sh linux x86_64 || exit 1
 
@@ -190,6 +193,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script/buildga.sh linux i386 || exit 1
 
@@ -252,6 +256,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script/buildga.sh linux i386 || exit 1
 
@@ -289,6 +294,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script/buildga.sh darwin x86_64 || exit 1
 
@@ -348,6 +354,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script/buildga.sh darwin arm64 || exit 1
 
@@ -407,6 +414,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script/buildga.sh raspberry arm64 || exit 1
 
@@ -468,6 +476,7 @@ jobs:
 #      OPTLD: -O0
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script/buildga.sh raspberry armv6l || exit 1
 
@@ -533,6 +542,7 @@ jobs:
        export OPTLD=${{ env.OPTLD }}
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        export _MEMAUDIT=${{ env._MEMAUDIT }}
+       export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
        script/buildga.sh raspberry arm64 || exit 1
        script/testga.sh raspberry arm64 || exit 1
        cp jlibrary/bin/* j64 || true
@@ -601,6 +611,7 @@ jobs:
        export OPTLD=${{ env.OPTLD }}
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        export _MEMAUDIT=${{ env._MEMAUDIT }}
+       export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
        script/buildga.sh raspberry armv6l || exit 1
        script/testga.sh raspberry armv6l || exit 1
        find j32 -type d -exec chmod a+rwx {} \;
@@ -679,6 +690,7 @@ jobs:
        export OPTLD=${{ env.OPTLD }}
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        export _MEMAUDIT=${{ env._MEMAUDIT }}
+       export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
        script/buildga.sh openbsd x86_64 || exit 1
        script/testga.sh openbsd x86_64 || exit 1
        cp jlibrary/bin/* j64 || true
@@ -745,6 +757,7 @@ jobs:
        export OPTLD=${{ env.OPTLD }}
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        export _MEMAUDIT=${{ env._MEMAUDIT }}
+       export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
        script/buildga.sh openbsd arm64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
@@ -813,6 +826,7 @@ jobs:
        export OPTLD=${{ env.OPTLD }}
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        export _MEMAUDIT=${{ env._MEMAUDIT }}
+       export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
        script/buildga.sh freebsd x86_64 || exit 1
        script/testga.sh freebsd x86_64 || exit 1
        cp jlibrary/bin/* j64 || true
@@ -882,6 +896,7 @@ jobs:
        export OPTLD=${{ env.OPTLD }}
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        export _MEMAUDIT=${{ env._MEMAUDIT }}
+       export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
        script/buildga.sh freebsd arm64 || exit 1
        script/testga.sh freebsd arm64 || exit 1
        cp jlibrary/bin/* j64 || true
@@ -933,6 +948,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script/buildga.sh android arm64 || exit 1
 
@@ -974,6 +990,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script/buildga.sh wasm wasm32 || exit 1
       script/testga.sh wasm wasm32 || exit 1
@@ -1019,6 +1036,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script\buildga.cmd x64
 
@@ -1104,6 +1122,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script\buildga.cmd x86
 
@@ -1189,6 +1208,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script\buildga.cmd arm64
 
@@ -1255,6 +1275,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script\buildga.cmd arm64
 
@@ -1366,6 +1387,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
@@ -1436,6 +1458,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
@@ -1505,6 +1528,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script/buildga.sh windows i386 || exit 1
 
@@ -1574,6 +1598,7 @@ jobs:
       OPTLD: ${{ env.OPTLD }}
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
+      AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
      run: |
       script/buildga.sh windows arm64 || exit 1
 

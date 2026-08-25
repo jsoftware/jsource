@@ -1,4 +1,4 @@
-name: JE
+name: AUDITEXEC
 
 on:
  push:
@@ -18,10 +18,10 @@ env:
  OPTLD: -O2
  NO_UNDEFINED: 1
  _MEMAUDIT: 0
- AUDITEXECRESULTS: 0
+ AUDITEXECRESULTS: 1
  USE_PYXES: 1
  USE_EMU_AVX: 1
- RELEASE: ${{ true }}
+ RELEASE: ${{ false }}
 
 jobs:
 

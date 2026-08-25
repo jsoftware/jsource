@@ -940,40 +940,37 @@ takestats(++stats[0x10];)
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
  I vandx=__atomic_load_n(&FAV(self)->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
 // obsolete  I ar=AR(a), wr=AR(w);   // noun types & ranks
- {
-  if(withprob(!densbid0,0.95)){  // bool/int/fl nonsparse args (always cleared on error retry)
-   // Here for the fast and important case, where the arguments are both dense B01/INT/FL
-   VA2 *aadocv=&((VA*)((I)va+vandx))->p2[bidcase>>INTX];   // read table[primitive][argtype]
-   cv=aadocv->cv; adocvfn=aadocv->f;   // fetch the address of the function and the cv
-  }else{
+ if(withprob(!densbid0,0.95)){  // bool/int/fl nonsparse args (always cleared on error retry)
+  // Here for the fast and important case, where the arguments are both dense B01/INT/FL
+  VA2 *aadocv=&((VA*)((I)va+vandx))->p2[bidcase>>INTX];   // read table[primitive][argtype]
+  cv=aadocv->cv; adocvfn=aadocv->f;   // fetch the address of the function and the cv
+ }else{
 takestats(++stats[0x11];)
-   // An arg is not BID.  Get the control vector and routine
-   I at=AT(a), wt=AT(w);
+  // An arg is not BID.  Get the control vector and routine
+  I at=AT(a), wt=AT(w);
 // obsolete    self=(A)((I)self&~0x3f);  // remove flags from self
-   jtfg=(J)((I)jtfg|(SGNTO0(at|wt)<<JTSPARSEARGX));  // remember if an arg is sparse.
-   adocv=var(self,at&~SPARSE,wt&~SPARSE);
-   if(unlikely(adocv.f==0)){
-    at=AT(a), wt=AT(w);  // refetch type to save a reg
-    // There is no routine for these argument types.  That's an error unless an argument is empty
-    // If an operand is empty, or if the other operand is empty and this one is non-numeric, turn it to Boolean (leaving
-    //  rank and shape untouched).  This change to the other operand is notional only - we won't actually convert
-    // when there is an empty - but it guarantees that execution on an empty never fails.
-    at=((-AN(a)&(-AN(w)|-(at&NUMERIC)))>=0)?B01:at;
-    wt=((-AN(w)&(-AN(a)|-(wt&NUMERIC)))>=0)?B01:wt;
-    adocv=var(self,at&~SPARSE,wt&~SPARSE);   // rerun the decode with safer types
-    adocv.cv&=~VICMSK;  // disable input conversion: if there is an empty we need to; if not we are going to take an error
-    adocv.cv|=VTYPECHGA+VTYPECHGW;  // we don't know whether the verb will change the original type.  Only an empty could be inplaced, so we warn the inplacing code to change the type
-    forcetomemory(aawwzknfxrz);  // make sure we don't try to keep these values in registers
-   }
-   cv=adocv.cv; adocvfn=adocv.f;   // fetch the address of the function and the cv
-   // We could allocate the result block here & avoid the test after the allocation later.  But we would have to check for agreement etc
-   // Don't signal domain error on the types yet, because domain has lower priority than agreement
-   // If we switch a sparse nonnumeric matrix to boolean, that may be a space problem; but we don't
-   // support nonnumeric sparse now
+  jtfg=(J)((I)jtfg|(SGNTO0(at|wt)<<JTSPARSEARGX));  // remember if an arg is sparse.
+  adocv=var(self,at&~SPARSE,wt&~SPARSE);
+  if(unlikely(adocv.f==0)){
+   at=AT(a), wt=AT(w);  // refetch type to save a reg
+   // There is no routine for these argument types.  That's an error unless an argument is empty
+   // If an operand is empty, or if the other operand is empty and this one is non-numeric, turn it to Boolean (leaving
+   //  rank and shape untouched).  This change to the other operand is notional only - we won't actually convert
+   // when there is an empty - but it guarantees that execution on an empty never fails.
+   at=((-AN(a)&(-AN(w)|-(at&NUMERIC)))>=0)?B01:at;
+   wt=((-AN(w)&(-AN(a)|-(wt&NUMERIC)))>=0)?B01:wt;
+   adocv=var(self,at&~SPARSE,wt&~SPARSE);   // rerun the decode with safer types
+   adocv.cv&=~VICMSK;  // disable input conversion: if there is an empty we need to; if not we are going to take an error
+   adocv.cv|=VTYPECHGA+VTYPECHGW;  // we don't know whether the verb will change the original type.  Only an empty could be inplaced, so we warn the inplacing code to change the type
+   forcetomemory(aawwzknfxrz);  // make sure we don't try to keep these values in registers
   }
+  cv=adocv.cv; adocvfn=adocv.f;   // fetch the address of the function and the cv
+  // Don't signal domain error on the types yet, because domain has lower priority than agreement
+  // If we switch a sparse nonnumeric matrix to boolean, that may be a space problem; but we don't
+  // support nonnumeric sparse now
  }
 
- // vbls in use: a w allranks cv jt
+ // vbls in use: a w afwf awr cv jt
  // cv is going to take ~6 cycles to settle, or more if it missed D1$.  We want to do as much as we can before needing to use it.  We can do the agreement test first, and then any input conversions
 
  I agreefr=afwf==0?awr:afwf; agreefr=MIN((UI1)agreefr,(UI1)(agreefr>>RANKTX));    // for agreement, we test shorter noun-rank if no frame, shorter frame if there is frame
@@ -1001,7 +998,7 @@ takestats(if(agreefr)++stats[0x12];)
  // We detect agreement error before domain error
  A awlongcr,awlongfr;  // The arg with the longer-or-equal frame.
  {
-  if(withprob(afwf==0,0.98)||unlikely((awr-0x0101)&0x8080)){ // rank 0 0 means no outer frames, sets up faster.  If either arg atomic, take this path since rank can't matter.  We anticipate next step
+  if(withprob(afwf==0,0.98)||unlikely((awr-0x0101)&0x8080)){ // rank 0 0 means no outer frames, sets up faster.  If either arg atomic, take this path since rank can't matter.
 takestats(++stats[0x13];)
    if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
 #if 1
@@ -1159,7 +1156,7 @@ takestats(++stats[0x18];)
  // Not sparse.
  RESETRANK;  // Ranks are required for sparse, which calls IRS-enabled routines internally.  We clear in case the action routine calls a function with IRS
 
- // vbls needed: a w ak wk cv fr n jt
+ // vbls needed: a w ak wk cv fr n m jt
  // convert (n=#inner loops/a is repeated)/(m=len of inner loop) to m(~(single-loop len), or (#inner loops)/(a is repeated))/aawwzknfxrz[5](garbage, or inner-loop len)
  // n/m are settling here
  aawwzknfxrz[5]=m;  // parm n to action rtn will be orig m, i. e. the length of the inner or only loop.
@@ -1239,7 +1236,7 @@ noallonoloop:;  // when we inplace, here to bypass allo
 takestats(++stats[0x23];)
    if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all   zn free
    // no outer loops.  execute once.  This adds a misbranch when the # outer loops changes, but it is made up for by the unrolling of the awz update.  The indirect call will misbranch, usually
-   lrc=((AHDR2FN*)adocvfn)AH2A(aawwzknfxrz[5],m,CAV(a),CAV(w),CAV(z),jt);    // run.  Result is EOK normally, otherwise error code, as examined below.  adocvfn could be in a register, or fetched early enough to mispredict fast
+   lrc=((AHDR2FN*)adocvfn)AH2A(aawwzknfxrz[5],m,CAV(a),CAV(w),CAV(z),jt);    // run.  Result is EOK normally, otherwise error code, as examined below.  adocvfn could be in a register, or fetched early enough to mispredict fast  scaf! lose AH2A
    if(likely(lrc==EVOK))lrc=cv&VRMSK;  // good return: switch it to output conversion+good rc
    else{
     // section did not complete normally.  Error stays in lrc
@@ -1333,9 +1330,9 @@ retrylrc:;  // exit to here with lrc set to error code when there is an error
    }
    R zz;  // Return the result after overflow has been corrected
   }
-  // retry required, not inplaceable.  Signal the error code to the caller.  If the error is not retryable, set the error message.
+  // falling through, retry required, not inplaceable.  Signal the error code to the caller.  If the error is not retryable, set the error message.
   // The caller will call again with the error set, which will change our selection of processing routines
-  if(lrc<=NEVM)jsignal(lrc);else jt->jerr=(UC)lrc;
+  if(unlikely(lrc<=NEVM))jsignal(lrc);else jt->jerr=(UC)lrc;  // save rc always; if not retryable error, signal the error as failure
  }
 
  R 0;  // return to the caller, who will retry any retryable errors

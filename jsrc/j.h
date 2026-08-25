@@ -1014,6 +1014,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #if C_AVX2 || EMU_AVX2
 // verify that shapes *x and *y match for l axes using AVX for rank<vector size, loop otherwise
 // Strains to stay in 3 registers
+#if 0 // obsolete
 #define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
  {C *aaa, *aab=(C*)&validitymask; I aai=(l)<<LGSZI; __m256i enbmask=_mm256_loadu_si256((__m256i*)(aab+NPAR*SZI+aai)); \
   if(unlikely(aai>NPAR*SZI)){aaa=(C*)(aai&(NPAR*SZI-1)); enbmask=_mm256_loadu_si256((__m256i*)(aab+NPAR*SZI+(I)aaa)); aaa=(C*)(x); aab=(C*)(y); \
@@ -1035,6 +1036,22 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   } \
   _mm256_testz_si256(_mm256_xor_si256(aaaa,aaab),aaam); /* test result is 1 if all match */ \
  })
+#else
+#define TESTAGREE(x,y,l) \
+ ({I *aaa=(x), *aab=(y); I aai=(l); __m256i aaaa,aaab,aaam; \
+  if(likely(aai<=NPAR) || /* normal case of small rank */ \
+   ({ aaam=_mm256_loadu_si256((__m256i*)(validitymask)); /* start testing all words */ \
+   NOUNROLL do{ /* test larger ranks, aborting on error, which test we will repeat */ \
+    aaaa=_mm256_loadu_si256((__m256i *)&aaa[aai-NPAR]); aaab=_mm256_loadu_si256((__m256i *)&aab[aai-NPAR]); \
+    if(!_mm256_testz_si256(_mm256_xor_si256(aaaa,aaab),aaam))break; \
+   }while((aai-=NPAR)>NPAR); \
+   aai; \
+  })<=NPAR){aaaa=_mm256_loadu_si256((__m256i *)(aaa+aai-NPAR)); aaab=_mm256_loadu_si256((__m256i *)(aab+aai-NPAR)); aaam=_mm256_loadu_si256((__m256i*)(validitymask+NPAR+aai));}  /* start of compare, under mask */ \
+ \
+  _mm256_testz_si256(_mm256_xor_si256(aaaa,aaab),aaam); /* test result is 1 if all match */ \
+ })
+#define ASSERTAGREECOMMON(x,y,l,ASTYPE) ASTYPE(TESTAGREE(x,y,l),EVLENGTH)
+#endif
 // set r nonzero if a value in x shape is bigger than corresponding one in y shape
 #define TESTXITEMSMALL(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \

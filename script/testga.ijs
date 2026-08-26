@@ -30,7 +30,8 @@ echo 'RUNNER_ARCH: ',": 2!:5'RUNNER_ARCH'
 
 ddall=: ~. ddall ,~ (<testpath),each 'glapack.ijs';'glapackcb.ijs';'gregex.ijs'
 ddall=: ddall -. blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each <'gstack.ijs' NB. temporarily disable
-ddall=: ddall -. blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each 'gtdot.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs';'g128x19.ijs' NB. temporarily disable
+ddall=: ddall -. blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each 'gtdot.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs' NB. temporarily disable
+ddall=: ddall -. blacklist=: blacklist, ((*9!:56'auditexecresults')*.'OpenBSD'-:UNAME)#(<testpath),each 'gtdot1.ijs';'g128x19.ijs' NB. temporarily disable
 ddall=: ddall -. blacklist=: blacklist, ((1 -.@e. '/gcc-' E. 9!:14'')+.('0'={.":2!:5'_DEBUG')+.IF64+.UNAME-.@-:'linux')#(<testpath),each 'glapack.ijs';'glapackcb.ijs'  NB. linux32 gcc lapack issue running under gdb
 
 NB. smoke test

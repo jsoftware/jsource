@@ -322,7 +322,7 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
 #define IDBIT(c) ((UI8)1<<((c)&0x3f))   // mask for c
 #define SPECAT (IDBIT(CFIT)|IDBIT(CBOX)|IDBIT(CNOT)|IDBIT(CGRADE)|IDBIT(CSLASH)|IDBIT(CPOUND)|IDBIT(CCEIL)|IDBIT(CFLOOR)|IDBIT(CRAZE)|IDBIT(CQUERY)|IDBIT(CQRYDOT)|IDBIT(CICAP)|IDBIT(CAMP)|IDBIT(CSTAR)|IDBIT(CSLDOT)|IDBIT(CQQ)|IDBIT(CEXP)|IDBIT(CAT)|IDBIT(CATCO))  // mask for all special cases
  if((I)(SPECAT>>(c&0x3f))&BETWEENC(c,CFIT,CQQ)){
-  switch(c&0x3f){   // **** DO NOT add cases without adding them to the SPECAT test above! ****
+  switch(c&0x3f){   // **** DO NOT add cases without adding them to the SPECAT test above!   Make sure the added ID is in [CFIT,CQQ] ****
   case CBOX&0x3f:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f
   case CNOT&0x3f:    if(d==CMATCH){f2=jtnotmatch; flag+=VIRS2;} break;
   case CGRADE&0x3f:  if(d==CGRADE){f1=jtranking; flag+=VIRS1;} break;
@@ -333,7 +333,7 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
    break;
   case CPOUND&0x3f:  f1=d==CCOMMA?jtnatoms:f1; f1=d==CDOLLAR?jtrank:f1; f1=d==COPE?jttallyatopopen:f1; break;    // #@,  #@$    #@>
   case CAT&0x3f:
-  case CATCO&0x3f:   f1=d==COPE&&FAV(av->fgh[0])->id==CPOUND&&FAV(av->fgh[1])->id==CDOLLAR?jtrankatopopen:f1; f1=d==COPE&&FAV(av->fgh[0])->id==CPOUND&&FAV(av->fgh[1])->id==CCOMMA?jtnatomsatopopen:f1; break;  // (#@$)@>  (#@:$)@>  (#@,)@>  (#@:,)@>
+  case CATCO&0x3f:   if(unlikely(d==COPE&&FAV(av->fgh[0])->id==CPOUND&&(AT(av->fgh[1])&VERB))){f1=FAV(av->fgh[1])->id==CDOLLAR?jtrankatopopen:f1; f1=FAV(av->fgh[1])->id==CCOMMA?jtnatomsatopopen:f1;} break;  // (#@$)@>  (#@:$)@>  (#@,)@>  (#@:,)@>
   case CSTAR&0x3f:   f1=d==CPOUND?jtisitems:f1; break;  // *@#
   case CFIT&0x3f:
    if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG && (FAV(av->fgh[0])->id&~1)==CFLOOR){  // if w is 2&v, v must be a verb
@@ -439,7 +439,7 @@ F2(jtatco){F12IP;A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1
  flag = ((av->flag&wv->flag)&VNOLOCCHG+VNONAME+VNOSELF);
 #define SPECATCO (IDBIT(CFIT)|IDBIT(CEXP)|IDBIT(CBOX)|IDBIT(CGRADE)|IDBIT(CSLASH)|IDBIT(CPOUND)|IDBIT(CCEIL)|IDBIT(CFLOOR)|IDBIT(CSEMICO)|IDBIT(CNOT)|IDBIT(CQUERY)|IDBIT(CQRYDOT)|IDBIT(CICAP)|IDBIT(CAMP)|IDBIT(CSTAR))  // mask for all special cases
  if(unlikely((I)(SPECATCO>>(c&0x3f))&BETWEENC(c,CFIT,CPOUND))){
-  switch(c&0x3f){   // **** DO NOT add cases without adding them to the SPECATCO test above! ****
+  switch(c&0x3f){   // **** DO NOT add cases without adding them to the SPECATCO test above!  Make sure the added ID is in [CFIT,CPOUND] ****
   case CBOX&0x3f:    flag2 |= (VF2BOXATOP1|VF2BOXATOP2); break;  // mark this as <@f
 #if SLEEF && (C_AVX2 || EMU_AVX2)
   case CEXP&0x3f:    if(d==CPOLY){f2=jtpoly2; flag+=VIRS2+(VFATOPPOLYEXP<<VFATOPPOLYX);} break;   // ^@:p.

@@ -1816,16 +1816,17 @@ takestats(if(notoneatom)++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
  if(withprob((notoneatom|densbid0)!=0,0.95)){
 // obsolete   self=(A)((I)self+bidcase+densbid0);  // insert arg-type flags into self
   // either not singleton BID, or singleton needing retry: carry on with normal setup
-  afwf=selfranks==0?0:afwf;   // if ranks were 0 0, ignore them and shift down to working on frame wrt 0.  afwf=0 signals that case (& happens naturally if there is no frame wrt actual rank).    It uses simpler setup
 // obsolete   afwf+=agreefr<<(2*RANKTX);  // put agreeaf into parm, freeing its register over the call.  afwf is now 0/framelen/af/wf
   NOUNROLL while(1){
+   afwf=selfranks==0?0:afwf;   // if ranks were 0 0, ignore them and shift down to working on frame wrt 0.  afwf=0 signals that case (& happens naturally if there is no frame wrt actual rank).    It uses simpler setup
    // Run the full dyad, retrying if a retryable error is returned.  self has been modified to point to the actual primitive rather than the rank block
-   z=jtva2(jtfg,a,w,self,afwf,bidcase,densbid0,awr);  // execute the verb  scaf parms: bidcase, densbid0, unshifted agreefr
+   z=jtva2(jtfg,a,w,self,afwf,bidcase,densbid0,awr);  // execute the verb
    if(likely(z!=0)){RETF(z);}  // normal case is good return
    if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
    jtfg=(J)((I)jtfg|JTRETRY);  // indicate that we are retrying the operation
 // obsolete  self=(A)((I)self|1);  // set 'not BID' flag so we don't use the routine# from self
-   densbid0=1; bidcase=0; awr=(AR(a)<<RANKTX)+AR(w);   // set 'not BID' flag so we don't use the routine# from self, clear unneeded bidcase, reload awr to avoid save
+   densbid0=1; bidcase=0; awr=(AR(a)<<RANKTX)+AR(w);   // set 'not BID' flag so we don't use the routine# from self, clear unneeded bidcase, reload awr to avoid save.
+   afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  // reload afwf too.  selfranks must be preserved
   }
   // We hit an error.  We will format it now because we have the IRS ranks that were used in selfranks.  It might be possible to get the ranks from the self?
   // convert 0 rank back to R2MAX to avoid "0 0 in msg

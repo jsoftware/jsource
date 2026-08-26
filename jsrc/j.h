@@ -1050,7 +1050,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
  \
   _mm256_testz_si256(_mm256_xor_si256(aaaa,aaab),aaam); /* test result is 1 if all match */ \
  })
-#define ASSERTAGREECOMMON(x,y,l,ASTYPE) ASTYPE(TESTAGREE(x,y,l),EVLENGTH)
 #endif
 // set r nonzero if a value in x shape is bigger than corresponding one in y shape
 #define TESTXITEMSMALL(r,x,y,l) \
@@ -1060,6 +1059,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   }else{NOUNROLL do{--aai; r=0; if(unlikely(aaa[aai]>aab[aai])){r=1; break;}}while(aai);} \
  }
 #else
+#if 0  // obsolete 
 #define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
   if(likely(aai<=2)){ \
@@ -1067,11 +1067,12 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
    ASTYPE(((aaa[0]^aab[0])+(aaa[aai]^aab[aai]))==0,EVLENGTH); \
   }else{ASTYPE(!memcmp(aaa,aab,aai<<LGSZI),EVLENGTH)} \
  }
+#endif
 
 #define TESTAGREE(x,y,l) \
  ({I *aaa=(x), *aab=(y); I aai=(l); \
- NOUNROLL for(--aai;aai>=0;--aai)if(aaa[aai]!=aab[aai])break; \
- aai<0;  /* return 1 if all matched */ \
+ NOUNROLL for(;aai>0;--aai)if(aaa[aai-1]!=aab[aai-1])break; \
+ aai==0;  /* return 1 if all matched */ \
  })
 
 #define TESTXITEMSMALL(r,x,y,l) \
@@ -1079,6 +1080,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   DONOUNROLL(l, if(unlikely(aaa[i]>aab[i])){r=1;break;}) \
  }
 #endif
+#define ASSERTAGREECOMMON(x,y,l,ASTYPE) ASTYPE(TESTAGREE(x,y,l),EVLENGTH)
 #define ASSERTAGREE(x,y,l) ASSERTAGREECOMMON(x,y,l,ASSERT)
 #define ASSERTAGREESEGFAULT (x,y,l) {I *aaa=(x), *aab=(y), aai=(l)-1; do{aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT; --aai; aab=aai<0?aaa:aab; if(aaa[aai]!=aab[aai])SEGFAULT; --aai;}while(aai>=0); }
 // BETWEENx requires that lo be <= hi

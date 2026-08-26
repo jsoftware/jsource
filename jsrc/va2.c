@@ -1328,11 +1328,12 @@ retrylrc:;  // exit to here with lrc set to error code when there is an error
      NOUNROLL while(1){(repairfn)AH2A(n,m,av,zv,zzv,jt); if((I)zv==mend)break; aawwzknfxrz[7]=--jj; jj=REPSGN(jj); zv+=aawwzknfxrz[4]; zzv+=zzk; av+=aawwzknfxrz[2*nipw+1+jj]; jj=aawwzknfxrz[7+jj];}  // jj1 is -1 on the last inner iter, where we use outer incr
     }
    }
-   R zz;  // Return the result after overflow has been corrected
+   R zz;  // Return the repaired result after overflow has been corrected
+  }else{
+   // retry required, not inplaceable.  Signal the error code to the caller.  If the error is not retryable, set the error message.
+   // For retry, the caller will call again with the error set, which will change our selection of processing routines
+   if(unlikely(lrc<=NEVM))jsignal(lrc);else jt->jerr=(UC)lrc;  // save rc always; if not retryable error, signal the error as failure
   }
-  // falling through, retry required, not inplaceable.  Signal the error code to the caller.  If the error is not retryable, set the error message.
-  // The caller will call again with the error set, which will change our selection of processing routines
-  if(unlikely(lrc<=NEVM))jsignal(lrc);else jt->jerr=(UC)lrc;  // save rc always; if not retryable error, signal the error as failure
  }
 
  R 0;  // return to the caller, who will retry any retryable errors

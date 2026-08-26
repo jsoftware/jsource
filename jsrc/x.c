@@ -437,7 +437,7 @@ MN(18,7)  XPRIM(VERB, jtsetpermanent,    0,       VNONAME+VNOSELF,VF2NONE,RMAX,R
 }
 
 // called at initialization after memory reset, to assign cocurrent_z_ and coclass_z_.  The 18!:4 block is at the end of foreignA and is a read-only value
-static __attribute__ ((aligned (8))) char ronames[2][16] = {"cocurrent_z_    " , "coclass_z_      "};  // names to be assigned.  aligned because the hash function overfetches
+static char __attribute__ ((aligned (8))) ronames[2][16] = {"cocurrent_z_    " , "coclass_z_      "};  // names to be assigned.  aligned because the hash function overfetches
 I jtforeignassigninit(J jt){A nm;L *e;
  DO(2, RZ(nm=nfs(strchr(ronames[i],' ')-ronames[i],ronames[i],0)); AFLAG(nm)|=AFRO; symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],jt->global);
      e=probeisres(nm, *JT(jt,zpath)); e->flag|=LREADONLY;  // the assignment is in z, but we need a valid global table as an arg

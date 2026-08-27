@@ -1026,7 +1026,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define TESTAGREE(x,y,l) \
  ({I *aaa=(x), *aab=(y); I aai=(l); __m256i aaaa,aaab,aaam; \
   if(unlikely(aai>NPAR)){ \
-   aaam=_mm256_loadu_si256((__m256i*)(validitymask)); /* start testing all words */ \
+   aaam=_mm256_setone_epi64(); /* start testing all words */ \
    NOUNROLL do{ \
     aaaa=_mm256_loadu_si256((__m256i *)&aaa[aai-NPAR]); aaab=_mm256_loadu_si256((__m256i *)&aab[aai-NPAR]); \
     if(!_mm256_testz_si256(_mm256_xor_si256(aaaa,aaab),aaam))break; \
@@ -1040,7 +1040,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define TESTAGREE(x,y,l) \
  ({I *aaa=(x), *aab=(y); I aai=(l); __m256i aaaa,aaab,aaam; \
   if(likely(aai<=NPAR) || /* normal case of small rank */ \
-   ({ aaam=_mm256_loadu_si256((__m256i*)(validitymask)); /* start testing all words */ \
+   ({ aaam=_mm256_setone_epi64(); /* start testing all words */ \
    NOUNROLL do{ /* test larger ranks, aborting on error, which test we will repeat */ \
     aaaa=_mm256_loadu_si256((__m256i *)&aaa[aai-NPAR]); aaab=_mm256_loadu_si256((__m256i *)&aab[aai-NPAR]); \
     if(!_mm256_testz_si256(_mm256_xor_si256(aaaa,aaab),aaam))break; \

@@ -532,7 +532,7 @@ pipok:;  //
         if(((wlen-wk))<0){RZ(jtsetfv1(jt,w,AT(w))); mvc(wk-wlen,av+wlen,BIT(fgwd&FGLGK),jt->fillv);}
        }
        // Fill has been installed.  Copy in the actual w data, replicating if w is atomic
-       if(!(fgwd&FGWATOMIC)){JMC(av,CAV(w),wlen,1);} else mvc(wk,av,BIT(fgwd&FGLGK),CAV(w));  // no overcopy because there could be fill   scaf use JMC also if no fill, and have fast path for short copy/mvc
+       if(!(fgwd&FGWATOMIC)){JMC(av,CAV(w),wlen,1);} else mvc(wk,av,BIT(fgwd&FGLGK),CAV(w));  // no overcopy because there could be fill
        // a was inplaceable & thus not virtual, but we must clear pristinity from w wherever it is
        PRISTCLRF(w)  // this destroys w!
        // The data has been copied.  No more errors are possible.  It is safe to modify the size of a

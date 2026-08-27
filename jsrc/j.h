@@ -2573,7 +2573,7 @@ typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 #if C_AVX2 && (defined(__clang__) || !defined(_WIN32)) // more precisely, BMI2 support.  MINGW32 gcc missing _pext_u64
 #define PEXT(s,m) _pext_u64((UI)(s),(UI)(m))
 #define PEXT0(s,x,m)  _pext_u64((UI)(s),((UI)(m)<<(x)))  // x is bit#, m must be contiguous starting at bit 0.  x and m should be compile-time constants; otherwise use SHMSK
-// scafdebug #define PEXT0(s,x,m)  ((m)&((m)+1)?SEGFAULT:_pext_u64((UI)(s),((UI)(m)<<(x))))  //use this to ensure masks OK after major changes it bit numbering
+// scafdebug #define PEXT0(s,x,m)  ((m)&((m)+1)?SEGFAULT:_pext_u64((UI)(s),((UI)(m)<<(x))))  //use this to ensure masks OK after major changes in bit numbering
 #define PEXT08(s,x,m) PEXT0(s,x,m)   // must be 8-byte value
 #define PDEP(s,m) _pdep_u64((UI)(s),(UI)(m))
 #else

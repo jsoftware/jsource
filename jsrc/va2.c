@@ -1253,7 +1253,7 @@ takestats(++stats[0x25];)
 noalloloop:;  // when we inplace, here to bypass allo
 takestats(++stats[0x26];)
    if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all   zn free
-   aawwzknfxrz[8]=cv&VRMSK;  // init good composite rc, and transfer output conversion to it.  scaf float as high as possible
+   aawwzknfxrz[8]=cv&VRMSK;  // init good composite rc, and transfer output conversion to it.
    C *zv=CAV(z); C *av=CAV(a); C *wv=CAV(w);   // point to the data.  Get zv settled first because it's tested for boundary in the action routine.
    C *mend=aawwzknfxrz[9]+zv;   // add addr to offset to get addr of last block of z
    // Call the action routines:
@@ -1800,7 +1800,7 @@ takestats(++stats[0x0];)
  UI jtranks=jt->ranks;  // fetch IRS ranks if any.  Destroyed by the function & thus must be saved
  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank.
  // singletons dominate the testcases.  We check them before any non-singleton fetches
- UI densbid0=(UI)((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL))); I bidcase=3*at+(wt&FL+INT);  // arg type info (low 2 bits garb.); bit0=not singleable  scaf 0x3c
+ UI densbid0=(UI)((at|wt)&((NOUN|SPARSE)&~(B01+INT+FL))); I bidcase=3*at+(wt&FL+INT);  // arg type info (low 2 bits garb.); bit0=not singleable
  if(withprob((awr+densbid0)==0,0.7)){takestats(++stats[0x1];) goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
  // falling through, not atomic singleton.
  UI selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive

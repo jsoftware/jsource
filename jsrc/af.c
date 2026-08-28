@@ -135,15 +135,8 @@ cycfound:;  // cycle found, running from cyci to cycn; now back it down to find 
     R (A)(cyc1+1);  // return start of cycle+1, which signals abort
    }
    // self-recursion check finished.  Now replace the name with its value
-// obsolete    A x; RZ(x=symbrdlock(f))   // current value of name; locked name returns a ref to the same name; not found returns error.  If found, value has been ra'd and tpushed.  Error if undefname
-#if 0 // obsolete 
-A x; RZ(x=symbrdlock(f))   // current value of name; locked n
-I isglobal=0;
-#else
-// obsolete    I isglobal=1;  // scaf
    A x; ASSERTN(QCWORD(x=syrd(f,jt->locsyms))!=0,EVVALUE,f);  // read name, returning QCFAOWED semantics.  Error if not defined
    I isglobal; if(isglobal=ISFAOWED(x))tpush(QCWORD(x)); x=QCWORD(x);  // remember if name was public (it can't be sparse, since it is not a noun).  If fa owed, use the tstack for it; remove QC flags
-#endif
    if(unlikely(FUNC&AT(x)&&(jt->glock||FAV(x)->flag&VLOCK)))R w;  // if value is locked, don't replace it - leave the original name
    // since the name is supposed to be executable, we have to guard against a type pun on the name
    ASSERT(PARTOFSPEECHEQACV(AT(w),AT(x)),EVTYPECHG);   // make sure its part of speech has not changed since the name was parsed
@@ -232,7 +225,6 @@ DF2(jtfix){F12IP;PROLOG(0005);A z;
   // a faux INT block to hold the value, and use AM in that block to point to the list of names.  The fauxblock has rank 0 but 2 items
   I namelist[128];  // work area to hold names being fixed.  Only a tiny bit will be used
   fauxblock(fauxself); A augself; fauxINT(augself,fauxself,3,0); IAV0(augself)[0]=reqmask; IAV0(augself)[1]=0; IAV0(augself)[2]=(I)namelist;  // transfer value to writable block; install empty name array
-// obsolete   RZ(z=fixa(augself,AT(a)&VERB+ADV+CONJ?a:symbrdlock(a)));  // name comes from string a
   RZ(z=fixa(augself,a));  // fix as requested.  a must be an ACV now
   // the fixed version may still contain a name, if there was a cycle
  }

@@ -329,7 +329,6 @@
 #define every2(x0,x1,x2)            jtevery2(jt,(x0),(x1),(x2)) 
 #define everysp(x,y)                jteverysp(jt,(x),(y))
 #define evger(x,y)                  jtevger(jt,(x),(y))
-// obsolete #define ex(x)                       jtex(jt,(x))  
 #define exec1(x)                    jtexec1(jt,(x),ds(CEXEC))   
 #define exec2(x,y)                  jtexec2(jt,(x),(y))   
 #define exec2q(x0,x1,x2,x3,x4)      jtexec2q(jt,(x0),(x1),(x2),(x3),(x4)) 

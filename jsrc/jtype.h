@@ -119,7 +119,7 @@ typedef I SI;
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
      // Note: this flag MUST NOT equal BOX, or BOX<<1, or 1 or 2
 #define JTWILLBEOPENED  (((I)1)<<JTWILLBEOPENEDX)
-#define JTRETRYX        6  // in va2, this bit is set to indicate that the current execution is a retry
+#define JTRETRYX        6  // in va1, this bit is set to indicate that the current execution is a retry
 #define JTRETRY         (((I)1)<<JTRETRYX)
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTCOUNTITEMSX   7   // result of this exec will be go into ;, so an item count in m would be helpful
@@ -695,17 +695,6 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #endif
 #define ASGNINPLACESGN(s,w)  (ASGNINPLACENEG(s,w)<0)
 #define ASGNINPLACESGNNJA(s,w)  ASGNINPLACESGN(s,w)
-// obsolete // define virtreqd and set it to 0 to start, and lgatomsini to lg(#atoms of type in an I)
-// obsolete // This is used in apip.  We must ALWAYS allow inplacing for NJA types, but for ordinary inplacing we don't bother if the number of atoms of w pushes a over a power-of-2 boundary
-// obsolete #define EXTENDINPLACENJA(a,w) 
-// obsolete   ( ((AC(a)&((((AN(a)+((NORMAH+1)<<lgatomsini)-1)+AN(w))^(AN(a)+((NORMAH+1)<<lgatomsini)-1))-(AN(a)+((NORMAH+1)<<lgatomsini)-1)))<0) || /* inplaceable value that will probably fit */ 
-// obsolete     (     ((((((AN(a)+((NORMAH+1)<<lgatomsini)-1)+AN(w))^(AN(a)+((NORMAH+1)<<lgatomsini)-1))-(AN(a)+((NORMAH+1)<<lgatomsini)-1))|SGNIF(AFLAG(a),AFNJAX))<0) &&  /* value will probably fit OR is NJA, where any fit MUST be used */
-// obsolete       (jt->zombieval==a || (virtreqd=(AFLAG(a)>>AFKNOWNNAMEDX)&SGNTO0(((AC(a)^ACUC2)|(AFLAG(a)&(AFRO|AFVIRTUAL)))-1),virtreqd>(UI)jt->zombieval)) /* asg-in-place or virt extension.  Remember if virt extension  */ 
-// obsolete         /* virt extension is (x { (a , item)).  We require a to be named so that we know that usecount of 2 means value is stacked only once */ 
-// obsolete         /* we require zombieval=0 so that (a =. b , 5) will not create a virtual that must immediately be realized */ 
-// obsolete         /* the other requirements for inplacing are AC=2 and not VIRTUAL or RO */ 
-// obsolete     )  /* OK to inplace assignment/virtual */ 
-// obsolete   )
 
 // ************************************ Values for AFLAG(x) field of type A ***********************************
 
@@ -808,9 +797,6 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 
 #define SFNSIMPLEONLY 1   // to sfn: return simple name only, discarding any locative
 
-// obsolete #define FIXALOCSONLYLOWEST 4  // to fixa: replace only the first occurrence of u./v. in each branch
-// obsolete #define FIXALOCSONLY 8  // to fixa: replace only u./v. (IMPLOC)
-// obsolete #define FIXAFCOX 5  // starting bit# of options given by f:
 // f./f: flags.  The user's code is converted into a bit mask of these:
 // bits 0-1 are recursion flags
 #define FIXAFCOX 2  // start of bits indicating which names to replace.  Private names are always replaced.

@@ -632,15 +632,6 @@ static DF1(jtpackbytem1){F12IP;
 #ifdef PEXT
  DO((wn+8-1)>>3, zv[i]=PEXT(wv[i],VALIDBOOLEAN8);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
 #else
-// obsolete #if ALIGNREQ & 8
-// obsolete  UI8 wv1;
-// obsolete  DO(((wn+8-1)>>3)-1, wv1=0; memcpy(&wv1, &wv[i], 8);zv[i]=(wv1*(UI8)0x0102040810204080LL)>>(64-8);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
-// obsolete  wv1=0; memcpy(&wv1, &wv[((wn+8-1)>>3)-1], 8);
-// obsolete  zv[((wn+8-1)>>3)-1]=((wv1&VALIDBOOLEAN8)*(UI8)0x0102040810204080LL)>>(64-8);  // mask off invalid bits in last section
-// obsolete #else
-// obsolete  DO(((wn+8-1)>>3)-1, zv[i]=(wv[i]*(UI8)0x0102040810204080LL)>>(64-8);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
-// obsolete  zv[((wn+8-1)>>3)-1]=((wv[((wn+8-1)>>3)-1]&VALIDBOOLEAN8)*(UI8)0x0102040810204080LL)>>(64-8);  // mask off invalid bits in last section
-// obsolete #endif
  DO(((wn+8-1)>>3)-1, zv[i]=(LDUI8(&wv[i])*(UI8)0x0102040810204080LL)>>(64-8);)   // read 8 bits, pack, write out.  This overfetches but does not overstore
  zv[((wn+8-1)>>3)-1]=((LDUI8(&wv[((wn+8-1)>>3)-1])&VALIDBOOLEAN8)*(UI8)0x0102040810204080LL)>>(64-8);  // mask off invalid bits in last section
 #endif

@@ -442,7 +442,6 @@ I jtforeignassigninit(J jt){A nm;L *e;
  DO(2, RZ(nm=nfs((char*)strchr(ronames[i],' ')-ronames[i],(C*)ronames[i],0)); AFLAG(nm)|=AFRO; symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],jt->global);
      e=probeisres(nm, *JT(jt,zpath)); e->flag|=LREADONLY;  // the assignment is in z, but we need a valid global table as an arg
    )
-// obsolete  RZ(nm=nfs(10,,0)); AFLAG(nm)|=AFRO; symbis(nm,(A)&foreignA[(sizeof(foreignA)/sizeof(foreignA[0]))-1],jt->global); e=probeisres(nm, *JT(jt,zpath)); e->flag|=LREADONLY;  // ... 
  R 1;
 }
 

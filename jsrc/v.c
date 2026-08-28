@@ -115,7 +115,6 @@ DF1(jtiota){F12IP;A z;I m,n,*v;
 DF1(jtjico1){F12IP;A y,z;B b;D d,*v;I c,m,n; 
  F1RANK(0,jtjico1,self);  // run on every atom of w
  RZ(y=ccvt(FL,rect(w),0)); v=DAV(y); d=*v;  // convert to complex, d=real part of value
-// obsolete  RE(m=v[1]?i0(cvt(INT,tail(y))):i0(tymes(mag(w),num(2))));  // m=#steps: imaginary part if nonzero; otherwise 2*|w
  m=v[1]?rei0(tail(y)):rei0(tymes(mag(w),num(2)));  // m=#steps: imaginary part if nonzero; otherwise 2*|w
  ASSERT(0<m||!m&&0==d,EVDOMAIN);  // error if imag part was negative, or 0 unless d is also 0
  n=(I)jround(d); b=FFIEQ(d,n); c=(2*ABS(n))/(m?m:1);   // try as integer

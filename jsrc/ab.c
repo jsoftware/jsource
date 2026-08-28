@@ -172,12 +172,12 @@ DF2(jtbitwisechar){F12IP;A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A p,z;I
  ASSERTAGREE(AS(a),AS(w),minr)
  PROD(n,AR(longs)-minr,AS(longs)+minr)  // n=#repeats of low-rank arg
  j=IAV(FAV(fs)->fgh[1])[0]-16;  // fetch boolean fn #
- if(unlikely(a==w))jtfg=(J)((I)jtfg&~(JTINPLACEW+JTINPLACEA));  // remove inplaceability if blocks identical
+ if(unlikely(a==w))goto alloc;  // don't inplace if blocks identical
  // allocate result area, inplace if possible
  if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&~(wr-ar),w))z=w;  // try inplacing w, unless a is longer
  else if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEAX)&~(ar-wr),a))z=a;  // try inplacing a, unless w is longer
- else GATV(z,LIT,zn,AR(longs),AS(longs));  // can't inplace, allocate the result
- bwC[j] AH2A(m,n==1?~m:2*n+b,AV(x),AV(y),AV(z),jt);  // convert m to encoded length/repct
+ else alloc: GATV(z,LIT,zn,AR(longs),AS(longs));  // can't inplace, allocate the result
+ bwC[j](n==1?~m:2*n+b,AV(z),AV(x),AV(y),m,jt);  // convert m to encoded length/repct
  RETF(z);
 }
 

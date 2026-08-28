@@ -14,8 +14,6 @@ static const D pnpwrs[MAXDVAL+1][2]={{1e0, 1e-0}, {1e1, 1e-1}, {1e2, 1e-2}, {1e3
   {1e5, 1e-5}, {1e6, 1e-6}, {1e7, 1e-7}, {1e8, 1e-8}, {1e9, 1e-9}, 
   {1e10, 1e-10}, {1e11, 1e-11}, {1e12, 1e-12}, {1e13, 1e-13}, {1e14, 1e-14},
   {1e15, 1e-15}, {1e16, 1e-16}, {1e17, 1e-17}}; 
-// obsolete static const D ppwrs[10]={1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9};
-// obsolete static const D npwrs[10]={1,1e-1,1e-2,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8,1e-9};
 static const C*pp="<({[";
 static const C*qq=">)}]";
 
@@ -296,10 +294,6 @@ static F2(jtfmtprecomp) {F12IP;A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
    if(wt&INT){
     if(!*iw){*bits|=BITSz; *iv=0;    // set BITSz if value 0, and clear field len
     }else if(d==-1){if(ABS((D)*iw)>2000000000.){*bits|=BITSe; *iv=dpone(*bits,(D)*iw);}else *iv=0;}  // if exponent form allowed, switch to it (by setting BITSe) if |value|>2e9, & save #dps needed as exp form
-// obsolete  *bits |= BITSe * (2000000000L < (UI)ABS(*iw));
-// obsolete    if(d==-1) *iv = dpone(*bits,(D)*iw);    // get # decimal places needed (only if exponent form allowed)
-// obsolete    }else{
-// obsolete    }
    }else{X XN=*(X*)iw;  // must be XNUM.  the value, as X
     if(ISX0(XN))*bits|=BITSz;    // set BITSz if value 0
     else if(d==-1){   // exponent form possible, which would give us decimal places
@@ -379,11 +373,6 @@ static F2(jtfmtprecomp) {F12IP;A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
    if(FL&wt) {D ad=ABS(*dw);  // value
     I ep=1+3; ep=ad>=1e-99?1+2:ep; ep=ad>=1?1:ep; ep=ad>=1e10?2:ep; ep=ad>=1e100?3:ep;  // # exponent places needed
     *iv=2+!!d+d+ep;  // store total # columns needed
-// obsoleteif(ABS(*dw) < 1e-99) *iv=2+!!d+d+1+3;
-// obsolete  else if(ABS(*dw) < 1    ) *iv=2+!!d+d+1+2;
-// obsolete  else if(ABS(*dw) < 1e10 ) *iv=2+!!d+d+  1;
-// obsoleteelse if(ABS(*dw) < 1e100) *iv=2+!!d+d+  2;
-// obsoleteelse  *iv=2+!!d+d+  3;
     if(*dw < 0) { if(mMN) (*iv)+=nMN; else (*iv)++; }
     else if(mPQ) (*iv)+=nPQ;
    } else {D ad, dv;  // exponent form originating from integer (possibly XNUM).  ad is value converted to float
@@ -394,13 +383,6 @@ static F2(jtfmtprecomp) {F12IP;A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
     }
     I ep=1+3; ep=ad>=1e-99?1+2:ep; ep=ad>=1?1:ep; ep=ad>=1e10?2:ep; ep=ad>=1e100?3:ep;  // # exponent places needed
     *iv=2+!!d+d+ep;  // store total # columns needed
-// obsolete #if SY_64
-// obsolete         }
-// obsolete          if ((((UI)*iw)^(UI)REPSGN(*iw))-(UI)REPSGN(*iw) < 10000000000L) *iv=2+!!d+d+  1;  // (UI)ABS(*iw) without signed arithmetic
-// obsolete          else                         *iv=2+!!d+d+  2;
-// obsolete #else
-// obsolete          *iv=2+!!d+d+  1;
-// obsolete #endif
     if(dv < 0) { if(mMN) (*iv)+=nMN; else (*iv)++; }
     else if(mPQ) (*iv) += nPQ;
    }

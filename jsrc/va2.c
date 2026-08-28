@@ -43,13 +43,10 @@ static INLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so many
 }
 
 #define SSINGCASE(id,bidenc) ((bidenc)*32+(id))   // encode case/args into one branch value.  To reduce cache footprint of branch table, collect the arg combinations together.  ids are grouped by usage
-// obsolete #define SSINGCASE4(id,bidenc4) ((bidenc4)*8+(id))   // Same, when case# is * 4
 
 // we know that AN=1 in a and w, which are FL/INT/B01 types.  af is larger arg rank (=rank of result)
 // bidcase is the routine index to use * 4
 INLINE static A jtssingleton(J jtfg,A a,A w,I af,A self,I bidcase){F12JT;
-// obsolete  I awip=2*SGNTO0(AC(a))+SGNTO0(AC(w));  // collect inplaceable status for a and w
-// obsolete  I bidcase=(I)self&0x3c; self=(A)((I)self&~0x3f);
  I opcode=(I)FAV(self)->lu2.lc;  // fetch bidcase from self; restore self; operation#
  void *av=voidAV(a), *wv=voidAV(w), *zv;  // point to the argument values and result.  2 fetches to op addrs, 3 to op values
  // We are waiting for opcode and data pointers to settle.  We use the idle time to start the reads to calculate inplaceability.  We also start the calculation, to save registers
@@ -67,24 +64,15 @@ takestats(++stats[0x9];)
  // and not AFRO if bare; and never UNINCORPABLE since we may change the type and we don't want callers to bear the burden of checking that.  Assign in place is best,
  // because it makes the assignment skip the free
  // Inplacing is fairly common (30% of the non-comparisons), so we make sure there is only one branch to be predicted.
-// obsolete  if(awip&=(I)jtfg){z=awip&JTINPLACEW?w:a; zv=awip&JTINPLACEW?wv:av;   // block is abandoned inplaceable, pick it.  Priority to w
-// obsolete   if(withprob((AFLAG(z)&AFUNINCORPABLE+AFRO)+(af^AR(z))==0,0.9)){goto haszv;}  // not disallowed and correct rank: use it
-// obsolete   if(awip==3){if(withprob((AFLAG(a)&AFUNINCORPABLE+AFRO)+(af^AR(a))==0,0.9)){z=a; zv=av; goto haszv;}}  // if a & w both eligible, check a if w failed
-// obsolete  }
  z=jt->zombieval;  // fetch address of assignand, which we presumptively make the result
  I awip=2*SGNTO0(ac&((aflag&AFUNINCORPABLE+AFRO)+((af-1)-ar)))  // a inplaceability: AC, not (unincorp/AFRO or awr<af)
        +SGNTO0(wc&((wflag&AFUNINCORPABLE+AFRO)+((af-1)-wr)));  // aw inplaceability
  if(withprob(awip&=(I)jtfg,0.3)){z=awip&JTINPLACEW?w:a; zv=awip&JTINPLACEW?wv:av; goto haszv;}
-// obsolete  for(awip&=(I)jtfg;awip;awip&=~LOWESTBIT(awip)){   // args eligible for inplacing
-// obsolete   A zz=awip&JTINPLACEW?w:a; zv=awip&JTINPLACEW?wv:av;  // select the lowest enabled arg
-// obsolete   if(likely(!(AFLAG(zz)&AFUNINCORPABLE+AFRO))&&likely(af==AR(zz))){z=zz; goto haszv;}  // use it if inplaceable
-// obsolete  }
 takestats(++stats[0xa];)
  // See if we can inplace an assignment (z=zombieval).  That is always a good idea, but in the test suite it's very rare so we check after other inplaceability.  Might be more common in user code.
  I asginplacemsk=(2*(a==z)+(w==z))&(I)jtfg;  // mask of reassigned inplaceable args
  if(withprob(asginplacemsk,0.05)){   // one of the args is being reassigned
 takestats(++stats[0xb];)
-// obsolete   if(likely(!(AFLAG(z)&AFVIRTUAL+AFUNINCORPABLE))&&likely(af==AR(z))){zv=asginplacemsk&1?wv:av; goto haszv;}   // mustn't modify type of VIRTUAL or INCORPABLE, and reassigned value must have the higher rank
   if(likely(af==AR(z))){zv=asginplacemsk&1?wv:av; goto haszv;}   // reassigned value must have the higher rank; zombieval must not be VIRT (or UNINCORP)
  }
 takestats(++stats[0xc];)
@@ -453,7 +441,7 @@ bitwiseexit:;
 
  circleresult: ;
  D cirvals[3]={adv,wdv,0.0};  // put ops into memory (0.0 to avoid asan warnings)
- I rc=cirDD AH2A_v(1,cirvals,cirvals+1,cirvals+2,jt); rc=rc<0?EWOVIP+EWOVIPMULII:rc;  // run the routine
+ I rc=cirDD(~1,cirvals+2,cirvals,cirvals+1,0,jt); rc=rc<0?EWOVIP+EWOVIPMULII:rc;  // run the routine
  if(rc==EVOK){SSSTORE(cirvals[2],z,FL,D);}else{jsignal(rc); z=0;} R z;  // Don't change the input block if there is an error.  If there is, post it to the return area
 }
 
@@ -939,7 +927,6 @@ takestats(++stats[0x10];)
  A z;I m,mf,n,nf,zn;UI cv;VF adocvfn;VA2 adocv;UI4 fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift  cv is flags value for function, with many local mods
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
  I vandx=__atomic_load_n(&FAV(self)->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
-// obsolete  I ar=AR(a), wr=AR(w);   // noun types & ranks
  if(withprob(!densbid0,0.95)){  // bool/int/fl nonsparse args (always cleared on error retry)
   // Here for the fast and important case, where the arguments are both dense B01/INT/FL
   VA2 *aadocv=&((VA*)((I)va+vandx))->p2[bidcase>>INTX];   // read table[primitive][argtype]
@@ -948,7 +935,6 @@ takestats(++stats[0x10];)
 takestats(++stats[0x11];)
   // An arg is not BID.  Get the control vector and routine
   I at=AT(a), wt=AT(w);
-// obsolete    self=(A)((I)self&~0x3f);  // remove flags from self
   jtfg=(J)((I)jtfg|(SGNTO0(at|wt)<<JTSPARSEARGX));  // remember if an arg is sparse.
   adocv=var(self,at&~SPARSE,wt&~SPARSE);
   if(unlikely(adocv.f==0)){
@@ -1001,17 +987,10 @@ takestats(if(agreefr)++stats[0x12];)
   if(withprob(afwf==0,0.98)||unlikely((awr-0x0101)&0x8080)){ // rank 0 0 means no outer frames, sets up faster.  If either arg atomic, take this path since rank can't matter.
 takestats(++stats[0x13];)
    if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
-#if 1
     fr=awr>>RANKTX; I shortr=(RANKT)awr; I wl=fr-shortr;  // separate ar and wr; wl neg if w long rank
     awlongcr=wl<0?w:a; awlongfr=wl<0?a:w; shortr=wl<0?fr:shortr; fr=wl<0?(RANKT)awr:fr;  // arg with long cell; other arg
     zn=AN(awlongcr); m=AN(awlongfr);  // long cell gives len of result, other gives short-arg len
     I mf=SGNTO0(wl); nf=2*mf+SGNTO0(-wl);  // each arg uninplaceable if short rank
-#else   // obsolete 
-    awlongcr=(UI)ar<(UI)wr?w:a; awlongfr=(UI)ar<(UI)wr?a:w;   // point to long cell and short cell.  short cell could be either, since it is not used, but it must be mapped to avoid uprogram check and we need short cell here
-    zn=AN(awlongcr); m=AN(awlongfr);   // fetch lengths of result and the short arg
-    fr=(UI)ar<(UI)wr?wr:ar; UI shortr=(UI)ar<(UI)wr?ar:wr;   // long frame and short frame
-    mf=(UI)(0+((UI)ar<(UI)wr)); nf=(UI)(mf+mf+((UI)wr<(UI)ar));   // set a non-inplaceable if repeated, similar for w   should be ADDC
-#endif
     PRODRNK(n,fr-shortr,AS(awlongcr)+shortr);  // treat the entire operands as one big cell
     cv&=~nf;  // bit 0-1=routine/rank/arg/input inplaceable
     n=2*n+mf;   // parm m if there are multiple inner loops.  The value is 2 * (length of inner loop), with LSB set if x is the repeated value (i. e. w has long frame)
@@ -1213,8 +1192,6 @@ takestats(++stats[0x21];)
   // here and the outer later, minimizing misbranches.  We don't mind having instructions piled up before the expected pipeline break for the action routine
   MCISH(AS(z)+fru.lanes[frFL],AS(awlongcr)+fru.lanes[frFLC],fru.lanes[frZRANK]-fru.lanes[frFL]);  // copy inner shape
      // start of cellshape,    shape of long cell+its frame  rank of long cell (zrank-len of long frame)
-// obsolete   MCISH(AS(z),AS(awlongfr),fru.lanes[frFL]);  // copy outer shape
-// obsolete      //      &long frame  len(long frame)     
   // Signal domain error if appropriate.  Must do this after agreement tests
   ASSERT(adocvfn,EVDOMAIN);  // if no function to run even on BOOL args, that's an error.  By waiting till now we hope to keep adocvfn in the call register till end of loop.  We might have allocated a BOOL result block, which is OK
  } 
@@ -1236,14 +1213,12 @@ noallonoloop:;  // when we inplace, here to bypass allo
 takestats(++stats[0x23];)
    if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all   zn free
    // no outer loops.  execute once.  This adds a misbranch when the # outer loops changes, but it is made up for by the unrolling of the awz update.  The indirect call will misbranch, usually
-   lrc=((AHDR2FN*)adocvfn)AH2A(aawwzknfxrz[5],m,CAV(a),CAV(w),CAV(z),jt);    // run.  Result is EOK normally, otherwise error code, as examined below.  adocvfn could be in a register, or fetched early enough to mispredict fast  scaf! lose AH2A
+   lrc=((AHDR2FN*)adocvfn)(m,CAV(z),CAV(a),CAV(w),aawwzknfxrz[5],jt);    // run.  Result is EOK normally, otherwise error code, as examined below.  adocvfn could be in a register, or fetched early enough to mispredict fast
    if(likely(lrc==EVOK))lrc=cv&VRMSK;  // good return: switch it to output conversion+good rc
    else{
     // section did not complete normally.  Error stays in lrc
     aawwzknfxrz[9]=0;  // retry needs the ending offset of result
-// obsolete     if(unlikely(lrc<0)){mulofloloc=((zv-CAV(z))>>LGSZI)+~lrc; aawwzknfxrz[8]=EWOVIP+EWOVIPMULII;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
     if(unlikely(lrc<0)){mulofloloc=~lrc; lrc=EWOVIP+EWOVIPMULII;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
-// obsolete     aawwzknfxrz[8]=lrc;   // remember any other error, which may be retryable.  If error, aa..[8] has the code as well as lrc
    }
   }else{
    MCISH(AS(z),AS(awlongfr),fru.lanes[frFL]);  // finish copying outer shape   &long frame  len(long frame)     
@@ -1269,7 +1244,7 @@ takestats(++stats[0x26];)
     // loop unroll: start calculating the values for the next iteration.  This can run while args are being fetched.
     C *avu=av, *wvu=wv, *zvu=zv;  // the values for this iteration
     aawwzknfxrz[7]=--jj; jj=REPSGN(jj); zv+=aawwzknfxrz[4]; av+=aawwzknfxrz[1+jj]; wv+=aawwzknfxrz[3+jj]; jj=aawwzknfxrz[7+jj]; // jj is -1 on the last inner iter, where we use outer incr
-    lrc=((AHDR2FN*)adocvfn)AH2A(n,m,avu,wvu,zvu,jt);    // run one section.  Result is EOK normally, otherwise error code, as examined below.  After the first time it doesn't matter whether adocvfn is in a reg, since the branch is predicted
+    lrc=((AHDR2FN*)adocvfn)(m,zvu,avu,wvu,n,jt);    // run one section.  Result is EOK normally, otherwise error code, as examined below.  After the first time it doesn't matter whether adocvfn is in a reg, since the branch is predicted
     if(unlikely(lrc!=EVOK)){   // scaf can make EVOK=0
      // section did not complete normally.
      if(unlikely(lrc<0)){mulofloloc=((zv-aawwzknfxrz[4]-CAV(z))>>LGSZI)+~lrc; lrc=EWOVIP+EWOVIPMULII; goto retrylrc;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
@@ -1325,7 +1300,7 @@ retrylrc:;  // exit to here with lrc set to error code when there is an error
      av=CAV(nipw?w:a);  // point to the not-in-place argument
      I nsgn=SGNTO0(n); n^=REPSGN(n); if(nipw==nsgn){m*=n; n=1;} n^=-nipw;  // force n to <=1; make n flag indicate whether args were switched
      I jj=aawwzknfxrz[6]; I mend=aawwzknfxrz[9]+(I)zv;
-     NOUNROLL while(1){(repairfn)AH2A(n,m,av,zv,zzv,jt); if((I)zv==mend)break; aawwzknfxrz[7]=--jj; jj=REPSGN(jj); zv+=aawwzknfxrz[4]; zzv+=zzk; av+=aawwzknfxrz[2*nipw+1+jj]; jj=aawwzknfxrz[7+jj];}  // jj1 is -1 on the last inner iter, where we use outer incr
+     NOUNROLL while(1){(repairfn)(m,zzv,av,zv,n,jt); if((I)zv==mend)break; aawwzknfxrz[7]=--jj; jj=REPSGN(jj); zv+=aawwzknfxrz[4]; zzv+=zzk; av+=aawwzknfxrz[2*nipw+1+jj]; jj=aawwzknfxrz[7+jj];}  // jj1 is -1 on the last inner iter, where we use outer incr
     }
    }
    R zz;  // Return the repaired result after overflow has been corrected
@@ -1781,9 +1756,9 @@ DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
   z=nn&1?z:z1;  // If the number of items is odd, the final result is in original zv, otherwise original zu
  }
  I rc;  // accumulate error returns
- rc=((AHDR2FN*)adocv.f)AH2A_nm(n,m,av,wv,zv,jt); rc=rc<0?EWOVIP+EWOVIPMULII:rc;  // create first result-cell of g
- DQ(nn-1, av-=ak; wv-=wk; I lrc; lrc=((AHDR2FN*)adocv.f)AH2A_nm(n,m,av,wv,yv,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc;
-    lrc=((AHDR2FN*)adocvf.f)AH2A_v(zn,yv,zv,zu,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc; {C* ztemp=zu; zu=zv; zv=ztemp;});  // p==1 means result goes to ping buffer zv
+ rc=((AHDR2FN*)adocv.f)(n==1?~m:2*(n^REPSGN(n))+SGNTO0(n),zv,av,wv,m,jt); rc=rc<0?EWOVIP+EWOVIPMULII:rc;  // create first result-cell of g
+ DQ(nn-1, av-=ak; wv-=wk; I lrc; lrc=((AHDR2FN*)adocv.f)(n==1?~m:2*(n^REPSGN(n))+SGNTO0(n),yv,av,wv,m,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc;
+    lrc=((AHDR2FN*)adocvf.f)(~zn,zu,yv,zv,0,jt); lrc=lrc<0?EWOVIP+EWOVIPMULII:lrc; rc=lrc<rc?lrc:rc; {C* ztemp=zu; zu=zv; zv=ztemp;});  // p==1 means result goes to ping buffer zv
  if(NEVM<(rc&255)){z=jtupon2cell(jtfg,a,w,self);}else{if(rc&255)jsignal(rc);}  // if overflow, revert to old-fashioned way.  If p points to ping, prev result went to pong, make pong the result
  RE(0); RETF(z);
 }    /* a f/@:g w where f and g are atomic*/
@@ -1810,28 +1785,22 @@ retryss0:;  // here when an atomic singleton fails.  self has not been touched s
  self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
 retryss:;  // here when a non-atomic singleton fails.  self has been advanced to the primitive, so we have to use the old selfranks and the updated self
  // find frames
-// obsolete  UI awr=(ar<<RANKTX)+wr;  // composite ranks, needed by va2   0/0/anr/wnr
  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
  // check for non-atomic singletons, which are rare (4% in testcases)
 takestats(if(notoneatom)++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
  if(withprob((notoneatom|densbid0)!=0,0.95)){
-// obsolete   self=(A)((I)self+bidcase+densbid0);  // insert arg-type flags into self
   // either not singleton BID, or singleton needing retry: carry on with normal setup
-// obsolete   afwf+=agreefr<<(2*RANKTX);  // put agreeaf into parm, freeing its register over the call.  afwf is now 0/framelen/af/wf
   NOUNROLL while(1){
    afwf=selfranks==0?0:afwf;   // if ranks were 0 0, ignore them and shift down to working on frame wrt 0.  afwf=0 signals that case (& happens naturally if there is no frame wrt actual rank).    It uses simpler setup
    // Run the full dyad, retrying if a retryable error is returned.  self has been modified to point to the actual primitive rather than the rank block
    z=jtva2(jtfg,a,w,self,afwf,bidcase,densbid0,awr);  // execute the verb
    if(likely(z!=0)){RETF(z);}  // normal case is good return
    if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
-   jtfg=(J)((I)jtfg|JTRETRY);  // indicate that we are retrying the operation
-// obsolete  self=(A)((I)self|1);  // set 'not BID' flag so we don't use the routine# from self
    densbid0=1; bidcase=0; awr=(AR(a)<<RANKTX)+AR(w);   // set 'not BID' flag so we don't use the routine# from self, clear unneeded bidcase, reload awr to avoid save.
    afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  // reload afwf too.  selfranks must be preserved
   }
   // We hit an error.  We will format it now because we have the IRS ranks that were used in selfranks.  It might be possible to get the ranks from the self?
   // convert 0 rank back to R2MAX to avoid "0 0 in msg
-// obsolete   self=(A)((I)self&~0x3f);  // remove flags from self
   jt->ranks=selfranks?selfranks:R2MAX;
   if(FAV(self)->flag&VWASUNARY){  // originally monadic shorthand?
    // the verb was translated from a unary shorthand like -: to 0.5 * .  We must translate back for display.
@@ -1855,10 +1824,8 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
   if(likely(z!=0)){RETF(z);}  // normal case is good return; the rest is retry for singletons
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
-  jtfg=(J)((I)jtfg|JTRETRY);  // indicate that we are retrying the operation.  We must, because jt->jerr is set with the retry code
   awr=(AR(a)<<RANKTX)+AR(w); // restore aw vars so they won't be saved over the call
   notoneatom=1; bidcase=0; densbid0=1; // disable atomic; set not BID to force the retry through va2.  bidcase immaterial, set to prevent save
-// obsolete   self=(A)((I)self&~0x3f); // remove flags from self in case we need to use it
   if(likely(awr==0)){selfranks=R2MAX; goto retryss0;} goto retryss;  // retry.  atomic singletons must advance self (selfranks max to have no frame); others must not, using the incumbent self & selfranks
   // (no fallthrough here)
  }
@@ -1948,14 +1915,6 @@ VA2 jtvar(J jt,A self,I at,I wt){
   }
   // falling through the operation is on the main numeric types.  Sparse, probably.
   R vainfo->p2[(at*3+(wt&INT+FL))>>INTX];  // this normal case was tested for in va2() so it's not likely here
-#if 0  // obsolete 
-   I cpri=(at<<2+wt)>>C2TX;  // priority if character
-   VA2 *base=&eqnetbl[opchar&1];  // table line if character
-   I npri=((UI8)0xedffcbf8a9ffffffLL>>(MAX(apri,wpri)<<2);  // priority if numeric
-   base=t&(NOUN&~NUMERIC)?base:(VA2*)vainfo; cpri=t&(NOUN&~NUMERIC)?cpri:npri;  // base and priority to use
-   if(likely(HOMO(at,wt)){cpri=at&BOX?0b0011:cpri;
-   R base[cpri];  // return the routine
-#endif
  }else{VA2 retva2;
   // Here there was an error in a previous run.  We see if we have a way to retry the operation
   retva2.f=0;  // error if not filled in

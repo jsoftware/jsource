@@ -711,7 +711,6 @@ bodyend: ;  // we branch to here to exit with z set to result
    DC d; RZ(d=deba(DCPM+(~bic<<8)+((NPGpysfmtdl<<(7-6))&SHMSK(~(I)jtfg,JTXDEFMODIFIERX-7,128)),locsym,AAV1(sv->fgh[2])[HN*PEXT0(NPGpysfmtdl,6,1)],self));  // push a debug frame for this error.  We know we didn't free locsym
    RETF(0)
   }
-// obsolete   tpop(_ttop);
  }
 
  // locsym may have been freed now, if it was cloned and there was no error.

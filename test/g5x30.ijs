@@ -219,6 +219,8 @@ u1 =: (u: 16b03c0),'r2'
 
 'index error'  -: (3 10 10 9) 5!:_1 etx 4 5 6
 
+(17 $ LF) -: (0 60 20 20) 5!:_1 ] 6 2 0 $ 2
+
 NB. decorations in emsg
 f =: {{
 try. ". y

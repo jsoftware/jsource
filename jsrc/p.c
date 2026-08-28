@@ -248,7 +248,6 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
  if(!w)R;
  if(AC(w)<0&&AZAPLOC(w)==0)SEGFAULT;
 // if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&AZAPLOC(w)>=jt->tnextpushp)SEGFAULT;  // requires large NTSTACK
-// obsolete  if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&((I)AZAPLOC(w)<0x100000||(*AZAPLOC(w)!=0&&*AZAPLOC(w)!=w)))SEGFAULT;  // if no zaploc for inplaceable block, error
  if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&((*AZAPLOC(w)!=0&&*AZAPLOC(w)!=w)))SEGFAULT;  // if no zaploc for inplaceable block, error
  I nonrecur = (AT(w)&RECURSIBLE) && ((AT(w)^AFLAG(w))&RECURSIBLE);  // recursible type, but not marked recursive
  if(AFLAG(w)&AFVIRTUAL && !(AFLAG(w)&AFUNINCORPABLE))if(AFLAG(ABACK(w))&AFVIRTUAL)SEGFAULT;  // make sure e real backer is valid and not virtual
@@ -272,8 +271,6 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
   break;
  case VERBX: case ADVX:  case CONJX: 
   {V*v=FAV(w); DO(3, if(v->fgh[i])auditblock(jt,CNOERR(v->fgh[i]),nonrecur,0);)} break;
-// obsolete    auditblock(jt,CNOERR(v->fgh[1]),nonrecur,0);
-// obsolete    auditblock(jt,CNOERR(v->fgh[2]),nonrecur,0);
  case B01X: case INTX: case FLX: case CMPXX: case QPX: case LITX: case C2TX: case C4TX: case NAMEX: case SYMBX: case CONWX: case INT2X: case INT4X:  // direct forms, but possibly sparse
   if(ISSPARSE(AT(w))){P*v=PAV(w);  A x;
 #if AUDITEXECRESULTS > 1
@@ -851,7 +848,6 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
         // not settle for 10 clocks.  We very much want to keep executing during the settlement so we don't want to risk a misprediction.  We should be executing
         // well into tpop* before zval settles.
         if(unlikely(AFLAG(zval)&AFVIRTUAL+AFRO+AFNJA)){zval=AFLAG(zval)&AFVIRTUAL+AFRO?0:zval;} else zval=AC(zval)==targc?zval:0;  // never if r/o or virtual; always if NJA; otherwise if AC right
-// obsolete         I af=AFLAG(zval); zval=AC(zval)==((I)PEXT0(af,AFNJAX,1)+targc)?zval:0; zval=af&(AFRO|AFVIRTUAL)?0:zval;  // OK if count right, and not R-O/VIRT
 anchoredip:;  // here when we have detected that an anchored name is inplaceable
         jt->zombieval=zval;
        }

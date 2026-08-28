@@ -568,7 +568,6 @@ DF2(jtfrom){F12IP;A z;
   PROLOG(000);
   // Handle the simple case of unboxed atom { array, and no frame: single cell
   // We don't process NJA through here because it might create a virtual block & we don't want NJAs rendered unmodifiable by virtual blocks
- // obsolete  if(!((at&BOX)+ar+(SGNTO0((((RANKT)jt->ranks-wr)|(wr-1))))+(AFLAG(w)&AFNJA))){   // if AR is unboxed atom and w has no frame
   if(!((at&BOX)+ar+(SGNTO0((((RANKT)jt->ranks-wr)|(wr-1)))))&&likely(!(AFLAG(w)&AFNJA))){   // if AR is unboxed atom and w has no frame
    I av;  // selector value
    if(likely(at&(B01|INT))){av=BIV0(a);  // B01/INT index.  We don't set at=INT for B01 because we aren't sure it's OK to overwrite a, which might be NJA.  Questionable analysis.

@@ -203,10 +203,6 @@ DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
     // The itemcount is the sum of the itemcounts; but if the ranks are different, use 1 for the shorter; and if both ranks are 0, the item count is 2
     // empty items are OK: they just have 0 length but their shape follows the normal rules
     I si=AS(s)[0]; si=ar==wr?si:1; si+=AS(l)[0]; si=lr==0?2:si; lr=lr==0?1:lr; ASSERT(si>=0,EVLIMIT);  // get short item count; adjust to 1 if lower rank; add long item count; check for overflow; adjust if atom+atom
-// obsolete       // The a block may be being extended in another thread.  We ensure that AS[0] is incremented AFTER AN to ensure that our allocation is adequate.  This can happen only if the apip started before we locked the block for this thread
-// obsolete     I alen=AN(a);  // ensure our copy matches the allocation even if AN incremented during allocation
-// obsolete     if(lr==1)alen=si-AN(w);  // if lr==1, the atom count calculated from the shapes (si) may lag behind that from the atom counts (AN(a)+AN(w)).  Override AN
-// obsolete       // this is questionable, since a is malformed and we leave it that way.  But there is no real alternative.  We hope the user will realize that the lengthening a is invalid.
     GA(z,t&NOUN,an+AN(w),lr,AS(l)); AS(z)[0]=si; C *x=CAVn(lr,z);   // install # items after copying shape, mark result in tstack
     if(unlikely(t&RPAR)){A zt; RZ(zt=cvt(t&NOUN,t&CONJ?a:w)) a=t&CONJ?zt:a; w=t&CONJ?w:zt;}   // convert the discrepant argument to type t
     I klg=bplg(t); an<<=klg; I wlen=AN(w)<<klg;  // arg sizes in bytes
@@ -430,7 +426,6 @@ F2(jtapip){F12IP;A h;
  // In both cases we require the inplaceable bit in jt, so that a =: (, , ,) a  , which has zombieval set, will inplace only the last append
  // Allow only DIRECT and BOX types, to simplify usecounting (we don't have to EPILOG for RAT/XNUM)
  if((SGNIF((I)jtfg,JTINPLACEAX)&-ar&~(ar-wr)&~jtrm)<0){  // inplaceable, ar!=0, wr<=ar, ranks=MAX, all close at hand  scaf! but virt exten is OK even if noninplaceable
-// obsolete   UI virtreqd=0;  // the inplacing test sets this if the result must be virtual
    // collect some values into a flags register
 #define FGLGK 0x7
 #define FGVIRTREQDX 3    // if virtual extension required
@@ -456,8 +451,6 @@ F2(jtapip){F12IP;A h;
       // if we supported public names, whose usecount is 2 after stacking, we would NOT support private names and in fact would give invalid extensions on them; (2) virt extension is not threadsafe because it does not lock
       // the block it is extending
   if(likely((nhi^nlo)>ncmp))goto noapip; fgwd|=FGVIRTREQD;   // skip if virt extension not allowed; remember if it is
-// obsolete     ;  /* OK to inplace assignment/virtual */ 
-// obsolete   if(EXTENDINPLACENJA(a,w) && 
 pipok:;  // 
   if(likely(at&(DIRECT|BOX)) && likely(!ISSPARSE(AT(w)))){  // We need DIRECT or BOX args, and not sparse (a cannot be sparse
    fgwd|=((ar-wr)<<FGARMINUSWRX) + FGWNOCELLFILL + FGWNOFILL + ((wr-1)&FGWATOMIC);  // collect flags.  If item of a has higher rank than w, force fill
@@ -470,7 +463,6 @@ pipok:;  //
     // result is pristine if a and w both are, and they are not the same block, and there is no fill, w is abandoned and not atomic
     fgwd|=((((I)jtfg>>JTINPLACEWX)&SGNTO0(AC(w)&-wr))<<AFPRISTINEX)&AFLAG(w);  // set if w qualifies as pristine before extension
     if(unlikely(a==w))fgwd&=~AFPRISTINE;   // not pristine if the other block is the same
-// obsolete     an&=virtreqd-1;  // turn off inplacing if the result must be virtual
     if(unlikely(fgwd&FGVIRTREQD))goto noapip;  // box cannot be virtual extension, because no one would free the extension boxes
     ra0(w);  // ensure w is recursive usecount.  This will be fast if w has 1=L.
     if(unlikely(AC(a)>ac))goto noapip;    // turn off inplacing if w referred to a

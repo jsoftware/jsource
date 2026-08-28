@@ -16,7 +16,7 @@
 #define SSINGENC(type) ((type)>>INTX)
 #define SSINGCASE(id,subtype) (3*(id)+(subtype))   // encode case/args into one branch value
 
-NOINLINE static A jtssingleton1(J jtfg, A w,I caseno){F12JT;A z;void *zv;
+INLINE static A jtssingleton1(J jtfg, A w,I caseno){F12JT;A z;void *zv;
  I ar=AR(w);
  // Start loading everything we will need as values before the pipeline break.  Tempting to convert int-to-float as well, but perhaps it will predict right?
  I wiv=IAV(w)[0],ziv;
@@ -293,7 +293,7 @@ static AHDR1(oneB,C,C){mvc(n,z,MEMSET01LEN,MEMSET01); R EVOK;}
 
 extern AHDR1FN expI, expD, expE, logI, logD, logE;
 
-UA va1tab[]={
+UA va1tab[]={   // scaf should transpose this to group together the routines for the common datatypes?
  /* <. */ [VA1CMIN-VA1ORIGIN]= {{{ 0,VB}, {  0,VI}, {floorDI,VI+VIP64}, {floorZ,VZ}, {  0,VX}, {floorQ,VX}, {0,VI}, {floorEI,VI}, {  0, VI2}, {0, VI4}}},
  /* >. */ [VA1CMAX-VA1ORIGIN]= {{{ 0,VB}, {  0,VI}, { ceilDI,VI+VIP64}, { ceilZ,VZ}, {  0,VX}, { ceilQ,VX}, {0,VI}, {ceilEI,VI}, {  0, VI2}, {0, VI4}}},
  /* +  */ [VA1CPLUS-VA1ORIGIN]= {{{ 0,VB}, {  0,VI}, {    0,VD}, { cjugZ,VZ}, {  0,VX}, {   0,VQ}, {  0, 0}, {0, VE}, {  0, VI2}, {0, VI4}}},

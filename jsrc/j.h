@@ -1014,29 +1014,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #if C_AVX2 || EMU_AVX2
 // verify that shapes *x and *y match for l axes using AVX for rank<vector size, loop otherwise
 // Strains to stay in 3 registers
-#if 0 // obsolete
-#define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
- {C *aaa, *aab=(C*)&validitymask; I aai=(l)<<LGSZI; __m256i enbmask=_mm256_loadu_si256((__m256i*)(aab+NPAR*SZI+aai)); \
-  if(unlikely(aai>NPAR*SZI)){aaa=(C*)(aai&(NPAR*SZI-1)); enbmask=_mm256_loadu_si256((__m256i*)(aab+NPAR*SZI+(I)aaa)); aaa=(C*)(x); aab=(C*)(y); \
-   NOUNROLL do{ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)&(aaa[aai-NPAR*SZI])),_mm256_loadu_si256((__m256i *)&(aab[aai-NPAR*SZI]))),_mm256_cmpeq_epi64(enbmask,enbmask)),EVLENGTH)}while((aai-=NPAR*SZI)>=NPAR*SZI); \
-  }else{aaa=(C*)(x); aab=(C*)(y);} \
-  ASTYPE(_mm256_testz_si256(_mm256_xor_si256(_mm256_loadu_si256((__m256i *)(aaa+aai-NPAR*SZI)),_mm256_loadu_si256((__m256i *)(aab+aai-NPAR*SZI))),enbmask),EVLENGTH) /* result is 1 if all match */ \
- }
-// result is true if shapes agree.  Modify only aai
-#define TESTAGREE(x,y,l) \
- ({I *aaa=(x), *aab=(y); I aai=(l); __m256i aaaa,aaab,aaam; \
-  if(unlikely(aai>NPAR)){ \
-   aaam=_mm256_setone_epi64(); /* start testing all words */ \
-   NOUNROLL do{ \
-    aaaa=_mm256_loadu_si256((__m256i *)&aaa[aai-NPAR]); aaab=_mm256_loadu_si256((__m256i *)&aab[aai-NPAR]); \
-    if(!_mm256_testz_si256(_mm256_xor_si256(aaaa,aaab),aaam))break; \
-   }while((aai-=NPAR)>NPAR); \
-   if(likely(aai<=NPAR)){aaaa=_mm256_loadu_si256((__m256i *)(aaa+aai-NPAR)); aaab=_mm256_loadu_si256((__m256i *)(aab+aai-NPAR)); aaam=_mm256_loadu_si256((__m256i*)(validitymask+NPAR+aai));}  /* if error, stay on it; otherwise back to beginning (would be OK to leave mask) */ \
-  }else{aaaa=_mm256_loadu_si256((__m256i *)(aaa+aai-NPAR)); aaab=_mm256_loadu_si256((__m256i *)(aab+aai-NPAR)); aaam=_mm256_loadu_si256((__m256i*)(validitymask+NPAR+aai));  /* normal case, fetch beginning and mask */ \
-  } \
-  _mm256_testz_si256(_mm256_xor_si256(aaaa,aaab),aaam); /* test result is 1 if all match */ \
- })
-#else
 #define TESTAGREE(x,y,l) \
  ({I *aaa=(x), *aab=(y); I aai=(l); __m256i aaaa,aaab,aaam; \
   if(likely(aai<=NPAR) || /* normal case of small rank */ \
@@ -1050,7 +1027,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
  \
   _mm256_testz_si256(_mm256_xor_si256(aaaa,aaab),aaam); /* test result is 1 if all match */ \
  })
-#endif
 // set r nonzero if a value in x shape is bigger than corresponding one in y shape
 #define TESTXITEMSMALL(r,x,y,l) \
  {I *aaa=(x), *aab=(y); I aai=(l); \
@@ -1059,16 +1035,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
   }else{NOUNROLL do{--aai; r=0; if(unlikely(aaa[aai]>aab[aai])){r=1; break;}}while(aai);} \
  }
 #else
-#if 0  // obsolete 
-#define ASSERTAGREECOMMON(x,y,l,ASTYPE) \
- {I *aaa=(x), *aab=(y); I aai=(l); \
-  if(likely(aai<=2)){ \
-   aai-=1; aaa=(aai<0)?(I*)&validitymask[1]:aaa; aab=(aai<0)?(I*)&validitymask[1]:aab; \
-   ASTYPE(((aaa[0]^aab[0])+(aaa[aai]^aab[aai]))==0,EVLENGTH); \
-  }else{ASTYPE(!memcmp(aaa,aab,aai<<LGSZI),EVLENGTH)} \
- }
-#endif
-
 #define TESTAGREE(x,y,l) \
  ({I *aaa=(x), *aab=(y); I aai=(l); \
  NOUNROLL for(;aai>0;--aai)if(aaa[aai-1]!=aab[aai-1])break; \
@@ -1708,7 +1674,6 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define JMC(d,s,l,bytelen) JMCcommon(d,s,l,bytelen,endmask,JMCDECL(endmask),JMCSETMASK(endmask,ll,bytelen))  //   0->1111 1->1000 3->1110 bytelen has already been applied here
 #define JMCR(d,s,l,bytelen,maskname) JMCcommon(d,s,l,bytelen,maskname,,)
 #else
-// obsolete #define JMC(d,s,l,bytelen) MC(d,s,l);
 #define JMC(d,s,l,bytelen) MC(d,s,(bytelen)?(l):(((l)+(SZI-1))&-SZI));   // it's better to round up the length than to require the byte store
 #define JMCR(d,s,l,bytelen,maskname) JMC(d,s,l,bytelen)
 #define JMCDECL(mskname)
@@ -2072,17 +2037,10 @@ static inline __attribute__((__always_inline__)) float64x2_t vec_and_pd(float64x
 // PROD multiplies a list of numbers, where the product is known not to overflow a signed int (for example, it might be part of the shape of a nonempty dense array)
 // assign length first so we can sneak some computation into ain in va2.  DON'T call a subroutine, to keep registers free
 // This version uses only 3 registers
-#if 1||!defined(__wasm__)
 #define PRODCOMMON(z,length,ain,LTYPE) {I _i=(LTYPE)(length); I * _zzt=(ain); z=_zzt[_i-1]; \
 if(likely(_i<3)){z=_i==1?_i:z; z*=_zzt[0]; _zzt=(I*)1; z=_i<1?(I)_zzt:z;} \
 else{--_i; NOUNROLL do{z*=_zzt[_i-1];}while(--_i); } \
  }
-#else  // obsolete if wasm works
-// the above original version confuse emscripten compiler when 1==length where zzt always becomes &oneone
-// but this version introduces mispredicted branches
-#define PRODCOMMON(z,length,ain,LTYPE) {LTYPE _i=(LTYPE)(length); I * _zzt=(ain); \
-if(likely(_i<3)){z=(_i<1)?1:(_i==1)?_zzt[0]:_zzt[0]*_zzt[1];}else{z=1; NOUNROLL do{z*=_zzt[--_i];}while(_i); } }
-#endif
 #define PROD(z,length,ain) PRODCOMMON(z,length,ain,I)
 // This version ignores bits of length above the low RANKTX bits
 #define PRODRNK(z,length,ain) PRODCOMMON(z,length,ain,RANKT)
@@ -2474,23 +2432,10 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 
 typedef I AHDR1FN(J RESTRICT jt,I n,void* z,void* x);  // negative return is offset to failure point in >. or <.
 typedef I AHDR2FN(I m,void* RESTRICTI z,void* RESTRICTI x,void* RESTRICTI y,I n,J jt);  // negative return is failure point for integer multiply
-// We experiment with argument ordering into AHDR2FNs.  Originally the order was n,m,x,y,z,jt and we reorder it to match the declaration.
-// z is needed early for alignment.  The stacked value (y now) is being calculated during the call and then has to be pushed and popped before use, which
-// might make it the limiting factor up till the end of alignment.  Alternative is to put n on the stack, in the hope that it will predict correctly
-// & not be needed, but it will delay misprediction detection.  Final idea is to encode n=1 as negative m, which would detect the misprediction immediately & not 
-// need to fetch n at all
 #define AHDR2(f,Tz,Tx,Ty) I f(I m,Tz* RESTRICTI z,Tx* RESTRICTI x,Ty* RESTRICTI y,I n,J jt)  // must match VF, AHDR2FN  n is #repeats of arg; if n neg, repeat x ~n times.  m is # times to repeat an n-cell
-#define AH2ANP(ahn,ahm,ahx,ahy,ahz,ahjt) ahm,ahz,ahx,ahy,ahn,ahjt
-#define AH2A(ahn,ahm,ahx,ahy,ahz,ahjt) (AH2ANP(ahn,ahm,ahx,ahy,ahz,ahjt))
-#define AH2ANP_v(ahn,ahx,ahy,ahz,ahjt) AH2ANP(0,~(ahn),ahx,ahy,ahz,ahjt)  // vector op vector, length n
-#define AH2A_v(ahn,ahx,ahy,ahz,ahjt) (AH2ANP_v(ahn,ahx,ahy,ahz,ahjt))
-#define AH2ANP_x1(ahm,ahx,ahy,ahz,ahjt) AH2ANP(1,2*(ahm),ahx,ahy,ahz,ahjt)  // vector op atom, length m
-#define AH2A_x1(ahm,ahx,ahy,ahz,ahjt) (AH2ANP_x1(ahm,ahx,ahy,ahz,ahjt))
-#define AH2ANP_nm(ahn,ahm,ahx,ahy,ahz,ahjt) AH2ANP(ahm,(ahn)==1?~(ahm):2*((ahn)^REPSGN(ahn))+SGNTO0(ahn),ahx,ahy,ahz,ahjt)
-#define AH2A_nm(ahn,ahm,ahx,ahy,ahz,ahjt) (AH2ANP_nm(ahn,ahm,ahx,ahy,ahz,ahjt))
 
 // following must match AHDR2FN
-#define OP1XYZ(name,Tz,Tx,Ty,pfx) I name##1##Tx##Ty##Tz AH2A(I n, I m, Tx *x, Ty *y, Tz *z, J jt){DO(~m, z[i]=pfx(x[i],y[i]);) R EVOK;}
+#define OP1XYZ(name,Tz,Tx,Ty,pfx) I name##1##Tx##Ty##Tz(I m, Tz *z, Tx *x, Ty *y, I n, J jt){DO(~m, z[i]=pfx(x[i],y[i]);) R EVOK;}
 typedef I AHDRPFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);  // these 3 must be the same for now, for VARPS.  The return is never negative
 typedef I AHDRRFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);
 typedef I AHDRSFN(I d,I n,I m,void* RESTRICTI x,void* RESTRICTI z,J jt);

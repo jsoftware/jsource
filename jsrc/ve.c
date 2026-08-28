@@ -520,7 +520,7 @@ AHDR2(remII,I,I,I){I u,v;
   DQU(n, u=*x++;
     // take abs(x); handle negative x in a postpass
    UI ua=-u>=0?-u:u;  // abs(x)
-   if(!(ua&(ua-1))){ I umsk = ua-1; bw0001II AH2A_x1(m,y,&umsk,z,jt); z+=m; y+=m;   // x is a power of 2, including 0
+   if(!(ua&(ua-1))){ I umsk = ua-1; bw0001II(2*m,z,y,&umsk,1,jt); z+=m; y+=m;   // x is a power of 2, including 0
    }else{
     // calculate 1/abs(x) to 53-bit precision.  Remember, x is at least 3, so the MSB will never have signed significance
     UI uarecip = (UI)(18446744073709551616.0/(D)(I)ua);  // recip, with binary point above the msb.  2^64 / ua

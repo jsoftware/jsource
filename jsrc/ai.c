@@ -176,7 +176,6 @@ xco:
  case CBASE:   // #.
   if(!nf)break;
   R AR(x) ? amp(x,ds(CABASE)) :   // if x is not an atom, revert to #:
-// obsolete   obverse(ev12(x,0,"($&]:@>:@<. ([.@((^.~|)&].)))@(1&>.)@(>./)@:|@, #: ]"),fampg?fampg:amp(f,g));  // atomic x, calculate the number of digits needed.  If x complex, add 2 digits; otherwise if negative add 1 digit
   obverse(ev12(x,0,"(]:&(((+ (0&>)`2:@.(~:+))~ >:@<.)$[) ([.@((^.~|)&].)))@(1&>.)@(>./)@:|@, #: ]"),fampg?fampg:amp(f,g));  // atomic x, calculate the number of digits needed.  If x complex, add 2 digits; otherwise if negative add 1 digit
  case CATOMIC:   // A.
   if(!nf){ASSERT(equ(x,nub(x)),EVDOMAIN); R obverse(atop(f,amp(x,ds(CIOTA))),fampg?fampg:amp(f,g));}  // fall through to common obverse (?)

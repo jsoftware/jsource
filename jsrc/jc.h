@@ -209,7 +209,6 @@
 #define CMCAP      (C)0xd1       /* 209 321 d1 M.                           */
 #define CTDOT      (C)0xd3  // t.
 #define CTCAPDOT   (C)0xd4  // T.
-// obsolete #define CQCAPCO    (C)0xd6       /* 214 326 d6 Q:                           */
 #define CMDOT      (C)0xd9       /* 217 331 d9 m.                           */
 #define CSCAPCO    (C)0xda       /* 218 332 da S:                           */
 // db-e8 free

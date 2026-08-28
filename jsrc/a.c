@@ -171,7 +171,6 @@ F1(jtmemo){F12IP;PROLOG(300);A h,*hv;
  ASSERT(VERB&AT(w),EVDOMAIN);
  V *v=FAV(w);
  GAT0(h,BOX,3,0); hv=AAV0(h);  // the components of fdef must be recursive if recursible, and are made so in fdef
-// obsolete  AFLAGINIT(h,BOX)
  // the tables are standard extendible, with # items in AM, thus must be zapped
  // So, we defer initializing them until they have been made recursive inside fdef.  They are owned by h, with AC=1
  GAT0(hv[0],INT,FULLHASHSIZE(30,BOXSIZE,1,0),0) ACINITUNPUSH0(hv[0]) GAT0(hv[1],INT,2*(FULLHASHSIZE(30,BOXSIZE,1,0)>>1),2) ACINITUNPUSH0(hv[1]) GAT0(hv[2],BOX,FULLHASHSIZE(30,BOXSIZE,1,0)>>1,0) ACINITUNPUSH0(hv[2])  // allo hash/keys/results

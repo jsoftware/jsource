@@ -331,11 +331,6 @@ A jtspellcon(J jt,I c){
 static I jtconword(J jt,I n,C*s){
  I c1=s[n-1]; c1=n<3?0:c1; if(c1!='.')R 0;  // if not 3+ chars ending with '.', it's not a control word
  // here it should be a control word.  Check one by one to avoid search and misprediction overhead.  The top cases are dominant.
-// obsolete #if ALIGNREQ & 8
-// obsolete  I8 c8=0; memcpy(&c8,s,MIN(8,n));  // *(I8*)s possibly bus error, not 8-byte aligned
-// obsolete #else
-// obsolete  I8 c8=*(I8*)s;  // overfetch leading chars of name
-// obsolete #endif
  I8 c8=LDI8(s);  // overfetch leading chars of name
  I cwtlen;  // will be result code\required length
 #define MATCHNAME8(nn,s0,s1,s2,s3,s4,s5,s6,s7) ((c8<<(64-8*nn))==((((((((((((((((UI8)s7<<8)+(UI8)s6)<<8)+(UI8)s5)<<8)+(UI8)s4)<<8)+(UI8)s3)<<8)+(UI8)s2)<<8)+(UI8)s1)<<8)+(UI8)s0)<<(64-8*nn)))

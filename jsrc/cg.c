@@ -162,7 +162,7 @@ F2(jtevger){F12IP;A hs;I k;
 F2(jttie){F12IP;ARGCHK2(a,w); R jtapip((J)((I)jtfg&(~JTFLAGMSK+JTINPLACEA+JTINPLACEW)),VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}  // don't pass MODIFIER flag through
 
 
-// m@.:v y.  Execute the verbs at high rank if the operands are large
+// m@.v y.  Execute the verbs at high rank if the operands are large
 // Bivalent entry point: called as (jt,w,self,self) or (jt,a,w,self)
 static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
   ARGCHK2(a,w);

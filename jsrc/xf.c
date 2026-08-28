@@ -160,7 +160,7 @@ DF2(jtjfwrite){F12IP;B b;F f;
  PROLOG(000);
  if(BOX&AT(w)){ASSERT(1>=AR(a),EVRANK); ASSERT(!AN(a)||AT(a)&LIT+C2T+C4T,EVDOMAIN);}
  RE(f=stdf(w));   // f=0 if w is filename, else 1-6 for special files
- if(2==(I)f){jtjpr((J)((I)jt+MTYOFILE),a); R a;}  // 2=write to console, convert to printable string and type out, with NOSTDOUT off
+ if(2==(I)f){RZ(jtjpr((J)((I)jt+MTYOFILE),a)) R a;}  // 2=write to console, convert to printable string and type out, with NOSTDOUT off; result is string
 #ifdef ANDROID
  if(4==(I)f){A z=tocesu8(a); R (U)AN(z)!=fwrite(CAV(z),sizeof(C),AN(z),stdout)?jerrno():a;}  // 4=stdout
  if(5==(I)f){A z=tocesu8(a); R (U)AN(z)!=fwrite(CAV(z),sizeof(C),AN(z),stderr)?jerrno():a;}  // 5=stderr

@@ -47,7 +47,7 @@ static INLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so many
 
 // we know that AN=1 in a and w, which are FL/INT/B01 types.  af is larger arg rank (=rank of result)
 // bidcase is the routine index to use * 4
-INLINE static A jtssingleton(J jtfg,A a,A w,I af,A self,UI bidcase,I opcode){F12JT;
+INLINE static A jtssingleton(J jtfg,A a,A w,I af,UI bidcase,I opcode){F12JT;
  void *av=voidAV(a), *wv=voidAV(w), *zv;  // point to the argument values and result.  2 fetches to op addrs, 3 to op values
  // We are waiting for opcode and data pointers to settle.  We use the idle time to start the reads to calculate inplaceability.  We also start the calculation, to save registers
  I caseno=opcode-VA2CBW1111; caseno=caseno<0?0:caseno; caseno&=31; caseno=SSINGCASE4(caseno,bidcase);  // case # for eventual switch.  Lump all Booleans at 0. &31 to remove comparison flag and to help the compiler
@@ -336,15 +336,25 @@ takestats(stats[0xd]+=caseno==statsoldcaseno; statsoldcaseno=caseno;)
  case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGII): ziv=aiv==wiv; goto compareresult;
  case SSINGCASE(VA2CEQ-VA2CBW1111,SSINGDD): ziv=TEQ(adv,wdv); goto compareresult;
 
- case SSINGCASE(VA2CRES0-VA2CBW1111,SSINGDD):   // these blocks just fill out the table
- case SSINGCASE(VA2CRES1-VA2CBW1111,SSINGDD): 
  case SSINGCASE(VA2CEQABS-VA2CBW1111,SSINGDD): ziv=TEQ(adv,ABS(wdv)); goto compareresult;
  case SSINGCASE(VA2CNEABS-VA2CBW1111,SSINGDD): ziv=TNE(adv,ABS(wdv)); goto compareresult;
  case SSINGCASE(VA2CLTABS-VA2CBW1111,SSINGDD): ziv=TLT(adv,ABS(wdv)); goto compareresult;
  case SSINGCASE(VA2CLEABS-VA2CBW1111,SSINGDD): ziv=TLE(adv,ABS(wdv)); goto compareresult;
  case SSINGCASE(VA2CGEABS-VA2CBW1111,SSINGDD): ziv=TGE(adv,ABS(wdv)); goto compareresult;
  case SSINGCASE(VA2CGTABS-VA2CBW1111,SSINGDD): ziv=TGT(adv,ABS(wdv)); goto compareresult;
-
+ case SSINGBB*32+VA2CEQABS-VA2CBW1111: case SSINGBI*32+VA2CEQABS-VA2CBW1111: case SSINGBD*32+VA2CEQABS-VA2CBW1111: case SSINGIB*32+VA2CEQABS-VA2CBW1111: case SSINGII*32+VA2CEQABS-VA2CBW1111:
+    case SSINGID*32+VA2CEQABS-VA2CBW1111: case SSINGDB*32+VA2CEQABS-VA2CBW1111: case SSINGDI*32+VA2CEQABS-VA2CBW1111:
+ case SSINGBB*32+VA2CNEABS-VA2CBW1111: case SSINGBI*32+VA2CNEABS-VA2CBW1111: case SSINGBD*32+VA2CNEABS-VA2CBW1111: case SSINGIB*32+VA2CNEABS-VA2CBW1111: case SSINGII*32+VA2CNEABS-VA2CBW1111:
+    case SSINGID*32+VA2CNEABS-VA2CBW1111: case SSINGDB*32+VA2CNEABS-VA2CBW1111: case SSINGDI*32+VA2CNEABS-VA2CBW1111:
+ case SSINGBB*32+VA2CLTABS-VA2CBW1111: case SSINGBI*32+VA2CLTABS-VA2CBW1111: case SSINGBD*32+VA2CLTABS-VA2CBW1111: case SSINGIB*32+VA2CLTABS-VA2CBW1111: case SSINGII*32+VA2CLTABS-VA2CBW1111:
+    case SSINGID*32+VA2CLTABS-VA2CBW1111: case SSINGDB*32+VA2CLTABS-VA2CBW1111: case SSINGDI*32+VA2CLTABS-VA2CBW1111:
+ case SSINGBB*32+VA2CLEABS-VA2CBW1111: case SSINGBI*32+VA2CLEABS-VA2CBW1111: case SSINGBD*32+VA2CLEABS-VA2CBW1111: case SSINGIB*32+VA2CLEABS-VA2CBW1111: case SSINGII*32+VA2CLEABS-VA2CBW1111:
+    case SSINGID*32+VA2CLEABS-VA2CBW1111: case SSINGDB*32+VA2CLEABS-VA2CBW1111: case SSINGDI*32+VA2CLEABS-VA2CBW1111:
+ case SSINGBB*32+VA2CGEABS-VA2CBW1111: case SSINGBI*32+VA2CGEABS-VA2CBW1111: case SSINGBD*32+VA2CGEABS-VA2CBW1111: case SSINGIB*32+VA2CGEABS-VA2CBW1111: case SSINGII*32+VA2CGEABS-VA2CBW1111:
+    case SSINGID*32+VA2CGEABS-VA2CBW1111: case SSINGDB*32+VA2CGEABS-VA2CBW1111: case SSINGDI*32+VA2CGEABS-VA2CBW1111:
+ case SSINGBB*32+VA2CGTABS-VA2CBW1111: case SSINGBI*32+VA2CGTABS-VA2CBW1111: case SSINGBD*32+VA2CGTABS-VA2CBW1111: case SSINGIB*32+VA2CGTABS-VA2CBW1111: case SSINGII*32+VA2CGTABS-VA2CBW1111:
+    case SSINGID*32+VA2CGTABS-VA2CBW1111: case SSINGDB*32+VA2CGTABS-VA2CBW1111: case SSINGDI*32+VA2CGTABS-VA2CBW1111:
+ break;
 
  case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGBB): adv=(B)aiv; wdv=(B)wiv; goto circleresult;
  case SSINGCASE(VA2CCIRCLE-VA2CBW1111,SSINGBD): adv=(B)aiv; goto circleresult;
@@ -373,6 +383,12 @@ takestats(stats[0xd]+=caseno==statsoldcaseno; statsoldcaseno=caseno;)
  case SSINGCASE(VA2CSTILE-VA2CBW1111,SSINGDD): 
   floatresidue: ;
    zdv=jtremdd(jt,adv,wdv); if(!jt->jerr){SSSTORE(zdv,z,FL,D);}else z=0; R z;  // Since this can retry, we must not modify the input block if there is an error
+
+ case SSINGBB*32+VA2CRES0-VA2CBW1111: case SSINGBI*32+VA2CRES0-VA2CBW1111: case SSINGBD*32+VA2CRES0-VA2CBW1111: case SSINGIB*32+VA2CRES0-VA2CBW1111: case SSINGII*32+VA2CRES0-VA2CBW1111:
+    case SSINGID*32+VA2CRES0-VA2CBW1111: case SSINGDB*32+VA2CRES0-VA2CBW1111: case SSINGDI*32+VA2CRES0-VA2CBW1111: case SSINGDD*32+VA2CRES0-VA2CBW1111:
+ case SSINGBB*32+VA2CRES1-VA2CBW1111: case SSINGBI*32+VA2CRES1-VA2CBW1111: case SSINGBD*32+VA2CRES1-VA2CBW1111: case SSINGIB*32+VA2CRES1-VA2CBW1111: case SSINGII*32+VA2CRES1-VA2CBW1111:
+    case SSINGID*32+VA2CRES1-VA2CBW1111: case SSINGDB*32+VA2CRES1-VA2CBW1111: case SSINGDI*32+VA2CRES1-VA2CBW1111: case SSINGDD*32+VA2CRES1-VA2CBW1111:
+ break;
  }
  // The only thing left is exit processing for the different functions
  gcdintresult:
@@ -414,7 +430,7 @@ takestats(stats[0xd]+=caseno==statsoldcaseno; statsoldcaseno=caseno;)
   R z;  // Return the value if valid, as integer if possible
 
  bitwiseresult:
- ziv=(I)FAV(self)->lu2.lc-VA2CBW0000;  // mask describing operation.  We refetch because self is needed in a reg and opcode isn't
+ ziv=opcode-VA2CBW0000;  // mask describing operation.
  RE(0);  // if error on D arg, make sure we abort
  ziv=((aiv&wiv)&REPSGN(SGNIF(ziv,0)))|((aiv&~wiv)&REPSGN(SGNIF(ziv,1)))|((~aiv&wiv)&REPSGN(SGNIF(ziv,2)))|((~aiv&~wiv)&REPSGN(SGNIF(ziv,3)));
 bitwiseexit:;
@@ -954,9 +970,10 @@ printf("va2a: axes="); spt=SPA(PAV(spt),a); DO(AN(spt), printf(" %d",IAV(spt)[i]
 printf("va2a: indexes="); spt=SPA(PAV(a),i); DO(AN(spt), printf(" %d",IAV(spt)[i]);) printf("\n");
 }
 #endif
+static A resolveself(A self){R FAV(self)->fgh[0]?FAV(self)->fgh[0]:self;}  // if there is an f, it must be the true self
 // repair routines for integer overflow, possibly in place
 static VF repairip[4]={plusBIO, plusIIO, minusBIO, minusIIO};
-// All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, self is the block for this primitive
+// All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, self is the block for this primitive or the rank compound calling it - only lc is used, except in sparse processing
 // afwf is af/wf, agreefr is frame for outer agreement test, bidcase is combined arg types (low 2 bits garbage), densbid0 is 0 if we can use bidcase 
 static INLINE A jtva2(J jtfg,AD *a,AD *w,AD * RESTRICT self,I afwf,UI bidcase,UI densbid0,I awr,I vandx){F12IP;
 takestats(++stats[0x10];)
@@ -1033,12 +1050,12 @@ takestats(++stats[0x13];)
    }else{
     // Sparse setup
     I ar=awr>>RANKTX, wr=(RANKT)awr;
-    R vasp(a,w,FAV(self)->id,adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),0,ar,0,wr,0,MAX(ar,wr));
+    R vasp(a,w,FAV(resolveself(self))->id,adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),0,ar,0,wr,0,MAX(ar,wr));
    }
   }else{I ak,wk;UI wcr;
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
     // Heavy register pressure here.
-    // vbls needed: cv a w afwf awr self
+    // vbls needed: cv a w afwf awr
 takestats(++stats[0x14];)
    UI4 afwfarwr=(afwf<<(2*RANKTX))+awr; wcr=afwfarwr-afwf;   // afwfarwr=af/wf/anr/wnr, subtract 0/0/af/wf => af/wf/acr/wcr = wcr  afwfagreefr free
    if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
@@ -1163,7 +1180,7 @@ takestats(++stats[0x18];)
    }else{  // sparse case
     I af=LANE(wcr,AF), wf=LANE(wcr,WF); UI acr=LANE(wcr,AC); wcr=LANE(wcr,WC);   // separate cr and f for sparse
     fr=acr<wcr?wcr:acr; I f=(af<wf)?wf:af;
-    R vasp(a,w,FAV(self)->id,adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),af,acr,wf,wcr,f,fr);  // handle sparse arrays separately.
+    R vasp(a,w,FAV(resolveself(self))->id,adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),af,acr,wf,wcr,f,fr);  // handle sparse arrays separately.
    }
   }
  }
@@ -1862,7 +1879,7 @@ takestats(++stats[0x2];)
   {I awcr=awr-afwf; awr=MAX((UI1)awcr,(UI1)(awcr>>RANKTX))+MAX((UI1)afwf,(UI1)(afwf>>RANKTX));}   // af=max framelen + max rank = resultrank
 forcess:;  // branch point for rank-0 singletons from above, always with atomic result (awr puns to 0)
   // any singleton.  awr is the rank of the result, with shape all 1s
-  z=jtssingleton(jtfg,a,w,awr,self,bidcase,opline);
+  z=jtssingleton(jtfg,a,w,awr,bidcase,opline);
   if(likely(z!=0)){RETF(z);}  // normal case is good return; the rest is retry for singletons
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
@@ -1914,7 +1931,7 @@ static VF eqnetbl[2][11] = {
 // The flags in cv have doubled letters (e.g. VDD) for input precision, single letters (e. g. VD) for result
 // result is a VA2 struct  containing ado and cv.  If failure, ado is 0 and the caller should signal domain error
 // The type has been converted to dense type
-VA2 jtvar(J jt,A self,I at,I wt){
+VA2 jtvar(J jt,A self,I at,I wt){   // scaf parm should be lu2.lc not self?
  I opchar=(UC)FAV(self)->lu2.lc&0x7f;  //  the index of the opcode - start reading ASAP, needed on main line
  // If there is a pending error, it might be one that can be cured with a retry; for example, fixed-point
  // overflow, where we will convert to float.  If the error is one of those, get the routine and conversion

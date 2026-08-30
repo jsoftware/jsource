@@ -189,18 +189,18 @@
 #define VA2CBW10000 17
 #define VA2CBW10001 18
 #define VA2CBW10010 19
-#define VA2CNE 20
-#define VA2CDIV 21
-#define VA2CPLUSCO 22
-#define VA2CPLUSDOT 23
-#define VA2CMINUS 24
-#define VA2CLT 25
-#define VA2CEQ 26
-#define VA2CGT 27
-#define VA2CSTARDOT 28
-#define VA2CSTARCO 29
-#define VA2CGE 30
-#define VA2CLE 31
+#define VA2CDIV 20
+#define VA2CPLUSCO 21
+#define VA2CPLUSDOT 22
+#define VA2CMINUS 23
+#define VA2CEQ 24
+#define VA2CNE 25
+#define VA2CLT 26
+#define VA2CLE 27
+#define VA2CGE 28
+#define VA2CGT 29
+#define VA2CSTARDOT 30
+#define VA2CSTARCO 31
 // shared part: verbs that are atomic in monad and dyad
 // the following are in the same order in va1
 #define VA2CMIN 32

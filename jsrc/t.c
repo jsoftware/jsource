@@ -46,28 +46,28 @@ static __attribute__((aligned(CACHELINESIZE))) const C alp[256]={
 #define PRIMALL(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc) [idda]PRIMASSIGN(idda,idd,t,f0,f1,f,g,h,initpm1,initpm2,rm,rl,rr,vflg,vflg2,an,ar,lcc)
 #define PRIMACV(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,id,t,f0,f1,0,0,0,.lu1.uavandx=0,0,rm,rl,rr,vflg,vflg2,0,0,0)
 #define PRIMACVPARM(id,t,f0,f1,rm,rl,rr,vflg,vflg2,initpm1,initpm2) PRIMALL(id,id,t,f0,f1,0,0,0,initpm1,initpm2,rm,rl,rr,vflg,vflg2,0,0,0)
-#define PRIMATOMIC2(vaid,id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(vaid,id,t,f0,f1,0,0,0,.lu1.uavandx=0,VA2##vaid*sizeof(VA),rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
+#define PRIMATOMIC2(vaid,id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(vaid,id,t,f0,f1,0,0,0,.lu1.uavandx=0,0,rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
  VA2##vaid+0x80*(vaid==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
-#define PRIMATOMIC2FGH(vaid,id,t,f0,f1,f,g,h,rm,rl,rr,vflg,vflg2) PRIMALL(vaid,id,t,f0,f1,f,g,h,.lu1.uavandx=0,VA2##vaid*sizeof(VA),rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
+#define PRIMATOMIC2FGH(vaid,id,t,f0,f1,f,g,h,rm,rl,rr,vflg,vflg2) PRIMALL(vaid,id,t,f0,f1,f,g,h,.lu1.uavandx=0,0,rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
  VA2##vaid+0x80*(vaid==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
-#define PRIMATOMIC2g(id,t,f0,f1,rm,rl,rr,vflg,vflg2,g) PRIMALL(id,id,t,f0,f1,0,g,0,.lu1.uavandx=0,VA2##id*sizeof(VA),rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
+#define PRIMATOMIC2g(id,t,f0,f1,rm,rl,rr,vflg,vflg2,g) PRIMALL(id,id,t,f0,f1,0,g,0,.lu1.uavandx=0,0,rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
  VA2##id+0x80*(id==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
 // used for -QP to avoid the subtract
-#define PRIMATOMIC2UV(vaid,id,uvid,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(vaid,id,t,f0,f1,0,0,0,.lu1.uavandx=(uvid)*sizeof(UA),VA2##vaid*sizeof(VA),rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
+#define PRIMATOMIC2UV(vaid,id,uvid,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(vaid,id,t,f0,f1,0,0,0,.lu1.uavandx=(uvid)*sizeof(UA),0,rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
  VA2##vaid+0x80*(vaid==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
 #define PRIMATOMIC1(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,id,t,f0,f1,0,0,0,.lu1.uavandx=(VA1##id-VA1ORIGIN)*sizeof(UA),0,rm,rl,rr,vflg,vflg2,0,0, \
  VA1##id+0x80*(id==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
-#define PRIMATOMIC12(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,id,t,f0,f1,0,0,0,.lu1.uavandx=(VA1##id-VA1ORIGIN)*sizeof(UA),VA2##id*sizeof(VA),rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
+#define PRIMATOMIC12(id,t,f0,f1,rm,rl,rr,vflg,vflg2) PRIMALL(id,id,t,f0,f1,0,0,0,.lu1.uavandx=(VA1##id-VA1ORIGIN)*sizeof(UA),0,rm,rl,rr,VISATOMIC2|(vflg),vflg2,0,0, \
  VA2##id+0x80*(id==CLT||id==CGT||id==CLE||id==CGE||id==CEQ||id==CNE))
 
-PRIM dsCMINUS_NOT PRIMASSIGN(CMINUS,CMINUS,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CMINUS*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE0,VF2PRIM,0,0,VA2CMINUS);
-PRIM dsCMINUS_NEG PRIMASSIGN(CMINUS,CMINUS,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CMINUS*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE1,VF2PRIM,0,0,VA2CMINUS);
-PRIM dsCMINUS_DEC PRIMASSIGN(CMINUS,CMINUS,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CMINUS*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE2,VF2PRIM,0,0,VA2CMINUS);
-PRIM dsCPLUS_INC PRIMASSIGN(CPLUS,CPLUS,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CPLUS*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE0,VF2PRIM,0,0,VA2CPLUS);
-PRIM dsCSTAR_DUBL PRIMASSIGN(CSTAR,CSTAR,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CSTAR*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE0,VF2PRIM,0,0,VA2CSTAR);
-PRIM dsCSTAR_SQUARE PRIMASSIGN(CSTAR,CSTAR,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CSTAR*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE1,VF2PRIM,0,0,VA2CSTAR);
-PRIM dsCSTAR_HALVE PRIMASSIGN(CSTAR,CSTAR,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CSTAR*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE2,VF2PRIM,0,0,VA2CSTAR);
-PRIM dsCSTAR_CIRCLE PRIMASSIGN(CSTAR,CSTAR,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CSTAR*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE3,VF2PRIM,0,0,VA2CSTAR);
+PRIM dsCMINUS_NOT PRIMASSIGN(CMINUS,CMINUS,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,0,  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE0,VF2PRIM,0,0,VA2CMINUS);
+PRIM dsCMINUS_NEG PRIMASSIGN(CMINUS,CMINUS,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,0,  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE1,VF2PRIM,0,0,VA2CMINUS);
+PRIM dsCMINUS_DEC PRIMASSIGN(CMINUS,CMINUS,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,0,  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE2,VF2PRIM,0,0,VA2CMINUS);
+PRIM dsCPLUS_INC PRIMASSIGN(CPLUS,CPLUS,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,0,  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE0,VF2PRIM,0,0,VA2CPLUS);
+PRIM dsCSTAR_DUBL PRIMASSIGN(CSTAR,CSTAR,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,0,  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE0,VF2PRIM,0,0,VA2CSTAR);
+PRIM dsCSTAR_SQUARE PRIMASSIGN(CSTAR,CSTAR,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,0,  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE1,VF2PRIM,0,0,VA2CSTAR);
+PRIM dsCSTAR_HALVE PRIMASSIGN(CSTAR,CSTAR,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,0,  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE2,VF2PRIM,0,0,VA2CSTAR);
+PRIM dsCSTAR_CIRCLE PRIMASSIGN(CSTAR,CSTAR,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,0,  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE3,VF2PRIM,0,0,VA2CSTAR);
 PRIM dsCDIV_RECIP PRIMASSIGN(CDIV,CDIV,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CDIV*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE0,VF2PRIM,0,0,VA2CDIV);
 PRIM dsCDIV_HALVE PRIMASSIGN(CDIV,CDIV,  VERB, 0,  jtatomic2,  0,0,0, .lu1.uavandx=0,VA2CDIV*sizeof(VA),  0,0,0   ,VFUSEDOK2|VIRS2|VNOLOCCHG+VNONAME+VNOSELF|VWASUNARY|VUNARYCODE1,VF2PRIM,0,0,VA2CDIV);
 

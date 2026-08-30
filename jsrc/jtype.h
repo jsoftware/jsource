@@ -1175,7 +1175,7 @@ typedef struct {
      I4 cutn;  // for u;.n where n is nonzero, n.  u/. also goes through this code.  There could be cyclic iterators but not boxcut
     } gercut;
     VARPSA *redfn;  // for reductions (u/ u/\ u/\.) address of rps block (may be dummy block)
-    US uavandx[2];   // offset from start of va/va1tbl to VA/UA block for adocv [monad then dyad]
+    US uavandx[2];   // offset from start of va/va1tbl to VA/UA block for adocv/psa [monad then dyad].  Not used for atomics dyad
     A wvb;  // for u&.[:]v, the verb whose inverse is needed
     I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function; for (compare[!.n] |), indicates which compare function
     A cachedlkp;  //  for namerefs ('name'~), the cached value, or 0 if not cached.   No QC semantics
@@ -1200,7 +1200,7 @@ typedef struct {
  RANKT mr;  // combining monad rank
  C id;  // pseudochar for the function encoded here
 union{
- C lc;  // lc is a local-use byte.  Used in atomic verbs to indicate which singleton function to execute.  in the derived function from fold, lc has the original id byte of the fold op
+ C lc;  // lc is a local-use byte.  Used in atomic verbs or atomic"n to indicate which singleton function to execute.  in the derived function from fold, lc has the original id byte of the fold op
  UI4 refvalidtime;  // for namerefs, the value of JT(jt,fnasgnct) when the cached value was looked up
 } lu2;
 } V;  // two cachelines in 64-bit (16 Is); 20 I4s in 32-bit

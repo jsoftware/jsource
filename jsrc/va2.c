@@ -887,13 +887,49 @@ VA va[]={
   &rpsnull},
 
 
-/* -- (compare |) */ [VA2CEQABS]={
-// these routines are used only for floating-point types (DD), so they overlap
+/* (= |) */ [VA2CEQABS]={
  {{0,0}, {0,0}, {0,0},
-  {(VF)eqabsDD,VRNONE+VB}, {(VF)neabsDD,VRNONE+VB}, {(VF)ltabsDD,VRNONE+VB},
-  {(VF)leabsDD,VRNONE+VB}, {(VF)geabsDD,VRNONE+VB}, {(VF)gtabsDD,VRNONE+VB}, 
-  },
-  &rpsnull},
+  {0,0}, {0,0}, {0,0},
+  {0,0}, {0,0}, {(VF)eqabsDD,VRNONE+VB}},
+ },
+/* (~: |) */ [VA2CNEABS]={
+ {{0,0}, {0,0}, {0,0},
+  {0,0}, {0,0}, {0,0},
+  {0,0}, {0,0}, {(VF)neabsDD,VRNONE+VB}},
+ },
+
+/* (< |) */ [VA2CLTABS]={
+ {{0,0}, {0,0}, {0,0},
+  {0,0}, {0,0}, {0,0},
+  {0,0}, {0,0}, {(VF)ltabsDD,VRNONE+VB}},
+ },
+
+/* (<: |) */ [VA2CLEABS]={
+ {{0,0}, {0,0}, {0,0},
+  {0,0}, {0,0}, {0,0},
+  {0,0}, {0,0}, {(VF)leabsDD,VRNONE+VB}},
+ },
+
+/* (>: |) */ [VA2CGEABS]={
+ {{0,0}, {0,0}, {0,0},
+  {0,0}, {0,0}, {0,0},
+  {0,0}, {0,0}, {(VF)geabsDD,VRNONE+VB}},
+ },
+
+/* (> |) */ [VA2CGTABS]={
+ {{0,0}, {0,0}, {0,0},
+  {0,0}, {0,0}, {0,0},
+  {0,0}, {0,0}, {(VF)gtabsDD,VRNONE+VB}},
+ },
+
+
+// obsolete // these routines are used only for floating-point types (DD), so they overlap  scaf perhaps save the space & cachelines at the expense of a little decode?
+// obsolete {{0,0}, {0,0}, {0,0},
+// obsolete   {(VF)eqabsDD,VRNONE+VB}, {(VF)neabsDD,VRNONE+VB}, {(VF)ltabsDD,VRNONE+VB},
+// obsolete   {(VF)leabsDD,VRNONE+VB}, {(VF)geabsDD,VRNONE+VB}, {(VF)gtabsDD,VRNONE+VB}, 
+// obsolete   },
+// obsolete   &rpsnull},
+
 
 
 };
@@ -1785,7 +1821,8 @@ takestats(++stats[0x0];)
 // obsolete retryss0:;  // here when an atomic singleton fails.  self has not been touched so we must advance it to the primitive.  We must process as non-rank array, so we have set selfranks=0x3f3f to go through no-rank code, and notoneatom=1
  self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
 retryss:;  // here when a non-atomic singleton fails.  self has been advanced to the primitive, so we have to use the old selfranks and the updated self
- opline=__atomic_load_n(&FAV(self)->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
+// obsolete  opline=__atomic_load_n(&FAV(self)->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
+ opline=(opline&0x7f)*sizeof(VA);  // convert op lc to table line offset
  // find frames
  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
  // check for non-atomic singletons, which are rare (4% in testcases)
@@ -1799,7 +1836,8 @@ takestats(if(notoneatom)++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
    if(likely(z!=0)){RETF(z);}  // normal case is good return
    if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
    densbid0=1; bidcase=0; UI awr=AR(a); awr<<=RANKTX; awr+=AR(w);   // set 'not BID' flag so we don't use the routine# from self, clear unneeded bidcase, reload awr to avoid save.
-   opline=FAV(self)->localuse.lu1.uavandx[1];  // extract table line from the primitive to avoid save
+// obsolete    opline=FAV(self)->localuse.lu1.uavandx[1];  // extract table line from the primitive to avoid save
+   opline=(FAV(self)->lu2.lc&0x7f)*sizeof(VA);  // extract table line from the primitive to avoid save
    afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  // reload afwf too.  selfranks must be preserved
   }
   // We hit an error.  We will format it now because we have the IRS ranks that were used in selfranks.  It might be possible to get the ranks from the self?
@@ -1829,7 +1867,7 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
   UI awr=AR(a); awr<<=RANKTX; awr+=AR(w); // restore aw vars so they won't be saved over the call
-  notoneatom=1; bidcase=0; densbid0=1; // disable atomic; set not BID to force the retry through va2.  bidcase immaterial, set to prevent save
+  notoneatom=1; bidcase=0; densbid0=1; opline=0;  // disable atomic; set not BID to force the retry through va2.  bidcase immaterial, set to prevent save
   if(likely(awr==0)){selfranks=R2MAX; realself=FAV(self)->fgh[0]; self=realself?realself:self;} goto retryss;  // retry.  atomic singletons must advance self (selfranks max to have no frame); others must not, using the incumbent self & selfranks
   // (no fallthrough here)
  }
@@ -1877,7 +1915,7 @@ static VF eqnetbl[2][11] = {
 // result is a VA2 struct  containing ado and cv.  If failure, ado is 0 and the caller should signal domain error
 // The type has been converted to dense type
 VA2 jtvar(J jt,A self,I at,I wt){
- I opchar=(UC)FAV(self)->id;  //  the index of the opcode - start reading ASAP, needed on main line
+ I opchar=(UC)FAV(self)->lu2.lc&0x7f;  //  the index of the opcode - start reading ASAP, needed on main line
  // If there is a pending error, it might be one that can be cured with a retry; for example, fixed-point
  // overflow, where we will convert to float.  If the error is one of those, get the routine and conversion
  // for it, and return.
@@ -1896,14 +1934,15 @@ VA2 jtvar(J jt,A self,I at,I wt){
    if(likely(HOMO(at,wt))){
     argtypes=PEXT0((at<<2)+wt,C2TX,0xf); argtypes=at&BOX?0b0011:argtypes; // bits are a4 a2 w4 w2 if char, 0011 if box, 0111 if INHOMO
    }else argtypes=7;  // inhomogeneous line
-   if(likely((opchar&~1)==CEQ)){  // CEQ or CNE
+   if(likely(BETWEENC(opchar-VA2CEQ,0,1))){  // CEQ or CNE
     // = or ~:, possibly inhomogeneous
-    retva2.f=eqnetbl[opchar-CEQ][argtypes];  // return the comparison
+    retva2.f=eqnetbl[opchar-VA2CEQ][argtypes];  // return the comparison
    }else retva2.f=0;  // if not equality comparison, it's a domain error
    R retva2;
   }
   // falling through, all args are numeric
-  VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
+// obsolete   VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
+  VA *vainfo=((VA*)((I)va+opchar*sizeof(VA)));  // extract table line from the primitive
   if(withprob((t&(NOUN&~(B01|INT|FL))),0.9)){
    // Numeric args, but one of the arguments is CMPX/RAT/XNUM/other numeric precisions 
    I apri=TYPEPRIORITYNUM(at), wpri=TYPEPRIORITYNUM(wt);  // start the long priority computation
@@ -1922,21 +1961,21 @@ VA2 jtvar(J jt,A self,I at,I wt){
  }else{VA2 retva2;
   // Here there was an error in a previous run.  We see if we have a way to retry the operation
   retva2.f=0;  // error if not filled in
-  switch((UC)FAV(self)->id){
-  case CCIRCLE: if(jerr==EWIMAG){retva2.f=(VF)cirZZ; retva2.cv=VRD+VZ+VZZ;} break;
-  case CEXP: if(jerr==EWIMAG){retva2.f=(VF)powZZ; retva2.cv=VRNONE+VZ+VZZ;}
+  switch((UC)FAV(self)->lu2.lc){
+  case VA2CCIRCLE: if(jerr==EWIMAG){retva2.f=(VF)cirZZ; retva2.cv=VRD+VZ+VZZ;} break;
+  case VA2CEXP: if(jerr==EWIMAG){retva2.f=(VF)powZZ; retva2.cv=VRNONE+VZ+VZZ;}
              else if(jerr==EWRAT){retva2.f=(VF)powQQ; retva2.cv=VRNONE+VQ+VQQ;}
              else if(jerr==EWIRR){retva2.f=(VF)powDD; retva2.cv=VRNONE+VD+VDD;} break;
-  case CBANG: if(jerr==EWIRR){retva2.f=(VF)binDD; retva2.cv=VRNONE+VD+VDD;} break;
-  case CDIV: if(jerr==EWRAT){retva2.f=(VF)divQQ; retva2.cv=VRNONE+VQ+VQQ;}
+  case VA2CBANG: if(jerr==EWIRR){retva2.f=(VF)binDD; retva2.cv=VRNONE+VD+VDD;} break;
+  case VA2CDIV: if(jerr==EWRAT){retva2.f=(VF)divQQ; retva2.cv=VRNONE+VQ+VQQ;}
              else if(jerr==EWDIV0){retva2.f=(VF)divDD; retva2.cv=VRNONE+VD+VDD;} break;
 // the following errors are normally retryable in place.  We keep the alternate code for sparse
-  case CPLUS: if(BETWEENC(jerr,EWOVIP+EWOVIPPLUSII,EWOVIP+EWOVIPPLUSIB)){retva2.f=(VF)plusIO; retva2.cv=VRNONE+VD+VII;} break;
-  case CMINUS: if(BETWEENC(jerr,EWOVIP+EWOVIPMINUSII,EWOVIP+EWOVIPMINUSIB)){retva2.f=(VF)minusIO; retva2.cv=VRNONE+VD+VII;} break;
-  case CSTAR: if(jerr==EWOVIP+EWOVIPMULII){retva2.f=(VF)tymesIO; retva2.cv=VRNONE+VD+VII;} break;
-  case CPLUSDOT: if(jerr==EWOV){retva2.f=(VF)gcdIO; retva2.cv=VRNONE+VD+VII;} break;
-  case CSTARDOT: if(jerr==EWOV){retva2.f=(VF)lcmIO; retva2.cv=VRNONE+VD+VII;} break;
-  case CSTILE: if(jerr==EWOV){retva2.f=(VF)remDD; retva2.cv=VRNONE+VD+VDD+VIP;} break;
+  case VA2CPLUS: if(BETWEENC(jerr,EWOVIP+EWOVIPPLUSII,EWOVIP+EWOVIPPLUSIB)){retva2.f=(VF)plusIO; retva2.cv=VRNONE+VD+VII;} break;
+  case VA2CMINUS: if(BETWEENC(jerr,EWOVIP+EWOVIPMINUSII,EWOVIP+EWOVIPMINUSIB)){retva2.f=(VF)minusIO; retva2.cv=VRNONE+VD+VII;} break;
+  case VA2CSTAR: if(jerr==EWOVIP+EWOVIPMULII){retva2.f=(VF)tymesIO; retva2.cv=VRNONE+VD+VII;} break;
+  case VA2CPLUSDOT: if(jerr==EWOV){retva2.f=(VF)gcdIO; retva2.cv=VRNONE+VD+VII;} break;
+  case VA2CSTARDOT: if(jerr==EWOV){retva2.f=(VF)lcmIO; retva2.cv=VRNONE+VD+VII;} break;
+  case VA2CSTILE: if(jerr==EWOV){retva2.f=(VF)remDD; retva2.cv=VRNONE+VD+VDD+VIP;} break;
   }
   if(likely(retva2.f)){RESETERR}else{if(jerr>NEVM){RESETERR jsignal(EVSYSTEM);}}  // system error if unhandled exception.  Otherwise reset error only if we handled it
   R retva2;

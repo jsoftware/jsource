@@ -1394,6 +1394,7 @@ jobs:
    - name: Test JE (Windows MSYS2 x64 clang)
      shell: msys2 {0}
      env:
+      __MSYS__: 1
       DEBUGCMD: lldb
       USE_PYXES: ${{ env.USE_PYXES }}
       USE_EMU_AVX: ${{ env.USE_EMU_AVX }}
@@ -1465,6 +1466,7 @@ jobs:
    - name: Test JE (Windows MSYS2 x64)
      shell: msys2 {0}
      env:
+      __MSYS__: 1
       DEBUGCMD: gdb
       USE_PYXES: ${{ env.USE_PYXES }}
       USE_EMU_AVX: ${{ env.USE_EMU_AVX }}
@@ -1535,6 +1537,7 @@ jobs:
    - name: Test JE (Windows MSYS2 x86)
      shell: msys2 {0}
      env:
+      __MSYS__: 1
       DEBUGCMD: gdb
       USE_PYXES: 0
       USE_EMU_AVX: 0
@@ -1605,6 +1608,7 @@ jobs:
    - name: Test JE (Windows MSYS2 arm64)
      shell: msys2 {0}
      env:
+      __MSYS__: 1
       DEBUGCMD: lldb
       USE_PYXES: ${{ env.USE_PYXES }}
       USE_EMU_AVX: ${{ env.USE_EMU_AVX }}

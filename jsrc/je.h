@@ -1188,6 +1188,8 @@ extern I Iimin;
 extern I Iimax;
 extern I4 charfill;
 extern I fortesting;
+extern C va2ctoc[];
+
 
 #if CRASHLOG // debugging
 extern int logfirsttime;

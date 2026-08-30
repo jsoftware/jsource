@@ -211,6 +211,7 @@
 #define VA2CSTILE 37
 #define VA2CBANG 38
 #define VA2CCIRCLE 39
+#define VA2CXLATEMAX 39  // va2ctoc[] translates VA2C* ids back to C* ids for sparse operations.  Only values up to here can be sparse operations
 // the following are used only for execution, not definition
 #define VA2CEQABS 40  // all the entries in va[] share this block
 #define VA2CNEABS 41

@@ -1050,7 +1050,7 @@ takestats(++stats[0x13];)
    }else{
     // Sparse setup
     I ar=awr>>RANKTX, wr=(RANKT)awr;
-    R vasp(a,w,FAV(resolveself(self))->id,adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),0,ar,0,wr,0,MAX(ar,wr));
+    R vasp(a,w,va2ctoc[FAV(self)->lu2.lc&0x7f],adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),0,ar,0,wr,0,MAX(ar,wr));
    }
   }else{I ak,wk;UI wcr;
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
@@ -1180,7 +1180,7 @@ takestats(++stats[0x18];)
    }else{  // sparse case
     I af=LANE(wcr,AF), wf=LANE(wcr,WF); UI acr=LANE(wcr,AC); wcr=LANE(wcr,WC);   // separate cr and f for sparse
     fr=acr<wcr?wcr:acr; I f=(af<wf)?wf:af;
-    R vasp(a,w,FAV(resolveself(self))->id,adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),af,acr,wf,wcr,f,fr);  // handle sparse arrays separately.
+    R vasp(a,w,va2ctoc[FAV(self)->lu2.lc&0x7f],adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),af,acr,wf,wcr,f,fr);  // handle sparse arrays separately.
    }
   }
  }
@@ -1884,7 +1884,7 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
   UI awr=AR(a); awr<<=RANKTX; awr+=AR(w); // restore aw vars so they won't be saved over the call
-  notoneatom=1; bidcase=0; densbid0=1; opline=0;  // disable atomic; set not BID to force the retry through va2.  bidcase immaterial, set to prevent save
+  notoneatom=1; bidcase=0; densbid0=1; opline=(I)FAV(self)->lu2.lc;  // disable atomic; set not BID to force the retry through va2.  bidcase immaterial, set to prevent save
   if(likely(awr==0)){selfranks=R2MAX; realself=FAV(self)->fgh[0]; self=realself?realself:self;} goto retryss;  // retry.  atomic singletons must advance self (selfranks max to have no frame); others must not, using the incumbent self & selfranks
   // (no fallthrough here)
  }

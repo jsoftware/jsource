@@ -262,6 +262,7 @@ static C jtjinit3(JS jjt){S t;JJ jt=MTHREAD(jjt);
  memset(INITJT(jjt,jobqueues),0,sizeof(JOBQ[MAXTHREADPOOLS]));
  DO(MAXTHREADPOOLS, (*INITJT(jjt,jobqueues))[i].ht[1]=(JOB *)&(*INITJT(jjt,jobqueues))[i].ht[1];)  // when q is empty, tail points to itself, as a safe NOP store
 #endif
+ DO(256, if(primtab[i].prim.primvb.flag&VISATOMIC2)va2ctoc[primtab[i].prim.primvb.lu2.lc]=i;)
 // only crashing on startup INITJT(jjt,peekdata)=1;  // wake up auditing
  // Initialize subsystems in order.  Each initializes all threads, if there are thread variables
  RZ(jtbufferinits(jjt)); // init the buffers pointed to by jjt

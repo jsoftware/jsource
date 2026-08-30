@@ -159,6 +159,7 @@ I Ivalidboolean=VALIDBOOLEAN;  // masks
 I Iimin=IMIN;
 I Iimax=IMAX;
 I4 charfill=0x20;  // SP, used for filling LIT/C2T/C4T
+C va2ctoc[VA2CXLATEMAX+1];  // will be filled in at init; gives the C* code (which is an index into ds) for each VA2C* code
 
 // global const end 
 

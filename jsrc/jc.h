@@ -64,7 +64,7 @@
 #define CCOMMA     (C)0x19  // ,
 #define CSEMICO    (C)0x1a  // ;
 #define CRAZE      (C)0x1a  //
-// arithmetic
+// arithmetic.  The VA[12]* codes do not match these.  Sparse processing goes through the ds[] table to translate
 #define CJDOT      (C)0x1b  // j.
 #define CGRADE     (C)0x1c  // /:
 #define CEXP       (C)0x1d  // ^

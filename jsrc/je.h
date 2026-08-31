@@ -983,7 +983,7 @@ extern A        jtunparse(J,A,I);
 extern A        jtunwordil(J,A,A,I);
 extern A        jtv2(J,I,I);
 extern A        jtva2s(J,A,A,C,VF,I,I,I,I,I);
-extern VA2      jtvar(J,A,I,I);
+extern VA2      jtvar(J,I,I,I);
 extern A        jtvasp(J,A,A,C,VF,I,I,I,I,I,I,I,I,I);
 extern B        jtvc1(J,I,US*);
 extern A        jtvci(J,I);

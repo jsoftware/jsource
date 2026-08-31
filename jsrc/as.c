@@ -377,7 +377,7 @@ static DF2(jtofxassoc){F12IP;A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 a
  I rc;  // return code from execution of verb
  if(!TYPESEQ(AT(p),AT(s))){rc=EWOV;} else {I klg;  // simulate overflow if different precisions - will convert everything to float
   r=AR(p); PROD(c,AR(p)-1,AS(p)+1) t=AT(p); klg=bplg(t); kc=c<<klg;
-  adocv=var(x,t,t); // analyze the u operand
+  adocv=var(FAV(x)->lu2.lc&0x7f,t,t); // analyze the u operand
   GA(z,t,c*(1+d),r,AS(p)); AS(z)[0]=1+d; zv=CAVn(r,z);  // allocate result assuming no overflow
   MC(zv,AV(s),kc);                     // first cell is {.s, i. e. all but the first infix
   rc=(1<d)?((AHDR2FN*)adocv.f)(~(c*(d-1)),zv+kc,AV(p),kc+CAV(s),0,jt):EVOK; rc=rc<0?EWOVIP+EWOVIPMULII:rc;  /* (}:p) f (}.s), with result stored into the result area */  // don't call with 0 length!

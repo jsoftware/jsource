@@ -143,7 +143,8 @@ DF2(jtpolymult){F12IP;A f,g,z;B b=0;C*av,c,d,*wv;I at,i,j,k,m,m1,n,p,t,wt,zn;V*v
   // here for +//.@(*/)
   {A a1,y;I*aa,i,*u,*ww=(I*)wv,*v,*yv,*zv;VA2 adocv; VARPS adocvsum;
    b=1;
-   adocv=var(ds(CSTAR),at,wt); varps(adocvsum,FAV(f)->fgh[0],wt,0);  // get sum routine from f/, which is +/
+// obsolete    adocv=var(ds(CSTAR),at,wt); varps(adocvsum,FAV(f)->fgh[0],wt,0);  // get sum routine from f/, which is +/
+   adocv=var(VA2CSTAR,at,wt); varps(adocvsum,FAV(f)->fgh[0],wt,0);  // get sum routine from f/, which is +/
    GATV0(a1,INT,m,1); aa=AV1(a1); u=m+(I*)av; DO(m, aa[i]=*--u;);
    GATV0(y,INT,MIN(m,n),1); yv=AV1(y);
    GATV0(z,INT,zn,1); zv=AV1(z);
@@ -248,7 +249,8 @@ A jtkeyct(J jtfg,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nitems;
     I meanrtn=16+PEXT0(zt,FLX,1);  // 17 if FL result, 16 if not
     routineid=keyslashfn==routineid?meanrtn:routineid;  // 'other mean': only way they can be = is if both are 3.  Switch to 16/17, which differ in type of freq result
     A accfn=FAV(FAV(self)->fgh[0])->fgh[0]; accfn=keyslashfn==3?ds(CPLUS):accfn;
-    adocv=var(accfn,AT(w),zt);  // get dyadic action routine for f out of f//. or (+/%#)/. for the given arguments
+// obsolete      adocv=var(accfn,AT(w),zt);  // get dyadic action routine for f out of f//. or (+/%#)/. for the given arguments
+    adocv=var(FAV(accfn)->lu2.lc&0x7f,AT(w),zt);  // get dyadic action routine for f out of f//. or (+/%#)/. for the given arguments
    }
    
    if(!((I)ai&1)){

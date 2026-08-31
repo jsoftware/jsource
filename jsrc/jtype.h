@@ -1144,7 +1144,7 @@ typedef struct{
 } PM0;
 
 // Info for calling an atomic verb
-typedef struct {VF f;I cv;} VA2;  // for dyads
+typedef struct {VF f;I cv;} __attribute__((aligned(2*sizeof(I)))) VA2;  // for dyads
 typedef struct {VA1F f;I cv;} VA1;  // for monads
 typedef struct {VARPSF f;I cv;} VARPS;  // for reduce/prefix/suffix
 

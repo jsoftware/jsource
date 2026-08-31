@@ -979,7 +979,7 @@ static INLINE A jtva2(J jtfg,AD *a,AD *w,I afwf,UI densbid0,I awr,I vandx){F12IP
 takestats(++stats[0x10];)
  A z;I m,mf,n,nf,zn;UI cv;VF adocvfn;VA2 adocv;UI4 fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift  cv is flags value for function, with many local mods
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
- if(withprob(!densbid0,0.95)){  // bool/int/fl nonsparse args (always cleared on error retry)
+ if(withprob(!densbid0,0.95)){  // 0 if vandx points to the VA2 block (always non0 on error retry)
   // Here for the fast and important case, where the arguments are both dense B01/INT/FL
 // obsolete   VA2 *aadocv=&((VA*)((I)va+vandx))->p2[bidcase>>INTX];   // read table[primitive][argtype]
   VA2 *aadocv=(VA2*)((I)va+vandx);   // read table[primitive][argtype]
@@ -989,7 +989,7 @@ takestats(++stats[0x11];)
   // An arg is not BID.  Get the control vector and routine
   I at=AT(a), wt=AT(w);
   jtfg=(J)((I)jtfg|(SGNTO0(at|wt)<<JTSPARSEARGX));  // remember if an arg is sparse.
-  adocv=var((VA*)vandx-(VA*)0,at&~SPARSE,wt&~SPARSE);
+  adocv=var((VA*)vandx-(VA*)0,at&~SPARSE,wt&~SPARSE);  // recover VA2C* id from the va line
   if(unlikely(adocv.f==0)){
    at=AT(a), wt=AT(w);  // refetch type to save a reg
    // There is no routine for these argument types.  That's an error unless an argument is empty
@@ -1844,7 +1844,7 @@ retryss:;  // here when singleton fails.  jt->ranks has not been touched, nor ha
  // find frames
  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
 // retryss0:;  // If not for emsg ranks, we could come here when atomic singleton fails.  Nouns ranks (awr) are perforce 0, so afwf have been set to 0.  at/wt are garbage
- I opline=(I)&((VA*)0)[opcode&0x7f].p2[(bidcase&0x3f)>>2];  // convert op lc to offset of routine, if BID; otherwise to a garbage index in the correct line (max bidcase is 1110, when CMPX+FL or FL+BOX)
+ I opline=(I)&((VA*)0)[opcode&0x7f].p2[(bidcase&0x3c)>>INTX];  // convert op lc to offset of routine, if BID; otherwise to a garbage index in the correct line (max bidcase is 1110xx, when CMPX+FL or FL+BOX)
  // check for non-atomic singletons, which are rare (4% in testcases)
 takestats(if(notoneatom)++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
  if(withprob((notoneatom|densbid0)!=0,0.95)){

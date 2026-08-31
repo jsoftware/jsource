@@ -1825,15 +1825,16 @@ DF2(jtatomic2){F12IP;A z;
  ARGCHK2(a,w);
 takestats(++stats[0x0];)
  I opcode=(I)__atomic_load_n(&FAV(self)->lu2.lc,__ATOMIC_RELAXED);  // extract VA2C* code from the primitive
- I at=AT(a), wt=AT(w); UI awr=AR(a); awr<<=RANKTX; awr+=AR(w); I afwf;
+ I at=AT(a), wt=AT(w); UI awr=AR(a);
+ UI jtranks=__atomic_load_n(&jt->ranks,__ATOMIC_RELAXED); UI selfranks=__atomic_load_n(&FAV(self)->lrr,__ATOMIC_RELAXED);  // verb ranks, from user or from "n.  Force load to avoid branch; early faute de mieux
+ awr<<=RANKTX; awr+=AR(w); I afwf;  // finish combining rank; afwf will be both frames
  // Retries of singletons branch back to points at the top.  We must take care to save only what's needed, refetching the rest to save reg spills
  // singletons dominate the testcases.  We check them before any non-singleton fetches
  UI bidcase=3*at; UI densbid0=(UI)((at|=wt)&((NOUN|SPARSE)&~(B01+INT+FL))); bidcase+=(wt&=FL+INT);  // arg type info (low 2 bits garb.); bit0=not singleable
  if(withprob((awr+densbid0)==0,0.7)){takestats(++stats[0x1];) goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
  // falling through, not atomic singleton.
-retryss:;  // here when singleton fails.  jt->ranks has not been touched, nor has self.  bidcase and densbid have been set to non-BID, and awr has been reconstructed.  at/wt are garbage
+retryss:;  // here when non-atomic singleton retries.  jtranks and selfranks have been loaded.  bidcase and densbid have been set to non-BID, and awr has been reconstructed.  at/wt are garbage
     // awr is known to be 0, but we still have to save selfranks in case an error message is needed.
- UI jtranks=__atomic_load_n(&jt->ranks,__ATOMIC_RELAXED); UI selfranks=__atomic_load_n(&FAV(self)->lrr,__ATOMIC_RELAXED);  // verb ranks, from user or from "n.  Force load to avoid branch
  UI notoneatom=(AN(a)-1)|(AN(w)-1);  // 0 if both ANs=1
 // obsolete  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank.
 // obsolete  UI selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
@@ -1843,21 +1844,20 @@ retryss:;  // here when singleton fails.  jt->ranks has not been touched, nor ha
 // obsolete  opline=__atomic_load_n(&FAV(self)->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
  // find frames
  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
-// retryss0:;  // If not for emsg ranks, we could come here when atomic singleton fails.  Nouns ranks (awr) are perforce 0, so afwf have been set to 0.  at/wt are garbage
- I opline=(I)&((VA*)0)[opcode&0x7f].p2[(bidcase&0x3c)>>INTX];  // convert op lc to offset of routine, if BID; otherwise to a garbage index in the correct line (max bidcase is 1110xx, when CMPX+FL or FL+BOX)
  // check for non-atomic singletons, which are rare (4% in testcases)
 takestats(if(notoneatom)++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
  if(withprob((notoneatom|densbid0)!=0,0.95)){
+retryss0:;  // Here when atomic singleton retries.  Noun ranks (awr) are perforce 0, so afwf have been set to 0, with selfranks set for error-message purposes.  at/wt are garbage
   // either not singleton BID, or singleton needing retry: carry on with normal setup
   NOUNROLL while(1){
    afwf=selfranks==0?0:afwf;   // if ranks were 0 0, ignore them and shift down to working on frame wrt 0.  afwf=0 signals that case (& happens naturally if there is no frame wrt actual rank).    It uses simpler setup
    // Run the full dyad, retrying if a retryable error is returned.  self has been modified to point to the actual primitive rather than the rank block
-   z=jtva2(jtfg,a,w,afwf,densbid0,awr,opline);  // execute the verb. jtfg, a, w, selfranks, self  must be preserved over call
+   z=jtva2(jtfg,a,w,afwf,densbid0,awr,(I)&((VA*)0)[opcode&0x7f].p2[(bidcase&0x3c)>>INTX]);  // point to the VA2 block for the BID if valid; VA block if not; execute the verb. jtfg/a/w/selfranks/self  must be preserved over call
    if(likely(z!=0)){RETF(z);}  // normal case is good return
    if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
-   densbid0=1; UI awr=AR(a); awr<<=RANKTX; awr+=AR(w);   // set 'not BID' flag so we don't use the routine# from self, reload awr to avoid save.
+   awr=AR(a); awr<<=RANKTX; awr+=AR(w); // restore aw vars so they won't be saved over the call
 // obsolete    opline=FAV(self)->localuse.lu1.uavandx[1];  // extract table line from the primitive to avoid save
-   opline=(I)&((VA*)0)[FAV(self)->lu2.lc&0x7f].p2[0];  // recover start of table line for opcode
+   densbid0=1; bidcase=0; opcode=FAV(self)->lu2.lc;  // set not BID to force the retry through va2.  bidcase must be harmless, such as 0; restore opcode to prevent save
    afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  // reload afwf too.  selfranks must be preserved
   }
   // We hit an error.  We will format it now because we have the IRS ranks that were used in selfranks.  It might be possible to get the ranks from the self?
@@ -1887,11 +1887,12 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
   if(likely(z!=0)){RETF(z);}  // normal case is good return; the rest is retry for singletons
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
-  UI awr=AR(a); awr<<=RANKTX; awr+=AR(w); // restore aw vars so they won't be saved over the call
-  bidcase=0; densbid0=1; opcode=(I)FAV(self)->lu2.lc;  // disable atomic: set not BID to force the retry through va2.  bidcase immaterial, set to prevent save
+  awr=AR(a); awr<<=RANKTX; awr+=AR(w); // restore aw vars so they won't be saved over the call
+  densbid0=1; bidcase=0; opcode=FAV(self)->lu2.lc;  // set not BID to force the retry through va2.  bidcase must be harmless, such as 0; restore opcode to prevent save
+  jtranks=jt->ranks; selfranks=FAV(self)->lrr;  // Restore verb ranks, from user or from "n.
 // obsolete   if(likely(awr==0)){selfranks=R2MAX; realself=FAV(self)->fgh[0]; self=realself?realself:self;} goto retryss;  // retry.  atomic singletons must advance self (selfranks max to have no frame); others must not, using the incumbent self & selfranks
 // obsolete   if(likely(awr==0)){selfranks=R2MAX;}
-  goto retryss;  // retry, loading the actual ranks of the verb
+  if(likely(awr==0)){afwf=0; goto retryss0;} goto retryss;  // retry, loading the actual ranks of the verb
   // (no fallthrough here)
  }
 

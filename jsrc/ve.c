@@ -706,7 +706,7 @@ F2(jtintdiv){F12IP;A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*
  if(an&&wn){PROD(m,r,s); PROD(n,b?ar-r:wr-r,r+s);}else m=n=0; 
  GATV(z,INT,b?an:wn,b?ar:wr,s); zv=AVn(b?ar:wr,z);
  d=wn?*wv:0; p=0<d?d:-d;
-#if defined(__clang__) && !SY_64
+#if defined(__GNUC__) || (defined(__clang__) && !SY_64)
  if(likely(d==IMIN)){p1=p;}else{p1=p-1;}  // workaround clang optimization issue
 #else
  p1=d==IMIN?p:p-1;

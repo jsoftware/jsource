@@ -500,14 +500,14 @@ I stringdisplaywidth(J jt, I c2, void*src, I nsrc){I n=nsrc,q;A c4;C4*u;
  switch(c2){
  default:
   q=mtousize(src,nsrc);
-  q=(q<0)?-q:q;
+  q=ABS(q);
   GATV0(c4,C4T,q,1); u=C4AV1(c4);
   mtou(src,nsrc,u);
   n=q; DO(q, if(u[i])n+=extrawidth(u[i]);else n--;);
   break;
  case 1:
   q=wtousize(src,nsrc);
-  q=(q<0)?-q:q;
+  q=ABS(q);
   GATV0(c4,C4T,q,1); u=C4AV1(c4);
   wtou(src,nsrc,u);
   n=q; DO(q, if(u[i])n+=extrawidth(u[i]);else n--;);

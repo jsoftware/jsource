@@ -1820,13 +1820,12 @@ DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 // Consolidated entry point for ATOMIC2 verbs.  These can be called with self pointing either to a rank block or to the block for
 // the atomic.  If the block is a rank block, we will switch self over to the block for the atomic.
 // Rank can be passed in via jt->ranks, or in the rank for self.  jt->ranks has priority.
-// This entry point supports inplacing
 DF2(jtatomic2){F12IP;A z;
  ARGCHK2(a,w);
 takestats(++stats[0x0];)
  // load initial values, many of them since there is nothing else to do while the first reads are completing.  We overrule the compiler, which would load jtranks and selfranks after the first test,
  // to get an early start down that path.  We use atomic_load to inhibit load reordering, but clang creates a mov/movzx pair when loading anything shorter than an I, so we avoid loading a short value
- // using atomic_load.  Best sequence would be at , wt/ar , wr, but we have to delay the gating wt a clock o force the loads of jtranks and selfranks
+ // using atomic_load.  Best sequence would be at , wt/ar , wr, but we have to delay the gating wt a clock to force the loads of jtranks and selfranks
  I opcode=FAV(self)->lu2.lc; UI jtranks=jt->ranks; // VA2C* code from the primitive (used if we predict to ssing), jt->ranks (used if we predict to va2)
  UI selfranks=FAV(self)->lrr; I at=AT(a);  //  ranks from "n (if we predict to va2); at, for bidcase/densbid0
  UI awr=AR(a); I wt=__atomic_load_n(&AT(w),__ATOMIC_RELAXED);   // ar, wt, for bidcase/densbid0

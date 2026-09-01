@@ -213,7 +213,7 @@ static D jtexprndID(J jt, I d, D y){I e,s;D f,q,c,x1,x2;DI8 f8,y8,c8;
 static B jtsprintfI(J jt, C *x, I m, I dp, I iw, C *subs) {I /*r,*/ g;
  x+=m-1;   // start at last digit
  DQ(dp, *x--='0';); if(dp) *x--=SUBd; /*r = dp + !!dp;*/  // if there are decimal places, make them all 0 and add the decimal point
- g=SGN(iw); UI uiw=ABS(iw);
+ g=SGN(iw); UI uiw=ABSUI(iw);
  while(uiw){ *x--='0'+(C)(uiw%10); uiw/=10; /*r++;*/ }   // format absolute value
  if(g==0) { *x--='0'; /*r++; */ }  // if input 0, give 1 digit of 0
  R 1;

@@ -1006,7 +1006,10 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define SGNTO0US(x) ((US)(x)>>(16-1))  // move sign bit to bit 0, clear other bits
 
 #define A0              0   // a nonexistent A-block
-#define ABS(a)          (0<=(a)?(a):-(a))
+#define ABS(a)          (0<=(a)?(a):-(a))  // use for FL or INT that cannot contain IMIN
+#define ABSOFLO(a,o) (unlikely(a==IMIN)?(o):ABS(a))   // use to provide value when arg is IMIN
+#define ABSUI(a) (((UI)(a)^REPSGN(a))-(UI)REPSGN(a))   // ABS(I), producing UI
+#define ABSUI4(a) (((UI4)(a)^REPSGN4(a))-(UI4)REPSGN4(a))   // ABS(I), producing UI
 #include "jr0.h" // moved to jr0.h: R0, ASSERT(b,e), ASSERTF(b,e,s...), ASSERTSUFF(b,e,suff), ASSERTGOTO(b,e,lbl), ASSERTTHREAD(b,e), ASSERTD(b,s), ASSERTMTV(w), ASSERTN(b,e,nm), ASSERTNGOTO(b,e,nm,lbl), ASSERTPYX(e,line), ASSERTSYSCOMMON(b,s,stmt),
 // ASSERTSYS(b,s), ASSERTSYSGOTO(b,s,lbl), ASSERTSYSV(b,s,stmt), ASSERTW(b,e), ASSERTWR(c,e)
 

@@ -94,7 +94,7 @@ static F2(jtrotsp){F12IP;PROLOG(0071);A q,x,y,z;B bx,by;I acr,af,ar,*av,d,k,m,n,
 // set k=length that wraps (dk * shift), ks=offset to it in source, kd=offset to it in dest, js=source offset to part that doesn't wrap, kd=offset to it in dest
 // for left shift (ar positive) ks=0, js=dk*shift, kd=e-k, jd=0
 // for right shift              ks=e-k, js=0, kd=0, jd=dk*shift
-#define ROTF(r) {I ar=ABS(r); if(unlikely((UI)ar>(UI)n)){if(jt->fill)ar=n; else{r=r%n; ar=ABS(r);}} k=dk*ar; kd=e-k; ks=r<0?kd:0; jd=r<0?k:0; kd-=ks; js=k-jd;}   // UI in case ABS(IMIN)
+#define ROTF(r) {UI ar=ABSUI(r); if(unlikely(ar>(UI)n)){if(jt->fill)ar=n; else{r=r%n; ar=ABSUI(r);}} k=dk*ar; kd=e-k; ks=r<0?kd:0; jd=r<0?k:0; kd-=ks; js=k-jd;}   // UI in case ABS(IMIN)
 
 F2(jtrotate){F12IP;A origw=w,z;C *u,*v;I acr,af,ar,d,k,m,n,p,*s,wcr,wf,wn,wr;
  ARGCHK2(a,w);

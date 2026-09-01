@@ -88,7 +88,7 @@ DF2(jtshasum2){F12IP;
 // SHA1 SHA224 SHA256 for armv8 x86_64
 // use other sources
 
-  switch((s>0)?s:-s) {
+  switch(ABS(s)) {
   case 1: {
     UC md[20],dh[2*20];
     SHA1(v, n, md);
@@ -124,7 +124,7 @@ DF2(jtshasum2){F12IP;
     UC d[64], dh[2*28];
     KECCAK1600_CTX c;
     sha3_reset(&c);
-    sha3_init(&c, (10==((s>0)?s:-s))?0x01:0x06, 28*8);
+    sha3_init(&c, (10==ABS(s))?0x01:0x06, 28*8);
     sha3_update(&c, v, n);
     sha3_final(d, &c);
     z = (s<0)?str(28, d):str(2*28, tohex(dh,d,28));
@@ -135,7 +135,7 @@ DF2(jtshasum2){F12IP;
     UC d[64], dh[2*32];
     KECCAK1600_CTX c;
     sha3_reset(&c);
-    sha3_init(&c, (11==((s>0)?s:-s))?0x01:0x06, 32*8);
+    sha3_init(&c, (11==ABS(s))?0x01:0x06, 32*8);
     sha3_update(&c, v, n);
     sha3_final(d, &c);
     z = (s<0)?str(32, d):str(2*32, tohex(dh,d,32));
@@ -146,7 +146,7 @@ DF2(jtshasum2){F12IP;
     UC d[64], dh[2*48];
     KECCAK1600_CTX c;
     sha3_reset(&c);
-    sha3_init(&c, (12==((s>0)?s:-s))?0x01:0x06, 48*8);
+    sha3_init(&c, (12==ABS(s))?0x01:0x06, 48*8);
     sha3_update(&c, v, n);
     sha3_final(d, &c);
     z = (s<0)?str(48, d):str(2*48, tohex(dh,d,48));
@@ -157,7 +157,7 @@ DF2(jtshasum2){F12IP;
     UC d[64], dh[2*64];
     KECCAK1600_CTX c;
     sha3_reset(&c);
-    sha3_init(&c, (13==((s>0)?s:-s))?0x01:0x06, 64*8);
+    sha3_init(&c, (13==ABS(s))?0x01:0x06, 64*8);
     sha3_update(&c, v, n);
     sha3_final(d, &c);
     z = (s<0)?str(64, d):str(2*64, tohex(dh,d,64));

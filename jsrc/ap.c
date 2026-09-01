@@ -433,7 +433,7 @@ static F2(jtseg){F12IP;A z;I c,k,m,n,*u,zn;
 static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
  ARGCHK1(w);
  // p=|m, n=#items of w, d=#applications of u (depending on overlapping/nonoverlapping)
- p=ABS(m); SETIC(w,n);
+ p=ABSOFLO(m,IMAX); SETIC(w,n);
  if(m>=0){d=MAX(0,1+n-m);}else{d=1+(n-1)/p; d=(n==0)?n:d;}
  // Allocate result, a dx2 table; install shape
  GATV0(z,INT,2*d,2); AS(z)[0]=d; AS(z)[1]=2;
@@ -447,10 +447,11 @@ static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
 static DF2(jtinfix){F12IP;PROLOG(0018);A fs=FAV(self)->fgh[0]; A x,z;I m; 
  F2RANK(0,RMAX,jtinfix,self); // Handle looping over rank.  This returns here for each cell (including this test)
  // The rest of this verb handles a single cell
- // If length is infinite, convert to large integer
- // kludge - test for ==ainf should be replaced with a test for value; will fail if _ is result of expression like {._
- if(a==ainf)m=IMAX;
- else m=rei0(a); // get infix length as an integer
+// obsolete  // If length is infinite, convert to large integer
+// obsolete  // kludge - test for ==ainf should be replaced with a test for value; will fail if _ is result of expression like {._
+// obsolete  if(a==ainf)m=IMAX;
+// obsolete  else
+ m=rei0(a); // get infix length as an integer, -imax to imax
  // Create table of infix positions
  RZ(x=ifxi(m,w));
  // If there are infixes, apply fs@:jtseg (ac2 creates an A verb for jtseg)
@@ -484,7 +485,7 @@ static DF2(jtginfix){F12IP;A h,*hv,x,z,*zv;I d,m,n;
   DO(n, RZ(zv[i]=df1(h,seg(from(sc(i),x),w),C(hv[i%d]))););
   R jtopenforassembly(jt,z);
  }else{A s;
-  RZ(s=AR(w)?shape(w):ca(iv0)); AV(s)[0]=ABS(m);
+  RZ(s=AR(w)?shape(w):ca(iv0)); AV(s)[0]=ABSOFLO(m,IMAX);
   RZ(dfv1(x,jtfiller(jt,AT(w),AR(s),AS(s)),C(*hv)));
   R reshape(over(zeroionei(0),shape(x)),x);
 }}
@@ -703,7 +704,7 @@ static DF1(jtpscan){F12IP;A z;I f,n,r,t,wn,wr,*ws,wt;
 static DF2(jtinfixd){F12IP;A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc; 
  F2RANKW(0,RMAX,jtinfixd,self);
  wr=AR(w); ws=AS(w); wt=AT(w); SETIC(w,n);   // n=#items of w
- m=rei0(a); if(m==IMAX){m=n+1;} p=m==IMIN?IMAX:ABS(m);  // m=x arg, p=abs(m)
+ m=rei0(a); if(m==IMAX){m=n+1;} p=ABSOFLO(m,IMAX);  // m=x arg, p=abs(m)
  if(0>m){p=MIN(p,n); if(likely(p!=0))d=(n+p-1)/p;else d=0;}else{ASSERT(IMAX-1>n-m,EVDOMAIN); d=MAX(0,1+n-m);}  // d=#partitions; error if n-m+1 overflows
  if(unlikely(CCOMMA==FAV(FAV(self)->fgh[0])->id)){RE(c=aii(w)); DPMULDE(p,c,zc) r=2;}  // c=#atoms in item of w; zc=#atoms in cell of result; r=result rank
  else{if(n)RE(c=aii(w)); zc=p; r=wr?1+wr:2;}   // if w has no items, proceed allocating 0 items of result

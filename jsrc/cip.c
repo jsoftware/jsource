@@ -767,7 +767,7 @@ F2(jtpdt){F12IP;PROLOG(0038);A z;I ar,at,i,m,n,p,p1,t,wr,wt;
     // vector products
     // The fast loop will be used if each multiplicand, and each product, fits in 32 bits
     I er=0;  // will be set if overflow detected
-    I* RESTRICT wv=AV(w); tot=0; DQ(p, I wvv=*wv; if((I4)wvv!=wvv){er=1; break;} wvv=wvv<0?-wvv:wvv; tot+=wvv; wv++;)
+    I* RESTRICT wv=AV(w); tot=0; DQ(p, I wvv=*wv; if((I4)wvv!=wvv){er=1; break;} wvv=ABS(wvv); tot+=wvv; wv++;)
     if(!er){
      // w fits in 32 bits.  Try to accumulate the products.  If we can be sure that the total will not exceed 32 bits unless
      // an a-value does, do the fastest loop

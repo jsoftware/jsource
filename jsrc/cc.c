@@ -1155,7 +1155,7 @@ static DF2(jttess2){F12IP;A z,zz=0,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
 
   hmv=av[1];  hsz=av[axisct+1];    // h movement vector and size
   state|=REPSGN(vsz)&STATEREFLECTY; state|=REPSGN(hsz)&STATEREFLECTX; 
-  vsz=(vsz<0)?-vsz:vsz; hsz=(hsz<0)?-hsz:hsz;  // take abs(size)
+  vsz=ABS(vsz); hsz=ABS(hsz);  // take abs(size)
   // Calculate the amount to add to the strip position when we move along the second axis.  If there is no overlap in the second axis, just move 0.
   hss = hmv*cellbytes; I hdsc=(hmv>=hsz)?0:hmv;  // horiz source stride, dest stride in cells.  A mv of 0 must have the same effect as an mv of infinity
   // Calculate the amount to add to the strip position when we move along the leading axis.  If there is no overlap on either axis, move 0.  If horiz overlap only, move vsize.  If vert overlap, move vert mv

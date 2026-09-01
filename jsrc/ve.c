@@ -519,7 +519,7 @@ AHDR2(remII,I,I,I){I u,v;
 #if SY_64 && C_USEMULTINTRINSIC
   DQU(n, u=*x++;
     // take abs(x); handle negative x in a postpass
-   UI ua=-u>=0?-u:u;  // abs(x)
+   UI ua=ABSUI(u);  // abs(x)
    if(!(ua&(ua-1))){ I umsk = ua-1; bw0001II(2*m,z,y,&umsk,1,jt); z+=m; y+=m;   // x is a power of 2, including 0
    }else{
     // calculate 1/abs(x) to 53-bit precision.  Remember, x is at least 3, so the MSB will never have signed significance
@@ -562,7 +562,7 @@ AHDR2(remI2I2,I2,I2,I2){I u,v;
  }else if(m&1){m>>=1;    // repeated x.  Handle special cases and avoid integer divide
 #if SY_64 && C_USEMULTINTRINSIC
   DQU(n, u=*x++;
-   UI ua=-u>=0?-u:u;  // abs(x)
+   UI ua=ABS(u);  // abs(x)
    if(!(ua&(ua-1))){I umsk = ua-1; DOU(m, z[i]=y[i]&umsk;) z+=m; y+=m;   // x is a power of 2, including 0
    }else{
     UI uarecip = (UI)(18446744073709551616.0/(D)(I)ua);  // recip, with binary point above the msb.  2^64 / ua
@@ -589,7 +589,7 @@ AHDR2(remI4I4,I4,I4,I4){I u,v;
  }else if(m&1){m>>=1;    // repeated x.  Handle special cases and avoid integer divide
 #if SY_64 && C_USEMULTINTRINSIC
   DQU(n, u=*x++;
-   UI ua=-u>=0?-u:u;  // abs(x)
+   UI ua=ABSUI4(u);  // abs(x)
    if(!(ua&(ua-1))){I umsk = ua-1; DOU(m, z[i]=y[i]&umsk;) z+=m; y+=m;   // x is a power of 2, including 0
    }else{
     UI uarecip = (UI)(18446744073709551616.0/(D)(I)ua);  // recip, with binary point above the msb.  2^64 / ua
@@ -618,7 +618,7 @@ I jtigcd(J jt,I a,I b){I d;UI4 s,xz,yz;UI x,y;
  // IMIN+.IMIN, IMIN+.0, and 0+.IMIN are |IMIN, which is not representable
  if(unlikely((a|b)==IMIN)){jt->jerr=EWOV; R 0;}
  // switch to UI so shifts are logical, in case of IMIN
- x=ABS(a);y=ABS(b);
+ x=ABSUI(a);y=ABSUI(b);
  if(!x||!y)R x|y;  // if either value is 0, return absolute value of the other
  // The algorithm is as follows:
  // s=CTTZI(x|y) gives the number of factors of 2 shared between x and y
@@ -698,7 +698,7 @@ APFX(lcmZZ, Z,Z,Z, zlcm ,,HDR1JERR)
 #define INTDIVF(c,d) (c/d-(SGNTO0(c^d)&(c%d!=0)))  // c/d - (c^d)<0 && c%d
 #define INTDIVC(c,d) (c/d+(~SGNTO0((c^d))&(c%d!=0)))   // c/d + (c^d)>=0 && c%d
 
-F2(jtintdiv){F12IP;A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*wv,*zv;
+F2(jtintdiv){F12IP;A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,r,*s,wn,wr,*ws,*wv,*zv;UI p,p1;
  ARGCHK2(a,w);
  an=AN(a); ar=AR(a); as=AS(a); av=AV(a);
  wn=AN(w); wr=AR(w); ws=AS(w); wv=AV(w); b=ar>=wr; r=b?wr:ar; s=b?as:ws;
@@ -707,7 +707,7 @@ F2(jtintdiv){F12IP;A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*
  GATV(z,INT,b?an:wn,b?ar:wr,s); zv=AVn(b?ar:wr,z);
  d=wn?*wv:0;
 // obsolete  p=0<d?d:-d;
- p=((UI)d^(UI)REPSGN(d))-(UI)REPSGN(d); p1=(UI)p-(UI)SGNTO0(p);  // p is abs(divisor) without overflow (perhaps IMIN), p1 is p-1 unless d=IMIN; IMAX then
+ p=ABSUI(d); p1=p-1;  // p is abs(divisor) without overflow (perhaps IMIN), p1 is p-1 unless d=IMIN; IMAX then
 // obsolete #if defined(__GNUC__) || (defined(__clang__) && !SY_64)
 // obsolete  if(likely(d==IMIN)){p1=p;}else{p1=p-1;}  // workaround clang optimization issue
 // obsolete #else
@@ -877,7 +877,7 @@ F1(jtabase1){F12IP;A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  }
  // Integer.  Calculate x=max magnitude encountered (minimum of 1, to leave 1 output value)
  x=1; v=AV(w);
- DQ(n, p=*v++; x|=(UI)(p>0?p:-p););  // overflow happens on IMIN, no prob
+ DQ(n, p=*v++; x|=ABSUI(p););  // overflow happens on IMIN, no prob
  for(c=0;x;x>>=1){++c;}  // count # bits in result
  GATV0(z,B01,n*c,1+r); MCISH(AS(z),AS(w),r) AS(z)[r]=c;  // Allocate result area, install shape
  v=n+AV(w); zv=AN(z)+BAVn(1+r,z);  // v->last input location (prebiased), zv->last result location (prebiased)

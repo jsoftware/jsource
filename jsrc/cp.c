@@ -352,7 +352,7 @@ DF2(jtpowop){F12IP;B b;V*v;
     ASSERT(FAV(a)->valencefns[0]==jtpowv12cell,EVDOMAIN)  // enforce u is u^:v all verbs
     n=IMIN; // u^:v^:_. inherits assignsafe from u^:v, set exponent IMIN to indic u^:v^:_.
    }else{   // normal power, not _.
-    RZ(h=vib(w)); ASSERT(AN(h)!=0,EVDOMAIN); n=IAV(h)[0]; n=n==IMIN?-IMAX:n;   // hs=n coerced to integer (must not be 0); n=power (if atomic), exponent IMIN reserved for ^:_.
+    RZ(h=vib(w)); ASSERT(AN(h)!=0,EVDOMAIN); n=IAV(h)[0]; if(unlikely(n==IMIN))++n;   // hs=n coerced to integer (must not be 0); n=power (if atomic), exponent IMIN reserved for ^:_.
    }
    if(likely(!AR(w))){  // input is an atom
     // Handle the important cases: atomic _1 (inverse), 0 (nop), 1 (execute u), _ (converge), _. (dowhile)

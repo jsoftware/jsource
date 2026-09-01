@@ -225,7 +225,7 @@ DF2(jtxxhash2){F12IP;
   4   XXH3_128bits
   */
 
-  switch((s>0)?s:-s) {
+  switch(ABS(s)) {
   case 1: {
     UC dh[2*4];
     I4 r = XXH32(v, n, 0);  // sign-extend result if needed to make 64-bit and 32-bit the same numeric value

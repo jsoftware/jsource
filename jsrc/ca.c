@@ -376,7 +376,7 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
    x=av->fgh[0];
    if(RAT&AT(x))RZ(x=pcvt(XNUM,x));
    if((d==CEXP||d==CAMP&&CEXP==IDD(wv->fgh[1]))&&AT(x)&INT+XNUM&&!AR(x)&&CSTILE==IDD(av->fgh[1])){  // m&|@^ and m&|@(n&^) where m is atomic INT/XNUM
-    h=x; UI m=ABS(IAV(x)[0]);
+    h=x; UI m=ABSOFLO(IAV(x)[0],IMIN);  // IMIN for compatibility
     // precalculate 2^64/m so it is there if we need it
     if(AT(x)&INT&&m>1){mrecip=((UI)IMIN/m); mrecip=(mrecip<<1)+((((UI)IMIN-mrecip*m)<<1)>=m);}  // 2^64%m, possibly low by as much as 2^-64
     if(d==CEXP){f2=jtmodpow2;} else{f1=jtmodpow1;}

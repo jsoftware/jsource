@@ -707,7 +707,7 @@ F2(jtintdiv){F12IP;A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*
  GATV(z,INT,b?an:wn,b?ar:wr,s); zv=AVn(b?ar:wr,z);
  d=wn?*wv:0;
 // obsolete  p=0<d?d:-d;
- p=((UI)d^(UI)REPSGN(d))-(UI)REPSGN(d); p1=(UI)p-(UI)SGNTO0(p);  // p is abs(divisor) (perhaps IMIN), p1 is p-1 unless d=IMIN; IMAX then
+ p=((UI)d^(UI)REPSGN(d))-(UI)REPSGN(d); p1=(UI)p-(UI)SGNTO0(p);  // p is abs(divisor) without overflow (perhaps IMIN), p1 is p-1 unless d=IMIN; IMAX then
 // obsolete #if defined(__GNUC__) || (defined(__clang__) && !SY_64)
 // obsolete  if(likely(d==IMIN)){p1=p;}else{p1=p-1;}  // workaround clang optimization issue
 // obsolete #else

@@ -1174,9 +1174,10 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define ISFTOIOKFZ(f,i,fuzz) (likely((f)<FLIMAX) && likely((f)>=FLIMIN) && (likely((f)==(i)) || FIEQ(f,i,fuzz))) // same, but variable fuzz
 #define F1(f)           A f(JJ jtfg,    A w)  // whether in an interface routine or not, these must use the internal parameter type
 #define F2(f)           A f(JJ jtfg,A a,A w)
-#define F12IP JJ jt=(JJ)(intptr_t)((I)jtfg&~JTFLAGMSK)
-#define F12JT JJ jt=(JJ)(intptr_t)((I)jtfg&~JTFLAGMSK)  // for documentation, when flags are not IP flags
-#define FPREFIP(T)         T jtfg=jt; jt=(T)(intptr_t)((I)jt&~JTFLAGMSK)  // turn off all flag bits in jt, leave them in jtfg
+#define JTFROMJTFG(T) jt=(T)(intptr_t)((I)jtfg&~JTFLAGMSK)
+#define F12IP JJ JTFROMJTFG(JJ)
+#define F12JT JJ JTFROMJTFG(JJ)  // for documentation, when flags are not IP flags
+#define FPREFIP(T)         T jtfg=jt; JTFROMJTFG(T)  // turn off all flag bits in jt, leave them in jtfg
 #define F1PREFJT        FPREFIP(J)  // for doc purposes, use when the JT flags are not for inplacing
 #define F2PREFJT        FPREFIP(J)
 #define DF1RANK(m,f,self)    {if(AR(w)<=m)R f(jt,w,(A)self); if(m==0)R rank1ex0(w,(A)self,f);else R rank1ex(w,(A)self,(I)m,f);}  // if there is more than one cell, run rank1ex on them.  m=monad rank, f=function to call for monad cell.  Run suff only if rank was called.  Fall through otherwise

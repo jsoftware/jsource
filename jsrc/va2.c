@@ -1824,10 +1824,14 @@ DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 DF2(jtatomic2){F12IP;A z;
  ARGCHK2(a,w);
 takestats(++stats[0x0];)
- I opcode=(I)__atomic_load_n(&FAV(self)->lu2.lc,__ATOMIC_RELAXED);  // extract VA2C* code from the primitive
- I at=AT(a), wt=AT(w); UI awr=AR(a);
- UI jtranks=__atomic_load_n(&jt->ranks,__ATOMIC_RELAXED); UI selfranks=__atomic_load_n(&FAV(self)->lrr,__ATOMIC_RELAXED);  // verb ranks, from user or from "n.  Force load to avoid branch; early faute de mieux
- awr<<=RANKTX; awr+=AR(w); I afwf;  // finish combining rank; afwf will be both frames
+ // load initial values, many of them since there is nothing else to do while the first reads are completing.  We overrule the compiler, which would load jtranks and selfranks after the first test,
+ // to get an early start down that path.  We use atomic_load to inhibit load reordering, but clang creates a mov/movzx pair when loading anything shorter than an I, so we avoid loading a short value
+ // using atomic_load.  Best sequence would be at , wt/ar , wr, but we have to delay the gating wt a clock o force the loads of jtranks and selfranks
+ I opcode=FAV(self)->lu2.lc; UI jtranks=jt->ranks; // VA2C* code from the primitive (used if we predict to ssing), jt->ranks (used if we predict to va2)
+ UI selfranks=FAV(self)->lrr; I at=AT(a);  //  ranks from "n (if we predict to va2); at, for bidcase/densbid0
+ UI awr=AR(a); I wt=__atomic_load_n(&AT(w),__ATOMIC_RELAXED);   // ar, wt, for bidcase/densbid0
+ awr<<=RANKTX; awr+=AR(w);   // wr, one cycles after ar.  We cannot load any more here without overrunning registers
+ I afwf;  // finish combining rank; afwf will be both frames
  // Retries of singletons branch back to points at the top.  We must take care to save only what's needed, refetching the rest to save reg spills
  // singletons dominate the testcases.  We check them before any non-singleton fetches
  UI bidcase=3*at; UI densbid0=(UI)((at|=wt)&((NOUN|SPARSE)&~(B01+INT+FL))); bidcase+=(wt&=FL+INT);  // arg type info (low 2 bits garb.); bit0=not singleable
@@ -1835,7 +1839,8 @@ takestats(++stats[0x0];)
  // falling through, not atomic singleton.
 retryss:;  // here when non-atomic singleton retries.  jtranks and selfranks have been loaded.  bidcase and densbid have been set to non-BID, and awr has been reconstructed.  at/wt are garbage
     // awr is known to be 0, but we still have to save selfranks in case an error message is needed.
- UI notoneatom=(AN(a)-1)|(AN(w)-1);  // 0 if both ANs=1
+// obsolete  UI notoneatom=(an-1)|(wn-1);
+ I notoneatom=(AN(a)-1)|(AN(w)-1);   // 0 if both ANs=1: nonatomic singleton
 // obsolete  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank.
 // obsolete  UI selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
  selfranks=jtranks==R2MAX?selfranks:jtranks;   // ignore IRS if not given, to get the rank to be used for the execution
@@ -1854,6 +1859,8 @@ retryss0:;  // Here when atomic singleton retries.  Noun ranks (awr) are perforc
    // Run the full dyad, retrying if a retryable error is returned.  self has been modified to point to the actual primitive rather than the rank block
    z=jtva2(jtfg,a,w,afwf,densbid0,awr,(I)&((VA*)0)[opcode&0x7f].p2[(bidcase&0x3c)>>INTX]);  // point to the VA2 block for the BID if valid; VA block if not; execute the verb. jtfg/a/w/selfranks/self  must be preserved over call
    if(likely(z!=0)){RETF(z);}  // normal case is good return
+   // error cases: exit and retry
+   JTFROMJTFG(J);  // restore jt to avoid save
    if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
    awr=AR(a); awr<<=RANKTX; awr+=AR(w); // restore aw vars so they won't be saved over the call
 // obsolete    opline=FAV(self)->localuse.lu1.uavandx[1];  // extract table line from the primitive to avoid save
@@ -1885,6 +1892,8 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
   // any singleton.  awr is the rank of the result, with shape all 1s
   z=jtssingleton(jtfg,a,w,awr,bidcase,opcode);
   if(likely(z!=0)){RETF(z);}  // normal case is good return; the rest is retry for singletons
+  // error cases: exit and retry
+  JTFROMJTFG(J);  // restore jt to avoid save
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
   awr=AR(a); awr<<=RANKTX; awr+=AR(w); // restore aw vars so they won't be saved over the call

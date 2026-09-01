@@ -1857,7 +1857,7 @@ retryss0:;  // Here when atomic singleton retries.  Noun ranks (awr) are perforc
    if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
    awr=AR(a); awr<<=RANKTX; awr+=AR(w); // restore aw vars so they won't be saved over the call
 // obsolete    opline=FAV(self)->localuse.lu1.uavandx[1];  // extract table line from the primitive to avoid save
-   densbid0=1; bidcase=0; opcode=FAV(self)->lu2.lc;  // set not BID to force the retry through va2.  bidcase must be harmless, such as 0; restore opcode to prevent save
+   densbid0=1; bidcase=0; opcode=FAV(self)->lu2.lc;  // set not BID to force the retry through var.  bidcase must be harmless, such as 0; restore opcode to prevent save
    afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  // reload afwf too.  selfranks must be preserved
   }
   // We hit an error.  We will format it now because we have the IRS ranks that were used in selfranks.  It might be possible to get the ranks from the self?
@@ -1888,14 +1888,13 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
   awr=AR(a); awr<<=RANKTX; awr+=AR(w); // restore aw vars so they won't be saved over the call
-  densbid0=1; bidcase=0; opcode=FAV(self)->lu2.lc;  // set not BID to force the retry through va2.  bidcase must be harmless, such as 0; restore opcode to prevent save
+  densbid0=1; bidcase=0; opcode=FAV(self)->lu2.lc;  // set not BID to force the retry through var.  bidcase must be harmless, such as 0; restore opcode to prevent save
   jtranks=jt->ranks; selfranks=FAV(self)->lrr;  // Restore verb ranks, from user or from "n.
 // obsolete   if(likely(awr==0)){selfranks=R2MAX; realself=FAV(self)->fgh[0]; self=realself?realself:self;} goto retryss;  // retry.  atomic singletons must advance self (selfranks max to have no frame); others must not, using the incumbent self & selfranks
 // obsolete   if(likely(awr==0)){selfranks=R2MAX;}
-  if(likely(awr==0)){afwf=0; goto retryss0;} goto retryss;  // retry, loading the actual ranks of the verb
+  if(likely(awr==0)){afwf=0; selfranks=jtranks==R2MAX?selfranks:jtranks; goto retryss0;} goto retryss;  // retry, loading the actual ranks of the verb
   // (no fallthrough here)
  }
-
 }
 
 DF2(jtexpn2  ){F12IP; ARGCHK2(a,w); if(unlikely(((((I)AR(w)-1)&SGNIF(AT(w),FLX))<0)))if(unlikely(0.5==DAV(w)[0]))R sqroot(a);  R jtatomic2(jtfg,a,w,self);}  // use sqrt hardware for sqrt.  Only for atomic w. 

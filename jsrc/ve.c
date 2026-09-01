@@ -705,13 +705,15 @@ F2(jtintdiv){F12IP;A z;B b,flr;I an,ar,*as,*av,c,d,j,k,m,n,p,p1,r,*s,wn,wr,*ws,*
  ASSERTAGREE(as,ws,r);
  if(an&&wn){PROD(m,r,s); PROD(n,b?ar-r:wr-r,r+s);}else m=n=0; 
  GATV(z,INT,b?an:wn,b?ar:wr,s); zv=AVn(b?ar:wr,z);
- d=wn?*wv:0; p=0<d?d:-d;
-#if defined(__GNUC__) || (defined(__clang__) && !SY_64)
- if(likely(d==IMIN)){p1=p;}else{p1=p-1;}  // workaround clang optimization issue
-#else
- p1=d==IMIN?p:p-1;
-#endif
- flr=XMFLR==jt->xmode;  // p is abs(divisor), p1 is p-1 unless d=IMIN; IMIN then
+ d=wn?*wv:0;
+// obsolete  p=0<d?d:-d;
+ p=((UI)d^(UI)REPSGN(d))-(UI)REPSGN(d); p1=(UI)p-(UI)SGNTO0(p);  // p is abs(divisor) (perhaps IMIN), p1 is p-1 unless d=IMIN; IMAX then
+// obsolete #if defined(__GNUC__) || (defined(__clang__) && !SY_64)
+// obsolete  if(likely(d==IMIN)){p1=p;}else{p1=p-1;}  // workaround clang optimization issue
+// obsolete #else
+// obsolete  p1=d==IMIN?p:p-1;
+// obsolete #endif
+ flr=XMFLR==jt->xmode;
  if(!wr&&p&&!(p&p1)){  // divisor is power of 2, perhaps negative
   k=CTTZI(p);  // bit# of the sole 1 bit
   if(d>0)if(flr){DQ(n,*zv++=*av++>>k;)}else{DQ(n, c=*av++; *zv++=likely(!__builtin_add_overflow(c,p1,&c))?c>>k:(UI)c>>k;)}

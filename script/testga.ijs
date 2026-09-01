@@ -117,6 +117,13 @@ eformat_j_=: exformat_j_ f.
 NB. echo (2&^.) _.
 NB. echo datatype (2&^.) _.
 
+3 : 0''
+echo 'i:20'
+echo i:20
+assert. (i:20) -: _20 _19 _18 _17 _16 _15 _14 _13 _12 _11 _10 _9 _8 _7 _6 _5 _4 _3 _2 _1 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+1
+)
+
 NB. g222 smoke test
 echo 'g222 smoke test'
 t0=: {. t=: 1 56 10 $ ,".;._2 (0 : 0)

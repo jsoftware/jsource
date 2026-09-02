@@ -45,9 +45,9 @@ static INLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so many
 #define SSINGCASE(id,bidenc) ((bidenc)*32+(id))   // encode case/args into one branch value.  To reduce cache footprint of branch table, collect the arg combinations together.  ids are grouped by usage
 #define SSINGCASE4(id,bidenc) (((bidenc)&-4)*8+(id))   // encode case/args into one branch value.  To reduce cache footprint of branch table, collect the arg combinations together.  ids are grouped by usage
 
-// we know that AN=1 in a and w, which are FL/INT/B01 types.  af is larger arg rank (=rank of result)
+// we know that AN=1 in a and w, which are FL/INT/B01 types.  af is larger arg rank (=rank of result), copied to each of the low 2 byte lanes
 // bidcase is the routine index to use * 4
-INLINE static A jtssingleton(J jtfg,A a,A w,I af,UI bidcase,I opcode){F12JT;
+INLINE static A jtssingleton(J jtfg,A a,A w,I awr,I af,UI bidcase,I opcode){F12JT;
  void *av=voidAV(a), *wv=voidAV(w), *zv;  // point to the argument values and result.  2 fetches to op addrs, 3 to op values
  // We are waiting for opcode and data pointers to settle.  We use the idle time to start the reads to calculate inplaceability.  We also start the calculation, to save registers
  I caseno=opcode-VA2CBW1111; caseno=caseno<0?0:caseno; caseno&=31; caseno=SSINGCASE4(caseno,bidcase);  // case # for eventual switch.  Lump all Booleans at 0. &31 to remove comparison flag and to help the compiler
@@ -56,28 +56,29 @@ takestats(++stats[0x8];)
  // if the operation is a rank-0 comparison that can return num[result], don't bother with inplacing.  Inplacing would be
  // a potential gain if the result can itself be inplaced, but it is a certain loser when deciding where the result is
  A z;   // result addr, or 0 for comparisons that return num[0/1]
+ I aflag=AFLAG(a); I wflag=AFLAG(w); I ac=AC(a); I wc=__atomic_load_n(&AC(w),__ATOMIC_RELAXED);  // fetch aw inplaceability before likely misbranch - should be free
  if(withprob((opcode>>7)>af,0.3)){z=0; goto nozv;}  // true if 0x80 (comparison op) and af=0.  Set z=0 as a flag to return num(result)
- I ar=AR(a), wr=AR(w), aflag=AFLAG(a), wflag=AFLAG(w), ac=AC(a), wc=AC(w);  // fetch aw inplaceability
 takestats(++stats[0x9];)
  // See if we can inplace.  We let some chances get away because they aren't worth testing for.  There are two main possibilities: assignment (checked above)
  // and abandoned arg (checked presently).  If either passes, it must further be not VIRTUAL if assigned (lest it overwrite the backer of a virtual x/y arg)
  // and not AFRO if bare; and never UNINCORPABLE since we may change the type and we don't want callers to bear the burden of checking that.  Assign in place is best,
  // because it makes the assignment skip the free
  // Inplacing is fairly common (30% of the non-comparisons), so we make sure there is only one branch to be predicted.
- z=jt->zombieval;  // fetch address of assignand, which we presumptively make the result
- I awip=2*SGNTO0(ac&((aflag&AFUNINCORPABLE+AFRO)+((af-1)-ar)))  // a inplaceability: AC, not (unincorp/AFRO or awr<af)
-       +SGNTO0(wc&((wflag&AFUNINCORPABLE+AFRO)+((af-1)-wr)));  // aw inplaceability
+ z=__atomic_load_n(&jt->zombieval,__ATOMIC_RELAXED);  // fetch address of assignand, which we presumptively make the result
+ awr^=af;  // for a and w in byte lanes, set non0 if incorrect rank (= noninplaceable)
+ I awip=2*SGNTO0(ac&((aflag&AFUNINCORPABLE+AFRO)+(awr&0xff00)-1))  // a inplaceability: AC, not (unincorp/AFRO or awr<af)
+       +SGNTO0(wc&((wflag&AFUNINCORPABLE+AFRO)+(awr&0x00ff)-1));  // w inplaceability
  if(withprob(awip&=(I)jtfg,0.3)){z=awip&JTINPLACEW?w:a; zv=awip&JTINPLACEW?wv:av; goto haszv;}
 takestats(++stats[0xa];)
  // See if we can inplace an assignment (z=zombieval).  That is always a good idea, but in the test suite it's very rare so we check after other inplaceability.  Might be more common in user code.
  I asginplacemsk=(2*(a==z)+(w==z))&(I)jtfg;  // mask of reassigned inplaceable args
  if(withprob(asginplacemsk,0.05)){   // one of the args is being reassigned
 takestats(++stats[0xb];)
-  if(likely(af==AR(z))){zv=asginplacemsk&1?wv:av; goto haszv;}   // reassigned value must have the higher rank; zombieval must not be VIRT (or UNINCORP)
+  if(likely((af&=0xff)==AR(z))){zv=asginplacemsk&1?wv:av; goto haszv;}   // reassigned value must have the higher rank; zombieval must not be VIRT (or UNINCORP)
  }
 takestats(++stats[0xc];)
  // fall through: no inplacing, allocate the result as FL, usually an atom.  If not atom, make the shape all 1s
- if(likely(af==0)){GAT0(z,FL,1,0); zv=voidAV0(z);}else{GATV1(z,FL,1,af); zv=voidAVn(af,z);}  // af persists over call, then freed
+ if(likely((af&=0x7f)==0)){GAT0(z,FL,1,0); zv=voidAV0(z);}else{GATV1(z,FL,1,af); zv=voidAVn(af,z);}  // af persists over call, then freed
 haszv:;  // here when we are operating inplace on z/zv
 nozv:;  // here when we have zv or don't need it
  // z is 0 ONLY for comparisons with no rank.
@@ -91,7 +92,7 @@ nozv:;  // here when we have zv or don't need it
 #endif
 
  // Huge switch statement to handle every case.  Lump all the booleans together at 0.  In the testcases this is a pipeline break 80% of the time
-takestats(stats[0xd]+=caseno==statsoldcaseno; statsoldcaseno=caseno;)
+takestats(stats[0xd]+=caseno==statsoldcaseno; statsoldcaseno=caseno;)  // predictable fns
  switch(caseno){
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBB): SSSTORENV((B)aiv+(B)wiv,z,INT,I) R z;  // NV because B01 is never virtual inplace
  case SSINGCASE(VA2CPLUS-VA2CBW1111,SSINGBD): SSSTORENV((B)aiv+wdv,z,FL,D) R z;
@@ -1825,16 +1826,16 @@ DF2(jtatomic2){F12IP;A z;
 takestats(++stats[0x0];)
  // load initial values, many of them since there is nothing else to do while the first reads are completing.  We overrule the compiler, which would load jtranks and selfranks after the first test,
  // to get an early start down that path.  We use atomic_load to inhibit load reordering, but clang creates a mov/movzx pair when loading anything shorter than an I, so we avoid loading a short value
- // using atomic_load.  Best sequence would be at , wt/ar , wr, but we have to delay the gating wt a clock to force the loads of jtranks and selfranks
+ // using atomic_load.  Best sequence would be at , wt/ar , wr, but we have to delay the gating wt a clock to force the loads of jtranks and selfranks (added to misprediction latency of the first branch)
  I opcode=FAV(self)->lu2.lc; UI jtranks=jt->ranks; // VA2C* code from the primitive (used if we predict to ssing), jt->ranks (used if we predict to va2)
  UI selfranks=FAV(self)->lrr; I at=AT(a);  //  ranks from "n (if we predict to va2); at, for bidcase/densbid0
  UI awr=AR(a); I wt=__atomic_load_n(&AT(w),__ATOMIC_RELAXED);   // ar, wt, for bidcase/densbid0
  awr<<=RANKTX; awr+=AR(w);   // wr, one cycles after ar.  We cannot load any more here without overrunning registers
- I afwf;  // finish combining rank; afwf will be both frames
+ I afwf, af;  // finish combining rank; afwf will be both frames; af is rank of singleton result
  // Retries of singletons branch back to points at the top.  We must take care to save only what's needed, refetching the rest to save reg spills
  // singletons dominate the testcases.  We check them before any non-singleton fetches
  UI bidcase=3*at; UI densbid0=(UI)((at|=wt)&((NOUN|SPARSE)&~(B01+INT+FL))); bidcase+=(wt&=FL+INT);  // arg type info (low 2 bits garb.); bit0=not singleable
- if(withprob((awr+densbid0)==0,0.7)){takestats(++stats[0x1];) goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
+ if(withprob((awr+densbid0)==0,0.7)){takestats(++stats[0x1];) af=0*0x101; goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
  // falling through, not atomic singleton.
 retryss:;  // here when non-atomic singleton retries.  jtranks and selfranks have been loaded.  bidcase and densbid have been set to non-BID, and awr has been reconstructed.  at/wt are garbage
     // awr is known to be 0, but we still have to save selfranks in case an error message is needed.
@@ -1866,7 +1867,7 @@ retryss0:;  // Here when atomic singleton retries.  Noun ranks (awr) are perforc
    densbid0=1; bidcase=0; opcode=FAV(self)->lu2.lc;  // set not BID to force the retry through var.  bidcase must be harmless, such as 0; restore opcode to prevent save
    afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  // reload afwf too.  selfranks must be preserved
   }
-  // We hit an error.  We will format it now because we have the IRS ranks that were used in selfranks.  It might be possible to get the ranks from the self?
+  // We hit an error.  We will format it now because we have the IRS ranks that were used in selfranks.
   // convert 0 rank back to R2MAX to avoid "0 0 in msg
   jt->ranks=selfranks?selfranks:R2MAX;
   self=resolveself(self);   // reconstruct true self from its original value (it might be a monadic shorthand)
@@ -1886,10 +1887,10 @@ retryss0:;  // Here when atomic singleton retries.  Noun ranks (awr) are perforc
  }else{
 takestats(++stats[0x2];)
   // singleton BID, rank>0.  we need the rank of the result.  Rare to come in this way (singletons with rank)
-  {I awcr=awr-afwf; awr=MAX((UI1)awcr,(UI1)(awcr>>RANKTX))+MAX((UI1)afwf,(UI1)(afwf>>RANKTX));}   // af=max framelen + max rank = resultrank
-forcess:;  // branch point for rank-0 singletons from above, always with atomic result (awr puns to 0)
+  I awcr=awr-afwf; af=MAX((UI1)awcr,(UI1)(awcr>>RANKTX)); af+=MAX((UI1)afwf,(UI1)(afwf>>RANKTX)); af*=0x101;   // af=max framelen + max rank = resultrank, in 2 lanes
+forcess:;  // branch point for rank-0 singletons from above, always with atomic result (awr is 0, so if af)
   // any singleton.  awr is the rank of the result, with shape all 1s
-  z=jtssingleton(jtfg,a,w,awr,bidcase,opcode);
+  z=jtssingleton(jtfg,a,w,awr,af,bidcase,opcode);
   if(likely(z!=0)){RETF(z);}  // normal case is good return; the rest is retry for singletons
   // error cases: exit and retry
   JTFROMJTFG(J);  // restore jt to avoid save

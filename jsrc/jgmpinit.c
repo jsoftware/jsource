@@ -346,7 +346,6 @@ Q jtQmpq(J jt, mpq_t mpq, I number) {
  #define LIBGMPNAME "libgmp" LIBEXT
  #define LIBGMPNAME2 "libgmp32" LIBEXT
  #define LIBGMPNAME10 "libgmp" LIBEXT10
- #define LIBJGMPNAME "libjgmp" LIBEXT
 #endif
 
 static void*libgmp=0;
@@ -401,6 +400,26 @@ void jgmpinit(C*libpath) {
 #if !defined(_WIN64)
  }
 #endif
+#elif defined(__APPLE__)
+#if defined(__aarch64__)||defined(_M_ARM64)
+ if((libgmp= dlopen("/opt/homebrew/lib/" LIBGMPNAME, RTLD_LAZY))){
+  if(!dlsym(libgmp,"__gmpn_gcd_11")){   /* check system libgmp version is 6.2.x  */
+   dlclose(libgmp); libgmp= 0;
+  }
+ }
+#else
+ if((libgmp= dlopen("/usr/local/lib/" LIBGMPNAME, RTLD_LAZY))){
+  if(!dlsym(libgmp,"__gmpn_gcd_11")){   /* check system libgmp version is 6.2.x  */
+   dlclose(libgmp); libgmp= 0;
+  }
+ }
+#endif
+ if(!libgmp) {
+  strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,LIBGMPNAME);
+  if(!(libgmp= dlopen(dllpath, RTLD_LAZY)))  /* first try libj directory */
+  libgmp= dlopen(LIBGMPNAME, RTLD_LAZY);
+ }
+ if (!libgmp) {dldiag();R;}
 #else
  if(libpath&&*libpath){
   int FHS=0,i=0;
@@ -422,7 +441,7 @@ void jgmpinit(C*libpath) {
   }
 #endif
   if(!libgmp) {
-   strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,FHS?LIBJGMPNAME:LIBGMPNAME);
+   strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,LIBGMPNAME);
    if(!(libgmp= dlopen(dllpath, RTLD_LAZY)))  /* first try libj directory */
    libgmp= dlopen(FHS?LIBGMPNAME10:LIBGMPNAME, RTLD_LAZY);
   }

@@ -248,7 +248,8 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
  if(!w)R;
  if(AC(w)<0&&AZAPLOC(w)==0)SEGFAULT;
 // if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&AZAPLOC(w)>=jt->tnextpushp)SEGFAULT;  // requires large NTSTACK
- if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&((*AZAPLOC(w)!=0&&*AZAPLOC(w)!=w)))SEGFAULT;  // if no zaploc for inplaceable block, error
+ if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&((uintptr_t)AZAPLOC(w)<0x100000||(*AZAPLOC(w)!=0&&*AZAPLOC(w)!=w)))SEGFAULT;  // if no zaploc for inplaceable block, error
+// if(AC(w)<0&&!(AFLAG(w)&AFVIRTUAL)&&((*AZAPLOC(w)!=0&&*AZAPLOC(w)!=w)))SEGFAULT;  // if no zaploc for inplaceable block, error
  I nonrecur = (AT(w)&RECURSIBLE) && ((AT(w)^AFLAG(w))&RECURSIBLE);  // recursible type, but not marked recursive
  if(AFLAG(w)&AFVIRTUAL && !(AFLAG(w)&AFUNINCORPABLE))if(AFLAG(ABACK(w))&AFVIRTUAL)SEGFAULT;  // make sure e real backer is valid and not virtual
  if(nonrecur&&!nonrecurok)SEGFAULT;

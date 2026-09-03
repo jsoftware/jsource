@@ -1373,7 +1373,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // Because the Boolean dyads read beyond the end of the byte area (up to 1 extra word), we add one SZI-1 for islast (which includes B01), rather than adding 1
 // NOTE: sizeof(NM) is rounded up to a word multiple; offsetof() would be better.  But since it overallocates only for names of >20 characters, we keep it as is
 // NOTE: we overfetch from all blocks we allocate.  We assume that there is at least 32 bytes of fetchable data at the end of the block.
-//  * for AVX loops, we use maskload/maskstore.  We do not modify anything past the valid area but we need them to be mapped to avoid microprogram check
+//  * for AVX loops, we use load/maskstore.  We do not modify anything past the valid area but we need them to be mapped to avoid microprogram check
 //  * for boolean operations, we are entitled to fetch an I from the start of any valid atom.  When creating result blocks we may write as much as an I into the address of any valid atom
 //  * for singleton operations, we fetch a D from the address of the argument; it must be mapped
 // to guarantee validity we allocate a tail area for everything we allocate, and insist that mapped files do the same.

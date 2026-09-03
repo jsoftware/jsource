@@ -211,7 +211,7 @@ F1(jtmemhashs){F12IP;
 // initialize shared state for memory allocator
 B jtmeminits(JS jjt){
  INITJT(jjt,adbreakr)=INITJT(jjt,adbreak)=(C*)&INITJT(jjt,breakbytes); /* required for ma to work */
- INITJT(jjt,mmax) =(I)1<<(MLEN-1);
+ INITJT(jjt,lgmmax)=MLEN-2;   // max allo is 1<<(MLEN-1), i. e. 1/4 of the memory space; max lg(blksize)-1 is then MLEN-2
  R 1;}
 
 // initialise thread-specific state for memory allocator
@@ -464,14 +464,16 @@ F1(jtspforloc){F12IP;A*wv,x,y,z;C*s;D tot,*zv;I i,j,m,n;L*u;LX *yv,c;
 }    /* 7!:6 space for a locale */
 
 
-F1(jtmmaxq){F12IP;ASSERTMTV(w); RETF(sc(JT(jt,mmax)));}
+F1(jtmmaxq){F12IP;ASSERTMTV(w); RETF(sc((I)1<<(JT(jt,lgmmax)+1)));}
      /* 9!:20 space limit query */
 
-F1(jtmmaxs){F12IP;I j,m=MLEN,n;
- n=rei0(w);
- ASSERT(1E5<=n,EVLIMIT);
- j=m-1; DO(m, if(n<=(I)1<<i){j=i; break;});
- JT(jt,mmax)=(I)1<<j;
+F1(jtmmaxs){F12IP;
+// obsolete I j,m=MLEN,n;
+ I n=rei0(w);
+ ASSERT(n>=100000,EVLIMIT);  // Don't allow so small a value that we can't reset it
+ JT(jt,lgmmax)=CTLZI(n-1);  // save lg(rounded-up max blksize)-1
+// obsolete  j=m-1; DO(m, if(n<=(I)1<<i){j=i; break;});
+// obsolete  JT(jt,mmax)=(I)1<<j;
  RETF(mtm);
 }    /* 9!:21 space limit set */
 
@@ -1275,15 +1277,15 @@ __attribute__((noinline)) A jtgafallopool(J jt){
  // we visit them in back-to-front order so the first-allocated headers are in cache
 #if PYXES
 // the lock must always be cleared when the block is returned, so we can set it once.  The origin likewise doesn't change
-#define MOREINIT(u) *(I4 *)&u->origin=THREADID1(jt);  // init allocating thread# and clear the lock
+#define PYXMEMINIT(u) *(I4 *)&(u)->origin=THREADID1(jt);  // init allocating thread# and clear the lock
 #else
-#define MOREINIT(u)
+#define PYXMEMINIT(u)
 #endif
  u=(A)((C*)z+PSIZE); chn = 0; hrh = FHRHENDVALUE(1+blockx-PMINL); I n=2L<<blockx;
 #if MEMAUDIT&17
- DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; if(MEMAUDIT&4)AC(u)=(I)0xdeadbeefdeadbeefLL; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; MOREINIT(u));   // chain blocks to each other; set chain of last block to 0
+ DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; if(MEMAUDIT&4)AC(u)=(I)0xdeadbeefdeadbeefLL; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; PYXMEMINIT(u));   // chain blocks to each other; set chain of last block to 0
 #else
- DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; MOREINIT(u));    // chain blocks to each other; set chain of last block to 0
+ DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; PYXMEMINIT(u));    // chain blocks to each other; set chain of last block to 0
 #endif
  AFHRH(u) = hrh|FHRHROOT;  // flag first block as root.  It has 0 offset already
 #if MEMAUDIT&1
@@ -1318,7 +1320,7 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
  I nt=jt->malloctotalremote+jt->malloctotal;  // get net total allocated from this thread & not freed
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
  A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
- MOREINIT(z);  // init allocating thread# and clear the lock
+ PYXMEMINIT(z);  // init allocating thread# and clear the lock
  R z;
 }
 
@@ -1365,6 +1367,7 @@ if((I)jt&3)SEGFAULT;
    RZ(z=jtgafallopool((J)((I)jt+blockx)));
   }
  } else {      // here for non-pool allocs...
+  ASSERT(blockx<=JT(jt,lgmmax),EVLIMIT)  // make sure request isn't too big
   // add to the allocation for the fixed tail and the alignment area
   RZ(z=jtgafalloos(jt,blockx,((I)2<<blockx)+TAILPAD+ALIGNTOCACHE*CACHELINESIZE));  // ask OS for block, and fill in AFHRH.  We want to keep only jt over this call
  }
@@ -1399,7 +1402,7 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
  bytes|=(I)1<<(PMINL-1);  // if the memory header itself doesn't meet the minimum buffer length, insert a minimum
 #endif
  j=CTLZI((UI)bytes);  // 3 or 4 should return 2; 5 should return 3
- ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)
+// obsolete  ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)
  R jtgaf(jt,(I)j);
 }
 
@@ -1447,7 +1450,8 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
  // Get the number of bytes needed-1, including the header, the atoms, and end padding
  // This takes several cycles: type->bplg->bytes->CTLZI (and then fetch from [block] in the subroutine).  Unfortunately, stuck in this routine there's nothing to overlap with it.
  I bytes; if(likely(type&(BIT(LASTNOUNX+1)-1)))bytes=ALLOBYTESVSZLG(atoms,rank,bplg(type),(type)&C4T,0);else bytes=ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),0,0);
- ASSERT((UI)rank<=(UI)RMAX,EVLIMIT) ASSERT((UI)atoms<=2147483647,EVLIMIT) ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)   // verify size & rank are in limits
+ ASSERT((UI)rank<=(UI)RMAX,EVLIMIT) ASSERT((UI)atoms<=2147483647,EVLIMIT)   // verify size & rank are in limits
+// obsolete  ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)
     // We never use GA for NAME types, so we don't need to check for it
  RZ(z=jtgaf(jt, CTLZI((UI)bytes)));   // allocate the block, filling in AC AFLAG AM
  AT(z)=type; ARINIT(z,rank); AK(z)=AKXR(rank);

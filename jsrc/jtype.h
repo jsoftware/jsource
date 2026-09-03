@@ -254,7 +254,7 @@ struct AD {
  US origin;  // 
  S lock;   // can be used as a lock
 #endif
-#else
+#else  // bigendian, not used
 #if PYXES && SY_64
  S lock;   // can be used as a lock
  US origin;
@@ -283,12 +283,12 @@ struct AD {
 #define AC(x)           ((x)->c)        /* Reference count.                */
 #define AN(x)           ((x)->n)        /* # elements in ravel             */
 #define AR(x)           ((x)->r)        /* Rank                            */
-#if PYXES
-#define ARINIT(x,v)     {*(US*)&((x)->r)=(v);        /* Rank, clearing the high byte for initialization                           */ \
-    *(I4*)&(x)->origin=THREADID1(jt);}   // save the originating thread and clear the lock to 0
-#else
-#define ARINIT(x,v)     *(US*)&((x)->r)=(v);        /* Rank, clearing the high byte for initialization                           */
-#endif
+// obsolete #if PYXES
+// obsolete #define ARINIT(x,v)     {*(US*)&((x)->r)=(v);        /* Rank, clearing the high byte for initialization                           */ \
+// obsolete     *(I4*)&(x)->origin=THREADID1(jt);}   // save the originating thread and clear the lock to 0
+// obsolete #else
+#define ARINIT(x,v)     *(US*)&((x)->r)=(v);       // Rank, clearing the high byte for initialization, and also clearing the lock.  Threadid is set at allocation and never changes
+// obsolete #endif
 #define SMMAH           (7L+0)   // number of header words in old-fashioned SMM alloc
 #define NORMAH          (7L+0)   // number of header words in new system
 #define AS(x)           ((x)->s)        // Because s is an array, AS(x) is a pointer to the shape, which is in s.  The shape is stored in the fixed position s.

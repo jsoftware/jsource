@@ -310,7 +310,6 @@ typedef struct JSTstruct {
  S systemlocktct;   // counter field, used for systemlock sync, # running tasks
  S systemlockthreadct;  // for system lock, total # threads active
  US breakbytes;    // first byte: used for signals when there is no mapped breakfile.  Bit 0=ATTN request, bit 1=BREAK request.  Byte 1 used as error return value during systemlock
- I mmax;             // space allocation limit could be float or short float
  A stloc;            // named locales symbol table - this pointer never changes
  C baselocale[4];    // will be "base"
  UI4 baselocalehash;   // name hash for base locale
@@ -321,8 +320,9 @@ typedef struct JSTstruct {
  UC outeol;           /* output: EOL sequence code, 0, 1, or 2             */
  B sesm;             /* whether there is a session manager             */
  C nfe;              /* 1 for J native front end                    */
-// 1 byte free
+ C lgmmax;             // lg(rounded-up max allocation size)-1
  A *zpath;         // path 'z', used for all initial paths.  *JT(jt,zpath) is the z locale itself
+ I filler0[1];
 // end of cacheline 0
 
 // Cacheline 1: DLL variables

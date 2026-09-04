@@ -330,7 +330,7 @@ B jtspfree(J jt){I i;A p;
       // NOTE PUN: AFCHAIN(a) must be offset 0 of a
     for(p=jt->mempool[i];p;p=AFCHAIN(p)){   // for each free block
      if(!FHRHISALLOFREE(p,offsetmask)) {  // if the whole allocation containing this block is NOT deleted...
-      AFCHAIN(survivetail)=p;survivetail=p;  // ...add it as tail of survival chain
+      AFOFFSET0(survivetail)=(I)p;survivetail=p;  // ...add it as tail of survival chain
      }
     }
     AFCHAIN(survivetail)=0;  // terminate the chain of surviving buffers.  We leave the [].pool entry pointing to the free list

@@ -62,6 +62,7 @@
 #define MFREEBCOUNTING 1   // When this bit is set in mfreeb[], we keep track of max space usage
 
 // Format of h, the 16-bit workarea for free and allocated blocks in main memory.  This is used for in-memory headers for NJS blocks, but not for NJA blocks all on disk
+#define AFOFFSET0(a) ((a)->kchain.chain)  // the offset 0 of a  PUN: depends on struct AD
 #define AFCHAIN(a) ((a)->kchain.chain)  // the chain field, when the block is not allocated
 #define AFPROXYCHAIN(a) ((a)->tproxy.proxychain)  // chain field for base proxies during garbage collection
 #define FHRHROOTX 15

@@ -1513,9 +1513,9 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
  I bytes = ALLOBYTES(atoms,rank,size,(type)&C4T,(type)&NAME); \
  HISTOCALL \
  name = jtgaf(jt, ALLOBLOCK(bytes)); \
- I akx=AKXR(rank);   \
+/* obsolete  I akx=AKXR(rank); */   \
  if(likely(name!=0)){   \
- AK(name)=akx; AT(name)=(type); AN(name)=atoms;   \
+ if((rank)!=0)AK(name)=AKXR(rank); if((type)!=FL)AT(name)=(type); if((atoms)!=1)AN(name)=atoms;  /* default is atomic FL */   \
  ARINIT(name,rank);     \
  if(!(((type)&DIRECT))>0){if(rank==0)AS(name)[0]=0; if((bytes-(offsetof(AD,s[1])-32))&-32)mvc((bytes-(offsetof(AD,s[1])-32))&-32,&AS(name)[1],MEMSET00LEN,MEMSET00);}  \
       /* bytes is known; the if((bytes is evaluated at compile time */ \

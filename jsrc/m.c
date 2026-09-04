@@ -222,7 +222,7 @@ B jtmeminitt(JJ jt){I k;
  jt->tnextpushp = (A*)(((I)jt->tstackcurr+NTSTACKBLOCK)&(-NTSTACKBLOCK));  // get address of aligned block AFTER the first word
  *jt->tnextpushp++=0;  // blocks chain to blocks, allocations to allocations.  0 in first block indicates end.  We will never try to go past the first allo, so no chain needed
  // init all subpools to empty, setting the garbage-collection trigger points
- for(k=PMINL;k<=PLIML;++k){jt->memballo[-PMINL+k]=SBFREEB;jt->mempool[-PMINL+k]=0;}  // init so we garbage-collect after SBFREEB frees
+ for(k=PMINL;k<=PLIML;++k){jt->memballo[-PMINL+k]=SBFREEB;jt->mempool[-PMINL+k]=0;}  // init so we garbage-collect after SBFREEB bytes freed in pool
  jt->mfreegenallo=-SBFREEB*(PLIML+1-PMINL);   // balance that with negative general allocation
 #if LEAKSNIFF
  leakblock = 0;
@@ -1297,7 +1297,7 @@ __attribute__((noinline)) A jtgafallopool(J jt){
  if(unlikely((((jt->memballo[-PMINL+1+blockx]+=n-PSIZE)&MFREEBCOUNTING)!=0))){     // We are adding a bunch of free blocks now...
   I jtbytes=jt->bytes+=n; if(jtbytes>jt->bytesmax)jt->bytesmax=jtbytes;
  }
- A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
+// obsolete  A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
  R z;
 }
 
@@ -1319,14 +1319,14 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
  jt->malloctotal+=n;  // add to our allocations
  I nt=jt->malloctotalremote+jt->malloctotal;  // get net total allocated from this thread & not freed
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
- A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
+// obsolete  A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
  PYXMEMINIT(z);  // init allocating thread# and clear the lock
  R z;
 }
 
 // static auditmodulus = 0;
 // blockx is bit# of MSB in (length-1), i. e. lg2(bufsize)-1
-RESTRICTF A jtgaf(J jt,I blockx){A z;
+RESTRICTF A jtgaf(J jt,I blockx){AD __attribute__ ((aligned (CACHELINESIZE))) *z;
 // audit free chain I i,j;MS *x; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mempool[-PMINL+i]); while(x){x=(MS*)(x->a); if(++j>25)break;}}  // every time, audit first 25 entries
 // audit free chain if(++auditmodulus>25){auditmodulus=0; for(i=PMINL;i<=PLIML;++i){j=0; x=(jt->mempool[-PMINL+i]); while(x){x=(MS*)(x->a); ++j;}}}
 // audit free chain {I xxi,xxj;A xxx; {for(xxi=PMINL;xxi<=PLIML;++xxi){xxj=0; xxx=(jt->mempool[-PMINL+xxi]); while(xxx){xxx=xxx->kchain.chain; ++xxj;}}}}
@@ -1353,10 +1353,7 @@ if((I)jt&3)SEGFAULT;
    if(unlikely((((jt->memballo[-PMINL+1+blockx]+=(I)2<<blockx)&MFREEBCOUNTING)!=0))){
     jt->bytes+=(I)2<<blockx; if(unlikely(jt->bytes>jt->bytesmax))jt->bytesmax=jt->bytes;
    }
-   // Put the new block into the tpop stack and point the blocks to its zappable tpop slot.  We have to check for a new tpop stack block, and we cleverly
-   // pass z into that function, which will return it unchanged, so that we don't have to push the value in this routine
-   // We require each other allocation routine to copy this, so that they don't need registers saved either
-   A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // advance to next slot, allocating a new block as needed
+// obsolete    A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // advance to next slot, allocating a new block as needed
 #if MEMAUDIT&1
    if(AFCHAIN(z)&&FHRHPOOLBIN(AFHRH(AFCHAIN(z)))!=(1+blockx-PMINL))SEGFAULT;  // reference the next block to verify chain not damaged
    if(FHRHPOOLBIN(AFHRH(z))!=(1+blockx-PMINL))SEGFAULT;  // verify block has correct size
@@ -1378,8 +1375,15 @@ if((I)jt&3)SEGFAULT;
 #if MEMAUDIT&1
  if(z->h==0)SEGFAULT;  // h field must be valid
 #endif
- AFLAGINIT(z,0) ACINIT(z,ACUC1|ACINPLACE)  // all blocks are born inplaceable, and point to their deletion entry in tpop
-  // we do not attempt to combine the AFLAG write into a 64-bit operation
+ // initialize the header fields.  To help with GAT (especially singletons), we init to an atomic FL block (0x38,0,tp,FL,inplaceable,1)
+ A *tp=jt->tnextpushp;  // we will have to modify pushp
+ static I __attribute__ ((aligned (CACHELINESIZE))) inithdr[6]={AKXR(0),0,0,FL,ACINPLACE+ACUC1,1};  // atomic header block, type FL.  Could put into JTT around tpushp, but takes too much space
+ memcpy(z,inithdr,sizeof(inithdr));  AZAPLOC(z)=tp; // all blocks are born inplaceable, and point to their deletion entry in tpop
+// obsolete  AFLAGINIT(z,0) ACINIT(z,ACUC1|ACINPLACE)
+      // Note: with AVX-512 it is better to insert pushp into the store register using _mm256_insert_epi64
+   // Put the new block into the tpop stack and point the blocks to its zappable tpop slot.  We have to check for a new tpop stack block, and we cleverly
+   // pass z into that function, which will return it unchanged, so that we don't have to push the value in this routine
+ *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // advance to next slot, allocating a new block as needed
 #if LEAKSNIFF
  if(leakcode>0){  // positive starts logging; set to negative at end to clear out the parser allocations etc
   if(leaknbufs*2 >= AN(leakblock)){

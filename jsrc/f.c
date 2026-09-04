@@ -731,7 +731,7 @@ static A jtjprx(J jt,I ieol,I maxlen,I lb,I la,A w){A y,z;B ch;C e,eov[2],*v,x,*
  // c1=#characters to put out per line, lba=max # lines to put out
  c1=MIN(c,maxlen);
  // calculate p=total # lines of spacing needed, as sum of (#k-cells-1) for k>=2
- p=2<r?2-r:0; h=1; DO(r-2, if(s[i]){DPMULD(h,s[i],h,p=IMAX-1; break;) if(__builtin_add_overflow(p,h,&p)){p=IMAX-1; break;}}else{p=0; break;})  // overflow possible if AN=0
+ p=2<r?2-r:0; h=1; DO(r-2, if(s[i]){DPMULDDECLS DPMULD(h,s[i],h,p=IMAX-1; break;) if(__builtin_add_overflow(p,h,&p)){p=IMAX-1; break;}}else{p=0; break;})  // overflow possible if AN=0
  // Set h = max#lines to output, the smaller of (the # before spacing) and (the number we allow)
  I lba; if(__builtin_add_overflow(lb,la,&lba))lba=IMAX; lba=MIN(lba,IMAX-1); h=MIN(nq,lba);
  // zn=# characters in result string.  Start with enough for '...\n', plus '\n' for each line of spacing,

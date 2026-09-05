@@ -37,7 +37,7 @@ static void ctmask(J jt){DI p,x,y;UINT c,d,e,m,q;
  if(c==y.i[MSW]){e=y.i[LSW]; m|=(d&~e)|(~d&e);}
  q=m;
  while(m){m>>=1; q|=m;}       /* q=:+./\m as a bit vector */
- jt->ctmask= 0xffffffff00000000LL | (UIL)~q;
+ jt->etxinfo->vidata.ctmask= 0xffffffff00000000LL | (UIL)~q;
 }    /* 1 iff significant wrt comparison tolerance */
 
 
@@ -54,7 +54,7 @@ static void ctmask(J jt){DI p,x,y;UINT c,d,e,m,q;
 
 static UI hicnz(    I k,UC*v){UI HASHINIT(z);UC c;        DQ(k, c=*v++; if(c&&c!=255)HASHSTEP(z,c);); R z;}
 
-static UI hicx(J jt,I k,UC*v){UI HASHINIT(z);I*u=jt->hiv; DQ(jt->hin, HASHSTEP(z,v[*u++]);      ); R z;}
+static UI hicx(J jt,I k,UC*v){UI HASHINIT(z);I*u=jt->etxinfo->vidata.hiv; DQ(jt->etxinfo->vidata.hin, HASHSTEP(z,v[*u++]);      ); R z;}
 
 #if C_LE
        UI hic2(     I k,UC*v){UI HASHINIT(z);             DQ(k>>1,     HASHSTEP(z,v[0]);
@@ -84,10 +84,10 @@ static UI hicx(J jt,I k,UC*v){UI HASHINIT(z);I*u=jt->hiv; DQ(jt->hin, HASHSTEP(z
 #define hicw(v)  (10495464745870458733U**(UI*)(v))
 // Hash a single double, using only the bits in ctmask.  -0 is hashed differently than +0.  Should we take the sign bit out of ct?  Only if ct=0?
 //  not required for tolerant comparison, but if we tried to do tolerant comparison through the fast code it would help
-static UI jthid(J jt,D d){R 10495464745870458733U*(jt->ctmask&*(I*)&d);}
+static UI jthid(J jt,D d){R 10495464745870458733U*(jt->etxinfo->vidata.ctmask&*(I*)&d);}
 #else
 #define hicw(v)  (2838338383U**(U*)(v))
-static UI jthid(J jt,D d){DI x; x.d=d; R 888888883U*(x.i[LSW]&jt->ctmask)+2838338383U*x.i[MSW];}
+static UI jthid(J jt,D d){DI x; x.d=d; R 888888883U*(x.i[LSW]&jt->etxinfo->vidata.ctmask)+2838338383U*x.i[MSW];}
 #endif
 
 // Hash the data in the given A.  Comments say this is called only for singletons
@@ -408,7 +408,7 @@ static IOFX(I,jtioi,  hicw(v),           *v!=av[hj],                      ++v,  
 // should have 64-bit versions that use ctmask directly (it should be in machine byte order)
 // create hash for a D type
 #define HID(y)              (888888883U*y.i[LSW]+2838338383U*y.i[MSW])
-#define MASK(dd,xx)         {dd.d=xx; dd.i[LSW]&=jt->ctmask;}
+#define MASK(dd,xx)         {dd.d=xx; dd.i[LSW]&=jt->etxinfo->vidata.ctmask;}
 
 // functions for building the hash table for tolerant comparison.  expa is the function for detecting matches on a values
 
@@ -1074,7 +1074,7 @@ A jtindexofsub(J jtfg,I mode,A a,A w){F12JT;PROLOG(0079);A h=0,hi=mtv,z;B mk=w==
  }
 
  // Convert dissimilar types
- th=HOMO(at,wt); jt->min=0;  // are args compatible? clear return values from irange
+ th=HOMO(at,wt); jt->etxinfo->vidata.min=0;  // are args compatible? clear return values from irange
  // Indicate if float args need to be canonicalized for -0.  should do this in the hash
  I cvtsneeded = 0;  // 1 means convert a, 2 means convert w
  if(th&&TYPESNE(t,at))RZ(a=cvt(t|VFRCEXMT,a)) else if(t&FL+CMPX      )cvtsneeded=1;
@@ -1305,7 +1305,7 @@ A jtindexofsub(J jtfg,I mode,A a,A w){F12JT;PROLOG(0079);A h=0,hi=mtv,z;B mk=w==
    q=k; u=CAV(a); v=u+k;  // q = #bytes that have all identical values.  v point to current item, starting at second
    DO(ac*(m-1), DO(k, if(u[i]!=*v&&b[i]){b[i]=0; --q;} ++v;); if(!q)break;);  // Check for differing byte.  Exit loop if all different.   should reverse b[i] test   error - should be ac*m-1
    // Convert the mask of varying bytes into the list of indexes of varying bytes, and set a pointer to that list for use in the indexing routine
-   if(q){jt->hin=k-q; GATV0(hi,INT,k-q,1); jt->hiv=d=AV1(hi); DO(k, if(!b[i])*d++=i;); fn=jtiocx;}
+   if(q){jt->etxinfo->vidata.hin=k-q; GATV0(hi,INT,k-q,1); jt->etxinfo->vidata.hiv=d=AV1(hi); DO(k, if(!b[i])*d++=i;); fn=jtiocx;}
   }
 
   // Call the routine to perform the operation
@@ -1327,7 +1327,7 @@ A jtindexofsub(J jtfg,I mode,A a,A w){F12JT;PROLOG(0079);A h=0,hi=mtv,z;B mk=w==
     case IJ0EPS:  case IJ1EPS:  ztype=PREHRESIA;  break;         /* integer scalar      */
     case IIFBEPS:               ztype=PREHRESIVN; break; // integer vector with length check
    }
-   xv[0]=mode; xv[1]=n; xv[2]=k; xv[3]=jt->min; xv[4]=(I)fn; xv[5]=ztype; 
+   xv[0]=mode; xv[1]=n; xv[2]=k; xv[3]=jt->etxinfo->vidata.min; xv[4]=(I)fn; xv[5]=ztype; 
    zv[0]=incorp(x); zv[1]=incorp(h); zv[2]=incorp(hi);
  }else if(unlikely((mode&IIOPMSK)==IIFBEPS)){
   // I.@e. initially allocated a maximum-sized result, which might be colossally wasteful of space (but not of time or cache footprint)
@@ -1354,7 +1354,7 @@ A jtindexofprehashed(J jtfg,A a,A w,A hs,A self){F12IP;A h,hi,*hv,x,z;AF fn;I ar
  // hv is (info vector);(hashtable);(byte index validity)
  hv=AAV(hs); x=hv[0]; h=hv[1]; hi=hv[2];  
  // get the info from the info vector
- xv=AV(x); mode=xv[0]; n=xv[1]; k=xv[2]; jt->min=xv[3]; fn=(AF)xv[4]; ztype=xv[5]; 
+ xv=AV(x); mode=xv[0]; n=xv[1]; k=xv[2]; jt->etxinfo->vidata.min=xv[3]; fn=(AF)xv[4]; ztype=xv[5]; 
  ar=AR(a); as=AS(a); at=AT(a); t=at; m=ar?*as:1; 
  wr=AR(w); ws=AS(w); wt=AT(w);
  r=ar?ar-1:0;
@@ -1379,7 +1379,7 @@ A jtindexofprehashed(J jtfg,A a,A w,A hs,A self){F12IP;A h,hi,*hv,x,z;AF fn;I ar
   case PREHRESIAN: ASSERT(wr<=MAX(ar,1),EVNONCE); GAT0(z,INT,1,    0); break;
  }
  // save info used by the routines
- jt->hin=AN(hi); jt->hiv=AV(hi);
+ jt->etxinfo->vidata.hin=AN(hi); jt->etxinfo->vidata.hiv=AV(hi);
  // convert type of w if needed; and if unconverted FL/CMPX, touch to change -0 to 0
  // this is dodgy: if the comparison tolerance doen't change, there should be no need for conversion; but
  // if ct does change, the stored hashtable is invalid.  We should store the ct as part of the hashtable

@@ -71,6 +71,14 @@ typedef struct __attribute__((aligned(CACHELINESIZE))) {
 
 // area used for formatting errors.  This includes the buffer that holds the error message, and also information about a failure during assembly
 typedef struct etxdata {
+#if !C_VIAVX
+ struct {
+  I    hin;              /* used in dyad i. & i:                            */
+  I*   hiv;              /* used in dyad i. & i:                            */
+  I    min;              /* the r result from irange                        */
+  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
+ } vidata;  // this block is used only in vi.c (obsolete), and so doesn't take space in the main build
+#endif
  C etx[NETX+1];   // error message, with trailing NUL
  struct assem {
   I assemframelen;  // length of frame of assembled data
@@ -188,12 +196,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  UI4 *futexwt; // value this thread is currently waiting on, 0 if not waiting.  Used to wake sleeping threads during systemlock/jbreak.  In same cacheline as taskstate
  A* tstacknext;       // if not 0, points to the recently-used tstack allocation, whose first entry points to the current allocation  
  A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
-#if !(C_VIAVX)
- I    hin;              /* used in dyad i. & i:                            */
- I*   hiv;              /* used in dyad i. & i:                            */
-#else
  A filler1[2];
-#endif
 // end of cacheline 1 - not heavily used
 
  C _cl2[0];
@@ -205,25 +208,27 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  A global;           // global symbol table inherit for task, but not for job
  A locsyms;  // local symbol table, or dummy empty symbol table if none init for task to emptylocale
 // *** end of fixed block
- I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around.  Used at thread startup as pointer to coremask, NUL if none
-// end of cacheline 2  (spanned by shapesink)
-
- C _cl3[0];
-// things needed by name lookup (unquote)
- LX symfreehead[2];   // head of main and overflow symbol free chains
- LX symfreetail1;  // tail pointer for local symbol overflow chain: symbols that have been returned but not yet given back to be shared by all threads
- US symfreect[2];  // number of symbols in main and overflow local symbol free chains
-// things needed for memory allocation
- A mempool[-PMINL+PLIML+1];             // pointer to first free block in each pool.  ends at binary boundary (no longer needed)
-// end of cacheline 3
-
- C _cl4[0];
- I memballo[-PMINL+PLIML+1];              // bits 1+: negative number of blocks in free pool, but with zero-point biased so that - means needs garbage collection  bit 0: set if HWM is being tracked  6 bytes would be enough
- A* tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
- UI cstackmin;        // red warning for C stack pointer
  A zombieval;    // the value that the verb result will be assigned to, if the assignment is safe and has inplaceable usecount and is not read-only
             // zombieval may have a stale address, if the name it came from was deleted after zombieval was set.  That's OK, because we use zombieval only to compare
             // against a named value that we have stacked; that value is guaranteed protected so zombieval cannot match it unless zombieval is valid.
+// end of cacheline 
+
+ C _cl3[0];
+// things needed for memory allocation
+ A* tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
+ A mempool[-PMINL+PLIML+1];             // pointer to first free block in each pool.
+ I4 memballo[-PMINL+PLIML+1];              // bits 1+: negative number of blocks in free pool, but with zero-point biased so that - means needs garbage collection  bit 0: set if HWM is being tracked
+// 4 bytes free  
+// end of cacheline 3 (spanned by mballo which runs 4 bytes long)
+
+ C _cl4[0];
+ I shapesink[SY_64?2:4];     // garbage area used as load/store targets of operations we don't want to branch around.  Used at thread startup as pointer to coremask, NUL if none
+ LX symfreehead[2];   // head of main and overflow symbol free chains
+ LX symfreetail1;  // tail pointer for local symbol overflow chain: symbols that have been returned but not yet given back to be shared by all threads
+ US symfreect[2];  // number of symbols in main and overflow local symbol free chains
+ UI cstackmin;        // red warning for C stack pointer
+ I mfreegenallo;        // Amount allocated through malloc, biased  modified only by owning thread
+ I malloctotal;    // net total of malloc/free performed in m.c only  modified only by owning thread
 // end of cacheline 4
 
  C _cl5[0];
@@ -235,12 +240,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // seldom-used fields
  I bytes;            // bytes currently in use - used only during 7!:1  6 bytes would be enoungh
  I bytesmax;         // high-water mark of "bytes" - used only during 7!:1   6 bytes would be enough
-#if !(C_VIAVX)
- I    min;              /* the r result from irange                        */
- UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
-#else
  I filler5[2];
-#endif
 // end of cacheline 5
 
  C _cl6[0];
@@ -264,25 +264,14 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
            // snmalloc has a slick design but it sometimes 'repatriates' blocks to the wrong thread, so they may sometimes take multiple hops to get home, which is annoying.  An alternative is to use a fixed-sized array, and sort it once it fills up
            // perhaps something like an lru cache of threads recently freed to?  Do a linear scan of the first k entries (maybe w/short simd if the first is a miss), and if they all miss, then fall back to--snmalloc trick, or sort buffer, or something else
            // Or maybe a fixed-size cache, and anything that falls out of it gets immediately flushed?  I like that, because it helps prevent singleton allocations from getting lost
- I mfreegenallo;        // Amount allocated through malloc, biased  modified only by owning thread
- I malloctotal;    // net total of malloc/free performed in m.c only  modified only by owning thread
  I malloctotalhwmk;  // highest value since most recent 7!:1
  UI cstackinit;       // C stack pointer at beginning of execution
  I mfreegenalloremote;        // Amount allocated through malloc but freed by other threads (frees only, so always negative)
  I malloctotalremote;    // net total of malloc/free performed in m.c only but freed by other threads (frees only, so always negative)
  DC sitop;            /* pointer to top of SI stack                                 */
+ I filler7[2];
 // end of cacheline 7
  C _cl8[0];
-
-// stats I totalpops;
-// stats I nonnullpops;
-// the following lines are engaged only for low-performance builds, and must not be set in 64-bit builds lest blocks get too big
-// #if !(C_VIAVX)
-//  I    hin;              /* used in dyad i. & i:                            */
-//  I*   hiv;              /* used in dyad i. & i:                            */
-//  I    min;              /* the r result from irange                        */
-//  UIL  ctmask;           /* 1 iff significant wrt ct; for i. and i:         */
-// #endif
 
 };
 typedef struct JTTstruct JTT;
@@ -501,8 +490,8 @@ _Static_assert(offsetof(struct JSTstruct, threaddata[1])-offsetof(struct JSTstru
 _Static_assert(offsetof(JTT,_cl0)==0*64,"cacheline 0 offset wrong");
 _Static_assert(offsetof(JTT,_cl1)==1*64,"cacheline 1 offset wrong");
 _Static_assert(offsetof(JTT,_cl2)==2*64,"cacheline 2 offset wrong");
-// _Static_assert(offsetof(JTT,_cl3)==3*64,"cacheline 3 offset wrong");
-_Static_assert(offsetof(JTT,_cl4)==4*64,"cacheline 4 offset wrong");
+_Static_assert(offsetof(JTT,_cl3)==3*64,"cacheline 3 offset wrong");
+// _Static_assert(offsetof(JTT,_cl4)==4*64,"cacheline 4 offset wrong");
 _Static_assert(offsetof(JTT,_cl5)==5*64,"cacheline 5 offset wrong");
 _Static_assert(offsetof(JTT,_cl6)==6*64,"cacheline 6 offset wrong");
 _Static_assert(offsetof(JTT,_cl7)==7*64,"cacheline 7 offset wrong");

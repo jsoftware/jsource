@@ -218,7 +218,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // end of cacheline 3
 
  C _cl4[0];
- I memballo[-PMINL+PLIML+1];              // negative number of bytes in free pool, but with zero-point biased so that - means needs garbage collection  LSB set if HWM is being tracked  6 bytes would be enough
+ I memballo[-PMINL+PLIML+1];              // bits 1+: negative number of blocks in free pool, but with zero-point biased so that - means needs garbage collection  bit 0: set if HWM is being tracked  6 bytes would be enough
  A* tnextpushp;       // pointer to empty slot in allocated-block stack.  When low bits are 00..00, pointer to previous block of pointers.  Chain in first block is 0
  UI cstackmin;        // red warning for C stack pointer
  A zombieval;    // the value that the verb result will be assigned to, if the assignment is safe and has inplaceable usecount and is not read-only

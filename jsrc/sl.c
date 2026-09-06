@@ -725,13 +725,13 @@ B jtlocdestroy(J jt,A g){
  if(unlikely(path==0))R 1;  // already deleted - can't do it again
  // The path was nonnull, which means the usecount had 1 added correspondingly.  That means that freeing the path cannot make
  // the usecount of g go to 0.  (It couldn't anyway, because any locale that would be deleted by a fa() must have had its path cleared earlier)
- WRITELOCK(g->lock);  // in case a probe() is reading from this locale, lock before altering chains
+ WRITELOCK(ALOCK(g));  // in case a probe() is reading from this locale, lock before altering chains
  freesymb(jt,g);   // delete all the names.  Anything executing will have been fa()d
  I j,wn=AN(g); LX * RESTRICT wv=LXAV0(g); for(j=SYMLINFOSIZE;j<wn;++j)wv[j]=0;  // clear the hashchains in case the locale lingers
  while(*path)--path; fa(UNvoidAV1(path))   // delete the path too.  block is recursive; must fa() to free sublevels
  // Set path pointer to 0 (above) to indicate it has been emptied; clear Bloom filter.  Leave hashchains since the Bloom filter will ensure they are never used
  BLOOMCLEAR(g);  // clear Bloom filter
- WRITEUNLOCK(g->lock);
+ WRITEUNLOCK(ALOCK(g));
  // lower the usecount.  The locale and the name will be freed when the usecount goes to 0
  fa(g);
  // The current implied locale can be deleted only after it leaves execution, i. e. after it returns to immex in all threads where it is current.

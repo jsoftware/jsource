@@ -292,6 +292,10 @@ struct AD {
 #define SMMAH           (7L+0)   // number of header words in old-fashioned SMM alloc
 #define NORMAH          (7L+0)   // number of header words in new system
 #define AS(x)           ((x)->s)        // Because s is an array, AS(x) is a pointer to the shape, which is in s.  The shape is stored in the fixed position s.
+#if PYXES
+#define AORIGIN(x)      ((x)->origin)   /* thread origin id                */
+#define ALOCK(x)        ((x)->lock)     /* thread lock                     */
+#endif
 
 // The following fields are used for private communication between /. and ;. and inside ;. for the fret buffer.
 #define CUTFRETCHAIN(x) ((x)->kchain.chain)  // pointer to next block of frets

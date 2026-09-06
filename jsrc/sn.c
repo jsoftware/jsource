@@ -254,10 +254,10 @@ DF1(jtex){F12IP;jtfg=jt;A*wv,y,z;B*zv;I i,n;  // clear all jt flags in jtfg
   A locfound;  // get the locale in which the name is defined - must exist.
   if(y&&(locfound=syrdforlocale(y))){
    // if debug turned on, see if the value is on the debug stack.  The name must still be in the locale we found it in, if it is on our debug stack.
-   if(jt->uflags.trace&TRACEDB){READLOCK(locfound->lock) A v=probex(NAV(y)->m,NAV(y)->s,SYMORIGIN,NAV(y)->hash,locfound); A rres=(A)1; if(v)rres=redef(mark,v); READUNLOCK(locfound->lock) RZ(rres)}
-   WRITELOCK(locfound->lock)
+   if(jt->uflags.trace&TRACEDB){READLOCK(ALOCK(locfound)) A v=probex(NAV(y)->m,NAV(y)->s,SYMORIGIN,NAV(y)->hash,locfound); A rres=(A)1; if(v)rres=redef(mark,v); READUNLOCK(ALOCK(locfound)) RZ(rres)}
+   WRITELOCK(ALOCK(locfound))
    jtprobedel((J)((I)jtfg+NAV(y)->m),NAV(y)->s,NAV(y)->hash,locfound);  // delete the symbol (incl name and value) in the locale in which it is defined.  if we delete an ACV, probedel invalidates cached references
-   WRITEUNLOCK(locfound->lock)
+   WRITEUNLOCK(ALOCK(locfound))
   }
  }
  EPILOG(z);

@@ -153,18 +153,18 @@ fslocal:;  // come here when the name we are about to execute was found in a loc
      // have to take a write lock.  We would like to avoid a read lock when checking the timestamp.  We do so at the cost of setting the timestamp to 'uncacheable' for a moment.  The
      // worst this will do is cause a very rare cache miss.  Our rule is, we must never expose a situation where reading the fs followed by the timestamp gives a timestamp that is
      // later than the correct one for the fs.
-     WRITELOCK(self->lock)  // take a lock on the reference
+     WRITELOCK(ALOCK(self))  // take a lock on the reference
      __atomic_store_n(&FAV(self)->lu2.refvalidtime,(UI4)0,__ATOMIC_RELEASE);  // set timestamp invalid in case it starts after the new stamp
      __atomic_store_n(&FAV(self)->localuse.lu1.cachedlkp,fs,__ATOMIC_RELEASE);     // save named lookup calc for next time.  This makes the lookup cached.  no QC
      __atomic_store_n(&FAV(self)->localuse.lu0.cachedloc,explocale,__ATOMIC_RELEASE);   // including locale in case it was looked up (used only for NMLOC references)
      __atomic_store_n(&FAV(self)->lu2.refvalidtime,localts,__ATOMIC_RELEASE);  // set timestamp for the lookup.  It may already be out of date, which is OK - it will be recreated
-     WRITEUNLOCK(self->lock)  // release lock on the reference
+     WRITEUNLOCK(ALOCK(self))  // release lock on the reference
     }
    }else if(namedloc && (!(flgvbnmgen&(NMLOC<<FLGNMFLGX)) || (LXAV0(explocale)[SYMLEXECCT]&EXECCTPERM))){   // cacheable nameref, and value found in a permanent named locale
     // ************* the nameref is long-term cachable.  Fill it in.  Happens the first time a cachable reference is encountered.
     thisname=jt->curname;  // refresh thisname
     // point the nameref to the lookup result.
-    WRITELOCK(fs->lock);  // we want to cache a name only once
+    WRITELOCK(ALOCK(fs));  // we want to cache a name only once
     if(!(flgvbnmgen&((UI8)VF2CACHED<<FLGFLAG2X))){  // if this is not true, someone else beat us to the cache.  OK, we'll get it next time.  This ensures only one cache calculation
      ACSETPERM(fs);  // make the cached value immortal
      // set the flags in the nameref to what they are in the value.  This will allow compounds using this nameref (created in the parsing of later sentences)
@@ -192,7 +192,7 @@ fslocal:;  // come here when the name we are about to execute was found in a loc
      FAV(self)->localuse.lu1.cachedlkp=fs;     // save named lookup calc for next time  should ra locale or make permanent?
      if(flgvbnmgen&(NMLOC<<FLGNMFLGX))FAV(self)->localuse.lu0.cachedloc=explocale;   // including locale it is was looked up in
     }
-    WRITEUNLOCK(fs->lock);
+    WRITEUNLOCK(ALOCK(fs));
    }
   }
 

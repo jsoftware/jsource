@@ -1045,6 +1045,7 @@ takestats(++stats[0x13];)
     awlongcr=wl<0?w:a; awlongfr=wl<0?a:w; shortr=wl<0?fr:shortr; fr=wl<0?(RANKT)awr:fr;  // arg with long cell; other arg
     zn=AN(awlongcr); m=AN(awlongfr);  // long cell gives len of result, other gives short-arg len
     I mf=SGNTO0(wl); nf=2*mf+SGNTO0(-wl);  // each arg uninplaceable if short rank
+
     PRODRNK(n,fr-shortr,AS(awlongcr)+shortr);  // treat the entire operands as one big cell
     cv&=~nf;  // bit 0-1=routine/rank/arg/input inplaceable
     n=2*n+mf;   // parm m if there are multiple inner loops.  The value is 2 * (length of inner loop), with LSB set if x is the repeated value (i. e. w has long frame)
@@ -1248,15 +1249,12 @@ takestats(++stats[0x21];)
   MCISH(AS(z)+fru.lanes[frFL],AS(awlongcr)+fru.lanes[frFLC],fru.lanes[frZRANK]-fru.lanes[frFL]);  // copy inner shape
      // start of cellshape,    shape of long cell+its frame  rank of long cell (zrank-len of long frame)
   // Signal domain error if appropriate.  Must do this after agreement tests
-  ASSERT(adocvfn,EVDOMAIN);  // if no function to run even on BOOL args, that's an error.  By waiting till now we hope to keep adocvfn in the call register till end of loop.  We might have allocated a BOOL result block, which is OK
+  ASSERT(adocvfn,EVDOMAIN);  // if no function to run even on BOOL args, that's an error.  By waiting till now we hope to keep adocvfn in the call register till execution.  We might have allocated a BOOL result block, which is OK
  } 
  // (we don't get here if we are inplacing: that has branched into the loop or no-loop section)
  // End of setup phase.  The execution phase:
  // vbls needed from setup: adocvfn m cv a w z [jt]
 
- // The compiler thinks that because ak/wk/zk are used in the loop they should reside in registers.  So we force the compiler to spill aawwzknfxrz using forcetomemory.
- // We want m, mend, av, wv, zv, jj to be in registers  (m and zv so that the action routine can test them and do boundary alignment right away; mend so that the misprediction
- // of the last loop, if it happens, will be detected right away).  It might be better to have n (aawwzknfxrz[9]) in a register as well.
  {
   I mulofloloc, lrc;   // number of good results before we encountered integer overflow on multiply; overall return code, including conversion on exit
   // we want to execute the action routine nf times.  We could execute the loop-with-unroll nf-1 times followed by the code for the last loop, but that would misbranch to the action routine twice when there is rank, plus one misbranch at loop-end
@@ -1839,9 +1837,8 @@ takestats(++stats[0x0];)
  // falling through, not atomic singleton.
 // obsolete  UI notoneatom=(an-1)|(wn-1);
 takestats(if((AN(a)-1)|(AN(w)-1))++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
- bidcase&=(FL<<3)-1; bidcase=bidcase+(densbid0>=1);  // clear possibly-invalid high bits of bidcase; if args are not BID, set to 'invalid' bidcase (ADC)
 // obsolete  bidcase=densbid0>=1?1:bidcase;  // if args are not BID, set to 'invalid' bidcase (no ADC but compiler works)
- densbid0|=(AN(a)-1)|(AN(w)-1);   // 0 if both ANs=1: nonatomic singleton.  Now densbid0 is 0 if BID on nonatomic singleton
+ I notoneatom=(AN(a)-1)|(AN(w)-1);   // 0 if both ANs=1: nonatomic singleton.  Now densbid0 is 0 if BID on nonatomic singleton
 retryss:;  // here when non-atomic singleton retries.  jtranks and selfranks have been loaded.  bidcase and densbid0 have been set to non-BID, and awr has been reconstructed.  at/wt are garbage
 // obsolete  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank.
 // obsolete  UI selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
@@ -1852,10 +1849,11 @@ retryss:;  // here when non-atomic singleton retries.  jtranks and selfranks hav
  // find frames
  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
  // check for non-atomic singletons, which are rare (in testcases)
- if(withprob(densbid0!=0,0.95)){
+ if(withprob((notoneatom|densbid0)!=0,0.95)){
+  bidcase&=(FL<<3)-1; bidcase=bidcase+(densbid0>=1);  // clear possibly-invalid high bits of bidcase; if args are not BID, set to 'invalid' bidcase (ADC)
 retryss0:;  // Here when atomic singleton retries.  Noun ranks (awr) are perforce 0, so afwf have been set to 0, with selfranks set for error-message purposes.  at/wt are garbage
   // either not singleton BID, or singleton needing retry: carry on with normal setup
-  opcode&=0x7f; opcode*=sizeof(VA); opcode+=bidcase*(sizeof(VA2)/INT); // point to the VA2 block for the BID if valid; VA block if not
+  opcode&=0x7f; opcode*=sizeof(VA); opcode+=bidcase*=(sizeof(VA2)/INT); // point to the VA2 block for the BID if valid; VA block if not
   NOUNROLL while(1){
    afwf=selfranks==0?0:afwf;   // if ranks were 0 0, ignore them and shift down to working on frame wrt 0.  afwf=0 signals that case (& happens naturally if there is no frame wrt actual rank).    It uses simpler setup
    // Run the full dyad, retrying if a retryable error is returned.  self has been modified to point to the actual primitive rather than the rank block

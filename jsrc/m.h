@@ -61,10 +61,13 @@
 #define SBFREEB (1L<<SBFREEBLG)   // number of bytes that need to be freed before we rescan
 #define MFREEBCOUNTING 1   // When this bit is set in mfreeb[], we keep track of max space usage
 
-// Format of h, the 16-bit workarea for free and allocated blocks in main memory.  This is used for in-memory headers for NJS blocks, but not for NJA blocks all on disk
-#define AFOFFSET0(a) ((a)->kchain.chain)  // the offset 0 of a  PUN: depends on struct AD
-#define AFCHAIN(a) ((a)->kchain.chain)  // the chain field, when the block is not allocated
+// obsolete #define AFOFFSET0(a) ((a)->kchain.chain)  // the offset 0 of a  PUN: depends on struct AD
+#define AFCHAIN(a) ((a)->kchain.chain)  // the chain field, when the block is not allocated, including when block is on the survival chain
+_Static_assert(offsetof(AD,kchain.chain)==0,"");  // chain must be at offset 0 because the head pointer is a bare pointer to first element (PUN)
+
 #define AFPROXYCHAIN(a) ((a)->tproxy.proxychain)  // chain field for base proxies during garbage collection
+
+// Format of h, the 16-bit workarea for free and allocated blocks in main memory.  This is used for in-memory headers for NJS blocks, but not for NJA blocks all on disk
 #define FHRHROOTX 15
 #define FHRHROOT (((I)1)<<FHRHROOTX)  // set if the current block is the root (the first of the consecutive blocks making up its allocation)
 #define FHRHROOTFREE ((I)2<<(PSIZEL-PMINL))   // If this bit is set at the end of garbage-collection, the whole allocation can be freed.  LSB (precisely, lowest 1-bit) is the size indicator

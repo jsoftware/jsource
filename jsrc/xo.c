@@ -30,11 +30,11 @@ B jtxoinit(JS jjt){A x;JJ jt=MTHREAD(jjt);
 // check that x is in table of file#s.  Return x if so, otherwise 0 for error
 // if the file is found, mark it as busy in fopafl.  This establishes a lock on that file to prevent it from being deleted while I/O is in process
 // Every non-failing call to vfn must be matched by a call to unvfn to unlock the file
-F jtvfn(J jt,F x){F z=0; READLOCK(JT(jt,flock)) A*v=AAV0(JT(jt,fopafl)); DQ(AM(JT(jt,fopafl)),if((F)AM(v[i])==x){z=x; READLOCK(v[i]->lock) break;}) READUNLOCK(JT(jt,flock)) ASSERT(z!=0,EVFNUM); R z;}
+F jtvfn(J jt,F x){F z=0; READLOCK(JT(jt,flock)) A*v=AAV0(JT(jt,fopafl)); DQ(AM(JT(jt,fopafl)),if((F)AM(v[i])==x){z=x; READLOCK(ALOCK(v[i])) break;}) READUNLOCK(JT(jt,flock)) ASSERT(z!=0,EVFNUM); R z;}
 
 // remove internal file lock set by vfn().  Required exactly when vfn has returned non0.  The file is known to be in the file table, but its index may have changed.
 // for syntactic ease we return the dummy argument
-A jtunvfn(J jt,F x,A dummy){READLOCK(JT(jt,flock)) A*v=AAV0(JT(jt,fopafl)); DQ(AM(JT(jt,fopafl)),if((F)AM(v[i])==x){READUNLOCK(v[i]->lock) break;}) READUNLOCK(JT(jt,flock)) R dummy;}
+A jtunvfn(J jt,F x,A dummy){READLOCK(JT(jt,flock)) A*v=AAV0(JT(jt,fopafl)); DQ(AM(JT(jt,fopafl)),if((F)AM(v[i])==x){READUNLOCK(ALOCK(v[i])) break;}) READUNLOCK(JT(jt,flock)) R dummy;}
 
 // w is a user argument, either a number or a filename string.  If a number, return it (with error if it is 0); if a string return the file# if found, or 0 if not found
 // return of 0 is not ipso facto an error
@@ -153,7 +153,7 @@ F1(jtjclose){F12IP;A*av;I*iv,j,h;
  // we have detached the string for the closing file.  It is possible that there wasn't one, if another thread got in and deleted it first.
  ASSERT(dela,EVFNUM)
  // Wait for any outstanding I/O to complete
- WRITELOCK(dela->lock) WRITEUNLOCK(dela->lock) fa(dela);  // active I/O sets a readlock on dela.  Wait for all to finish.  It can't start again because the string is gone.  Free dela finally
+ WRITELOCK(ALOCK(dela)) WRITEUNLOCK(ALOCK(dela)) fa(dela);  // active I/O sets a readlock on dela.  Wait for all to finish.  It can't start again because the string is gone.  Free dela finally
  if(fclose((F)h))R jerrno();   // try to close the file, fail if error
  R num(1);  // always return success
 }    /* close file# w */

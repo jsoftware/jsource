@@ -302,7 +302,7 @@ X jtXmpzcommon(J jt, mpz_t mpz, I numeric) {
  I n= AN(x);                        // length of memory allocated for number
  I sz= XHSZ+n;                      // bytes allocated
 #if PYXES
- x->origin= THREADID1(jt);           // track thread which created this array
+ AORIGIN(x)= THREADID1(jt);         // track thread which created this array
 #endif
  jt->bytes+= sz;                    // summarize the size of the new space
  jt->malloctotal+= sz;              // ditto

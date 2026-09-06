@@ -252,7 +252,7 @@ if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT;
 prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}
 }
 #else
- NOUNROLL while(Wx){if(Wx->origin!=THREADID1(jt)||FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}
+ NOUNROLL while(Wx){if(AORIGIN(Wx)!=THREADID1(jt)||FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}
 #endif
 #else
  NOUNROLL while(Wx){if(FHRHPOOLBIN(AFHRH(Wx))!=(Wi-PMINL)AUDITFILL||Wj>0x10000000)SEGFAULT; prevWx=Wx; Wx=AFCHAIN(Wx); ++Wj;}}
@@ -1277,7 +1277,7 @@ __attribute__((noinline)) A jtgafallopool(J jt){
  // we visit them in back-to-front order so the first-allocated headers are in cache
 #if PYXES
 // the lock must always be cleared when the block is returned, so we can set it once.  The origin likewise doesn't change
-#define PYXMEMINIT(u) *(I4 *)&(u)->origin=THREADID1(jt);  // init allocating thread# and clear the lock
+#define PYXMEMINIT(u) *(I4 *)&AORIGIN(u)=THREADID1(jt);  // init allocating thread# and clear the lock
 #else
 #define PYXMEMINIT(u)
 #endif
@@ -1490,7 +1490,7 @@ void jtrepatsend(J jt){
  A repato=jt->repato;
  if(!repato)R; // nothing to repatriate
  A tail=AAV0(repato)[0];  // extract tail
- I origthread1=repato->origin;
+ I origthread1=AORIGIN(repato);
  I allocsize=AN(repato);  // extract total length in repato
  jt->repato=0;  // clear repato to empty
  jt=JTFORTHREAD1(jt,origthread1); // switch to the thread the chain must return to
@@ -1519,7 +1519,7 @@ static void jtrepat1(J jt, A w, I allocsize){
 #if PYXES
  // repatriate a block allocated in another thread.  AN(jt->repato) holds the total allocated size of the blocks in repato  AAV0(repato)[0] is the tail pointer.  The tail has no AFCHAIN pointer
  A repato=jt->repato;
- if(common(repato&&repato->origin==w->origin)){      // adding to existing repatriation queue
+ if(common(repato&&AORIGIN(repato)==AORIGIN(w))){      // adding to existing repatriation queue
   allocsize+=AN(jt->repato);AN(jt->repato)=allocsize; // update allocated size
   AFCHAIN(AAV0(repato)[0])=w; AAV0(repato)[0]=w;          // add block to chain
  }else{
@@ -1579,7 +1579,7 @@ printf("%p-\n",w);
   I fv=frfillvalue++; DO((FHRHPOOLBINTOSIZE(blockx)>>LGSZI), if(i!=(0+6))((I*)w)[i]=fv;);   // wipe the block clean before we free it - but not the reserved area
 #endif
 #if PYXES
-  if(unlikely(w->origin!=(US)THREADID1(jt))){jtrepat1(jt,w,FHRHPOOLBINTOSIZE(blockx)); R;}  // if block was allocated from a different thread, pass it back to that thread where it can be garbage collected
+  if(unlikely(AORIGIN(w)!=(US)THREADID1(jt))){jtrepat1(jt,w,FHRHPOOLBINTOSIZE(blockx)); R;}  // if block was allocated from a different thread, pass it back to that thread where it can be garbage collected
 #endif
   AFCHAIN(w)=jt->mempool[blockx];  // append free list to the new addition...
   jt->mempool[blockx]=w;   //  ...and make new addition the new head
@@ -1596,7 +1596,7 @@ printf("%p-\n",w);
 #endif
   allocsize+=TAILPAD+ALIGNTOCACHE*CACHELINESIZE;  // the actual allocation had a tail pad and boundary
 #if PYXES
-  J jtremote=JTFORTHREAD1(jt,w->origin);
+  J jtremote=JTFORTHREAD1(jt,AORIGIN(w));
   if(likely(jtremote==jt)){  // normal case of freeing in the allocating thread: avoid atomics
    jt->malloctotal-=allocsize;
    jt->mfreegenallo-=allocsize;  // account for all the bytes returned to the OS

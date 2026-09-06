@@ -354,9 +354,9 @@ static A nameundco(J jtfg, A name, A y){F12IP;
  else{locfound=jt->locsyms;  // if not FAOWED, it must be local, no lookup needed
  }
  if(((I)jtfg&JTFROMEXEC))R SETFAOWED(y);   // in "., the result value from ". has not been protected by FAOWED, and might be prematurely freed.  So we don't free here, set FAOWED and return indicating indic that we need to fa
- WRITELOCK(locfound->lock)
+ WRITELOCK(ALOCK(locfound))
  jtprobedel((J)((I)jt+NAV(name)->m),NAV(name)->s,NAV(name)->hash,locfound);  // delete the symbol (incl name and value) in the locale in which it is defined
- WRITEUNLOCK(locfound->lock)
+ WRITEUNLOCK(ALOCK(locfound))
  // The name has been deleted.  The value is still protected by the ra() made in syrd or before we were called.
  // convert here (notionally) to QCFAOWED semantics, with the knowledge that every block has had a ra() at this point.  We explicitly set FAOWED status here
  if(likely(QCSENTTYPE(y)!=VALTYPESPARSE)&&likely(AC(QCWORD(y))==ACUC1)){

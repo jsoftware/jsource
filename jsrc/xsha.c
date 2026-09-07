@@ -13,7 +13,7 @@
 
 #include "j.h"
 #include "x.h"
-#undef num
+// #undef num
 #include "cpuinfo.h"
 // static UC hwsha1=0,hwsha2=0,hwssse3=0,hwsse41=0,hwavx=0,hwavx2=0;
 
@@ -48,7 +48,7 @@ UC* tohex(UC* dest, UC* src, I len)
 }
 
 F1(jtshasum1){F12IP;
-  R shasum2(sc(1),w);
+  R shasum2(num(1),w);
 }
 
 DF2(jtshasum2){F12IP;

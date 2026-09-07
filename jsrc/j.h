@@ -59,6 +59,7 @@
 #define dump_m256i32(a,x) {__m256i _b=x;fprintf(stderr,"%s %x %x %x %x %x %x %x %x \n", a, ((unsigned int*)(&_b))[0], ((unsigned int*)(&_b))[1], ((unsigned int*)(&_b))[2], ((unsigned int*)(&_b))[3], ((unsigned int*)(&_b))[4], ((unsigned int*)(&_b))[5], ((unsigned int*)(&_b))[6], ((unsigned int*)(&_b))[7]);}
 #define dump_m256d(a,x) {__m256d _b=x;fprintf(stderr,"%s %f %f %f %f \n", a, ((double*)(&_b))[0], ((double*)(&_b))[1], ((double*)(&_b))[2], ((double*)(&_b))[3]);}
 #define dump_m128d(a,x) {__m128d _b=x;fprintf(stderr,"%s %f %f \n", a, ((double*)(&_b))[0], ((double*)(&_b))[1]);}
+#define dump_ADheader(x) fprintf(stderr,""FMTX" "FMTX" "FMTX" "FMTX" "FMTX" "FMTX" "FMTX" "FMTX" \n", ((UI*)(x))[0], ((UI*)(x))[1], ((UI*)(x))[2], ((UI*)(x))[3], ((UI*)(x))[4], ((UI*)(x))[5], ((UI*)(x))[6], ((UI*)(x))[7]);
 
 
 #ifdef MMSC_VER
@@ -1724,7 +1725,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
   if(unlikely(_n>8))do{_mm512_storeu_si512(_d,_mm512_loadu_si512(_s)); _d+=8; _s+=8;}while((_n-=8)>8); \
   __mmask8 mask=_bzhi_u32(0xff,_n); _mm512_mask_storeu_epi64(_d,mask,_mm512_maskz_loadu_epi64(mask,_s));\
   }
-#elif C_AVX2
+#elif C_AVX2 || EMU_AVX2
 #define MCISH(dest,src,n) \
  {I *_d=(I*)(dest), *_s=(I*)(src); I _n=(I)(n); \
   if(unlikely(_n>NPAR))do{_mm256_storeu_si256((__m256i*)_d,_mm256_loadu_si256((__m256i*)_s)); _d+=NPAR; _s+=NPAR;}while((_n-=NPAR)>NPAR); \

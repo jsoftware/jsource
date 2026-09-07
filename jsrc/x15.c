@@ -1849,7 +1849,7 @@ static I cbvxalt[]={(I)&cbxalt00,(I)&cbxalt01,(I)&cbxalt02,(I)&cbxalt03,(I)&cbxa
 
 F1(jtcallback){F12IP;
  ARGCHK1(w);
- R jtcallback2(jt,sc(0),w);
+ R jtcallback2(jt,num(0),w);
 }
 
 F2(jtcallback2){F12IP;I k1;
@@ -1977,9 +1977,9 @@ F1(jtcdq){F12IP;I rc;
  ARGCHK1(w); ASSERT(!JT(jt,seclev),EVSECURE)
  ASSERTMTV(w); 
 #if defined(__wasm__)
- R sc(0);
+ R num(0);
 #else
- R sc(1);
+ R num(1);
 #endif
 }    /* 15!:23 query 15!:0 availability */
 

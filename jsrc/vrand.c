@@ -681,7 +681,7 @@ static X jtxrand(J jt,X x){PROLOG(0090);
  B big= 1; I prev=0; A halflimb= sc(BIT(SZI*4));
 #define rollpart(t) \
        1==t ?0 \
-            :2==t ?(UI)(CAV0(roll(sc(2)))[0]) \
+            :2==t ?(UI)(CAV0(roll(num(2)))[0]) \
 	                 :(UI)(IAV0(roll(sc(t)))[0])
 #define rollhalf() ((UI)IAV0(roll(halflimb))[0])
  for (I j= n-1; j>=0; j--) {

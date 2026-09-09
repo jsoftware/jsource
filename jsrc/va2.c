@@ -2,8 +2,8 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: Atomic (Scalar) Dyadic                                           */
-#define takestats(s) s
-// gather stats scaf #define takestats(s)
+// gather stats #define takestats(s) s
+#define takestats(s)
 
 takestats(static int stats[0x30]={0};)
 takestats(int statsoldcaseno=-1;)
@@ -1042,8 +1042,8 @@ takestats(if(agreefr)++stats[0x12];)
 takestats(++stats[0x13];)
    if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
 takestats(++stats[0x14];)
-    I atommsk; I negifaatom;
-    if(withprob((atommsk=(negifaatom=awr+~0x80)&0x4040)>=((awr^(awr>>RANKTX))&0xff),0.94)){
+    I atommsk;
+    if(withprob((atommsk=(awr+~0x80)&0x4040)>=((awr^(awr>>RANKTX))&0xff),0.94)){
      // Ranks are equal or one arg is atomic
 takestats(++stats[0x15]; if(atommsk&0x4040)++stats[0x16]; if((awr&0xff)==(awr>>RANKTX))++stats[0x17];)
      I isatom=SGNTO0(-atommsk);  // 1 if there is an atomic arg
@@ -1054,7 +1054,7 @@ takestats(++stats[0x15]; if(atommsk&0x4040)++stats[0x16]; if((awr&0xff)==(awr>>R
 #else
      cv&=~((atommsk*(BIT(BW-1-14)+BIT(BW-2-6)))>>(BW-1-1));
 #endif
-     m=zn<<isatom; m^=isatom-=1; m+=SGNTO0(negifaatom);  // m is encoded length/repeata flag if atomic (n set to 1 in next line), or ~length if nonatomic (n implied 1)
+     m=zn<<isatom; m^=isatom-=1; m+=atommsk>>=14;  // m is encoded length/repeata flag if atomic (n set to 1 in next line), or ~length if nonatomic (n implied 1)
      aawwzknfxrz[5]=1;  // in case an arg is atomic, indicate only one loop 
     }else{
         // all other cases without "n.  Arg ranks must be different
@@ -1849,7 +1849,7 @@ takestats(++stats[0x0];)
  UI opcode=FAV(self)->lu2.lc; UI jtranks=jt->ranks; // VA2C* code from the primitive (used if we predict to ssing), jt->ranks (used if we predict to va2)
  UI selfranks=FAV(self)->lrr; I at=AT(a);  //  ranks from "n (if we predict to va2); at, for bidcase/densbid0
  UI awr=AR(a); I wt=__atomic_load_n(&AT(w),__ATOMIC_RELAXED);   // ar, wt, for bidcase/densbid0
- awr<<=RANKTX; awr+=AR(w);   // wr, one cycles after ar.  We cannot load any more here without overrunning registers
+ awr<<=RANKTX; awr+=AR(w);   // wr, one cycle after ar.  We cannot load any more here without overrunning registers
  I afwf, af;  // finish combining rank; afwf will be both frames; af is rank of singleton result
  // Retries of singletons branch back to points at the top.  We must take care to save only what's needed, refetching the rest to save reg spills
  // singletons dominate the testcases.  We check them before any non-singleton fetches

@@ -70,7 +70,7 @@ takestats(++stats[0x9];)
        +SGNTO0(wc&((wflag&AFUNINCORPABLE+AFRO)+(awr&0x00ff)-1));  // w inplaceability
  if(withprob(awip&=(I)jtfg,0.3)){z=awip&JTINPLACEW?w:a; zv=awip&JTINPLACEW?wv:av; goto haszv;}
 takestats(++stats[0xa];)
- // See if we can inplace an assignment (z=zombieval).  That is always a good idea, but in the test suite it's very rare so we check after other inplaceability.  Might be more common in user code.
+ // See if we can inplace an assignment (z=zombieval).  That is always a good idea, saving the assignment code, but in the test suite it's very rare so we check after other inplaceability.  Might be more common in user code.
  I asginplacemsk=(2*(a==z)+(w==z))&(I)jtfg;  // mask of reassigned inplaceable args
  if(withprob(asginplacemsk,0.05)){   // one of the args is being reassigned
 takestats(++stats[0xb];)
@@ -1052,7 +1052,7 @@ takestats(++stats[0x15]; if(atommsk&0x4040)++stats[0x16]; if((awr&0xff)==(awr>>R
 #ifdef PEXT
      cv&=~PEXT(atommsk,0x4040);  // atoms are not inplaceable, anything else is.  Rare that both are atomic here (must not be BID)
 #else
-     cv&=~((atommsk*(BIT(BW-1-14)+BIT(BW-2-6)))>>(BW-1-1));
+     cv&=~((atommsk*(BIT(BW-2-14)+BIT(BW-3-6)))>>(BW-3));
 #endif
      m=zn<<isatom; m^=isatom-=1; m+=atommsk>>=14;  // m is encoded length/repeata flag if atomic (n set to 1 in next line), or ~length if nonatomic (n implied 1)
      aawwzknfxrz[5]=1;  // in case an arg is atomic, indicate only one loop 

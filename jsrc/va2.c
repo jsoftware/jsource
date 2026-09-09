@@ -2,7 +2,7 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: Atomic (Scalar) Dyadic                                           */
-// gather stats scaf! #define takestats(s) s
+// gather stats #define takestats(s) s
 #define takestats(s)
 
 takestats(static int stats[0x30]={0};)
@@ -976,7 +976,7 @@ static A resolveself(A self){R FAV(self)->fgh[0]?FAV(self)->fgh[0]:self;}  // if
 static VF repairip[4]={plusBIO, plusIIO, minusBIO, minusIIO};
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, self is the block for this primitive or the rank compound calling it - only lc is used, except in sparse processing
 // afwf is af/wf, agreefr is frame for outer agreement test, vandx is offset to some address in the correct VA line, but the invalid bits are set if args are not BID with no error
-static NOINLINE A jtva2(J jtfg,AD *a,AD *w,I afwf,I awr,UI vandx){F12IP;
+static INLINE A jtva2(J jtfg,AD *a,AD *w,I afwf,I awr,UI vandx){F12IP;
 takestats(++stats[0x10];)
  A z;I m,mf,n,nf,zn;UI cv;VF adocvfn;VA2 adocv;UI4 fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift  cv is flags value for function, with many local mods
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
@@ -990,7 +990,7 @@ takestats(++stats[0x11];)
   // An arg is not BID.  Get the control vector and routine
   I at=AT(a), wt=AT(w);
   if(unlikely(ISSPARSE(at|wt)))jtfg=(J)((I)jtfg|JTSPARSEARG);  // remember if an arg is sparse.
-  adocv=var(vandx/sizeof(VA),at&~SPARSE,wt&~SPARSE);  // recover VA2C* id from the va line
+  adocv=var(vandx/sizeof(VA),at&~SPARSE,wt&~SPARSE);  // recover VA2C* id from the va line [clang compiler error using (VA*)vandx-(VA*)0]
   if(unlikely(adocv.f==0)){
    at=AT(a), wt=AT(w);  // refetch type to save a reg
    // There is no routine for these argument types.  That's an error unless an argument is empty
@@ -1039,36 +1039,35 @@ takestats(if(agreefr)++stats[0x12];)
  A awlongcr,awlongfr;  // The arg with the longer-or-equal frame.
  {
   if(withprob(afwf==0,0.98)||unlikely((awr+~0x80)&0x4040)){ // rank 0 0 means no outer frames, sets up faster.  If either arg atomic, take this path since rank can't matter.
-
 takestats(++stats[0x13];)
    if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
 takestats(++stats[0x14];)
     I atommsk; I negifaatom;
-    if(withprob((atommsk=(negifaatom=awr+~0x80)&0x4040)>=((awr^(awr>>RANKTX))&0xff),0.95)){
+    if(withprob((atommsk=(negifaatom=awr+~0x80)&0x4040)>=((awr^(awr>>RANKTX))&0xff),0.94)){
      // Ranks are equal or one arg is atomic
 takestats(++stats[0x15]; if(atommsk&0x4040)++stats[0x16]; if((awr&0xff)==(awr>>RANKTX))++stats[0x17];)
      I isatom=SGNTO0(-atommsk);  // 1 if there is an atomic arg
      awlongcr=atommsk&0x40?a:w;    // long shape is from a if w atom; w if a atom; either one if = (w here)
      zn=AN(awlongcr); fr=AR(awlongcr);  // len and rank of long shape
      cv&=~PEXT(atommsk,0x4040);  // atoms are not inplaceable, anything else is.  Rare that both are atomic here (must not be BID)
-     m=zn<<isatom; m^=isatom-=1; m+=SGNTO0(negifaatom);  // m is encoded length/repeata flag if atomic (n set to 1 next), or ~length if nonatomic (n implied 1)
+     m=zn<<isatom; m^=isatom-=1; m+=SGNTO0(negifaatom);  // m is encoded length/repeata flag if atomic (n set to 1 in next line), or ~length if nonatomic (n implied 1)
      aawwzknfxrz[5]=1;  // in case an arg is atomic, indicate only one loop 
     }else{
         // all other cases without "n.  Arg ranks must be different
      fr=awr>>RANKTX; I shortr=(RANKT)awr; I wl=fr-shortr;  // separate ar and wr; wl neg if w high rank
      awlongcr=wl<0?w:a; awlongfr=wl<0?a:w; shortr=wl<0?fr:shortr; fr=wl<0?(RANKT)awr:fr;  // arg with high rank; other arg
      zn=AN(awlongcr); m=AN(awlongfr);  // high-rank arg gives len of result, other gives short-arg len i. e. # repeats
-     I mf=SGNTO0(wl); nf=2*mf+SGNTO0(-wl);  // each arg uninplaceable if short rank  scaf! only 10 and 01 are possible here
+// obsolete      I mf=SGNTO0(wl); nf=2*mf+SGNTO0(-wl);  // each arg uninplaceable if short rank  scaf! only 10 and 01 are possible here
 takestats(++stats[0x18]; if(wl<0)++stats[0x19];)
      PRODRNK(n,fr-shortr,AS(awlongcr)+shortr);  // the unmatched part of shape is the cell; get */ shape = n, the length of the inner loop
 takestats(if(n==1)++stats[0x1a];)
-     cv&=~nf;  // bit 0-1=routine/rank/arg/input inplaceable
-     n=2*n+mf;   // parm m if there are multiple inner loops.  The value is 2 * (number of inner loops), with LSB set if x is the repeated value (i. e. w has long frame)
+     cv&=~(SGNTO0(wl)+1);  // bit 0-1=routine/rank/arg/input inplaceable
+     n=2*n+SGNTO0(wl);   // parm m if there are multiple inner loops.  The value is 2 * (number of inner loops), with LSB set if x is the repeated value (i. e. w has long frame)
      // frZRANK is fr, frFL and frFLC are both 0
      // convert (n=#inner loops/a is repeated)/(m=len of inner loop) to m(~(single-loop len), or (#inner loops)/(a is repeated))/aawwzknfxrz[5](garbage, or inner-loop len)
-     aawwzknfxrz[5]=m;  // parm n to action rtn will be orig m, i. e. the length of the inner or only loop.
+     aawwzknfxrz[5]=m;  // parm n to action rtn is #loops, needed only if there is more than 1, i. e. m positive
      m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
-     m=n>3?n:m;  // if #inner-loops>1, switch m
+     m=n>3?n:m;  // if #inner-loops>1, leave m as (loop length)/repeat x; otherwise complement m to indicate single loop
     }
    }else{
     // Sparse setup

@@ -1118,7 +1118,7 @@ F1(jttest1){F12IP;
  if((AT(w)&B01+INT)&&AN(w)){
   enabledebug=rei0(w);
  }
- R sc(1);
+ R num(1);
 }
 #endif
 

@@ -2,10 +2,10 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: Atomic (Scalar) Dyadic                                           */
-// gather stats #define takestats(s) s
+// gather stats scaf! #define takestats(s) s
 #define takestats(s)
 
-takestats(static int stats[40]={0};)
+takestats(static int stats[0x30]={0};)
 takestats(int statsoldcaseno=-1;)
 
 #include "j.h"
@@ -976,7 +976,7 @@ static A resolveself(A self){R FAV(self)->fgh[0]?FAV(self)->fgh[0]:self;}  // if
 static VF repairip[4]={plusBIO, plusIIO, minusBIO, minusIIO};
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, self is the block for this primitive or the rank compound calling it - only lc is used, except in sparse processing
 // afwf is af/wf, agreefr is frame for outer agreement test, vandx is offset to some address in the correct VA line, but the invalid bits are set if args are not BID with no error
-static INLINE A jtva2(J jtfg,AD *a,AD *w,I afwf,I awr,UI vandx){F12IP;
+static NOINLINE A jtva2(J jtfg,AD *a,AD *w,I afwf,I awr,UI vandx){F12IP;
 takestats(++stats[0x10];)
  A z;I m,mf,n,nf,zn;UI cv;VF adocvfn;VA2 adocv;UI4 fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift  cv is flags value for function, with many local mods
  I aawwzknfxrz[10];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result
@@ -1038,18 +1038,38 @@ takestats(if(agreefr)++stats[0x12];)
  // We detect agreement error before domain error
  A awlongcr,awlongfr;  // The arg with the longer-or-equal frame.
  {
-  if(withprob(afwf==0,0.98)||unlikely((awr-0x0101)&0x8080)){ // rank 0 0 means no outer frames, sets up faster.  If either arg atomic, take this path since rank can't matter.
+  if(withprob(afwf==0,0.98)||unlikely((awr+~0x80)&0x4040)){ // rank 0 0 means no outer frames, sets up faster.  If either arg atomic, take this path since rank can't matter.
+
 takestats(++stats[0x13];)
    if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
-    fr=awr>>RANKTX; I shortr=(RANKT)awr; I wl=fr-shortr;  // separate ar and wr; wl neg if w long rank
-    awlongcr=wl<0?w:a; awlongfr=wl<0?a:w; shortr=wl<0?fr:shortr; fr=wl<0?(RANKT)awr:fr;  // arg with long cell; other arg
-    zn=AN(awlongcr); m=AN(awlongfr);  // long cell gives len of result, other gives short-arg len
-    I mf=SGNTO0(wl); nf=2*mf+SGNTO0(-wl);  // each arg uninplaceable if short rank
-
-    PRODRNK(n,fr-shortr,AS(awlongcr)+shortr);  // treat the entire operands as one big cell
-    cv&=~nf;  // bit 0-1=routine/rank/arg/input inplaceable
-    n=2*n+mf;   // parm m if there are multiple inner loops.  The value is 2 * (length of inner loop), with LSB set if x is the repeated value (i. e. w has long frame)
-    // frZRANK is fr, frFL and frFLC are both 0
+takestats(++stats[0x14];)
+    I atommsk; I negifaatom;
+    if(withprob((atommsk=(negifaatom=awr+~0x80)&0x4040)>=((awr^(awr>>RANKTX))&0xff),0.95)){
+     // Ranks are equal or one arg is atomic
+takestats(++stats[0x15]; if(atommsk&0x4040)++stats[0x16]; if((awr&0xff)==(awr>>RANKTX))++stats[0x17];)
+     I isatom=SGNTO0(-atommsk);  // 1 if there is an atomic arg
+     awlongcr=atommsk&0x40?a:w;    // long shape is from a if w atom; w if a atom; either one if = (w here)
+     zn=AN(awlongcr); fr=AR(awlongcr);  // len and rank of long shape
+     cv&=~PEXT(atommsk,0x4040);  // atoms are not inplaceable, anything else is.  Rare that both are atomic here (must not be BID)
+     m=zn<<isatom; m^=isatom-=1; m+=SGNTO0(negifaatom);  // m is encoded length/repeata flag if atomic (n set to 1 next), or ~length if nonatomic (n implied 1)
+     aawwzknfxrz[5]=1;  // in case an arg is atomic, indicate only one loop 
+    }else{
+        // all other cases without "n.  Arg ranks must be different
+     fr=awr>>RANKTX; I shortr=(RANKT)awr; I wl=fr-shortr;  // separate ar and wr; wl neg if w high rank
+     awlongcr=wl<0?w:a; awlongfr=wl<0?a:w; shortr=wl<0?fr:shortr; fr=wl<0?(RANKT)awr:fr;  // arg with high rank; other arg
+     zn=AN(awlongcr); m=AN(awlongfr);  // high-rank arg gives len of result, other gives short-arg len i. e. # repeats
+     I mf=SGNTO0(wl); nf=2*mf+SGNTO0(-wl);  // each arg uninplaceable if short rank  scaf! only 10 and 01 are possible here
+takestats(++stats[0x18]; if(wl<0)++stats[0x19];)
+     PRODRNK(n,fr-shortr,AS(awlongcr)+shortr);  // the unmatched part of shape is the cell; get */ shape = n, the length of the inner loop
+takestats(if(n==1)++stats[0x1a];)
+     cv&=~nf;  // bit 0-1=routine/rank/arg/input inplaceable
+     n=2*n+mf;   // parm m if there are multiple inner loops.  The value is 2 * (number of inner loops), with LSB set if x is the repeated value (i. e. w has long frame)
+     // frZRANK is fr, frFL and frFLC are both 0
+     // convert (n=#inner loops/a is repeated)/(m=len of inner loop) to m(~(single-loop len), or (#inner loops)/(a is repeated))/aawwzknfxrz[5](garbage, or inner-loop len)
+     aawwzknfxrz[5]=m;  // parm n to action rtn will be orig m, i. e. the length of the inner or only loop.
+     m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
+     m=n>3?n:m;  // if #inner-loops>1, switch m
+    }
    }else{
     // Sparse setup
     I ar=awr>>RANKTX, wr=(RANKT)awr;
@@ -1060,7 +1080,7 @@ takestats(++stats[0x13];)
    // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
     // Heavy register pressure here.
     // vbls needed: cv a w afwf awr
-takestats(++stats[0x14];)
+takestats(++stats[0x20];)
    UI4 afwfarwr=(afwf<<(2*RANKTX))+awr; wcr=afwfarwr-afwf;   // afwfarwr=af/wf/anr/wnr, subtract 0/0/af/wf => af/wf/acr/wcr = wcr  afwfagreefr free
    if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
 
@@ -1125,7 +1145,7 @@ takestats(++stats[0x14];)
     }
     // vbls needed: a w ak wk cv shortr n nf mf [jt]
     ASSERTAGREE(AS(a)+LANE(wcr,AF), AS(w)+LANE(wcr,WF), LANE(shortr,CSC))  // offset to each cellshape, and cellrank(short cell)  Delay till here to get nf/mf started shortr free
-takestats(++stats[0x15];)
+takestats(++stats[0x21];)
     // vbls needed: a w ak wk cv n nf mf  [jt]
     // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
     // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
@@ -1160,7 +1180,7 @@ takestats(++stats[0x15];)
      DPMULDE(nf,mf,mf);  // mf is total # iterations
      I zendofst=(mf-1)*(aawwzknfxrz[4]=zn<<rtypebplg(cv));   // set byte offset to z location of last iteration, length of each major z cell
      if(unlikely(zendofst<=0))goto migrate1;  // 0-1 outer loops needed, skip setup for it
-takestats(++stats[0x16];)
+takestats(++stats[0x22];)
      aawwzknfxrz[9]=zendofst;
      ak<<=bplg(AT(a)); aawwzknfxrz[0]=ak; wk<<=bplg(AT(w)); aawwzknfxrz[2]=wk;  // convert cell counts to bytes, set cell size
      ak=(cv&VIPWFNOTLONG)?ak:0; aawwzknfxrz[1]=ak; wk=(cv&VIPWFNOTLONG)?0:wk; aawwzknfxrz[3]=wk;  // ak, wk free
@@ -1171,15 +1191,19 @@ takestats(++stats[0x16];)
      // migration is possible
      m*=mf; n*=nf;   // propagate mf and nf down
      DPMULDE(nf,mf,mf);  // mf is total # outer loops, to get z length
-takestats(++stats[0x17];)
+takestats(++stats[0x23];)
 migrate1: ;  // here if there was 0-1 outer cell, i. e. mf=nf=1 or zn=0.  Rare but worth testing for.
-takestats(++stats[0x18];)
+takestats(++stats[0x24];)
      cv|=VIPOFRAMEREQD;  // indicate that the outer frame is needed, even if outer loop is not
      n=n+n+((UI)neq1m<(UI)(cv&VIPWCRLONG));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  Should generate ADC
      n=n+((UI1)(cv&VIPWFNOTLONG)<(UI1)((UI)1<(UI)nf));  // (nf!=1) repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus no flag set yet
     } 
     DPMULDE(zn,mf,zn)  // zn is total # atoms in result
     // m and n need a few cycles to settle
+    // convert (n=#inner loops/a is repeated)/(m=len of inner loop) to m(~(single-loop len), or (#inner loops)/(a is repeated))/aawwzknfxrz[5](garbage, or inner-loop len)
+    aawwzknfxrz[5]=m;  // parm n to action rtn will be orig m, i. e. the length of the inner or only loop.
+    m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
+    m=n>3?n:m;  // if #inner-loops>1, switch m
 
    }else{  // sparse case
     I af=LANE(wcr,AF), wf=LANE(wcr,WF); UI acr=LANE(wcr,AC); wcr=LANE(wcr,WC);   // separate cr and f for sparse
@@ -1192,11 +1216,6 @@ takestats(++stats[0x18];)
  RESETRANK;  // Ranks are required for sparse, which calls IRS-enabled routines internally.  We clear in case the action routine calls a function with IRS
 
  // vbls needed: a w ak wk cv fr n m jt
- // convert (n=#inner loops/a is repeated)/(m=len of inner loop) to m(~(single-loop len), or (#inner loops)/(a is repeated))/aawwzknfxrz[5](garbage, or inner-loop len)
- // n/m are settling here
- aawwzknfxrz[5]=m;  // parm n to action rtn will be orig m, i. e. the length of the inner or only loop.
- m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
- m=n>3?n:m;  // if #inner-loops>1, switch m
 
  union {UI4 fr; UI1 lanes[4];} fru;  // place to save the lanes of fr separately
   // vbls needed: a w ak wk cv fr jt
@@ -1221,11 +1240,11 @@ takestats(++stats[0x18];)
    }else AT(z)=rtype(cv);  // OK to change type of z to match the result, do so
   }
   // Here we are running inplace (25% of the time, in testcases).  Skip over the allocation and its overhead
-takestats(++stats[0x20];)
+takestats(++stats[0x28];)
   ASSERT(adocvfn,EVDOMAIN) if(withprob(!(cv&VIPOLOOPREQD),0.8))goto noallonoloop; else goto noalloloop;
  }else{
 allocate:;  // come here if no inplaceable block could have the type changed
-takestats(++stats[0x21];)
+takestats(++stats[0x29];)
    // vbls needed: a w zn m cv fr [jt]
   // allocate the result area.  We avoid the subroutine call for the overhead, and to save regs and to avoid needing to calculate zt->bplg->bytes
   I bytes=ALLOBYTESVSZLG(zn,LANE(fr,ZRANK),rtypebplg(cv),0,0);   // never allo C4T
@@ -1261,9 +1280,9 @@ takestats(++stats[0x21];)
   // Alternatively, we could execute the loop-with-unroll nf times.  This would misbranch once for the action routine, once at start when there is rank, and at loopend; and would execute the unroll needlessly on the non-loops.
 //   We actually have two versions: no loop/no unroll, and loop nf times.  Each branch misbranches once for the action routine, and 0, 1, or 2 times when there is rank, with no unroll for no-rank. 
   if(withprob(!(cv&VIPOLOOPREQD+VIPOFRAMEREQD),0.8)){   // see if outer loop/frame needed
-takestats(++stats[0x22];)
+takestats(++stats[0x2a];)
 noallonoloop:;  // when we inplace, here to bypass allo
-takestats(++stats[0x23];)
+takestats(++stats[0x2b];)
    if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all   zn free
    // no outer loops.  execute once.  This adds a misbranch when the # outer loops changes, but it is made up for by the unrolling of the awz update.  The indirect call will misbranch, usually
    lrc=((AHDR2FN*)adocvfn)(m,CAV(z),CAV(a),CAV(w),aawwzknfxrz[5],jt);    // run.  Result is EOK normally, otherwise error code, as examined below.  adocvfn could be in a register, or fetched early enough to mispredict fast
@@ -1274,12 +1293,13 @@ takestats(++stats[0x23];)
     if(unlikely(lrc<0)){mulofloloc=~lrc; lrc=EWOVIP+EWOVIPMULII;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
    }
   }else{
+   // outer loop needed (except in rare case when it can be elided)
    MCISH(AS(z),AS(awlongfr),fru.lanes[frFL]);  // finish copying outer shape   &long frame  len(long frame)     
-takestats(++stats[0x24];)
+takestats(++stats[0x2c];)
    if(unlikely(!(cv&VIPOLOOPREQD)))goto noallonoloop;  // if we needed frame but no outer loop, go back to no-loop
-takestats(++stats[0x25];)
+takestats(++stats[0x2d];)
 noalloloop:;  // when we inplace, here to bypass allo
-takestats(++stats[0x26];)
+takestats(++stats[0x2e];)
    if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all   zn free
    aawwzknfxrz[8]=cv&VRMSK;  // init good composite rc, and transfer output conversion to it.
    C *zv=CAV(z); C *av=CAV(a); C *wv=CAV(w);   // point to the data.  Get zv settled first because it's tested for boundary in the action routine.
@@ -1318,8 +1338,8 @@ retrylrc:;  // exit to here with lrc set to error code when there is an error
   // ********* error recovery starts here **********
   }else if(lrc-EWOVIP>=0){A zz;C *zzv;I zzk;
    // Here for overflow that can be corrected in place.  The routines use the old semantics for m and n, so we convert them back
-   n=(m>>1)^-(m&1); n=m<0?1:n;  // original n is 1 if m is complementary; otherwise m>>1, complemented if x is repeated
-   m=aawwzknfxrz[5];  // original m
+   n=(m>>1)^-(m&1); n=m<0?1:n;  // now n is the number of loops, but complemented if x repeats.  If m is neg (no repeat), it is 1; otherwise m>>1, complemented if x is repeated
+   I temp=aawwzknfxrz[5]; m=(m=~m)<0?temp:m;  // m is the length of a single loop (if m neg), or the number of loops if nested
 // not yet    if(rc==EVOKCLEANUP){jt->mulofloloc=0; RETF(z);}  // if multiply that did not overflow, clear the oflo position for next time, and return
   // If the original result block cannot hold the D result, allocate a separate result area
   if(sizeof(D)==sizeof(I)){zz=z; MODBLOCKTYPE(zz,FL); zzk=aawwzknfxrz[4];   // shape etc are already OK

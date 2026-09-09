@@ -472,11 +472,12 @@ AHDR2(name,void,void,void){ \
 // instruction cache we do it only once, building all the other loops around the core.
 // prefL and prefR are macros, used for noncommutative operations
 // fz: 1 set if NONcommutative operator  2 set if shuffle suppressed
-// n=1 vec+vec n<0 atom+vec  n>1 vec+atom
+// m<0 vec+vec n&1 atom+vec  !(n&1) vec+atom
+
 
 #define primop256CE(name,fz,CET,cepref,ceprefL,ceprefR,zzop,cesuff) \
 AHDR2(name,CET,CET,CET){ \
- __m256d z0, z1, x0, x1, y0, y1, in0, in1; \
+ __m256d z0, z1, x0, x1, y0, y1, in0, in1, one=_mm256_setone_pd();  /* one is NaN */ \
  cepref \
  /* convert vector args, which are the same size as z, to offsets from z; flag atom args. */ \
  if(likely(m<0)){n=1; m=~m; x=(CET*)((C*)x-(C*)z); y=(CET*)((C*)y-(C*)z);  /* vector op vector, both args offset */ \
@@ -522,12 +523,12 @@ rdmasklp: ;  /* here when we must read the new args under mask */ \
  I totallen=len1&(BIT(BW-3)-1);  /* total remaining length */ \
  I zinc=(totallen>2)<<(LGNPAR+LGSZI);  /* offset to second half of input, if it is valid */ \
  if(likely(!((I)x&1))){  /* if x is not repeated... */ \
-  in0=_mm256_maskload_pd((D*)((C*)z+(I)x),wrmask), in1=_mm256_maskload_pd((D*)((C*)z+(I)x+zinc),_mm256_slli_epi64(wrmask,1)); \
+  in0=_mm256_blendv_pd(one,_mm256_loadu_pd((D*)((C*)z+(I)x)),wrmask), in1=_mm256_blendv_pd(one,_mm256_loadu_pd((D*)((C*)z+(I)x+zinc)),_mm256_slli_epi64(wrmask,1)); /* fill unread values with NaN, which doesn't generate error */ \
   SHUFIN(fz,in0,in1,x0,x1);  /* convert to llll hhhh form */ \
   if(fz&1){ceprefL(x0,x1)}  /* do LR processing for noncommut */ \
  } \
  /* always read the y arg */ \
- in0=_mm256_maskload_pd((D*)((C*)z+(I)y),wrmask), in1=_mm256_maskload_pd((D*)((C*)z+(I)y+zinc),_mm256_slli_epi64(wrmask,1)); \
+ in0=_mm256_blendv_pd(one,_mm256_loadu_pd((D*)((C*)z+(I)y)),wrmask), in1=_mm256_blendv_pd(one,_mm256_loadu_pd((D*)((C*)z+(I)y+zinc)),_mm256_slli_epi64(wrmask,1)); /* fill unread values */  \
  \
 mainlp:  /* here when args have already been read.  x has been converted & prefixed; y not */ \
  if(!(fz&1)){SHUFIN(fz,in0,in1,y0,y1)}  /* convert y, which is always read, to llll hhhh form */ \

@@ -321,7 +321,7 @@ AHDR2(tymesII,I,I,I){DPMULDECLS I u;I v;I *zi=z;   // could use a side channel t
 oflo: *x=u; *y=v; R ~(z-zi);  // back out the last store, in case it's in-place; gcc stores before overflow.  Return complement of overflow offset as special signal
 }
 
-// Overflow repair routines.  These use the old interpretation of m/n (m=outer or only, n=inner)
+// Overflow repair routines.  These use the old interpretation of m/n (m=outer or only count, n=inner)
 // *x is a non-in-place argument, and n and m advance through it
 //  each atom of *x is repeated n times
 // *y is the I result of the operation that overflowed
@@ -431,6 +431,119 @@ if(likely(_mm256_testz_pd(denomis0,denomis0))){ /* no 0 divisors */ \
 }
 
 primop256CE(divZZ,1,Z,__m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d y0non0; __m256d y1non0; NAN0; __m256d denomis0;,PREFNULL,RECIPZ,DIVZ,ASSERTWR(!NANTEST,EVNAN);)
+#if 0  // obsolete
+#define SHUFIN(fz,v0,v1,out0,out1) if(fz&2){out0=v0;out1=v1;}else{out0=_mm256_unpacklo_pd(v0,v1); out1=_mm256_unpackhi_pd(v0,v1);}
+#define SHUFOUT(fz,out0,out1) if(!(fz&2)){__m256d t0=out0; out0=_mm256_shuffle_pd(out0,out1,0b0000); out1=_mm256_shuffle_pd(t0,out1,0b1111);}
+#define PREFNULL(lo,hi)  // modify lo and hi as needed
+
+I divZZ(I m,Z* RESTRICTI z,Z* RESTRICTI x,Z* RESTRICTI y,I n,J jt){
+
+ __m256d z0, z1, x0, x1, y0, y1, in0, in1, one=_mm256_setone_pd(); 
+#define fz 1
+ __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d y0non0; __m256d y1non0; NAN0; __m256d denomis0; 
+ /* convert vector args, which are the same size as z, to offsets from z; flag atom args. */ 
+ if(likely(m<0)){n=1; m=~m; x=(Z*)((C*)x-(C*)z); y=(Z*)((C*)y-(C*)z);  /* vector op vector, both args offset */ 
+ }else{  /* one arg is atom - flag addr and fetch repeated value.  n is #atom-vec loops, m is length of each and switch flag */ 
+  {I taddr=(I)x^(I)y; x=m&1?x:y; y=(Z*)((I)x^taddr);}  /* if repeated vector op atom, exchange to be atom op vector for ease of fetch */ 
+  y=(Z*)((C*)y-(C*)z);  /* convert the full-sized y arg to offset form */ 
+  x=(Z*)((I)x+1); if(fz&1){x=(Z*)((I)x+(2*(~m&1)));}  /* flag x: atom in bit 0, swapped in bit 1    n=#outer loops, m=length of inner loop*/ 
+  m>>=1; /* adjust vec len */ 
+atomveclp: ;  /* come back here to do next atom op vector loop, with z running */ 
+  /* read the repeated value and convert to internal form */ 
+  if(!(fz&1)){  /* commutative value */ 
+   if(!(fz&2)){x0=_mm256_broadcast_sd((D*)((I)x&-4)), x1=_mm256_broadcast_sd((D*)((I)x&-4)+1); /* read and shuffle=broadcast */ 
+   }else{x0=_mm256_broadcast_pd((__m128d*)((I)x&-4)), x1=x0;}  /* broadcast pairs, no shuffle */ 
+  }else{ 
+   if((I)x&2){ 
+    if(!(fz&2)){y0=_mm256_broadcast_sd((D*)((I)x&-4)), y1=_mm256_broadcast_sd((D*)((I)x&-4)+1); 
+    }else{y0=_mm256_broadcast_pd((__m128d*)((I)x&-4)), y1=y0;}  /* broadcast pairs, no shuffle */ 
+    RECIPZ(y0,y1) 
+   }else{ 
+    if(!(fz&2)){x0=_mm256_broadcast_sd((D*)((I)x&-4)), x1=_mm256_broadcast_sd((D*)((I)x&-4)+1); 
+    }else{x0=_mm256_broadcast_pd((__m128d*)((I)x&-4)), x1=x0;}  /* broadcast pairs, no shuffle */ 
+    PREFNULL(x0,x1) 
+   } 
+  }  /* do LR processing for noncommut */ 
+ } 
+ /* loop n times - usually once, but may be repeated for each atom.  The loop is by branch back to atomveclp */ 
+ 
+ /* The loop is split into 3 parts: prefix/body/suffix.  The prefix gets z onto a cacheline boundary; the */ 
+ /* body processes full cachelines; the suffix finishes.  Prefix/suffix use masked stores. */ 
+ /* Here we calculate length of prefix and body+suffix.  We then encode them into one value. */ 
+ /* We keep a mask for the current part */ 
+ I len0=-(I)z>>(LGSZI+1);  /* ...aa amt to proc to get to 2cacheline bdy */  
+ len0=m<8?m:len0;  /* if short, switch len0 to full length to reduce passes through op */ 
+ len0&=NPAR-1;  /* prefix len: if long, to get to bdy; if short, to leave last block exactly NPAR or 0 */ 
+ /* get mask for first read/write: same 2-bit values in lanes 01, and the other 2 bits in 23 */ 
+ __m256i wrmask=_mm256_castps_si256(_mm256_permutevar_ps(_mm256_castpd_ps(_mm256_broadcast_sd((D*)&maskec4123[len0])),_mm256_loadu_si256((__m256i*)&validitymask[2]))); 
+ I len1=m+((4|-len0)<<(BW-3));    /* make len1 negative so we set new masks for the body.  We can recover len0 from len1.  We do this even if len0=0 to avoid misbranches */ 
+ 
+ /* loop m times, for each operation */ 
+rdmasklp: ;  /* here when we must read the new args under mask */ 
+ 
+ /* read any nonrepeated argument, shuffle */ 
+ I totallen=len1&(BIT(BW-3)-1);  /* total remaining length */ 
+ I zinc=(totallen>2)<<(LGNPAR+LGSZI);  /* offset to second half of input, if it is valid */ 
+ if(likely(!((I)x&1))){  /* if x is not repeated... */ 
+ in0=_mm256_blendv_pd(one,_mm256_loadu_pd((D*)((C*)z+(I)x)),wrmask), in1=_mm256_blendv_pd(one,_mm256_loadu_pd((D*)((C*)z+(I)x+zinc)),_mm256_slli_epi64(wrmask,1)); /* fill unread values with NaN, which doesn't generate error */ 
+  SHUFIN(fz,in0,in1,x0,x1);  /* convert to llll hhhh form */ 
+  if(fz&1){PREFNULL(x0,x1)}  /* do LR processing for noncommut */ 
+ } 
+ /* always read the y arg */ 
+ in0=_mm256_blendv_pd(one,_mm256_loadu_pd((D*)((C*)z+(I)y)),wrmask), in1=_mm256_blendv_pd(one,_mm256_loadu_pd((D*)((C*)z+(I)y+zinc)),_mm256_slli_epi64(wrmask,1)); /* fill unread values */  
+ 
+mainlp:  /* here when args have already been read.  x has been converted & prefixed; y not */ 
+ if(!(fz&1)){SHUFIN(fz,in0,in1,y0,y1)}  /* convert y, which is always read, to llll hhhh form */ 
+ else{if((I)x&2){SHUFIN(fz,in0,in1,x0,x1) PREFNULL(x0,x1)}else{SHUFIN(fz,in0,in1,y0,y1) RECIPZ(y0,y1)}} 
+ DIVZ;  /* do the main processing */ 
+ 
+ SHUFOUT(fz,z0,z1);  /* put result into interleaved form for writing */ 
+ /* write out the result and loop */ 
+ if(len1>=2*NPAR){ 
+  /* the NEXT batch can be written out in full (and so can this one).  Write the result, read new args and shuffle, and loop quickly */ 
+  _mm256_storeu_pd((D*)z,z0); _mm256_storeu_pd((D*)z+NPAR,z1);   /* write out */ 
+  z=(Z*)((I)z+2*NPAR*SZI); len1-=NPAR;  /* advance to next batch */ 
+rdlp: ;  /* come here to fetch next batch & store it without masking */ 
+  if(likely(!((I)x&1))){  /* if x is not repeated... */ 
+   in0=_mm256_loadu_pd((D*)((C*)z+(I)x)), in1=_mm256_loadu_pd((D*)((C*)z+(I)x)+NPAR); 
+   SHUFIN(fz,in0,in1,x0,x1);  /* convert to llll hhhh form */ 
+   if(fz&1){PREFNULL(x0,x1)}  /* do L processing for noncommut - value was not swapped */ 
+  } 
+  /* always read the y arg */ 
+  in0=_mm256_loadu_pd((D*)((C*)z+(I)y)), in1=_mm256_loadu_pd((D*)((C*)z+(I)y)+NPAR); 
+  goto mainlp; 
+ }else if(len1>=NPAR){  /* next-to-last, or possibly last, batch */ 
+  /* the next batch must be masked.  This one is OK; write the result, set the new mask, go back to read under mask */ 
+  _mm256_storeu_pd((D*)z,z0); _mm256_storeu_pd((D*)z+NPAR,z1);   /* write out */ 
+  z=(Z*)((I)z+2*NPAR*SZI); len1-=NPAR;  /* advance to next batch */ 
+  if(len1!=0)goto rdmasklp;  /* process nonempty last batch, under mask, which has already been set */ 
+  /* if len is 0, fall through to loop exit */ 
+ }else{ 
+  /* The current batch must write under mask.  Do so, and continue as called for, to body, suffix, or exit */ 
+  /* The length of this batch comes from len0 or len1 */ 
+  len0=-(len1>>(BW-3));   /* extract len0 from combined len0/len1, range 1 to 4, or 0 if not first batch */ 
+  len0=len1<0?len0:len1;  /* len0=length of batch: len0 (first batch) or len1 (others) */ 
+  len1&=(BIT(BW-3)-1); /* discard len0 from length remaining */ 
+  I zinc=(len0>2)<<(LGNPAR+LGSZI);  /* offset to second half of result, if it can be written */ 
+  _mm256_maskstore_pd((D*)((C*)z+zinc),_mm256_slli_epi64(wrmask,1),z1); 
+  _mm256_maskstore_pd((D*)(z),wrmask,z0); 
+  z=(Z*)((I)z+(len0<<(LGSZI+1))); len1-=len0;  /* advance to next batch */ 
+  if(len1!=0){  /* z is advanced.  Continue if there is more to do */ 
+   /* set the mask for the last batch.  Unless m is 5-8, this will not hold anything up */ 
+   wrmask=_mm256_castps_si256(_mm256_permutevar_ps(_mm256_castpd_ps(_mm256_broadcast_sd((D*)&maskec4123[len1&(NPAR-1)])),_mm256_loadu_si256((__m256i*)&validitymask[2]))); 
+   if(likely(len1>=NPAR))goto rdlp; else goto rdmasklp;  /* process nonempty next batch, under mask if it is the last one */ 
+  } 
+  /* fall through to loop exit if len hit 0 */  
+ } 
+ /* this is the exit from the loop, possibly reached by fallthrough */ 
+ 
+ /* end of one vector operation.  If there are multiple atom*vector, loop */ 
+ if(unlikely(--n!=0)){++x; goto atomveclp;}  /* if multiple atom*vec, move to next atom.  z/y stay in step */ 
+ ASSERTWR(!NANTEST,EVNAN); 
+ R EVOK; 
+}
+#endif
+
 
 
 // QP arithmetic.  We do not support infinities.  If you multiply one, it might give NaN

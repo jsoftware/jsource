@@ -523,12 +523,12 @@ rdmasklp: ;  /* here when we must read the new args under mask */ \
  I totallen=len1&(BIT(BW-3)-1);  /* total remaining length */ \
  I zinc=(totallen>2)<<(LGNPAR+LGSZI);  /* offset to second half of input, if it is valid */ \
  if(likely(!((I)x&1))){  /* if x is not repeated... */ \
-  in0=_mm256_blendv_pd(one,_mm256_loadu_pd((D*)((C*)z+(I)x)),wrmask), in1=_mm256_blendv_pd(one,_mm256_loadu_pd((D*)((C*)z+(I)x+zinc)),_mm256_slli_epi64(wrmask,1)); /* fill unread values with NaN, which doesn't generate error */ \
+  in0=_mm256_blendv_pd(one,_mm256_loadu_pd((D*)((C*)z+(I)x)),_mm256_castsi256_pd(wrmask)), in1=_mm256_blendv_pd(one,_mm256_loadu_pd((D*)((C*)z+(I)x+zinc)),_mm256_castsi256_pd(_mm256_slli_epi64(wrmask,1))); /* fill unread values with NaN, which doesn't generate error */ \
   SHUFIN(fz,in0,in1,x0,x1);  /* convert to llll hhhh form */ \
   if(fz&1){ceprefL(x0,x1)}  /* do LR processing for noncommut */ \
  } \
  /* always read the y arg */ \
- in0=_mm256_blendv_pd(one,_mm256_loadu_pd((D*)((C*)z+(I)y)),wrmask), in1=_mm256_blendv_pd(one,_mm256_loadu_pd((D*)((C*)z+(I)y+zinc)),_mm256_slli_epi64(wrmask,1)); /* fill unread values */  \
+ in0=_mm256_blendv_pd(one,_mm256_loadu_pd((D*)((C*)z+(I)y)),_mm256_castsi256_pd(wrmask)), in1=_mm256_blendv_pd(one,_mm256_loadu_pd((D*)((C*)z+(I)y+zinc)),_mm256_castsi256_pd(_mm256_slli_epi64(wrmask,1))); /* fill unread values */  \
  \
 mainlp:  /* here when args have already been read.  x has been converted & prefixed; y not */ \
  if(!(fz&1)){SHUFIN(fz,in0,in1,y0,y1)}  /* convert y, which is always read, to llll hhhh form */ \

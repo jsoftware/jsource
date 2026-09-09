@@ -2,8 +2,8 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: Atomic (Scalar) Dyadic                                           */
-// gather stats #define takestats(s) s
-#define takestats(s)
+#define takestats(s) s
+// gather stats scaf #define takestats(s)
 
 takestats(static int stats[0x30]={0};)
 takestats(int statsoldcaseno=-1;)
@@ -1049,7 +1049,11 @@ takestats(++stats[0x15]; if(atommsk&0x4040)++stats[0x16]; if((awr&0xff)==(awr>>R
      I isatom=SGNTO0(-atommsk);  // 1 if there is an atomic arg
      awlongcr=atommsk&0x40?a:w;    // long shape is from a if w atom; w if a atom; either one if = (w here)
      zn=AN(awlongcr); fr=AR(awlongcr);  // len and rank of long shape
+#ifdef PEXT
      cv&=~PEXT(atommsk,0x4040);  // atoms are not inplaceable, anything else is.  Rare that both are atomic here (must not be BID)
+#else
+     cv&=~((atommsk*(BIT(BW-1-14)+BIT(BW-2-6)))>>(BW-1-1));
+#endif
      m=zn<<isatom; m^=isatom-=1; m+=SGNTO0(negifaatom);  // m is encoded length/repeata flag if atomic (n set to 1 in next line), or ~length if nonatomic (n implied 1)
      aawwzknfxrz[5]=1;  // in case an arg is atomic, indicate only one loop 
     }else{
@@ -1060,14 +1064,12 @@ takestats(++stats[0x15]; if(atommsk&0x4040)++stats[0x16]; if((awr&0xff)==(awr>>R
 // obsolete      I mf=SGNTO0(wl); nf=2*mf+SGNTO0(-wl);  // each arg uninplaceable if short rank  scaf! only 10 and 01 are possible here
 takestats(++stats[0x18]; if(wl<0)++stats[0x19];)
      PRODRNK(n,fr-shortr,AS(awlongcr)+shortr);  // the unmatched part of shape is the cell; get */ shape = n, the length of the inner loop
-takestats(if(n==1)++stats[0x1a];)
+takestats(if(n==1){++stats[0x1a]; stats[0x1b]+=m;})
      cv&=~(SGNTO0(wl)+1);  // bit 0-1=routine/rank/arg/input inplaceable
-     n=2*n+SGNTO0(wl);   // parm m if there are multiple inner loops.  The value is 2 * (number of inner loops), with LSB set if x is the repeated value (i. e. w has long frame)
-     // frZRANK is fr, frFL and frFLC are both 0
-     // convert (n=#inner loops/a is repeated)/(m=len of inner loop) to m(~(single-loop len), or (#inner loops)/(a is repeated))/aawwzknfxrz[5](garbage, or inner-loop len)
      aawwzknfxrz[5]=m;  // parm n to action rtn is #loops, needed only if there is more than 1, i. e. m positive
-     m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
-     m=n>3?n:m;  // if #inner-loops>1, leave m as (loop length)/repeat x; otherwise complement m to indicate single loop
+     m=2*n+SGNTO0(wl);   // parm m if there are multiple inner loops (which there always are here, since ranks differ).  The value is 2 * (length of inner loop), with LSB set if x is the repeated value (i. e. w has long frame)
+     // frZRANK is fr, frFL and frFLC are both 0
+// not worth it     m=~m; m=n>3?n:m;  // migrating to 1 loop helps if n==1, but that case is so rare that it's not worth the test // if #inner-loops>1, leave m as (loop length)/repeat x; otherwise complement m to indicate single loop
     }
    }else{
     // Sparse setup

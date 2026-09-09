@@ -159,7 +159,7 @@ static SYMWALK(jtnlsymlocked, A,BOX,20,1, LOCPATH(QCWORD(d->fval))&&CAV1(a)[((UC
 static SYMWALK(jtnlsymlockedz, A,BOX,20,1, CAV1(a)[((UC*)NAV(d->name)->s)[0]],
     RZ(*zv++=incorp(sfn(SFNSIMPLEONLY,d->name))) )
 
-A jtnlsym(J jt,A a,A w,I zomb){READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) A z=zomb?jtnlsymlockedz(jt,a,w):jtnlsymlocked(jt,a,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) R z;}
+A jtnlsym(J jt,A a,A w,I zomb){READLOCK(JT(jt,stlock)) READLOCK(ALOCK(JT(jt,stloc))) A z=zomb?jtnlsymlockedz(jt,a,w):jtnlsymlocked(jt,a,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(ALOCK(JT(jt,stloc))) R z;}
 
 static const I nlmask[] = {NOUN,ADV,CONJ,VERB, MARK,MARK,SYMB,MARK};
 
@@ -236,7 +236,7 @@ static F1(jtnch2){F12IP;A ch;B b;LX *e;I i,m,n;L*d;
  R grade2(ch,ope(ch));
 }    /* 4!:5  names changed */
 
-F1(jtnch){F12IP;READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock)) A z=jtnch2(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock)) R z;}
+F1(jtnch){F12IP;READLOCK(JT(jt,stlock)) READLOCK(ALOCK(JT(jt,stloc))) READLOCK(JT(jt,symlock)) A z=jtnch2(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(ALOCK(JT(jt,stloc))) READUNLOCK(JT(jt,symlock)) R z;}
 
 // 4!:55 y.  y is boxed names.  Delete names in y
 // Result is array of booleans, 1 if name OK

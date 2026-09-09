@@ -191,7 +191,7 @@ F1(jtsympool){F12IP;A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  ARGCHK1(w); 
  ASSERT(1==AR(w),EVRANK); 
  ASSERT(!AN(w),EVLENGTH);
- READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock))
+ READLOCK(JT(jt,stlock)) READLOCK(ALOCK(JT(jt,stloc))) READLOCK(JT(jt,symlock))
  GAT0E(z,BOX,4,1,goto exit;); zv=AAV1(z);
  n=AN((A)((I)SYMORIGIN-AKXR(0)))/symcol; pv=SYMORIGIN;
  GATV0E(x,INT,n*6,2,goto exit;); AS(x)[0]=n; AS(x)[1]=6; xv= AV2(x); zv[0]=incorp(x);  // box 0: sym info
@@ -230,7 +230,7 @@ F1(jtsympool){F12IP;A aa,q,x,y,*yv,z,zz=0,*zv;I i,n,*u,*xv;L*pv;LX j,*v;
  DO(JT(jt,wthreadhwmk)+1, J jt0=JTFORTHREAD(jt,i); I nfreesym=0; DO(2, for(j=jt0->symfreehead[i];j=SYMNEXT(j),j;j=SYMORIGIN[j].next)++nfreesym;) xv[i]=nfreesym;)
  zz=z;
 exit: ;
- READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock))
+ READUNLOCK(JT(jt,stlock)) READUNLOCK(ALOCK(JT(jt,stloc))) READUNLOCK(JT(jt,symlock))
  RETF(zz);
 }    /* 18!:_2 symbol pool */
 

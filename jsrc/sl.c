@@ -302,7 +302,7 @@ F1(jtlocsizes){F12IP;I p,q,*v;
 }    /* 9!:39 default locale size set */
 
 // jtprobe, with readlock taken on stlock
-static A jtprobestlock(J jtfg, C *u,UI4 h){F12JT; READLOCK(JT(jt,stloc)->lock) A z=probex((I)jtfg&255,u,SYMORIGIN,h,JT(jt,stloc)); READUNLOCK(JT(jt,stloc)->lock) R z;}
+static A jtprobestlock(J jtfg, C *u,UI4 h){F12JT; READLOCK(ALOCK(JT(jt,stloc))) A z=probex((I)jtfg&255,u,SYMORIGIN,h,JT(jt,stloc)); READUNLOCK(ALOCK(JT(jt,stloc))) R z;}
 
 // find the symbol table for locale with name u which has length n and hash/number bucketx
 // locale name is known to be valid
@@ -338,7 +338,7 @@ A jtstfindcre(J jt,I n,C*u,I bucketx){
  while(1){
   A v = stfind(n,u,bucketx);  // lookup.  NOTE another thread could delete the locale while we're looking at it - could always zombie it?
   if(likely(v!=0)){  // name found
-   if(unlikely(LOCPATH(v)==0)){ra(v); WRITELOCK(JT(jt,stloc)->lock) REINITZOMBLOC(v,1) WRITEUNLOCK(JT(jt,stloc)->lock)}  // if the path is null, this is a zombie empty locale in the path of some other locale.  Bring it back to life
+   if(unlikely(LOCPATH(v)==0)){ra(v); WRITELOCK(ALOCK(JT(jt,stloc))) REINITZOMBLOC(v,1) WRITEUNLOCK(ALOCK(JT(jt,stloc)))}  // if the path is null, this is a zombie empty locale in the path of some other locale.  Bring it back to life
     // setting a path must be accompanied by raising the usecount, because a locale is liable to be erased when its path is nonnull and it must survive as a zombie then
    R v;  // return the locale found
   }
@@ -538,7 +538,7 @@ static F2(jtloccre){F12IP;A g,y,z=0;C*s;I n,p;A v;
  y=C(AAV(w)[0]); n=AN(y); s=CAV(y); ASSERT(n<256,EVLIMIT);
  SYMRESERVE(2)  // make sure we have symbols to insert, for the locale itself
  A op=0;  // old path, if there is one
- WRITELOCK(JT(jt,locdellock)) WRITELOCK(JT(jt,stloc)->lock)  // take a write lock until we have installed the new locale if any.  No errors!  We need both locks, in this order (delete calls symfree, which takes locks in this order)
+ WRITELOCK(JT(jt,locdellock)) WRITELOCK(ALOCK(JT(jt,stloc)))  // take a write lock until we have installed the new locale if any.  No errors!  We need both locks, in this order (delete calls symfree, which takes locks in this order)
  if(v=probex(n,s,SYMORIGIN,nmhash(n,s),JT(jt,stloc))){
   // named locale exists.  It may be zombie (i. e. no path) or not, but we have to keep using the same locale block, since it may be out there in paths
   g=v;
@@ -562,7 +562,7 @@ static F2(jtloccre){F12IP;A g,y,z=0;C*s;I n,p;A v;
  }
  z=y;  // good return
 exit:
- WRITEUNLOCK(JT(jt,locdellock)) WRITEUNLOCK(JT(jt,stloc)->lock)  // errors OK now
+ WRITEUNLOCK(JT(jt,locdellock)) WRITEUNLOCK(ALOCK(JT(jt,stloc)))  // errors OK now
  if(unlikely(op!=0&&!ACISPERM(AC(op)))){jtsystemlock(jt,LOCKPRIPATH,jtnullsyslock); fa(op)}  // free old path after systemlock to ensure uses of path have been purged.  Mustn't hold lock
  R boxW(ca(z));  // result is boxed string of name - we copy it, perhaps not needed
 }    /* create a locale named w with hash table size a */
@@ -634,7 +634,7 @@ static F1(jtlocmaplocked){F12IP;A g,q,x,y,*yv,z,*zv;I c=-1,d,j=0,m,*qv,*xv;
  GAT0(z,BOX,2,1); zv=AAV1(z); zv[0]=incorp(x); zv[1]=incorp(y);
  R z;
 }    /* 18!:_1 locale map */
-F1(jtlocmap){F12IP;READLOCK(JT(jt,stlock)) READLOCK(JT(jt,stloc)->lock) READLOCK(JT(jt,symlock)) A z=jtlocmaplocked(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(JT(jt,stloc)->lock) READUNLOCK(JT(jt,symlock)) R z;}
+F1(jtlocmap){F12IP;READLOCK(JT(jt,stlock)) READLOCK(ALOCK(JT(jt,stloc))) READLOCK(JT(jt,symlock)) A z=jtlocmaplocked(jt,w); READUNLOCK(JT(jt,stlock)) READUNLOCK(ALOCK(JT(jt,stloc))) READUNLOCK(JT(jt,symlock)) R z;}
 
 // recalculate Bloom filter in table w
 SYMWALK(jtaccumbloom,B,B01,0,0,BLOOMSET(BLOOMBASE(w),i)&&0,;)  // i is chain#.  For each defined symbol, set the bit

@@ -46,7 +46,7 @@ static NOINLINE I intforD(J jt, D d){D q;I z;  // noinline because it uses so ma
 #define SSINGCASE4(id,bidenc) (((bidenc)&-4)*8+(id))   // encode case/args into one branch value.  To reduce cache footprint of branch table, collect the arg combinations together.  ids are grouped by usage
 
 // we know that AN=1 in a and w, which are FL/INT/B01 types.  af is larger arg rank (=rank of result), copied to each of the low 2 byte lanes
-// bidcase is the routine index to use * 4
+// bidcase is the routine index to use * 4, possibly with garbage in the 2 LSBs
 INLINE static A jtssingleton(J jtfg,A a,A w,I awr,I af,UI bidcase,I opcode){F12JT;
  void *av=voidAV(a), *wv=voidAV(w), *zv;  // point to the argument values and result.  2 fetches to op addrs, 3 to op values
  // We are waiting for opcode and data pointers to settle.  We use the idle time to start the reads to calculate inplaceability.  We also start the calculation, to save registers
@@ -1044,13 +1044,13 @@ takestats(++stats[0x13];)
 takestats(++stats[0x14];)
     I atommsk;
     if(withprob((atommsk=(awr+~0x80)&0x4040)>=((awr^(awr>>RANKTX))&0xff),0.94)){
-     // Ranks are equal or one arg is atomic
+     // Ranks are equal or at least one arg is atomic
 takestats(++stats[0x15]; if(atommsk&0x4040)++stats[0x16]; if((awr&0xff)==(awr>>RANKTX))++stats[0x17];)
      I isatom=SGNTO0(-atommsk);  // 1 if there is an atomic arg
      awlongcr=atommsk&0x40?a:w;    // long shape is from a if w atom; w if a atom; either one if = (w here)
      zn=AN(awlongcr); fr=AR(awlongcr);  // len and rank of long shape
 #ifdef PEXT
-     cv&=~PEXT(atommsk,0x4040);  // atoms are not inplaceable, anything else is.  Rare that both are atomic here (must not be BID)
+     cv&=~PEXT(atommsk,0x4040);  // atoms are not inplaceable, anything else is.  Rare that both are atomic here (must not be BID).  remove (a atomic),(w atomic) from cv inplaceability
 #else
      cv&=~((atommsk*(BIT(BW-2-14)+BIT(BW-3-6)))>>(BW-3));
 #endif
@@ -1061,7 +1061,7 @@ takestats(++stats[0x15]; if(atommsk&0x4040)++stats[0x16]; if((awr&0xff)==(awr>>R
      fr=awr>>RANKTX; I shortr=(RANKT)awr; I wl=fr-shortr;  // separate ar and wr; wl neg if w high rank
      awlongcr=wl<0?w:a; awlongfr=wl<0?a:w; shortr=wl<0?fr:shortr; fr=wl<0?(RANKT)awr:fr;  // arg with high rank; other arg
      zn=AN(awlongcr); m=AN(awlongfr);  // high-rank arg gives len of result, other gives short-arg len i. e. # repeats
-// obsolete      I mf=SGNTO0(wl); nf=2*mf+SGNTO0(-wl);  // each arg uninplaceable if short rank  scaf! only 10 and 01 are possible here
+// obsolete      I mf=SGNTO0(wl); nf=2*mf+SGNTO0(-wl);  // each arg uninplaceable if short rank  only 10 and 01 are possible here
 takestats(++stats[0x18]; if(wl<0)++stats[0x19];)
      PRODRNK(n,fr-shortr,AS(awlongcr)+shortr);  // the unmatched part of shape is the cell; get */ shape = n, the length of the inner loop
 takestats(if(n==1){++stats[0x1a]; stats[0x1b]+=m;})
@@ -1261,20 +1261,21 @@ takestats(++stats[0x29];)
 // obsolete   ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)   // single-allocation limit
   RZ(z=jtgaf(jt,CTLZI((UI)bytes)));   // allocate the block, filling in AC AFLAG AM
   AT(z)=rtype(cv); AN(z)=zn; ARINIT(z,fru.lanes[frZRANK]); AK(z)=AKXR(fru.lanes[frZRANK]);  // fill in the rest
-  if(unlikely(AT(z)&CMPX+QP))AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
-  if(unlikely(((AT(z)&DIRECT)==0))){z=zfillind(z,bytes);}  // Clear data for non-DIRECT types in case of later error.  zfillind clears 32 bytes at a time, OK since the region is a power of 2 long
+  if(unlikely(AT(z)&(CMPX|QP|(NOUN&~DIRECT)))){
+   if(AT(z)&CMPX+QP)AK(z)=(AK(z)+SZD)&~SZD;  // move 16-byte values to 16-byte bdy
+   if(((AT(z)&DIRECT)==0)){z=zfillind(z,bytes);}  // Clear data for non-DIRECT types in case of later error.  zfillind clears 32 bytes at a time, OK since the region is a power of 2 long
+  }
   // vbls needed: m a w z cv zn [jt]
   // Install shape.  There are 2 parts: the inner shape, needed only when there is rank, and the outer, needed for all.  We install the outer shape
   // here and the inner later, minimizing misbranches.  We don't mind having instructions piled up before the expected pipeline break for the action routine
   MCISH(AS(z)+fru.lanes[frFL],AS(awlongcr)+fru.lanes[frFLC],fru.lanes[frZRANK]-fru.lanes[frFL]);  // copy inner shape
      // start of cellshape,    shape of long cell+its frame  rank of long cell (zrank-len of long frame)
   // Signal domain error if appropriate.  Must do this after agreement tests
-  ASSERT(adocvfn,EVDOMAIN);  // if no function to run even on BOOL args, that's an error.  By waiting till now we hope to keep adocvfn in the call register till execution.  We might have allocated a BOOL result block, which is OK
+  ASSERT(adocvfn,EVDOMAIN)  // if no function to run , that's an error.  By waiting till now we hope to keep adocvfn in the call register till execution.  We might have allocated a BOOL result block, which is OK
  } 
  // (we don't get here if we are inplacing: that has branched into the loop or no-loop section)
  // End of setup phase.  The execution phase:
  // vbls needed from setup: adocvfn m cv a w z [jt]
-
  {
   I mulofloloc, lrc;   // number of good results before we encountered integer overflow on multiply; overall return code, including conversion on exit
   // we want to execute the action routine nf times.  We could execute the loop-with-unroll nf-1 times followed by the code for the last loop, but that would misbranch to the action routine twice when there is rank, plus one misbranch at loop-end
@@ -1299,7 +1300,7 @@ takestats(++stats[0x2b];)
 takestats(++stats[0x2c];)
    if(unlikely(!(cv&VIPOLOOPREQD)))goto noallonoloop;  // if we needed frame but no outer loop, go back to no-loop
 takestats(++stats[0x2d];)
-noalloloop:;  // when we inplace, here to bypass allo
+noalloloop:;  // when we inplace, here to bypass allo and consequent saving the shape
 takestats(++stats[0x2e];)
    if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all   zn free
    aawwzknfxrz[8]=cv&VRMSK;  // init good composite rc, and transfer output conversion to it.
@@ -1871,7 +1872,7 @@ retryss:;  // here when non-atomic singleton retries.  jtranks and selfranks hav
  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
  // check for non-atomic singletons, which are rare (in testcases)
  if(withprob((notoneatom|densbid0)!=0,0.95)){
-  bidcase&=(FL<<3)-1; bidcase=bidcase+(densbid0>=1);  // clear possibly-invalid high bits of bidcase; if args are not BID, set to 'invalid' bidcase (ADC)
+  bidcase&=(FL+INT)*5; bidcase=bidcase+(densbid0>=1);  // clear possibly-invalid bits of bidcase; if args are not BID, set to 'invalid' bidcase (ADC)
 retryss0:;  // Here when atomic singleton retries.  Noun ranks (awr) are perforce 0, so afwf have been set to 0, with selfranks set for error-message purposes.  at/wt are garbage
   // either not singleton BID, or singleton needing retry: carry on with normal setup
   opcode&=0x7f; opcode*=sizeof(VA); opcode+=bidcase*=(sizeof(VA2)/INT); // point to the VA2 block for the BID if valid; VA block if not

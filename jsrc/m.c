@@ -19,15 +19,9 @@
 #include "j.h"
 
 #if MEMAUDIT&1
-#define CHKAFCHAIN0   {if(jt->mempool[1]&&AFCHAIN(jt->mempool[1])&&(0x100>(uintptr_t)AFCHAIN(jt->mempool[1])))SEGFAULT;}
-#define CHKAFCHAIN1   {if(jt->mempool[-PMINL+1+blockx]&&AFCHAIN(jt->mempool[-PMINL+1+blockx])&&(0x100>(uintptr_t)AFCHAIN(jt->mempool[-PMINL+1+blockx])))SEGFAULT;}
-#define CHKAFCHAIN(z) {if(z&&AFCHAIN(z)&&(((uintptr_t)AFCHAIN(z)&QCMASK2)||(0x100>(uintptr_t)AFCHAIN(z))))SEGFAULT;}
-#define CHKQCMASK(z)  {if((uintptr_t)z&QCMASK2)SEGFAULT;}
+#define CHKAFCHAIN(z) {A z1=z; while(z1){if(z1&&(((uintptr_t)z1)<0x10000))SEGFAULT;z1=AFCHAIN(z1);}}
 #else
-#define CHKAFCHAIN0
-#define CHKAFCHAIN1
 #define CHKAFCHAIN(z)
-#define CHKQCMASK(z)
 #endif
 
 #if 0    // already defined in m.h
@@ -310,7 +304,6 @@ B jtspfree(J jt){I i;A p;
    I nexpats=IMIN;  // number of expats repatriated
    for(p=jt->mempool[i];p;){
 #if MEMAUDIT&1
-    CHKQCMASK(p);
     CHKAFCHAIN(p);
     if(FHRHPOOLBIN(AFHRH(p))!=i)SEGFAULT;  // make sure chains are valid
     if(ISGMP(p)&&!ACISPERM(p)&&!AZAPLOC(p))SEGFAULT; // catch an old libgmp integration failure mode
@@ -1268,7 +1261,7 @@ __attribute__((noinline)) A jtgafallopool(J jt){
  // allocate without alignment
  ASSERT(av=MALLOC(PSIZE+TAILPAD),EVWSFULL);
 #endif
- I blockx=(I)jt&63; jt=(J)((I)jt&-64);
+ I blockx=(I)jt&QCMASK; jt=(J)((I)jt&~QCMASK);
  jt->malloctotal+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;  // add to total JE mem allocated
  I nt=jt->malloctotalremote+jt->malloctotal;  // get net total allocated from this thread & not freed
  jt->mfreegenallo+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;   // add to total from OS
@@ -1288,11 +1281,6 @@ __attribute__((noinline)) A jtgafallopool(J jt){
  DQ(PSIZE/2>>blockx, u=(A)((C*)u-n); AFCHAIN(u)=chn; chn=u; hrh -= FHRHBININCR(1+blockx-PMINL); AFHRH(u)=hrh; PYXMEMINIT(u));    // chain blocks to each other; set chain of last block to 0
 #endif
  AFHRH(u)=hrh|FHRHROOT;  // flag first block as root.  It has 0 offset already
-#if MEMAUDIT&1
- CHKQCMASK((A)((C*)u));
- CHKQCMASK((A)((C*)u+n));
- CHKAFCHAIN((A)((C*)u+n));
-#endif
  jt->mempool[-PMINL+1+blockx]=(A)((C*)u+n);  // the second block becomes the head of the free list
  if(unlikely((jt->memballo[-PMINL+1+blockx]&MFREEBCOUNTING)!=0)){     // We are adding a bunch of free blocks now...
   I jtbytes=jt->bytes+=n; if(jtbytes>jt->bytesmax)jt->bytesmax=jtbytes;  // Add the bytes we just allocated

@@ -2,11 +2,17 @@
 /* Licensed use only. Any other use is in violation of copyright.          */
 /*                                                                         */
 /* Verbs: Atomic (Scalar) Dyadic                                           */
-// gather stats #define takestats(s) s
+#if !defined(ATOMICSTATS)
+#define ATOMICSTATS 0
+#endif
+#if ATOMICSTATS
+#define takestats(s) s
+#else
 #define takestats(s)
+#endif
 
 takestats(static int stats[0x30]={0};)
-takestats(int statsoldcaseno=-1;)
+takestats(int statsoldcaseno=-1; VF statsoldadocvfn=0;)
 
 #include "j.h"
 #include "ve.h"
@@ -1282,6 +1288,7 @@ takestats(++stats[0x29];)
 takestats(++stats[0x2a];)
 noallonoloop:;  // when we inplace, here to bypass allo
 takestats(++stats[0x2b];)
+takestats(if(adocvfn==statsoldadocvfn)++stats[0x2f]; statsoldadocvfn=adocvfn;)
 #if defined(__clang__)
    __asm__ __volatile__("" : : "r"(adocvfn));   // clang inline assembler block that does nothing but put adocvfn into a register.  We want it early to speed up the expected misprediction
 #endif
@@ -1302,6 +1309,7 @@ takestats(++stats[0x2c];)
 takestats(++stats[0x2d];)
 noalloloop:;  // when we inplace, here to bypass allo and consequent saving the shape
 takestats(++stats[0x2e];)
+takestats(if(adocvfn==statsoldadocvfn)++stats[0x2f]; statsoldadocvfn=adocvfn;)
 #if defined(__clang__)
    __asm__ __volatile__("" : : "r"(adocvfn));   // clang inline assembler block that does nothing but put adocvfn into a register.  We want it early to speed up the expected misprediction first time
 #endif

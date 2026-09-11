@@ -612,7 +612,7 @@ static VARPSA rpsmax = {RATX+1 , {
 }};
 
 
-static VF err00(){R EVDOMAIN;}  // Error function, used when there is no valid one
+static I err00(){R EVDOMAIN;}  // Error function, used when there is no valid one
 
 // The 9 routines that handle B/I/D do not have to indicate argument conversion type unless it is a change.  For (D,D) (routine 8) we OR VDD into the argument field sometimes; this is 0xc and so the arg conv there must be omitted or one of VBB VII VDD
 // Routines that require both inputs to have the same precision (anything higher than FL) MUST include an input conversion in case a lower-priority arg is converted there.  If the result type is the same as the input, it should usually be IP.

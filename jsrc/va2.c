@@ -12,7 +12,7 @@
 #endif
 
 takestats(static int stats[0x30]={0};)
-takestats(int statsoldcaseno=-1; VF statsoldadocvfn=0;)
+takestats(int statsoldcaseno=-1; VF statsoldadocvfn[2]=0;)
 
 #include "j.h"
 #include "ve.h"
@@ -978,12 +978,12 @@ static A resolveself(A self){R FAV(self)->fgh[0]?FAV(self)->fgh[0]:self;}  // if
 // repair routines for integer overflow, possibly in place
 static VF repairip[4]={plusBIO, plusIIO, minusBIO, minusIIO};
 // All dyadic arithmetic verbs f enter here, and also f"n.  a and w are the arguments, self is the block for this primitive or the rank compound calling it - only lc is used, except in sparse processing
-// afwf is af/wf, agreefr is frame for outer agreement test, vandx is offset to some address in the correct VA line, but the invalid bits are set if args are not BID with no error
+// afwf is af/wf, agreefr is frame for outer agreement test, vandx is offset to some address in the correct VA line, but upper invalid bits are set if args are not BID with no error
 static INLINE A jtva2(J jtfg,AD *a,AD *w,I afwf,I awr,UI vandx){F12IP;
 takestats(++stats[0x10];)
  A z;I m,mf,n,nf,zn;UI cv;VF adocvfn;VA2 adocv;UI4 fr;  // fr will eventually be frame/rank  nf (and mf) change roles during execution  fr/shortr use all bits and shift  cv is flags value for function, with many local mods
  I aawwzknfxrz[11];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result, temp
- if(withprob(!(vandx&(0x3*(sizeof(VA2)/INT))),0.95)){  // if vandx is valid (meaning first pass through on BID args)
+ if(withprob(!(vandx&(0x3*(sizeof(VA2)/INT)+-BIT(15))),0.95)){  // if vandx is valid, with no upper or lower flags (meaning first pass through on BID args)
   // Here for the fast and important case, where the arguments are both dense B01/INT/FL
 // obsolete   VA2 *aadocv=&((VA*)((I)va+vandx))->p2[bidcase>>INTX];   // read table[primitive][argtype]
   VA2 *aadocv=(VA2*)((I)va+vandx);   // read table[primitive][argtype]
@@ -991,6 +991,7 @@ takestats(++stats[0x10];)
  }else{
 takestats(++stats[0x11];)
   // An arg is not BID.  Get the control vector and routine
+  vandx&=~-BIT(15);  // clear the densbid0 bits.  In 32-bit there may be LSBs but that's OK
   I at=AT(a), wt=AT(w);
   if(unlikely(ISSPARSE(at|wt)))jtfg=(J)((I)jtfg|JTSPARSEARG);  // remember if an arg is sparse.
   adocv=var(vandx/sizeof(VA),at&~SPARSE,wt&~SPARSE);  // recover VA2C* id from the va line [clang compiler error using (VA*)vandx-(VA*)0]
@@ -1232,6 +1233,9 @@ takestats(++stats[0x24];)
  if(withprob((ipw|ipa)<0,0.4)){  // see if either w or a is inplaceable
   if(unlikely(a==w))goto allocate;   // If a==w suppress inplacing, in case the operation must be retried (we could check which ones but they are just not likely to be used reflexively)
   // we are reusing an argument (ipw is neg if it's w, which has priority); make sure the type is updated to the result type
+#if defined(__clang__)
+   __asm__ __volatile__("" : : "r"(adocvfn));   // clang inline assembler block that does nothing but put adocvfn into a register.  We want it early to speed up the expected misprediction first time
+#endif
   z=ipw<0?w:a;  // z=inplaceable arg; in test suite, most inplaceables are inplaceable on both w and a, somewhat more on w
   if(unlikely(cv&(VTYPECHGA>>SGNTO0(ipw)))){   // if result type is not the (possibly converted) argument type...
    // the type of inplaceable z must (or might, if it was empty) change.  But if z is UNINCORPABLE, it might be virtual.  Realizing it is a losing move.  And, we don't change the type of an UNINCORPABLE so that the caller
@@ -1271,6 +1275,9 @@ takestats(++stats[0x29];)
   // vbls needed: m a w z cv zn [jt]
   // Install shape.  There are 2 parts: the inner shape, needed only when there is rank, and the outer, needed for all.  We install the outer shape
   // here and the inner later, minimizing misbranches.  We don't mind having instructions piled up before the expected pipeline break for the action routine
+#if defined(__clang__)
+   __asm__ __volatile__("" : : "r"(adocvfn));   // clang inline assembler block that does nothing but put adocvfn into a register.  We want it early to speed up the expected misprediction
+#endif
   MCISH(AS(z)+fru.lanes[frFL],AS(awlongcr)+fru.lanes[frFLC],fru.lanes[frZRANK]-fru.lanes[frFL]);  // copy inner shape
      // start of cellshape,    shape of long cell+its frame  rank of long cell (zrank-len of long frame)
   // Signal domain error if appropriate.  Must do this after agreement tests
@@ -1288,10 +1295,7 @@ takestats(++stats[0x29];)
 takestats(++stats[0x2a];)
 noallonoloop:;  // when we inplace, here to bypass allo
 takestats(++stats[0x2b];)
-takestats(if(adocvfn==statsoldadocvfn)++stats[0x2f]; statsoldadocvfn=adocvfn;)
-#if defined(__clang__)
-   __asm__ __volatile__("" : : "r"(adocvfn));   // clang inline assembler block that does nothing but put adocvfn into a register.  We want it early to speed up the expected misprediction
-#endif
+takestats(if(adocvfn==statsoldadocvfn[0])++stats[0x2f]; statsoldadocvfn[0]=adocvfn;)
    if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all   zn free
    // no outer loops.  execute once.  This adds a misbranch when the # outer loops changes, but it is made up for by the unrolling of the awz update.  The indirect call will misbranch, usually
    lrc=((AHDR2FN*)adocvfn)(m,CAV(z),CAV(a),CAV(w),aawwzknfxrz[5],jt);    // run.  Result is EOK normally, otherwise error code, as examined below.  adocvfn could be in a register, or fetched early enough to mispredict fast
@@ -1309,10 +1313,7 @@ takestats(++stats[0x2c];)
 takestats(++stats[0x2d];)
 noalloloop:;  // when we inplace, here to bypass allo and consequent saving the shape
 takestats(++stats[0x2e];)
-takestats(if(adocvfn==statsoldadocvfn)++stats[0x2f]; statsoldadocvfn=adocvfn;)
-#if defined(__clang__)
-   __asm__ __volatile__("" : : "r"(adocvfn));   // clang inline assembler block that does nothing but put adocvfn into a register.  We want it early to speed up the expected misprediction first time
-#endif
+takestats(if(adocvfn==statsoldadocvfn[1])++stats[0x2f]; statsoldadocvfn[1]=adocvfn;)
    if(unlikely(zn==0)){RETF(z);}  // If the result is empty, the allocated area says it all   zn free
    aawwzknfxrz[8]=cv&VRMSK;  // init good composite rc, and transfer output conversion to it.
    C *zv=CAV(z); C *av=CAV(a); C *wv=CAV(w);   // point to the data.  Get zv settled first because it's tested for boundary in the action routine.
@@ -1882,8 +1883,8 @@ retryss:;  // here when non-atomic singleton retries.  jtranks and selfranks hav
  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
  // check for non-atomic singletons, which are rare (in testcases)
  if(withprob((notoneatom|densbid0)!=0,0.95)){
+  bidcase&=(FL+INT)*5; bidcase=bidcase+(SY_64?(densbid0<<=15):!!densbid0);  // clear possibly-invalid bits of bidcase; if args are not BID, set to 'invalid' bidcase
 retryss0:;  // Here when atomic singleton retries.  Noun ranks (awr) are perforce 0, so afwf have been set to 0, with selfranks set for error-message purposes.  at/wt are garbage
-  bidcase&=(FL+INT)*5; bidcase=bidcase+(densbid0>=1);  // clear possibly-invalid bits of bidcase; if args are not BID, set to 'invalid' bidcase (ADC, but the compiler generates SETx instead because short)
   // either not singleton BID, or singleton needing retry: carry on with normal setup
   opcode&=0x7f; opcode*=sizeof(VA); opcode+=bidcase*=(sizeof(VA2)/INT); // point to the VA2 block for the BID if valid; VA block if not
   NOUNROLL while(1){
@@ -1920,7 +1921,7 @@ retryss0:;  // Here when atomic singleton retries.  Noun ranks (awr) are perforc
 takestats(++stats[0x2];)
   // singleton BID, rank>0.  we need the rank of the result.  Rare to come in this way (singletons with rank)
   I awcr=awr-afwf; af=MAX((UI1)awcr,(UI1)(awcr>>RANKTX)); af+=MAX((UI1)afwf,(UI1)(afwf>>RANKTX)); af*=0x101;   // af=max framelen + max rank = resultrank, in 2 lanes
-forcess:;  // branch point for rank-0 singletons from above, always with atomic result (awr is 0, so if af)
+forcess:;  // branch point for rank-0 singletons from above, always with atomic result (awr is 0, so is af)
   // any singleton.  awr is the rank of the result, with shape all 1s
   z=jtssingleton(jtfg,a,w,awr,af,bidcase,opcode);
   if(likely(z!=0)){RETF(z);}  // normal case is good return; the rest is retry for singletons
@@ -1929,11 +1930,11 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
   awr=AR(a); awr<<=RANKTX; awr+=AR(w); // restore aw vars so they won't be saved over the call
-  bidcase=0x0; densbid0=1; opcode=FAV(self)->lu2.lc;  // bidcase must be 'invalid'; restore opcode to prevent save
+  bidcase=0x1; opcode=FAV(self)->lu2.lc;  // bidcase must be 'invalid'; restore opcode to prevent save
   jtranks=jt->ranks; selfranks=FAV(self)->lrr;  // Restore verb ranks, from user or from "n.
 // obsolete   if(likely(awr==0)){selfranks=R2MAX; realself=FAV(self)->fgh[0]; self=realself?realself:self;} goto retryss;  // retry.  atomic singletons must advance self (selfranks max to have no frame); others must not, using the incumbent self & selfranks
 // obsolete   if(likely(awr==0)){selfranks=R2MAX;}
-  if(likely(awr==0)){afwf=0; selfranks=jtranks==R2MAX?selfranks:jtranks; goto retryss0;} goto retryss;  // retry, loading the actual ranks of the verb.  If not atomic, set 'not BID' to force through var
+  if(likely(awr==0)){afwf=0; selfranks=jtranks==R2MAX?selfranks:jtranks; goto retryss0;} densbid0=1; goto retryss;  // retry, loading the actual ranks of the verb.  If not atomic, set 'not BID' to force through var
   // (no fallthrough here)
  }
 }

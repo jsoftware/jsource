@@ -18,7 +18,7 @@ for. i. N do.
   (a +/@(*"1 _) b) -: a X b
   0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
   (a +/@(*"1 _) b) -: a X b
- (_1 1000{~(9!:56'pyxes')<IF64) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
+ (_1 1000{~(-.9!:56'pyxes')) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
   (a +/@(*"1 _) b) -: a X b
 
   empty thr (9!:58)"0 i.3
@@ -27,7 +27,7 @@ for. i. N do.
   (a +/@(*"1 _) b) -: a X b
   0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
   (a +/@(*"1 _) b) -: a X b
-  (_1 1000{~(9!:56'pyxes')<IF64) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
+  (_1 1000{~(-.9!:56'pyxes')) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
   (a +/@(*"1 _) b) -: a X b
 
   empty thr (9!:58)"0 i.3
@@ -36,7 +36,7 @@ for. i. N do.
   (a +/@(*"1 _) b) -: a X b
   0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
   (a +/@(*"1 _) b) -: a X b
-  (_1 1000{~(9!:56'pyxes')<IF64) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
+  (_1 1000{~(-.9!:56'pyxes')) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
   (a +/@(*"1 _) b) -: a X b
 
   if. (9!:56'PYXES') do.

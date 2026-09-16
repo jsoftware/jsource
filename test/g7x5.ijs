@@ -11,7 +11,7 @@ fmapped =: 3 : '7!:5 <''y'''
 g =: 3 : 0
  w=. IF64{4 8
  z=. w*0                              NB. 0 words for memory management
- z=. z + w*7                          NB. 7 words for non-shape header words
+ z=. z + w*9!:56'NORMAH'              NB. 7 words for non-shape header words
  z=. z + w*r+(-.IF64)*0=2|r=. #$y     NB. shape, pad to doubleword boundary if 32 bits
  z=. z + ((bp y)*<:*/$y) + ((bp y)>.w) + ((-.IF64) * SZI * 262144 = 3!:0 y)  NB. atoms-1 & trailing pad
  >.&.(2&^.) z
@@ -19,7 +19,7 @@ g =: 3 : 0
 gmapped =: 3 : 0  NB. contiguous header only
  w=. IF64{4 8
  z=. w*0                              NB. 0 words for memory management
- z=. z + w*7+64+(-.IF64)                     NB. fixed shape area
+ z=. z + w*(9!:56'NORMAH')+64+(-.IF64)                     NB. fixed shape area
  z=. z + >.&.(%&w) ((bp y)**/$y) + (w)*(3!:0 y)e. 1 2 131072 262144  NB. atoms & trailing pad
 )
 

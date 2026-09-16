@@ -273,13 +273,14 @@ F1(jtasgzombs){F12IP;I k;
 // return 0 to signal error, 1 to continue
 I jtdeprecmsg(J jt, I mno, C *mtxt){I absmno=mno^REPSGN(mno);I res=0;
  READLOCK(JT(jt,startlock))
+ if(JT(jt,forcedeprecmsg))jsto(jt,MTYOER,mtxt);   // force out the message if we are overriding; otherwise keep all the same and suppress message below
  if(JT(jt,deprecex)&&(JT(jt,deprecex)&((US)1<<absmno)))goto exitok;  // unless this msg excluded, continue
  if(mno>=0){if(JT(jt,deprecct)==0)goto exitok;}else{JT(jt,deprecct)+=JT(jt,deprecct)==0;}  // if msgs disabled, return; but force msg out if neg
  // code to write output line copied from jtpr1
  // extract the output type buried in jt
  if(JT(jt,deprecct)<0&&mno<0)goto exiterr;  // non-noun is a pee; don't set error info here
  ASSERTGOTO(JT(jt,deprecct)>0,EVNONCE,exiterr);  // if fail on warning, do so
- if(JT(jt,deprecct)!=271828)jsto(jt,MTYOER,mtxt); // write null-terminated string to console except when magic number given
+ if(JT(jt,deprecct)!=271828&&!JT(jt,forcedeprecmsg))jsto(jt,MTYOER,mtxt); // write null-terminated string to console except when magic number given
  JT(jt,deprecct)-=JT(jt,deprecct)!=0;  // decrement # of messages to allow
 exitok: ;
  res=1;
@@ -309,8 +310,10 @@ F1(jtdeprecxs){F12IP;A ct, excl;
  R mtm;
 }
 
-//9!:54
+// 9!:54 read deprec status
 F1(jtdeprecxq){F12IP;A zd;
+ ARGCHK1(w);
+ ASSERTMTV(w);
  GAT0(zd,INT,16,1); I zdi=0; DO(15, if(SHMSK(JT(jt,deprecex),i,1))IAV1(zd)[zdi++]=i;) AN(zd)=AS(zd)[0]=zdi;  // create vector of exclusions
  READLOCK(JT(jt,startlock))
  A z=jlink(sc(JT(jt,deprecct)),zd);  // return current status

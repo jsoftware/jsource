@@ -15,7 +15,7 @@ cutcol=: 2 : 0
  else.         i=. b {.;.n i.#b [ p=. b # ;.n b end.
  if. ''-:c do. j=. 0 
  else.         j=. c {.;.n i.#c [ q=. c # ;.n c end.
- ((i,.p),."1/ j,.q) u;.0 y
+ ((i,.p),."1."1 _ j,.q) u;.0 y
 )
 
 test=: 3 : 0

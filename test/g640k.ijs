@@ -51,8 +51,8 @@ j=: 9!:42 ''
 0 test :: 1: 2  NB. prime the pump
 9!:43 j
 
-(i.NRNG) test"0/ 2
-(i.NRNG) test"0/ 1e9
+(i.NRNG) test"0 ] 2
+(i.NRNG) test"0 ] 1e9
 
 test1=: 4 : 0
  h=: ,g
@@ -197,7 +197,7 @@ test9=: 4 : 0  NB. mean test
  1
 )
 
-(i.NRNG) test9"0/ 0
+(i.NRNG) test9"0 ] 0
 (i.NRNG) test9"0/ 10^1 2 6 8 9
 (i.NRNG) test9"0/ 2 ^1 3 5 7 8 13 23 30
 (i.NRNG) test9"0/ IF64#<.10^10 11 12 13 18

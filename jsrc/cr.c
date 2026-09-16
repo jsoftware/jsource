@@ -672,11 +672,30 @@ static DF2(rank2i){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; A
  RETF(z);
 }
 
+#define GEMIN0(a,b,c) ((a-b)&(a-c)) // sign is 0 if a>=MIN(b,c): a>=b or a>=c
+#define LEMIN0(a,b,c) ((b-a)|(c-a)) // sign is 0 if a<=MIN(b,c): a<=b and a<=c
 // u"n y when u does not support irs. We loop over cells, and as we do there is no reason to enable inplacing
 // Pass inplaceability through
-static DF1(rank1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; I m,wr;
+static DF1(rank1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];
  ARGCHK1(w);
- wr=AR(w); efr(m,wr,(I)FAV(self)->localuse.lu1.srank[0]);
+ // rank is considered presumptively nugatory if the rank of u<=n or rank of arg <=n, i. e. if n>=MIN(ranku,rankarg)
+ // This gives error in the case
+ //  {{ > y }} "0 "1 ] 2 2 $ 1 2;3;4;5   NB. >"1 is caught in jtqq
+ // If you run this at rank 0, the fill will be calculated over the whole array, while if you interpose a rank-1 step
+ // the last row will fill separately.
+ // We give a performance message if rank of u <= n unless the rank of arg is <= rank of u.  User can give a floating-point rank to suppress the message
+ I wr=AR(w), m=FAV(self)->localuse.lu1.srank[0], em=efr(em,wr,m); I um=FAV(fs)->mr;  // wr=arg rank, m=effective rank, um=rank of u
+ FILLREG(f1);  // bring routine address in early
+ if(withprob(GEMIN0(em,wr,um)>=0,0.2)){  // is em>=wr (must be =) or em>=rank of u?
+  if(unlikely(m==um))if(unlikely(!FAV(self)->localuse.lu1.srank[3]))
+   {RZ(jtdeprecmsg(jt,10,"(010) u\"n where n = rank of u, can be omitted.  To silence this message make n floating-point\n")); goto duprank;}  // totally superfluous rank operator.  Always a message, and omit the second copy
+  if(em>=wr){duprank: RETF(CALL1IP(f1,w,fs))}  // only one cell here, run u directly.  rank1ex would catch this quickly but why wait?
+  if(unlikely(!FAV(self)->localuse.lu1.srank[3]))RZ(jtdeprecmsg(jt,9,"(009) u\"n where n >= rank of u, usually needless.  To silence this message make n floating-point\n"));  // nugatory argument, usually superfluous
+ }
+ RETF(jtrank1ex(jtfg,w,fs,em,f1))  // multiple cells - execute rank loop and return
+}
+
+#if 0  // obsolete 
  // We know that the first call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
  // fs/f1 to rank1ex.  Until we can handle multiple fill neighborhoods, we mustn't consume a verb of lower rank  scaf should consume anyway, let user control?
  if(likely(!FAV(self)->localuse.lu1.srank[3])){  // unless the user has said this rank must be separate...
@@ -687,36 +706,50 @@ static DF1(rank1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; I 
  }
  RETF(m<wr?jtrank1ex(jtfg,w,fs,m,f1):CALL1IP(f1,w,fs))
 }
-#define GEMIN0(a,b,c) ((a-b)&(a-c)) // sign is 0 if a>=MIN(b,c): a>=b or a>=c
-#define LEMIN0(a,b,c) ((b-a)|(c-a)) // sign is 0 if a<=MIN(b,c): a<=b and a<=c
 
 // Pass inplaceability through
 static DF1(rank1q){F12IP;  // fast version: nonneg rank, no check for multiple RANKONLY
  ARGCHK1(w);
- // rank is considered nugatory if the rank of u<=n or rank of arg <=n or if n=rank of u, i. e. if n>=MIN(ranku,rankarg)
- // This gives error in the case
- //  {{ > y }} "0 "1 ] 2 2 $ 1 2;3;4;0   NB. >"1 is caught in jtqq
- // If you run this at rank 0, the fill will be calculated over the whole array, while if you interpose a rank-1 step
- // the last row will fill separately.  User can give a floating-point rank to mean 'force the rank regardless'.
  I r=AR(w); A fs=FAV(self)->fgh[0]; I m=FAV(self)->localuse.lu1.srank[0];   // r=arg rank  fs->u  m=rank from n
  I um=FAV(fs)->mr;
  if(unlikely(GEMIN0(m,r,um)>=0))if(likely(!FAV(self)->localuse.lu1.srank[3]))RETF(CALL1(FAV(fs)->valencefns[0],w,fs))  // rank is nugatory - bypass it
  r=r>m?m:r;  // clamp rank at arg rank - MIN(n, rankarg)
  RETF(jtrank1ex(jtfg,w,fs,r,FAV(fs)->valencefns[0]))
 }
+#endif
 
 // Version for rank 0.  Call rank1ex0, pointing to the u"r
 static DF1(jtrank10atom){F12IP; A fs=FAV(self)->fgh[0]; RETF(CALL1IP(FAV(fs)->valencefns[0],w,fs))}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop.  Pass inplaceability through
 static DF1(jtrank10){F12IP;RETF(jtrank1ex0(jtfg,w,self,jtrank10atom))}  // pass inplaceability through.
 
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
+// We don't do this now because fill between the loops might change the result
 
 // This routine supports jtflags by not touching jt - pass inplaceability through
-static DF2(rank2){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; I ar,l=FAV(self)->localuse.lu1.srank[1],r=FAV(self)->localuse.lu1.srank[2],wr;
+static DF2(rank2){F12IP;A fs=FAV(self)->fgh[0]; 
  ARGCHK2(a,w);
- ar=AR(a); efr(l,ar,l);
- wr=AR(w); efr(r,wr,r);  // now l<=ar, r<=wr
- I ulr=FAV(fs)->lrr>>RANKTX, urr=FAV(fs)->lrr&RANKTMSK;  // left & right ranks of u
+ I l=FAV(self)->localuse.lu1.srank[1], r=FAV(self)->localuse.lu1.srank[2], ul=FAV(fs)->lrr>>RANKTX, ur=FAV(fs)->lrr&RANKTMSK;   // ranks (possibly neg) of self and u
+ if(unlikely(FAV(fs)->id==CQQ)){ul=FAV(fs)->localuse.lu1.srank[1]; ur=FAV(fs)->localuse.lu1.srank[2];}   // if u is u"r, get its possiblt neg r
+ AF f2=FAV(fs)->valencefns[1]; FILLREG(f2);  // bring function address into a register early.  Should survive till needed
+ I ar=AR(a); I el=efr(el,ar,l);   // [aw]r arg ranks, [lr] ranks from u"n
+ I wr=AR(w); I er=efr(er,wr,r);  // now el<=ar, er<=wr
+ I eul=efr(eul,ar,ul), eur=efr(eur,wr,ur);  // left & right ranks of u when if applied directly to input
+ I anug=GEMIN0(el,ar,eul), wnug=GEMIN0(er,wr,eur);  // anug>=0 if l>=ar (must be =) or l>=lr of u; wnug similarly.  Indicates rank of self has no effect
+ if((anug&wnug)>=0){
+  // at least one of the ranks is nugatory, that is, is can affect the result only in the case of weird fill
+  if(unlikely((l^ul)+(r^ur)==0))if(unlikely(!FAV(self)->localuse.lu1.srank[3]))
+   {RZ(jtdeprecmsg(jt,10,"(010) u\"n where n = rank of u, can be omitted.  To silence this message make n floating-point\n")); goto duprank;}  // totally superfluous rank operator.  Always a message, and omit the second copy
+  if((el^ar)+(er^wr)==0){ duprank: RETF(CALL2IP(f2,a,w,fs))}  // only one cell here, run u directly.  rank2ex would catch this quickly but why wait?
+  if(((LEMIN0(ar,el,eul)|wnug)&(LEMIN0(wr,er,eur)|anug))>=0)  // one arg is nugatory (except possibly for fill) and the other does not modify its arg all the way into u.  Tell the user
+   if(unlikely(!FAV(self)->localuse.lu1.srank[3]))  // float suppresses msg.  Too bad _ is float
+    RZ(jtdeprecmsg(jt,9,"(009) u\"n where n >= rank of u, usually needless.  To silence this message make n floating-point\n"));
+ }
+ RETF(rank2exip(a,w,fs,el,er,el,er,f2))
+}
+#if 0 // obsolete 
+
+
+
  if(unlikely((-((ulr^l)|(urr^r))&(LEMIN0(ar,l,ulr)|GEMIN0(r,wr,urr))&(LEMIN0(wr,r,urr)|GEMIN0(l,ar,ulr)))>=0))if(likely(!FAV(self)->localuse.lu1.srank[3]))RETF(CALL2(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
  I llr=l, lrr=r;  // inner ranks, if any
  // We know that the current call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
@@ -750,6 +783,7 @@ static DF2(rank2q){F12IP;
  ar=ar>l?l:ar; wr=wr>r?r:wr;   // clamp ranks at argument rank
  RETF(rank2exip(a,w,fs,ar,wr,ar,wr,FAV(fs)->valencefns[1]))
 }
+#endif
 
 // Version for rank 0.  Call rank2ex0, pointing to the u"r
 static DF2(jtrank20atom){F12IP; A fs=FAV(self)->fgh[0]; RETF((FAV(fs)->valencefns[1])(jtfg,a,w,fs))}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop.  pass inplaceability through.
@@ -769,6 +803,7 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   r[1]=hv[1]=lr(w);
   r[2]=hv[2]=rr(w);
   vf=FAV(w)->flag&VNONAME+VNOSELF;  // set FIX if verb not named
+  isfloat=1;  // suppress messages that come through the verb path
  }else{A t;
   // Noun v. Extract and turn into 3 values, stored in h
   n=AN(w);
@@ -812,14 +847,16 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   flag2|=av->flag2&VF2WILLOPEN1;  // if u will open, so will u"n
  // For monads that are not ATOMIC1/IRS1, we use quick rank if r>0, which suppresses the rank loop if r >= mu.  This may erroneously suppress a rank loop that would affect fill.
  // We mitigate the problem by giving the user credit if: u WILLOPEN; u cannot be combined in a rank loop
-  if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?(hv[0]>=0&&!(av->id==CQQ)&&!(av->flag2&(VF2RANKONLY1+VF2WILLOPEN1))?rank1q:rank1):jtrank10; flag2|=VF2RANKONLY1;}}
-  // if the monad rank in v is 0, we can surely ignore any higher rank, except in the rank of the compound.  We set IRS1 here so any later "n is fast
-  vf|=(hv[0]==0)<<VIRS1X;
+// obsolete   if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?(hv[0]>=0&&!(av->id==CQQ)&&!(av->flag2&(VF2RANKONLY1+VF2WILLOPEN1))?rank1q:rank1):jtrank10; flag2|=VF2RANKONLY1;}}
+  if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?rank1:jtrank10; flag2|=VF2RANKONLY1;}}
+// obsolete   // if the monad rank in v is 0, we can surely ignore any higher rank, except in the rank of the compound.  We set IRS1 here so any later "n is fast
+// obsolete   vf|=(hv[0]==0)<<VIRS1X;
   // For dyad: atomic verbs take the rank from this block, so we take the action routine, and also the parameter it needs; these parameters mean that only
-  // nonnegative rank can be accomodated; otherwise, use processor for IRS (there is one for nonnegative, one for negative rank); if not IRS, there are processors for:
+  // nonnegative rank can be accomodated; otherwise, use processor for IRS; if not IRS, there are processors for:
   // rank 0; nonneg ranks where fs is NOT a rank operator; general case
   if(av->flag&VFUSEDOK2&&(hv[1]|hv[2])>=0){f2=av->valencefns[1]; lc=av->lu2.lc;}  // transfer the fn-address and fn-code from the atomic to the fused block
-  else if(av->flag&VIRS2){f2=rank2i;}else{f2=(hv[1]|hv[2])?((hv[1]|hv[2])>=0&&!(av->flag2&VF2RANKONLY2)?rank2q:rank2):jtrank20;flag2|=VF2RANKONLY2;}
+// obsolete   else if(av->flag&VIRS2){f2=rank2i;}else{f2=(hv[1]|hv[2])?((hv[1]|hv[2])>=0&&!(av->flag2&VF2RANKONLY2)?rank2q:rank2):jtrank20;flag2|=VF2RANKONLY2;}
+  else if(av->flag&VIRS2){f2=rank2i;}else{f2=(hv[1]|hv[2])?rank2:jtrank20;flag2|=VF2RANKONLY2;}
   // Test for special cases
   if(av->valencefns[1]==jtfslashatg && r[1]==1 && r[2]==1){  // f/@:g"1 1 where f and g are known atomic
    if(FAV(FAV(av->fgh[0])->fgh[0])->id==CPLUS && FAV(av->fgh[1])->id==CSTAR) {

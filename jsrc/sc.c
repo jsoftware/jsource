@@ -236,6 +236,7 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
  }
 #endif
  AF actionfn=FAV(fs)->valencefns[flgvbnmgen&FLGDYAD];  // index is 'is dyad'.  Load here to allow call address to settle.  There are no calls from here to fn dispatch
+ FILLREG(actionfn)   // tell compiler to keep fn addr in a register
  w=flgvbnmgen&FLGDYAD?w:fs;  // set up the bivalent argument with the new self, since fs may have been changed (if pseudo-named function)
  STACKCHKOFLSUFF(z=0; goto exitfa;)  // this could be in an infinite-reursion loop; check
  // Move to the destination locale.  The question is, What to do when the locale doesn't change?  The INCREXECCT is a single
@@ -265,13 +266,13 @@ finlookup:;  // here when short- or long-term cache hits.  We know that no pun i
 
   A execlocname=LOCNAME(jt->global);  // locale name for logging, known not to change since we haven't popped the executing locale yet
   if(jt->uflags.trace&TRACEPM){pmrecord(jt->curname,execlocname,-1L,(flgvbnmgen&FLGDYAD)+1); fs=jt->parserstackframe.sf;}  // Record the call to the name, if perf monitoring on
-  if(jt->uflags.spfreeneeded&SPFREETRACEON)
-#if NAMETRACK
- jtlogtrace(jt,"jtrace > %*s\n",0,0,trackinfo);  // log the call.  Initial mvc null-terminates the line
-#else
- jtlogtrace(jt,jt->global!=stack.global?"jtrace > %.*s %.*s>%.*s\n":"jtrace > %.*s %.*s\n",thisname,stack.global,jt->global);  // log name, old locale, and new locale if changed
-#endif
-
+  if(jt->uflags.spfreeneeded&SPFREETRACEON){
+// obsolete #if NAMETRACK
+// obsolete    jtlogtrace(jt,"jtrace > %.*s\n",0,0,trackinfo);  // log the call.  Initial mvc null-terminates the line
+// obsolete #else
+   jtlogtrace(jt,jt->global!=stack.global?"jtrace > %.*s %.*s>%.*s\n":"jtrace > %.*s %.*s\n",thisname,stack.global,jt->global);  // log name, old locale, and new locale if changed
+// obsolete #endif
+ }
   // transfer the bstkreqd flag to our internal flags so we can continue it on after the return, and clear it for the called function.  The idea is that bstkreqd has info about
   // the current caller, and is reset for the next level.
   // But: if this is a anonymous function, we need to skip the save/restore of locales, so we skip the update

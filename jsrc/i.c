@@ -246,6 +246,7 @@ static C jtjinit3(JS jjt){S t;JJ jt=MTHREAD(jjt);
 /* required for jdll and doesn't hurt others */
  gjt=jjt; // global jt for JPF debug
  jt->taskstate=0;  // The master thread is non-running when it is idle, so that system lock doesn't wait for it
+// only for looking for rank flaws     jjt->forcedeprecmsg=1;  // scaf init displaying msgs
  
 #if (SYS & SYS_DOS)
  t=EM_ZERODIVIDE+EM_INVALID; _controlfp(t,t);

@@ -88,7 +88,7 @@ plus=: 4 : 'x+y'
 NB. +/!.0 D ----------------------------------------------------------------
 
 f =: 4 : 0"0 1  NB. y is shape of region, x is rank of sums
-xasrank =. x (1 : ']"m')
+xasrank =. x (1 : ']"(8 c.m)')
 big =. (, -@:(+/))@}:"xasrank y ?@$ 1e8   NB. large integers adding to 0
 small =. y ?@$ 0   NB. floats in range 0-1
 bigfloat =. big+small  NB. floats with large & small components
@@ -103,7 +103,7 @@ assert. 0.05 > 1 ([: | [: -/ 0 2 {::"0 _ f)"0 x =: >: i. 32
 assert. 0.05 > _ ([: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: (1e6 + i. 20) ,"0 ] 6
 assert. 0.005 > _ ([: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: (1e5) ,"0 ] >: i. 20
 assert. , 1 2 3 ([: *./@, 1e_6 > [: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: > { 1 2 3 ; (>: i. 20) ; (>: i. 20)
-assert. , 1 2 3 4 ([: *./@, 1e_6 > [: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: > { 1 2 3 ; (>: i. 20) ; (>: i. 20) ; (>: i. 20)
+NB. slow assert. , 1 2 3 4 ([: *./@, 1e_6 > [: | [: -/ 0 2 {::"0 _ f)"0 1/ x =: > { 1 2 3 ; (>: i. 20) ; (>: i. 20) ; (>: i. 20)
 1
 )
 

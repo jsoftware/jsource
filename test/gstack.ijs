@@ -58,7 +58,7 @@ NB. obsolete 'stack error' -: ex '* ^:]  +&0@]`- '
 'stack error' -: ex 't 128!:2 ;~t' [ t=: '0&{:: ([ 128!:2 ;) 1&{::'
 p=: 3 : 0
  m=.(3 #:@:+ [: i.@<:&.-: 2^#) y
- c=.m <@:p;.2"1 y
+ c=.m <@:p;.2"1. y
 )
 'stack error' -: ex 'p;:''a b c'''
 f =: 3 : 0

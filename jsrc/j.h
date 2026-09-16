@@ -124,6 +124,13 @@
 #define EMU_AVX2 0
 #endif
 
+#if defined(__clang__)
+#define FILLREG(v)   __asm__ __volatile__("" : : "r"(v));   // clang inline assembler block that does nothing but put v into a register.
+#else
+#define FILLREG(v)
+#endif
+
+
 // no EMU_AVX512; avx512 is not widespread yet, and older chips still downclock (so not worth it for small arrays), so still maintain avx2-specific paths
 
 #if C_AVX2
@@ -797,7 +804,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #endif
                            // When 2 set, make all outputs from RETF() virtual.  Tests for inplacing will fail; that's OK if nothing crashes
 #ifndef NAMETRACK
-#define NAMETRACK 0   // turn on to define trackinfo in unquote, xdefn, line.  This makes some tests fail because we use etx as a workarea.
+#define NAMETRACK 0  // turn on to define trackinfo in unquote, xdefn, line.  This makes some tests fail because we use etx as a workarea.
 #endif
 // set FINDNULLRET to trap when a routine returns 0 without having set an error message
 #ifndef FINDNULLRET

@@ -153,8 +153,8 @@ eq  =. 3 : 0
 (<;._1 -: ;:) ' r. u. v. x. y.'
 
 
-(;: -: ;:"1) > 'a + b = c';'4 5 6 +&.> 6'  NB. Verify works at rank 1
-(;: -: ;:"1) > 2 3 4 $ 'a + b = c';'4 5 6 +&.> 6 NB. x'  NB. Verify works at rank 1
+(;: -: ;:"1.) > 'a + b = c';'4 5 6 +&.> 6'  NB. Verify works at rank 1
+(;: -: ;:"1.) > 2 3 4 $ 'a + b = c';'4 5 6 +&.> 6 NB. x'  NB. Verify works at rank 1
 
 NB. ;: numeric input ----------------------------------------------------
 

@@ -175,7 +175,7 @@ void memhashadd(I lineno, C *string){
  ++histarea[hash][1];  // increment count
 }
 
-// 9!:54/55  read/set memory histogram
+// 9!:_6/_7  read/set memory histogram
 F1(jtmemhistoq){F12IP;
  ASSERTMTV(w);
  R vec(INT,sizeof(jt->memhisto)/sizeof(jt->memhisto)[0],jt->memhisto);
@@ -190,7 +190,7 @@ F1(jtmemhistos){F12IP;I k;
 
 // return histo area
 
-// process using   ;"1 (":@{. ; ' ' ; 3 (3!:4) {:)"1 (20) {. \:~ |."1 (_2) ]\ 9!:62''
+// process using   ;"1 (":@{. ; ' ' ; 3 (3!:4) {:)"1 (20) {. \:~ |."1 (_2) ]\ 9!:_8''
 F1(jtmemhashq){F12IP;
  R vec(INT,sizeof(histarea)/sizeof(histarea)[0][0],histarea);
 }

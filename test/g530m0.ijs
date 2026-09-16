@@ -457,7 +457,7 @@ for_i. x do.
  case. 2 do. exaxis =. (i.ys) -. >axis =. < (?ys) ? ys
  case. 3 do. exaxis =. i. ys [ axis =. a:
  end.
- axes =. axes , <axis [ exaxes =. exaxes ,"1 0/ exaxis
+ axes =. axes , <axis [ exaxes =. exaxes ,"1 0"1 _ exaxis
 end.
 NB. We have the selectors.
 selshape =. (}:$exaxes) , ({:$exaxes)}.$y  NB. shape of m{y

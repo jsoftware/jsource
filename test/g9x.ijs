@@ -490,7 +490,7 @@ empty ferase f=: jpath'~temp/jtrace.txt'
 0= 9!:31[f
 foo3''
 f-: 9!:31[0
-(toJ^:IFWIN fread f) -: ('?';":numloc_loc2_) stringreplace (0 : 0) 
+(; (#~ +./@:e.&'<>'@>) <;.2 toJ^:IFWIN fread f) -: ('?';":numloc_loc2_) stringreplace (0 : 0) 
 jtrace > foo3 base
 jtrace > foo2 base
 jtrace > foo1 base

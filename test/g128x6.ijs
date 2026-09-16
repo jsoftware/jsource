@@ -401,9 +401,9 @@ f=: 128!:6
 'domain error' -: f etx u: 'abc'
 'domain error' -: f etx 10 u: 'abc'
 
-(f -: f"1 0 1"1 0 1) 3 4$'abc'
-(,1)  (f -: f"1 0 1"1 0 1)  'xyz'
-1 2 (f -: f"1 0 1"1 0 1)  'xyz'
+(f -: f"1 0 1"1. 0 1) 3 4$'abc'
+(,1)  (f -: f"1 0 1"1. 0 1)  'xyz'
+1 2 (f -: f"1 0 1"1. 0 1)  'xyz'
 
 
 

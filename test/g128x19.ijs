@@ -775,7 +775,7 @@ NB. put nothing here! savy is carried over to the next line
   if. 0 = 1 T. '' do.  NB. in multithreaded we don't know what run128_9 does; and single-threaded test is good enough
     tests =. (#~   [: +./"1 </"2) 0.2 0.5 >"(1 2) (100 2,1{$M) ?@$ 0  NB. first row zaps M, second zaps bk.  Remove tests that leave no places where M is not set and bk is
     for_mb. tests do.
-      'mx bx' =. <@I."1 mb  NB. indexes to zap
+      'mx bx' =. <@I. mb  NB. indexes to zap
       savy =: (<(15!:18) 2 1 |: 1e_12 (<0;mx)} M) 3} savy  NB. make some values of M small
       savy =: (<(15!:18) 0. (<0;bx)} bk) 6} savy  NB. make some values of bk 0
       pickup =. (1{$M)$00 [ z =. (2, #bkbeta) 15!:18 (0.)

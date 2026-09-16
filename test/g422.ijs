@@ -289,9 +289,9 @@ NB. boxed
 
 
 0!:_1`1:@.(-.WINMEM2) '$'   NB. skip because full memory auditing is slow
-*./@f"0 >:       i.3 10
-*./@f"1 >:  5 6#:i.3 10
-*./@f"1 >:5 3 2#:i.3 10
+*./@f >:       i.3 10
+*./@f >:  5 6#:i.3 10
+*./@f >:5 3 2#:i.3 10
 NB.$  end of skip
 
 g=: 3 : '0 1 -: /: ,:~ t=. y$t,<t=.1 2 3;''abc'' '

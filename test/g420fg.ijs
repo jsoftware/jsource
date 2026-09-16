@@ -119,8 +119,8 @@ NB. Create arguments
 xx =: ls ?@$ 0
 yy =: rs ?@$ 0
 tvb =. +&(+/@,)
-tvb1 =. tvb"(lir,rir)
-assert. (xx tvb1"(lvr,rvr) yy) -: (xx tvb"(lir,rir)"(lvr,rvr) yy)
+tvb1 =. tvb"(8 c. lir,rir)
+assert. (xx tvb1"(8 c. lvr,rvr) yy) -: (xx tvb"(8 c. lir,rir)"(8 c. lvr,rvr) yy)
 1
 )
 

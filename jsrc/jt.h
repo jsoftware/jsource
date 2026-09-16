@@ -415,7 +415,7 @@ typedef struct JSTstruct {
 // Cacheline 7: startup (scripts and deprecmsgs), essentially read-only
  C _cl7[0];
  A slist;            // boxed list of filenames used in right arg to 0!:, the entries made in sn field of L blocks are indexes into this.  AM has # valid entries
- I4 deprecct;  // number of deprecation  errors to display, -1 to emsg
+ I4 deprecct;  // number of deprecation errors to display, -1 to emsg
  S startlock;        // lock for slist
  US deprecex;  // bitmask of messages not to display
  // rest of cacheline used only in exceptional paths
@@ -425,7 +425,8 @@ typedef struct JSTstruct {
  FLOAT16 igemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for integer matrix product.  _1 means 'never'
  FLOAT16 dgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for float matrix product.  _1 means 'never'
  FLOAT16 zgemm_thres;      // used by cip.c: when m*n*p exceeds this, use BLAS for complex matrix product.  _1 means 'never'
-//  2 bytes free
+ C forcedeprecmsg;   // set to give a message regardless of 9!:55 setting
+//  1 byte free
 #if PYXES
  JOBQ (*jobqueues)[MAXTHREADPOOLS];     // one JOBQ block for each threadpool
  I filler7[1];

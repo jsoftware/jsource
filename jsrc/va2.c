@@ -1052,14 +1052,14 @@ takestats(++stats[0x14];)
 takestats(++stats[0x15]; if(atommsk&0x4040)++stats[0x16]; if((awr&0xff)==(awr>>RANKTX))++stats[0x17];)
      I isatom=SGNTO0(-atommsk);  // 1 if there is an atomic arg
      awlongcr=atommsk&0x40?a:w;    // long shape is from a if w atom; w if a atom; either one if = (w here)
-     zn=AN(awlongcr); fr=AR(awlongcr);  // len and rank of long shape
+     zn=AN(awlongcr); fr=AR(awlongcr);  // len and rank of long shape.  frZRANK is fr, frFL and frFLC are both 0
 #ifdef PEXT
      cv&=~PEXT(atommsk,0x4040);  // atoms are not inplaceable, anything else is.  Rare that both are atomic here (must not be BID).  remove (a atomic),(w atomic) from cv inplaceability
 #else
-     cv&=~((atommsk*(BIT(BW-2-14)+BIT(BW-3-6)))>>(BW-3));
+     cv&=~(((uint32_t)atommsk*(uint32_t)(BIT(32-2-14)+BIT(32-3-6)))>>(32-3));   // 32-bit computation to discard upper bits
 #endif
      m=zn<<isatom; m^=isatom-=1; m+=atommsk>>=14;  // m is encoded length/repeata flag if atomic (n set to 1 in next line), or ~length if nonatomic (n implied 1)
-     aawwzknfxrz[5]=1;  // in case an arg is atomic, indicate only one loop 
+     aawwzknfxrz[5]=1;  // in case an arg is atomic, indicate only one inner loop 
     }else{
         // all other cases without "n.  Arg ranks must be different
      fr=awr>>RANKTX; I shortr=(RANKT)awr; I wl=fr-shortr;  // separate ar and wr; wl neg if w high rank
@@ -1232,10 +1232,8 @@ takestats(++stats[0x24];)
  I ipw=ASGNINPLACENEG(SGNIF(cv,JTINPLACEWX),w), ipa=ASGNINPLACENEG(SGNIF(cv,JTINPLACEAX),a);  // is w/a inplaceable?  In test suite, inplaces 25% of the time
  if(withprob((ipw|ipa)<0,0.4)){  // see if either w or a is inplaceable
   if(unlikely(a==w))goto allocate;   // If a==w suppress inplacing, in case the operation must be retried (we could check which ones but they are just not likely to be used reflexively)
+  FILLREG(adocvfn)   // load function addr into register early
   // we are reusing an argument (ipw is neg if it's w, which has priority); make sure the type is updated to the result type
-#if defined(__clang__)
-   __asm__ __volatile__("" : : "r"(adocvfn));   // clang inline assembler block that does nothing but put adocvfn into a register.  We want it early to speed up the expected misprediction first time
-#endif
   z=ipw<0?w:a;  // z=inplaceable arg; in test suite, most inplaceables are inplaceable on both w and a, somewhat more on w
   if(unlikely(cv&(VTYPECHGA>>SGNTO0(ipw)))){   // if result type is not the (possibly converted) argument type...
    // the type of inplaceable z must (or might, if it was empty) change.  But if z is UNINCORPABLE, it might be virtual.  Realizing it is a losing move.  And, we don't change the type of an UNINCORPABLE so that the caller
@@ -1275,9 +1273,7 @@ takestats(++stats[0x29];)
   // vbls needed: m a w z cv zn [jt]
   // Install shape.  There are 2 parts: the inner shape, needed only when there is rank, and the outer, needed for all.  We install the outer shape
   // here and the inner later, minimizing misbranches.  We don't mind having instructions piled up before the expected pipeline break for the action routine
-#if defined(__clang__)
-   __asm__ __volatile__("" : : "r"(adocvfn));   // clang inline assembler block that does nothing but put adocvfn into a register.  We want it early to speed up the expected misprediction
-#endif
+  FILLREG(adocvfn)   // load function addr into register early
   MCISH(AS(z)+fru.lanes[frFL],AS(awlongcr)+fru.lanes[frFLC],fru.lanes[frZRANK]-fru.lanes[frFL]);  // copy inner shape
      // start of cellshape,    shape of long cell+its frame  rank of long cell (zrank-len of long frame)
   // Signal domain error if appropriate.  Must do this after agreement tests

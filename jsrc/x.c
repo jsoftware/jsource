@@ -330,10 +330,10 @@ void jtforeigninit(J jt){UI i;
  MN(9,54)  XPRIM(VERB, jtdeprecxq,   0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,55)  XPRIM(VERB, jtdeprecxs,   0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
 #if MEMHISTO
- MN(9,54)  XPRIM(VERB, jtmemhistoq, 0,             VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
- MN(9,55)  XPRIM(VERB, jtmemhistos, 0,             VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
- MN(9,62)  XPRIM(VERB, jtmemhashq,  0,             VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
- MN(9,63)  XPRIM(VERB, jtmemhashs,  0,             VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
+ MN(9,-6)  XPRIM(VERB, jtmemhistoq, 0,             VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
+ MN(9,-7)  XPRIM(VERB, jtmemhistos, 0,             VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
+ MN(9,-8)  XPRIM(VERB, jtmemhashq,  0,             VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
+ MN(9,-9)  XPRIM(VERB, jtmemhashs,  0,             VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
 #endif
  MN(9,51)  XPRIM(VERB, jttraceexc,   0,            VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);
  MN(9,56)  XPRIM(VERB, jtcpufeature, jtcpufeature2, VNONAME+VNOSELF,VF2NONE,RMAX,RMAX,RMAX);

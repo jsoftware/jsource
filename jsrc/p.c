@@ -806,7 +806,7 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
       L *symorigin=SYMORIGIN;   // while we are waiting for pmask/fs to settle (3+ clocks at least), read something that will be useful if we are on an assignment
       jt->parserstackframe.sf=fs;  // set new recursion point for $:
       PSTK *fsa1=&stack[1]; fsa=pt0ecam&FLGPLINE2+FLGPLINE1?fsa:fsa1;    // pointer to the operator's stack slot  1 2 2
-      AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask>>2],__ATOMIC_RELAXED);  // the routine we will execute.  We put the atomic_load here to encourage early load of notfinalexec.  clang17 keeps this in a reg till the call.  Stop using pmask $$$
+      AF actionfn=FAV(fs)->valencefns[pmask>>2];  // the routine we will execute.    Stop using pmask $$$
       // If it is an inplaceable assignment to a known name that has a value, remember the value (the name will of necessity be the one thing pointing to the value)
       // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be NOLOCCHG.  When we set jt->zombieval we are warranting
       // that the next assignment will overwrite the value, and that the reassigned value is available for inplacing.  In the V V N case,
@@ -853,6 +853,7 @@ anchoredip:;  // here when we have detected that an anchored name is inplaceable
         jt->zombieval=zval;
        }
       }
+      FILLREG(actionfn)  // get function address into a register for the expected pipeline break on the indirect call
       PSTK *arga=fsa; arga=pt0ecam&FLGPLINE2?stack:arga; A arg1=arga[1].a;  // 1st arg, reconstituted 1 1 2->1 2 0; then fetch  monad or left dyad  2 3 1
       arga=pt0ecam&FLGPLINE2?&stack[3]:arga; A arg2=arga[0].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
       stack=fsa;  // adjust stack vbl to point to verb 1 2 2; stop using fsa

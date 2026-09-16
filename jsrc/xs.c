@@ -55,7 +55,7 @@ PROLOG(000);
  C trackinfo[256]; int tracklineno=0;  // will hold line# followed by line
 #define SETTRACK if(x){mvc(sizeof(trackinfo),trackinfo,1,iotavec-IOTAVECBEGIN); \
   I trackwlen=sprintf(trackinfo,"%d: ",tracklineno++); \
-  MC(trackinfo+trackwlen,CAV(x),MIN((I)sizeof(trackinfo)-1-trackwlen,AN(x))); jtlogtrace(jt,"jtrace l %s\n",0,0,trackinfo);}  // no error allowed - used inside deba/debz
+  MC(trackinfo+trackwlen,CAV(x),MIN((I)sizeof(trackinfo)-1-trackwlen,AN(x))); jtlogtrace(jt,"jtrace l %.*s\n",0,0,trackinfo);}  // no error allowed - used inside deba/debz
 #else
 #define SETTRACK
 #endif

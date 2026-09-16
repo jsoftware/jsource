@@ -40,7 +40,7 @@ N=. IF64{QKTEST{::2000 4000;500 800
 'A B'=. 0?@$~2,,~N
 techo '$A= ',":$A
 
-(_1 1000{~(9!:56'pyxes')<IF64) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
+(_1 1000{~(-.9!:56'pyxes')) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
 t1=. 6!:2'c1=. A+/ .*B'
 techo ' never  blas ',' GFlop ',~ 0j3": 2*(N^3)%(t1)*1e9
 0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas

@@ -4,7 +4,7 @@ NB. LAPACK --------------------------------------------------------------
 cblas=: 9!:56'cblas'
 0 (9!:56) 'cblas'
 thr=: (9!:58)"0 i.3
-(_1 1000{~(9!:56'pyxes')<IF64) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
+(_1 1000{~(-.9!:56'pyxes')) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
 
 delth''  NB. make sure we start with an empty system
 0!:_1`1:@.(9!:56'PYXES') '$'   NB. skip slow

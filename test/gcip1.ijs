@@ -19,7 +19,7 @@ t1=: 3 : 0
 if. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
   '' return.  NB. no real hardware fma
 end.
-if. 9!:56'PYXES' do. {{0 T.0}}^:] 0 >. (1&T.'') -~ 4 <. 9!:56'cores' end.
+if. 9!:56'pyxes' do. {{0 T.0}}^:] 0 >. (1&T.'') -~ 4 <. 9!:56'cores' end.
 techo 9!:14''
 techo 'cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''
 if. UNAME-:'Darwin' do.
@@ -40,7 +40,7 @@ N=. IF64{QKTEST{::2000 4000;500 800
 'A B'=. 0?@$~2,,~N
 techo '$A= ',":$A
 
-(_1 1000{~(-.9!:56'pyxes')) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
+(_1 1000{~(9!:56'pyxes')<IF64) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
 t1=. 6!:2'c1=. A+/ .*B'
 techo ' never  blas ',' GFlop ',~ 0j3": 2*(N^3)%(t1)*1e9
 0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas

@@ -4,7 +4,7 @@ NB. +/ .* ---------------------------------------------------------------
 cblas=: 9!:56'cblas'
 0 (9!:56) 'cblas'
 thr=: (9!:58)"0 i.3
-(_1 1000{~(-.9!:56'pyxes')) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
+(_1 1000{~(9!:56'pyxes')<IF64) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
 
 NB. test failed on small ct
 ct   =: 9!:18''
@@ -136,7 +136,7 @@ f=: 4 : 0
  assert. xx test yy
  1
 )
-3 : 0^:(0=9!:56'MEMAUDIT') ''
+3 : 0^:(0=9!:56'memaudit') ''
 f"0/~ i.33
 f"0/~ 64 + i: 10
 f"0/~ 128 + i: 10

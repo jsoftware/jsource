@@ -158,7 +158,7 @@ epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
 epsub =. (epadd -)
 epcanon=. (epadd   0 $~ $)
 dptoqp=. 2 {. ,:
-delth =. {{ if. 9!:56'PYXES' do. while. 1 T. '' do. 55 T. '' end. end. 1 }}  NB. delete all worker threads
+delth =. {{ if. 9!:56'pyxes' do. while. 1 T. '' do. 55 T. '' end. end. 1 }}  NB. delete all worker threads
 
 delth''  NB. start with no threads
 
@@ -625,7 +625,7 @@ epadd =. (|:~ (_1 |. i.@#@$)) @: ((1.0"0 +/@:*"1!.1 ])@,"1&(0&|:))
 epsub =. (epadd -)
 epcanon=. (epadd   0 $~ $)
 dptoqp=. 2 {. ,:
-delth =. {{ if. 9!:56'PYXES' do. while. 1 T. '' do. 55 T. '' end. end. 1 }}  NB. delete all worker threads
+delth =. {{ if. 9!:56'pyxes' do. while. 1 T. '' do. 55 T. '' end. end. 1 }}  NB. delete all worker threads
 
 delth''  NB. start with no threads
 

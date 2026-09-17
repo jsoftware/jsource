@@ -5,7 +5,7 @@ thr=: (9!:58)"0 i.3
 0 (9!:58)"0 i.3       NB.  +/ .*  always use blas
 
 delth''  NB. make sure we start with an empty system
-0!:_1`1:@.(9!:56'PYXES') '$'   NB. skip slow
+0!:_1`1:@.(9!:56'pyxes') '$'   NB. skip slow
 empty {{0 T.0}}^:] 0 >. (1&T.'') -~  <: <./ 8&T.''
 NB.$  end of skip
 

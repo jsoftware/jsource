@@ -56,7 +56,7 @@ id=: =&i.&#
 delth''  NB. make sure we start with an empty system
 
 {{
-N=: (9!:56'PYXES'){1, 3 <. <: 1 { 8 T. ''  NB. max # worker threads, limited to 3
+N=: (9!:56'pyxes'){1, 3 <. <: 1 { 8 T. ''  NB. max # worker threads, limited to 3
 for. i. N do.
 
 assert. 4 19 -: $%.?19 4$2
@@ -95,7 +95,7 @@ assert. (b-:minv a) *. (1=+/a*b) *. (+/a*+a)-:%+/b*+b =:%.a=:_10+?17$20
 assert. (b-:minv a) *. (1=+/a*b) *. (+/a*+a)-:%+/b*+b =:%.a=:0.1*_10+?13$20
 assert. (b-:minv a) *. (1=+/a*b) *. (+/a*+a)-:%+/b*+b =:%.a=:r.?23$20
 
-if. 9!:56'PYXES' do.
+if. 9!:56'pyxes' do.
 if. (1<{:8&T.'') *. N > 1 T. '' do. 0 T. '' end.  NB. Create another worker thread for next loop
 end.
 end.

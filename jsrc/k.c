@@ -804,7 +804,7 @@ A jtccvt(J jt,I tflagged,A w,I natoms){A d,z;I n,r,*s,wt; void *wv,*yv;I t=tflag
   ASSERTSYS(!((t|wt)&FUNC),"non-noun in cvt");
   // Handle sparse
   if(likely(ISSPARSE(t|wt))){
-   RANK2T oqr=jt->ranks; RESETRANK; 
+   RANK2T oqr=jt->ranks; RESETRANK;  // scafrk are ranks ever set over call to ccvt?
    switch((ISSPARSE(t)?2:0)+(ISSPARSE(AT(w))?1:0)){I t1;P*wp,*yp;
    case 1: RZ(w=denseit(w)); break;  // sparse to dense
    case 2: RZ(z=sparseit(cvt(DTYPE(t),w),IX(r),cvt(DTYPE(t),num(0)))); jt->ranks=oqr; R z;  // dense to sparse; convert type first (even if same dtype)
@@ -1037,7 +1037,7 @@ F1(jticvt){F12IP;A z;D*v,x;I i,n,*u;
 }
 
 A jtpcvt(J jt,I t,A w){B b;RANK2T oqr=jt->ranks;
- RESETRANK; A z; WITHJTJERROFF(z=ccvt(t,w,0);) jt->ranks=oqr;
+ RESETRANK; A z; WITHJTJERROFF(z=ccvt(t,w,0);) jt->ranks=oqr;  // scafrk ranks needed?
  RESETERR; R z?z:w;
 }    /* convert w to type t, if possible, otherwise just return w.  Leave ranks unaffected */
 

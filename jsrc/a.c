@@ -9,10 +9,10 @@
 // create inplace bits as copy of W, or swap A & W
 static DF1(swap1){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; jtfg=MOVEIPWW(jtfg);
  // a~ carried the IRS flag from a and thus we might have ranks set.  If so, use them, and no need to check agreement again.  For ease, we just use whatever is set 
- A z; IRSIP2(w,w,fs,(RANKT)jt->ranks,(RANKT)jt->ranks,f2,z); R z;
+ A z; IRSIP2(w,w,fs,(RANKT)jt->ranks,(RANKT)jt->ranks,f2,z); R z;  // scafrk just swap ranks and f2
 }
 static DF2(swap2){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; jtfg=MOVEIPWA(jtfg);
- A z; IRSIP2(w,a,fs,(RANKT)jt->ranks,jt->ranks>>RANKTX,f2,z); R z;
+ A z; IRSIP2(w,a,fs,(RANKT)jt->ranks,jt->ranks>>RANKTX,f2,z); R z;  // scafrk just swap ranks and f2
 }
 
 // w~, which is either reflexive/passive or evoke

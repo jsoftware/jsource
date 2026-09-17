@@ -300,6 +300,7 @@ F1(jtdeprecxs){F12IP;A ct, excl;
  }
  I cti;  // integer value of count
  cti=rei0(ct);  // ct must be integral atomic
+ cti=MIN(cti,1e8);  // limit count to avoid overflow
  RZ(excl=vi(excl));  // excl mst be integral
  ASSERT(AR(excl)<2,EVRANK);  // and atomic or list
  // install values

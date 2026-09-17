@@ -674,7 +674,7 @@ static DF2(rank2i){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; A
 
 #define GEMIN0(a,b,c) ((a-b)&(a-c)) // sign is 0 if a>=MIN(b,c): a>=b or a>=c
 #define LEMIN0(a,b,c) ((b-a)|(c-a)) // sign is 0 if a<=MIN(b,c): a<=b and a<=c
-// u"n y when u does not support irs. We loop over cells, and as we do there is no reason to enable inplacing
+// u"n y when u does not support irs. We loop over cells
 // Pass inplaceability through
 static DF1(rank1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];
  ARGCHK1(w);
@@ -725,11 +725,10 @@ static DF1(jtrank10){F12IP;RETF(jtrank1ex0(jtfg,w,self,jtrank10atom))}  // pass 
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
 // We don't do this now because fill between the loops might change the result
 
-// This routine supports jtflags by not touching jt - pass inplaceability through
 static DF2(rank2){F12IP;A fs=FAV(self)->fgh[0]; 
  ARGCHK2(a,w);
  I l=FAV(self)->localuse.lu1.srank[1], r=FAV(self)->localuse.lu1.srank[2], ul=FAV(fs)->lrr>>RANKTX, ur=FAV(fs)->lrr&RANKTMSK;   // ranks (possibly neg) of self and u
- if(unlikely(FAV(fs)->id==CQQ)){ul=FAV(fs)->localuse.lu1.srank[1]; ur=FAV(fs)->localuse.lu1.srank[2];}   // if u is u"r, get its possiblt neg r
+ if(unlikely(FAV(fs)->id==CQQ)){ul=FAV(fs)->localuse.lu1.srank[1]; ur=FAV(fs)->localuse.lu1.srank[2];}   // if u is u"r, get its possibly neg r
  AF f2=FAV(fs)->valencefns[1]; FILLREG(f2);  // bring function address into a register early.  Should survive till needed
  I ar=AR(a); I el=efr(el,ar,l);   // [aw]r arg ranks, [lr] ranks from u"n
  I wr=AR(w); I er=efr(er,wr,r);  // now el<=ar, er<=wr
@@ -737,10 +736,10 @@ static DF2(rank2){F12IP;A fs=FAV(self)->fgh[0];
  I anug=GEMIN0(el,ar,eul), wnug=GEMIN0(er,wr,eur);  // anug>=0 if l>=ar (must be =) or l>=lr of u; wnug similarly.  Indicates rank of self has no effect
  if((anug&wnug)>=0){
   // at least one of the ranks is nugatory, that is, is can affect the result only in the case of weird fill
-  if(unlikely((l^ul)+(r^ur)==0))if(unlikely(!FAV(self)->localuse.lu1.srank[3]))
+  if(unlikely((l^ul)+(r^ur)+REPSGN(l|r)==0))if(unlikely(!FAV(self)->localuse.lu1.srank[3]))  // ranks positive and equal
    {RZ(jtdeprecmsg(jt,10,"(010) u\"n where n = rank of u, can be omitted.  To silence this message make n floating-point\n")); goto duprank;}  // totally superfluous rank operator.  Always a message, and omit the second copy
   if((el^ar)+(er^wr)==0){ duprank: RETF(CALL2IP(f2,a,w,fs))}  // only one cell here, run u directly.  rank2ex would catch this quickly but why wait?
-  if(((LEMIN0(ar,el,eul)|wnug)&(LEMIN0(wr,er,eur)|anug))>=0)  // one arg is nugatory (except possibly for fill) and the other does not modify its arg all the way into u.  Tell the user
+  if(unlikely(((LEMIN0(ar,el,eul)|wnug)&(LEMIN0(wr,er,eur)|anug))>=0)                   )  // one arg is nugatory (except possibly for fill) and the other does not modify its arg all the way into u.  Tell the user
    if(unlikely(!FAV(self)->localuse.lu1.srank[3]))  // float suppresses msg.  Too bad _ is float
     RZ(jtdeprecmsg(jt,9,"(009) u\"n where n >= rank of u, usually needless.  To silence this message make n floating-point\n"));
  }

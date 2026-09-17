@@ -374,7 +374,7 @@ DF1(jtcompsum){F12IP;
  ARGCHK1(w)
  I wr=AR(w); I *ws=AS(w);
  // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
- I r=(RANKT)jt->ranks; r=wr<r?wr:r; I f=wr-r; I n; SETICFR(w,f,r,n);  // no RESETRANK
+ I r=(RANKT)jt->ranks; r=wr<r?wr:r; I f=wr-r; I n; SETICFR(w,f,r,n);  // scafrk no RESETRANK
  // if the argument is not float, or if there are not more than 2 items, process as normal +/
  if(unlikely((-(AT(w)&FL)&(2-n))>=0))R reduce(w,FAV(self)->fgh[0]);
  // calculate cell sizes and allocate the result
@@ -712,7 +712,7 @@ static A jtredsps(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A a,a1,e,sn
 
 static DF1(jtreducesp){F12IP;A a,g,z;B b;I f,n,r,*v,wn,wr,*ws,wt,zt;P*wp;
  ARGCHK1(w);
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // no RESETRANK
+ wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;  // scafrk no RESETRANK
  wn=AN(w); ws=AS(w); n=r?ws[f]:1;
  wt=AT(w); wt=wn?DTYPE(wt):B01;
  g=FAV(self)->fgh[0];  // g is the f in f/
@@ -822,7 +822,7 @@ static DF1(jtreduce){F12IP;A z;I d,f,m,n,r,t,wr,*ws,zt;
  if(unlikely(ISSPARSE(AT(w))))RETF(reducesp(w,self));  // If sparse, go handle it
  wr=AR(w); ws=AS(w);
  // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
- r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; SETICFR(w,f,r,n);  // no RESETRANK
+ r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; SETICFR(w,f,r,n);  // scafrk no RESETRANK
  // Handle the special cases: neutrals, single items, lists of length 2
  I wt=AT(w); wt=AN(w)?wt:B01;   // Treat empty as Boolean type
 
@@ -943,7 +943,7 @@ DF1(jtredcat){F12IP;A z;B b;I f,r,*s,*v,wr;
 
 static DF1(jtredsemi){F12IP;I f,n,r,wr;
  ARGCHK1(w);
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; SETICFR(w,f,r,n);   // let the rank run into tail   n=#items in a cell of w
+ wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; SETICFR(w,f,r,n);   // scafrk let the rank run into tail   n=#items in a cell of w
  if(2>n){ASSERT(n!=0,EVDOMAIN); R tail(w);}  // rank still set
  if(BOX&AT(w))R jtredg(jt,w,self);  // the old way failed because it did not mimic scalar replication; revert to the long way.  ranks are still set
  else{A z; R IRS1(w,0L,r-1,jtbox,z);}  // unboxed, just box the cells
@@ -1024,10 +1024,10 @@ A jtatab   (J jt,C c,A a,A w){ARGCHK2(a,w); A z; R dfv2(z,a,w,   slash(ds(c))   
 
 DF1(jtmean){F12IP;
  ARGCHK1(w);
- I wr=AR(w); I r=(RANKT)jt->ranks; r=wr<r?wr:r;
+ I wr=AR(w); I r=(RANKT)jt->ranks; r=wr<r?wr:r;  // scafrk no RESETRANK
  I n=AS(w)[wr-r]; n=r?n:1;
  // leave jt->ranks unchanged to pass into +/
-A sum=reduce(w,FAV(self)->fgh[0]);  // calculate +/"r
+ A sum=reduce(w,FAV(self)->fgh[0]);  // calculate +/"r
  RESETRANK;  // back to infinite rank for the divide
  RZ(sum);
  RZ(w=jtatomic2(JTIPA,sum,sc(n),ds(CDIV)));  // take quotient inplace and return it

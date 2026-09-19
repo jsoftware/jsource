@@ -641,7 +641,7 @@ F1(jtvib){F12IP;A z;I i,n,*zv;
  if(ISDENSETYPE(AT(w),B01)){if(!AR(w))R zeroionei(BAV(w)[0]); R cvt(INT,w);}
  if(w==ainf)R imax;  // sentence words of _ always use the same block, so catch that too
  I p=-IMAX,q=IMAX;
- RANK2T oqr=jt->ranks; RESETRANK;  // scafrk needed?
+// obsolete  RANK2T oqr=jt->ranks; RESETRANK;  // scafrk needed?
  if(unlikely(ISSPARSE(AT(w))!=0))RZ(w=denseit(w));
  switch(AT(w)){
  default:
@@ -665,7 +665,8 @@ F1(jtvib){F12IP;A z;I i,n,*zv;
   case XNUM:
   case RAT:  z=cvt(INT,maximum(sc(p),minimum(sc(q),w))); break;
  }
- jt->ranks=oqr; RETF(z);
+// obsolete  jt->ranks=oqr;
+ RETF(z);
 }
 
 // Convert w to integer if needed, and verify every atom is nonnegative

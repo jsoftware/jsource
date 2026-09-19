@@ -1091,7 +1091,7 @@ DF1(jtdet){F12IP;A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; AF f1=FAV(fs)->
  R !c ? dfv1(z,mtv,slash(gs)) : 1==c ? CALL1(f1,ravel(w),fs) : h && c==s[0] ? gaussdet(w) : detxm(w,self);
 }
 
-DF1(jtdetxm){F12IP;A z; R dotprod(IRS1(w,0L,1L,jthead,z),det(minors(w),self),self);}
+DF1(jtdetxm){F12IP;A z; R dotprod(z=IRS1(jthead,jt,w,1L,0L),det(minors(w),self),self);}
      /* determinant via expansion by minors. w is matrix with >1 columns */
 
 F2(jtdot){F12IP;A f,h=0;AF f2=jtdotprod;C c,d;

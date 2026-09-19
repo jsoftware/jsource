@@ -737,7 +737,7 @@ static DFI1(jtreducesp){A a,g,z;B b;I f,n,*v,wn,*ws,wt,zt;P*wp;
   b=0; DO(AN(a), if(f==v[i]){b=1; break;});
   z=b?redsps(w,self,id,adocv.f,adocv.cv,f,wcr,zt):redspd(w,self,id,adocv.f,adocv.cv,f,wcr,zt);
  }
- R jt->jerr>=EWOV?IRS1(w,self,wcr,jtreducesp,z):z;  // retry if overflow
+ R jt->jerr>=EWOV?z=IRS1(jtreducesp,jt,w,wcr,self):z;  // retry if overflow
 }    /* f/"r for sparse w */
 
 #define BR2CASE(t,id)   ((((id)-CSTARCO)*7)+SHMSK(0x160008,(t),7))  // unique inputs are 0 1 2 3 16 17 18-> 0 4 2 1 6 3 5    10110 .... .... .... 1000
@@ -871,7 +871,7 @@ static DFI1(jtreduce){A z;I d,f,m,n,t,*ws,zt;
  // if return is EWOV, it's an integer overflow and we must restart, after restoring the ranks
  // EWOV1 means that there was an overflow on a single result, which was calculated accurately and stored as a D.  So in that case all we
  // have to do is change the type of the result.
- if(unlikely((255&~EVNOCONV)&rc)){if(unlikely(rc==EVNOCONV))RETF(z); if(jt->jerr==EWOV1){AT(z)=FL;RETF(z);}else {jsignal(rc); RETF(rc>=EWOV?IRS1(w,self,wcr,jtreduce,z):0);}} else {RETF(unlikely(((adocv.cv+VRD)&VRI))&&likely(rc!=EVNOCONV)?cvz(adocv.cv,z):z);}
+ if(unlikely((255&~EVNOCONV)&rc)){if(unlikely(rc==EVNOCONV))RETF(z); if(jt->jerr==EWOV1){AT(z)=FL;RETF(z);}else {jsignal(rc); RETF(rc>=EWOV?z=IRS1(jtreduce,jt,w,wcr,self):0);}} else {RETF(unlikely(((adocv.cv+VRD)&VRI))&&likely(rc!=EVNOCONV)?cvz(adocv.cv,z):z);}
 }    /* f/"r w main control */
 
 static A jtredcatsp(J jt,A w,A z,I r){A a,q,x,y;B*b;I c,d,e,f,j,k,m,n,n1,p,*u,*v,wr,*ws,xr;P*wp,*zp;
@@ -950,7 +950,7 @@ static DFI1(jtredsemi){I f,n;
  f=wr-wcr; SETICFR(w,f,wcr,n);   // scafrk let the rank run into tail   n=#items in a cell of w
  if(2>n){ASSERT(n!=0,EVDOMAIN); R tail(wfg);}  // rank still set
  if(BOX&AT(w))R jtredg(jt,wfg,self);  // the old way failed because it did not mimic scalar replication; revert to the long way.  ranks are still set
- else{A z; R IRS1(w,0L,wcr-1,jtbox,z);}  // unboxed, just box the cells
+ else{A z; R z=IRS1(jtbox,jt,w,wcr-1,0L);}  // unboxed, just box the cells
 }    /* ;/"r w */
 
 static DFI1(jtredstitch){A c,y;I f,n,*s,*v;
@@ -958,9 +958,9 @@ static DFI1(jtredstitch){A c,y;I f,n,*s,*v;
 // obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  f=wr-r; s=AS(w); SETICFR(w,f,r,n);
  ASSERT(n!=0,EVDOMAIN);
- if(1==n)R IRS1(w,0L,wcr,jthead,y);
+ if(1==n)R y=IRS1(jthead,jt,w,wcr,0L);
  if(1==r){if(2==n)R RETARG(w); A z1,z2,z3; RZ(IRS2(num(-2),w,0L,0L,1L,jtdrop,z1)); RZ(IRS2(num(-2),w,0L,0L,1L,jttake,z2)); R IRS2(z1,z2,self,1L,0L,jtover,z3);}
- if(2==r)R IRS1(w,0L,2L,jtcant1,y);
+ if(2==r)R y=IRS1(jtcant1,jt,w,2L,0L);
  RZ(c=apvwr(wr,0L,1L)); v=AV(c); v[f]=f+1; v[f+1]=f; RZ(y=cant2(c,w));  // transpose last 2 axes
  if(unlikely(ISSPARSE(AT(w)))){A x;
   GATV0(x,INT,f+wcr-1,1); v=AV1(x); MCISH(v,AS(y),f+1);
@@ -988,7 +988,7 @@ static DFI1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,*ws,zm,zn;I n1=0,n2=
  f=wr-wcr;
  SETICFR(w,f,wcr,n);
  if(!r||1>=n)R reshape(repeat(ne(sc(f),IX(wr)),shape(w)),n?w:ds(CACE));
- if(!(BOX&AT(w))){A t; RZ(t=cant2(sc(f),w)) R IRS1(t,0,1,jtbox,z);}  // handle unboxed args by transposing on the given axis and then boxing lists
+ if(!(BOX&AT(w))){A t; RZ(t=cant2(sc(f),w)) R z=IRS1(jtbox,jt,t,1,0);}  // handle unboxed args by transposing on the given axis and then boxing lists
 // bug: ,&.>/ y does scalar replication wrong
 // wv=AN(w)+AAV(w); DQ(AN(w), if(AN(*--wv)&&AR(*wv)&&n1&&n2) ASSERT(0,EVNONCE); if((!AR(*wv))&&n1)n2=1; if(AN(*wv)&&1<AR(*wv))n1=1;);
  zn=AN(w)/n; PROD(zm,f,ws); PROD(m,wcr-1,ws+f+1); mn=m*n;

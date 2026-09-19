@@ -697,14 +697,14 @@ static DFI1(jtpscan){A z;I f,n,t,wn,wr,*ws,wt;
  // If there are 0 or 1 items, or w is empty, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
  if(((1-n)&-wn)>=0){R r?RETARG(w):reshape(apip(shape(w),zeroionei(1)),w);}  // n<2 or wn=0
  VARPS adocv; varps(adocv,self,wt,1);  // fetch info for f/\ and this type of arg
- if(!adocv.f)R IRS1(w,self,wcr,jtinfixprefix1,z);  // if there is no special function for this type, do general scan
+ if(!adocv.f)R z=IRS1(jtinfixprefix1,jt,w,wcr,self);  // if there is no special function for this type, do general scan
  // Here is the fast special reduce for +/ etc
  I d,m; PROD(m,f,ws); PROD(d,wcr-1,ws+f+1);   // m=#scans, d=#atoms in a cell of each scan
  if(unlikely(isatype(adocv.cv))&&(t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));  // convert input if necessary
  // if inplaceable, reuse the input area for the result
  if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);  // use result type from f  
  I rc=(adocv.f)(d,n,m,AV(w),AV(z),jt);
- if(unlikely((255&~EVNOCONV)&rc)){jsignal(rc); R (rc>=EWOV)?IRS1(w,self,r,jtpscan,z):0;} else R unlikely(((adocv.cv+VRD)&VRI))&&likely(rc!=EVNOCONV)?cvz(adocv.cv,z):z;   // retry if needed; convert if needed & not suppressed
+ if(unlikely((255&~EVNOCONV)&rc)){jsignal(rc); R (rc>=EWOV)?z=IRS1(jtpscan,jt,w,r,self):0;} else R unlikely(((adocv.cv+VRD)&VRI))&&likely(rc!=EVNOCONV)?cvz(adocv.cv,z):z;   // retry if needed; convert if needed & not suppressed
 }    /* f/\"r w atomic f main control */
 
 static DF2(jtinfixd){F12IP;A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc; 

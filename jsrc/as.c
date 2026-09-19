@@ -295,14 +295,14 @@ A jtscansp(J jt,A wfg,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,t;P*wp,*zp;
  wp=PAV(w); e=SPA(wp,e); RZ(ee=over(e,e));
  if(!equ(ee,CALL1(sf,ee,self))){
   RZ(x=denseit(w));
-  R IRS1(x,self,wcr,sf,z);
+  R z=IRS1(sf,jt,x,wcr,self);
  }else{
   RZ(b=bfi(wr,SPA(wp,a),1));
   if(wcr&&b[f]){b[f]=0; RZ(w=reaxis(ifb(wr,b),w));}
   j=f; m=0; DQ(wr-f, m+=!b[j++];);
  }
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x);
- RZ(x=IRS1(x,self,m,sf,z));
+ RZ(x=z=IRS1(sf,jt,x,m,self));
  t=maxtype(AT(e),AT(x)); RZ(e=cvt(t,e)); if(TYPESNE(t,AT(x)))RZ(x=cvt(t,x));
  GASPARSE(z,STYPE(t),1,wr+!m,AS(w)); if(!m)*(wr+AS(z))=1;
  zp=PAV(z); 
@@ -320,16 +320,16 @@ static DFI1(jtsscan){A y,z;I d,f,m,n,t,wn,*ws,wt;
 // obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
  PROD(m,f,ws); PROD(d,wcr-1,f+ws+1); I *nn=&ws[f]; nn=wcr?nn:I1mem; n=*nn;   // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
  y=FAV(self)->fgh[0]; // y is f/
- if(((n-2)|(wn-1))<0){if(FAV(FAV(y)->fgh[0])->flag&VISATOMIC2){R wcr?RETARG(w):reshape(apip(shape(w),zeroionei(1)),w);}else R IRS1(w,self,r,jtsuffix,z);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
+ if(((n-2)|(wn-1))<0){if(FAV(FAV(y)->fgh[0])->flag&VISATOMIC2){R wcr?RETARG(w):reshape(apip(shape(w),zeroionei(1)),w);}else R z=IRS1(jtsuffix,jt,w,r,self);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
 
    // note that the above line always takes the r==0 case
  VARPS adocv; varps(adocv,self,wt,2);  // analyze f - get suffix routine
- if(!adocv.f)R IRSIP1(w,self,r,jtssg,z);   // if not supported atomically, go do general suffix
+ if(!adocv.f)R z=IRS1(jtssg,jtfg,w,r,self);   // if not supported atomically, go do general suffix
  // The rest handles primitives with fast suffix scans
  if(unlikely(isatype(adocv.cv))&&(t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));
  if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);
  I rc=((AHDRSFN*)adocv.f)(d,n,m,AV(w),AV(z),jt);
- if(unlikely((255&~EVNOCONV)&rc)){if(unlikely(rc==EVNOCONV))R z; jsignal(rc); R jt->jerr>=EWOV?IRS1(w,self,r,jtsscan,z):0;} else RETF(unlikely(((adocv.cv+VRD)&VRI))&&likely(rc!=EVNOCONV)?cvz(adocv.cv,z):z);
+ if(unlikely((255&~EVNOCONV)&rc)){if(unlikely(rc==EVNOCONV))R z; jsignal(rc); R jt->jerr>=EWOV?z=IRS1(jtsscan,jt,w,r,self):0;} else RETF(unlikely(((adocv.cv+VRD)&VRI))&&likely(rc!=EVNOCONV)?cvz(adocv.cv,z):z);
 }    /* f/\."r w main control */
 
 

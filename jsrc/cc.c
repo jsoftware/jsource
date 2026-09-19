@@ -1234,7 +1234,7 @@ static DF2(jttess2){F12IP;A z,zz=0,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
      }
     }
     if(state&STATEREFLECTY)RZ(opcell=reverse(opcell));  // reverse vertical
-    if(state&STATEREFLECTX){A t; I tr=AR(opcell)-((UI)AR(opcell)>0); RZ(opcell=IRS1(opcell,0L,tr,jtreverse,t));}  // reverse horizontal
+    if(state&STATEREFLECTX){A t; I tr=AR(opcell)-((UI)AR(opcell)>0); RZ(opcell=t=IRS1(jtreverse,jt,opcell,tr,0L));}  // reverse horizontal
    }
    // execute the verb on the cell and assemble results
    RZ(z=CALL1(f1,opcell,fs)); 

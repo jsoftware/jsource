@@ -1147,8 +1147,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define IARG2R IARG2 I ar=AR(a); I wr=AR(w);
 #define IARG2CR IARG2R acr=MIN(acr,ar); wcr=MIN(wcr,wr);
 // call IRS
-#define IRS1(f,j,w,wcr,self) f(j,(A)(((I)(w)+0x3f)^(wcr)),self)  // wcr is rank for w
-#define IRS2(f,j,a,acr,w,wcr,self) f(j,(A)(((I)(a)+0x3f)^(acr)),(A)(((I)(w)+0x3f)^(wcr)),self)  // wcr is rank for w.  Coded assuming w is ready before wcr
+#define IRS1 (f,j,w,wcr,self) f(j,(A)(((I)(w)+0x3f)^(wcr)),self)  // wcr is rank for w
+#define IRS2 (f,j,a,acr,w,wcr,self) f(j,(A)(((I)(a)+0x3f)^(acr)),(A)(((I)(w)+0x3f)^(wcr)),self)  // wcr is rank for w.  Coded assuming w is ready before wcr
 // obsolete #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lu2.lc=FAV(ds(cxx))->lu2.lc, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
 #define ATOMIC2(jt,a,w,fs,l,r,cxx) IRS2(jtatomic2,jt,a,l,w,r,ds(cxx))   // cxx is the function to execute, l/r ranks
 #define DO(n,stm...)          {I _n=(n); I i=0; for(;i<_n;i++){stm}}  // i runs from 0 to n-1
@@ -1638,8 +1638,8 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // obsolete // Use IRS[12] to call a verb that supports IRS.  Rank is nonnegative; result is assigned to z.  z mustn't be any other arg - it is also used as a temp
 // obsolete // args should be names, because they are evaluated repeatedly, and also because rank is set before one of the evaluations
 // obsolete #define IRS1COMMON(j,w,fs,r,f1,z) (z=(A)(r),z=(I)AR(w)>(I)(r)?z:(A)~0,jt->ranks=(RANK2T)(I)z,z=((AF)(f1))(j,(w),(A)(fs)),jt->ranks=R2MAX,z)  // nonneg rank
-// obsolete #define IRS1(w,fs,r,f1,z) IRS1COMMON(jt,w,fs,r,f1,z)  // nonneg rank
-// obsolete #define IRSIP1(w,fs,r,f1,z) IRS1COMMON(jtfg,w,fs,r,f1,z)  // nonneg rank
+// obsolete #define z=IRS1(f1,jt,w,r,fs) IRS1COMMON(jt,w,fs,r,f1,z)  // nonneg rank
+// obsolete #define z=IRS1(f1,jtfg,w,r,fs) IRS1COMMON(jtfg,w,fs,r,f1,z)  // nonneg rank
 // obsolete #define IRS2COMMON(j,a,w,fs,l,r,f2,z) (jt->ranks=(RANK2T)(((((I)AR(a)-(l)>0)?(l):RMAX)<<RANKTX)+(((I)AR(w)-(r)>0)?(r):RMAX)),z=((AF)(f2))(j,(a),(w),(A)(fs)),jt->ranks=R2MAX,z) // nonneg rank
 // obsolete #define IRS2(a,w,fs,l,r,f2,z) IRS2COMMON(jt,a,w,fs,l,r,f2,z)
 // obsolete #define IRSIP2(a,w,fs,l,r,f2,z) IRS2COMMON(jtfg,a,w,fs,l,r,f2,z)

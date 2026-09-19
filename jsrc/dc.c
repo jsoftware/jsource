@@ -49,7 +49,7 @@ static B jtdrow(J jt,DC si,DC s0,A*zv,UI ncollist,I* collist){A fs,q,*qv,y,z;C c
    RZ(*zv++=incorp(q));                                  /* 6 argument list            */
    break;
   case 7:
-   if(si->dcloc&&si->dcc){RZ(y=dloc(si->dcloc)); RZ(*zv++=incorp(grade2(y,ope(IRS1(y,0L,1L,jthead,z)))));}  // local symbols only if explicit defn
+   if(si->dcloc&&si->dcc){RZ(y=dloc(si->dcloc)); RZ(*zv++=incorp(grade2(y,ope(z=IRS1(jthead,jt,y,1L,0L)))));}  // local symbols only if explicit defn
    else         RZ(*zv++=incorp(iota(v2(0L,2L))));   /* 7 locals                   */  // empty so cannot be readonly
    break;
   case 8:

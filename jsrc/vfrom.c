@@ -485,7 +485,7 @@ static FI2(jtafrom){
   // Since the native rank of a is 0, if w has only one cell we can loop over boxes of a
   R wr==wcr?rank2ex(a,w,DUMMYSELF,0L,wcr,0L,wcr,jtafrom):  // if a has frame, rank-loop over a
     // If both a and w have cells, we must match them up by boxing
-      dfv2(t0,IRS1(a,0L,acr,jtbox,t1),IRS1(w,0L,wcr,jtbox,t2),amp(ds(CLBRACE),ds(COPE)));  // > (<"arank a) {&> <"wrank w
+      dfv2(t0,t1=IRS1(jtbox,jt,a,acr,0L),t2=IRS1(jtbox,jt,w,wcr,0L),amp(ds(CLBRACE),ds(COPE)));  // > (<"arank a) {&> <"wrank w
  }
  // a is an atomic box.  Open it
  A c=C(AAV(a)[0]);  // contents of a
@@ -684,9 +684,9 @@ static F2(jtmapx){F12IP;A z1,z2,z3;
  ARGCHK2(a,w);
  if(!(BOX&AT(w)))R ope(a);
  RZ(z1=catalog(every(shape(w),ds(CIOTA))));  // create index list of each box
- IRS1(z1,0,0,jtbox,z2);
+ z2=IRS1(jtbox,jt,z1,0,0);
  RZ(z2=every2(a,z2,(A)&sfn0overself));
- IRS1(z2,0,0,jtbox,z3);
+ z3=IRS1(jtbox,jt,z2,0,0);
  R every2(z3,w,(A)&mapxself);
 }
 

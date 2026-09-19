@@ -143,7 +143,7 @@ extern F1(jtgemmtune);
 extern DF1(jtemsglevel);
 extern F1(jtgh15);
 extern F1(jtgrade1);
-extern F1(jtgr1);
+extern DF1(jtgr1);
 extern F1(jtgsignal);
 extern A jtkeyct(J,A,A,A,D);
 extern DF2(jtkeybox);

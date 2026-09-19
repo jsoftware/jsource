@@ -709,8 +709,8 @@ static B (*grroutine[])(J,I,I,I,A,I*) = {  // index is [bitx]
 [B01X]=jtgrc, [LITX]=jtgrc, [INTX]=jtgri, [FLX]=jtgrd, [CMPXX]=jtgrx,[BOXX]=jtgrx, [XNUMX]=jtgrx, [RATX]=jtgrx, [QPX]=jtgrx,[C2TX]=jtgrc, [C4TX]=jtgru, [INT2X]=jtgrx, [INT4X]=jtgrx};
 
 // /: and \: with IRS support
-A jtgr1(J jt,A wfg){A z;I f,ai,m,n,*s,t,wn,wr,zn;
- IARG1CR F1PREFJT;PROLOG(0075);
+DFI1(jtgr1){A z;I f,ai,m,n,*s,t,wn,wr,zn;
+ IARG1CR F12IP;PROLOG(0075);
  t=AT(w);
 // obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  f=wr-wcr; s=AS(w);

@@ -1218,7 +1218,7 @@ takestats(++stats[0x24];)
   }
  }
  // Not sparse.
- RESETRANK;  // Ranks are required for sparse, which calls IRS-enabled routines internally.  We clear in case the action routine calls a function with IRS
+// obsolete  RESETRANK;  // Ranks are required for sparse, which calls IRS-enabled routines internally.  We clear in case the action routine calls a function with IRS
  // vbls needed: a w ak wk cv fr n m jt
 
  union {UI4 fr; UI1 lanes[4];} fru;  // place to save the lanes of fr separately
@@ -1592,9 +1592,9 @@ I jtsumattymesprods(J jt,I it,void *avp, void *wvp,I dplen,I nfro,I nfri,I ndpo,
 }
 
 #if C_AVX2 || EMU_AVX2
-// +/@:*"1 for QP, with IRS by hand
-static DF2(jtsumattymes1E){F12IP;
- if(unlikely((I)((1-AR(a))|(1-AR(w)))<0)){I lr=MIN((RANKT)jt->ranks,AR(a)); I rr=MIN(jt->ranks>>RANKTX,AR(w)); R rank2ex(a,w,(A)self,1,1,lr,rr,jtsumattymes1E);}  // if multiple results needed, do rank loop
+// +/@:*"1 for QP.  Caller has handled any rank loop
+static DF2(jtsumattymes1E){12IP;
+// obsolete  if(unlikely((I)((1-AR(a))|(1-AR(w)))<0)){I lr=MIN((RANKT)jt->ranks,AR(a)); I rr=MIN(jt->ranks>>RANKTX,AR(w)); R rank2ex(a,w,(A)self,1,1,lr,rr,jtsumattymes1E);}  // if multiple results needed, do rank loop
  I i; I n=AS(a)[AR(a)-1]; ASSERT(AS(w)[AR(w)-1]==n,EVLENGTH);  // length of vector; verify agreement
  E *x=EAV(a)+n, *y=EAV(w)+n;  // input pointers, advanced past end
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff});  /* needed masks: sign, mantissa */
@@ -1627,15 +1627,15 @@ static DF2(jtsumattymes1E){F12IP;
 
 
 // +/@:*"1 with IRS, also +/@:*"1!.0 on float args and +/@:*"1!.1 producing a float extended-precision result, a length-2 list per product
-DF2(jtsumattymes1){F12IP;
- ARGCHK2(a,w);
- I ar=AR(a); I wr=AR(w); I acr=jt->ranks>>RANKTX; I wcr=jt->ranks&RMAX;
- // get the cell-ranks to use 
- acr=ar<acr?ar:acr;   // r=left rank of verb, acr=effective rank
- wcr=wr<wcr?wr:wcr;  // r=right rank of verb, wcr=effective rank
-     // note: the prod above can never fail, because it gives the actual # cells of an existing noun
-   // Now that we have used the rank info, clear jt->ranks.  All verbs start with jt->ranks=RMAXX unless they have "n applied
-   // we do this before we generate failures
+DFI2(jtsumattymes1){
+ IARG2CR F12IP;
+// obsolete  I ar=AR(a); I wr=AR(w); I acr=jt->ranks>>RANKTX; I wcr=jt->ranks&RMAX;
+// obsolete   // get the cell-ranks to use 
+// obsolete   acr=ar<acr?ar:acr;   // r=left rank of verb, acr=effective rank
+// obsolete   wcr=wr<wcr?wr:wcr;  // r=right rank of verb, wcr=effective rank
+// obsolete       // note: the prod above can never fail, because it gives the actual # cells of an existing noun
+// obsolete     // Now that we have used the rank info, clear jt->ranks.  All verbs start with jt->ranks=RMAXX unless they have "n applied
+// obsolete     // we do this before we generate failures
 
  I fit=0; if(unlikely(FAV(self)->id==CFIT))fit=1+FAV(self)->localuse.lu1.fittype;  // fit 0=normal, 1=!.0, 2=!.1
  I *as=AS(a), *ws=AS(w);
@@ -1653,11 +1653,11 @@ DF2(jtsumattymes1){F12IP;
   if(ISDENSETYPE(AT(a)|AT(w),QP)&&((AN(a)-1)|(AN(w)-1)|(acr-1)|(wcr-1))>=0){
    // QP dot-product.  Transfer to that code with rank still set
    if(unlikely(!(AT(a)&QP)))RZ(a=cvt(QP,a)) else if(unlikely(!(AT(w)&QP)))RZ(w=cvt(QP,w))  // convert lower arg to qp
-   RETF(jtsumattymes1E(jt,a,w,self));
+   RETF(rank2ex(a,w,self,1,1,acr,wcr,jtsumattymes1E))  // QP code does not have IRS
   }
 #endif
   if(fit!=0)self=FAV(self)->fgh[0];  // lose the !.[01] if we revert
-  RESETRANK;  // This is required if we go to slower code
+// obsolete  RESETRANK;  // This is required if we go to slower code
   R rank2ex(a,w,FAV(self)->fgh[0],MIN(acr,1),MIN(wcr,1),acr,wcr,jtfslashatg);
  }
  // We can handle it here, and both ranks are at least 1 or both are rank 0.
@@ -1846,72 +1846,75 @@ DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 }    /* a f/@:g w where f and g are atomic*/
 
 // Consolidated entry point for ATOMIC2 verbs.  These can be called with self pointing either to a rank block or to the block for
-// the atomic.  If the block is a rank block, we will switch self over to the block for the atomic.
-// Rank can be passed in via jt->ranks, or in the rank for self.  jt->ranks has priority.
-DF2(jtatomic2){F12IP;A z;
- ARGCHK2(a,w);
+// the atomic.  self always has the 
+DFI2(jtatomic2){F12IP;A z;
+ IARG2R
 takestats(++stats[0x0];)
  // load initial values, many of them since there is nothing else to do while the first reads are completing.  We overrule the compiler, which would load jtranks and selfranks after the first test,
  // to get an early start down that path.  We use atomic_load to inhibit load reordering, but clang creates a mov/movzx pair when loading anything shorter than an I, so we avoid loading a short value
  // using atomic_load.  Best sequence would be at , wt/ar , wr, but we have to delay the gating wt a clock to force the loads of jtranks and selfranks (added to misprediction latency of the first branch)
- UI opcode=FAV(self)->lu2.lc; UI jtranks=jt->ranks; // VA2C* code from the primitive (used if we predict to ssing), jt->ranks (used if we predict to va2)
- UI selfranks=FAV(self)->lrr; I at=AT(a);  //  ranks from "n (if we predict to va2); at, for bidcase/densbid0
+ UI opcode=FAV(self)->lu2.lc;
+// obsolete UI jtranks=jt->ranks; // VA2C* code from the primitive (used if we predict to ssing), jt->ranks (used if we predict to va2)
+// obsolete  UI selfranks=FAV(self)->lrr;
+ I at=AT(a);  //  ranks from "n (if we predict to va2); at, for bidcase/densbid0
  UI awr=AR(a); I wt=__atomic_load_n(&AT(w),__ATOMIC_RELAXED);   // ar, wt, for bidcase/densbid0
- awr<<=RANKTX; awr+=AR(w);   // wr, one cycle after ar.  We cannot load any more here without overrunning registers
+// obsolete  awr<<=RANKTX;
+ I wr=AR(w);   // wr, one cycle after ar.  We cannot load any more here without overrunning registers
  I afwf, af;  // finish combining rank; afwf will be both frames; af is rank of singleton result
  // Retries of singletons branch back to points at the top.  We must take care to save only what's needed, refetching the rest to save reg spills
  // singletons dominate the testcases.  We check them before any non-singleton fetches
  UI bidcase=3*at; bidcase&=(FL+INT)*5; UI densbid0=(UI)((at|=wt)&((NOUN|SPARSE)&~(B01+INT+FL))); bidcase+=wt;   // arg type info, with possibly 1 bit set in bits 0-1; bid0=not singleable
- if(withprob((awr+densbid0)==0,0.7)){takestats(++stats[0x1];) af=0*0x101; goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
+ if(withprob((awr+wr+densbid0)==0,0.7)){takestats(++stats[0x1];) af=0*0x101; goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
  // falling through, not atomic singleton.
 // obsolete  UI notoneatom=(an-1)|(wn-1);
 takestats(if((AN(a)-1)|(AN(w)-1))++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
 // obsolete  bidcase=densbid0>=1?1:bidcase;  // if args are not BID, set to 'invalid' bidcase (no ADC but compiler works)
  I notoneatom=(AN(a)-1)|(AN(w)-1);   // 0 if both ANs=1: nonatomic singleton.  Now densbid0 is 0 if BID on nonatomic singleton
-retryss:;  // here when non-atomic singleton retries.  jtranks and selfranks have been loaded.  bidcase and densbid0 have been set to non-BID, and awr has been reconstructed.  at/wt are garbage
+retryss:;  // here when non-atomic singleton retries.  bidcase and densbid0 have been set to non-BID, and awr has been reconstructed.  at/wt are garbage
 // obsolete  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank.
 // obsolete  UI selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
- selfranks=jtranks==R2MAX?selfranks:jtranks;   // ignore IRS if not given, to get the rank to be used for the execution
+// obsolete  selfranks=jtranks==R2MAX?selfranks:jtranks;   // ignore IRS if not given, to get the rank to be used for the execution
 // obsolete retryss0:;  // here when an atomic singleton fails.  self has not been touched so we must advance it to the primitive.  We must process as non-rank array, so we have set selfranks=0x3f3f to go through no-rank code, and notoneatom=1
 // obsolete self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
 // obsolete  opline=__atomic_load_n(&FAV(self)->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
  // find frames
- afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
+ acr-=awr; acr=acr<0?0:acr; wcr-=wr; wcr=wcr<0?0:wcr; awr<<=RANKTX; awr+=wr; afwf=(acr<<=RANKTX)+wcr;  // awr=0/0/ar/wr afwf=0/0/af/wf
+ // obsolete  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
  // check for non-atomic singletons, which are rare (in testcases)
  if(withprob((notoneatom|densbid0)!=0,0.95)){
   bidcase&=(FL+INT)*5; bidcase=bidcase+(SY_64?(densbid0<<=15):!!densbid0);  // clear possibly-invalid bits of bidcase; if args are not BID, set to 'invalid' bidcase
-retryss0:;  // Here when atomic singleton retries.  Noun ranks (awr) are perforce 0, so afwf have been set to 0, with selfranks set for error-message purposes.  at/wt are garbage
+retryss0:;  // Here when atomic singleton retries.  Noun ranks (awr) are perforce 0, so afwf have been set to 0.  at/wt are garbage
   // either not singleton BID, or singleton needing retry: carry on with normal setup
   opcode&=0x7f; opcode*=sizeof(VA); opcode+=bidcase*=(sizeof(VA2)/INT); // point to the VA2 block for the BID if valid; VA block if not
   NOUNROLL while(1){
-   afwf=selfranks==0?0:afwf;   // if ranks were 0 0, ignore them and shift down to working on frame wrt 0.  afwf=0 signals that case (& happens naturally if there is no frame wrt actual rank).    It uses simpler setup
+// obsolete not needed?   afwf=selfranks==0?0:afwf;   // if ranks were 0 0, ignore them and shift down to working on frame wrt 0.  afwf=0 signals that case (& happens naturally if there is no frame wrt actual rank).    It uses simpler setup
    // Run the full dyad, retrying if a retryable error is returned.  self has been modified to point to the actual primitive rather than the rank block
    z=jtva2(jtfg,a,w,afwf,awr,opcode);  // execute the verb. jtfg/a/w/selfranks/self  must be preserved over call
    if(likely(z!=0)){RETF(z);}  // normal case is good return
    // error cases: exit and retry
    JTFROMJTFG(J);  // restore jt to avoid save
    if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
-   awr=AR(a); awr<<=RANKTX; awr+=AR(w); // restore aw vars so they won't be saved over the call
+   acr=~(I)afg&0x3f; a=(I)afg&~0x3f; wcr=~(I)wfg&0x3f; w=(I)wfg&~0x3f; awr=AR(a); wr=AR(w); // restore aw vars so they won't be saved over the call
 // obsolete    opline=FAV(self)->localuse.lu1.uavandx[1];  // extract table line from the primitive to avoid save
    opcode=(FAV(self)->lu2.lc&0x7f)*sizeof(VA)+0x1*(sizeof(VA2)/INT);  // set opcode to 'invalid' BID
-   afwf=(awr+(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  // reload afwf too.  selfranks must be preserved.  Use + instead of | to avoid compiler saving
+   acr-=awr; acr=acr<0?0:acr; wcr-=wr; wcr=wcr<0?0:wcr; awr<<=RANKTX; awr+=wr; afwf=(acr<<=RANKTX)|wcr;   // reload afwf/awr too.  Use | instead of + to avoid compiler saving
   }
   // We hit an error.  We will format it now because we have the IRS ranks that were used in selfranks.
-  // convert 0 rank back to R2MAX to avoid "0 0 in msg
-  jt->ranks=selfranks?selfranks:R2MAX;
+ // obsolete  // convert 0 rank back to R2MAX to avoid "0 0 in msg
+ // obsolete   jt->ranks=selfranks?selfranks:R2MAX;
   self=resolveself(self);   // reconstruct true self from its original value (it might be a monadic shorthand)
   if(FAV(self)->flag&VWASUNARY){  // originally monadic shorthand?
    // the verb was translated from a unary shorthand like -: to 0.5 * .  We must translate back for display.
    switch(FAV(self)->id){  // for each id, revert to the original id.  If the original arg was in w, move it to a.
-   case CMINUS: switch(FAV(self)->flag&VUNARYCODE3){case VUNARYCODE0: self=ds(CNOT); a=w;  break; case VUNARYCODE1: self=ds(CMINUS); a=w; break; case VUNARYCODE2: self=ds(CLE); break;} break;
-   case CPLUS: self=ds(CGE); a=w; break;
-   case CSTAR: switch(FAV(self)->flag&VUNARYCODE3){case VUNARYCODE0: self=ds(CPLUSCO); a=w;  break; case VUNARYCODE1: self=ds(CSTARCO); break; case VUNARYCODE2: self=ds(CHALVE); a=w; break; case VUNARYCODE3: self=ds(CCIRCLE); a=w; break;} break;
-   case CDIV: switch(FAV(self)->flag&VUNARYCODE3){case VUNARYCODE0: self=ds(CDIV); a=w;  break; case VUNARYCODE1: self=ds(CHALVE); break;} break;
+   case CMINUS: switch(FAV(self)->flag&VUNARYCODE3){case VUNARYCODE0: self=ds(CNOT); afg=wfg;  break; case VUNARYCODE1: self=ds(CMINUS); afg=wfg; break; case VUNARYCODE2: self=ds(CLE); break;} break;
+   case CPLUS: self=ds(CGE); afg=wfg; break;
+   case CSTAR: switch(FAV(self)->flag&VUNARYCODE3){case VUNARYCODE0: self=ds(CPLUSCO); afg=wfg;  break; case VUNARYCODE1: self=ds(CSTARCO); break; case VUNARYCODE2: self=ds(CHALVE); afg=wfg; break; case VUNARYCODE3: self=ds(CCIRCLE); afg=wfg; break;} break;
+   case CDIV: switch(FAV(self)->flag&VUNARYCODE3){case VUNARYCODE0: self=ds(CDIV); afg=wfg;  break; case VUNARYCODE1: self=ds(CHALVE); break;} break;
    }
-   w=0; // now a monad
+   wfg=0; // now a monad
   }
-  jteformat(jt,self,a,w,0);
-  RESETRANK;  // in case we installed something into jt->ranks, remove it
+  jteformat(jt,self,afg,wfg,0);
+// obsolete   RESETRANK;  // in case we installed something into jt->ranks, remove it
   RETF(z);
  }else{
 takestats(++stats[0x2];)
@@ -1927,10 +1930,11 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
   // if retryable error, fall through.  The retry will not be through the singleton code
   awr=AR(a); awr<<=RANKTX; awr+=AR(w); // restore aw vars so they won't be saved over the call
   bidcase=0x1; opcode=FAV(self)->lu2.lc;  // bidcase must be 'invalid'; restore opcode to prevent save
-  jtranks=jt->ranks; selfranks=FAV(self)->lrr;  // Restore verb ranks, from user or from "n.
+  acr=~(I)afg&0x3f; a=(I)afg&~0x3f; wcr=~(I)wfg&0x3f; w=(I)wfg&~0x3f; awr=AR(a); wr=AR(w); // restore aw vars so they won't be saved over the call
+// obsolete   jtranks=jt->ranks; selfranks=FAV(self)->lrr;  // Restore verb ranks, from user or from "n.
 // obsolete   if(likely(awr==0)){selfranks=R2MAX; realself=FAV(self)->fgh[0]; self=realself?realself:self;} goto retryss;  // retry.  atomic singletons must advance self (selfranks max to have no frame); others must not, using the incumbent self & selfranks
 // obsolete   if(likely(awr==0)){selfranks=R2MAX;}
-  if(likely(awr==0)){afwf=0; selfranks=jtranks==R2MAX?selfranks:jtranks; goto retryss0;} densbid0=1; goto retryss;  // retry, loading the actual ranks of the verb.  If not atomic, set 'not BID' to force through var
+  if(likely(awr==0)){afwf=0; goto retryss0;} notoneatom=densbid0=1; goto retryss;  // retry, loading the actual ranks of the verb.  If not atomic, set 'not BID' to force through var
   // (no fallthrough here)
  }
 }

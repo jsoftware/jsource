@@ -121,7 +121,7 @@ A jtrank1ex(J jtfg,AD * RESTRICT w,A fs,I rr,AF f1){F12IP;PROLOG(0041);A z;
 A jtrank1ex0(J jtfg,AD * RESTRICT w,A fs,AF f1){F12IP;PROLOG(0041);A z,virtw;
    I wk;
  ARGCHK1(w);
- RESETRANK;  // in case we are called with IRS, clear it
+// obsolete RESETRANK;  // in case we are called with IRS, clear it
  if(unlikely(!AR(w))){R CALL1IP(f1,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.  Make this as fast as possible.
  // Switch to sparse code if argument is sparse
  if(unlikely(ISSPARSE(AT(w))))R sprank1(w,fs,0,f1);
@@ -593,9 +593,9 @@ A jtirs1(J jtfg,A w,A fs,I m,AF f1){F12IP;A z;I wr;
 // Get the rank of w; if the requested rank m is > wr, use ~0 because some verbs test for that as an expedient
 // If m is negative, use wr+m but never < 0
  wr=AR(w); m=m>=wr?R2MAX:m; wr+=m; wr=wr<0?0:wr; wr=m>=0?m:wr;   // requested rank, after negative resolution, or ~0
- jt->ranks=(RANK2T)wr;  // install rank for called routine
- z=CALL1IP(f1,w,fs);    // Pass inplaceability through
- jt->ranks=R2MAX;  // reset rank to infinite
+// obsolete  jt->ranks=(RANK2T)wr;  // install rank for called routine
+ z=IRS1(f1,jtfg,w,wr,fs);    // Pass inplaceability through
+// obsolete  jt->ranks=R2MAX;  // reset rank to infinite
  RETF(z);
 }
 
@@ -613,12 +613,13 @@ A jtirs2(J jtfg,A a,A w,A fs,I l,I r,AF f2){F12IP;A z;I ar,wr;
  wr=AR(w); r=r>=wr?RMAX:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; r=AR(w)-wr;   // wr=requested rank, after negative resolution, or ~0; r=frame of w, possibly negative if no frame
  ar=AR(a); l=l>=ar?RMAX:l; ar+=l; ar=ar<0?0:ar; ar=l>=0?l:ar; l=AR(a)-ar;   // ar=requested rank, after negative resolution, or ~0; l=frame of a, possibly negative if no frame
  ASSERTAGREE(AS(a),AS(w),MAX(0,MIN(r,l)))  // verify agreement before we modify jt->ranks
- jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
- z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack.  Pass inplaceability through
+// obsolete  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
+ z=IRS2(f2,jtfg,a,l,w,r,fs);   // save ranks, call setup verb, pop rank stack.  Pass inplaceability through
    // Not all verbs (*f2)() use the fs argument.
- jt->ranks=R2MAX;  // reset rank to infinite
+// obsolete  jt->ranks=R2MAX;  // reset rank to infinite
  RETF(z);
 }
+// end of sparse-only
 
 
 static DF1(cons1a){F12IP;RETF(FAV(self)->fgh[0])}  // scaf bivalent
@@ -650,26 +651,29 @@ static DF2(cycr2){F12IP;V*sv=FAV(self); I cger[128/SZI];
  RETF(rank2ex(a,w,self,lr2,rr2,lr2,rr2,FAV(self)->valencefns[1]))  // callback is to the cyclic-execution function
 }
 
-
-
+// fast path for atomic2 verbs, whose rank is passed in like IRS.  We don't check agreement, we don't support negative rank, and we don't clamp the rank to the arg rank
+static DF2(rank2atomic){F12IP;ARGCHK1(w); RETF(IRS2(jtatomic2,jtfg,a,FAV(self)->localuse.lu1.srank[1],w,FAV(self)->localuse.lu1.srank[2],self)) }  // self is used only for lc byte and ranks
 
 // Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass inplaceability through.
-static DF1(rank1i){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];ARGCHK1(w);  // this version when requested rank is positive
- I m=FAV(self)->localuse.lu1.srank[0]; I r=AR(w); m+=REPSGN(m)&r; m=m<0?0:m; m=m>=r?RMAX:m; jt->ranks=(RANK2T)(m);  // install rank for called routine
- A z=CALL1IP(f1,w,fs);
- jt->ranks=R2MAX;  // reset rank to infinite
- RETF(z);
+static DF1(rank1i){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];ARGCHK1(w);
+ FILLREG(f1)  // get routine address ready for misbranch
+ I m=FAV(self)->localuse.lu1.srank[0]; I r=AR(w); m+=REPSGN(m)&r; m=m<0?0:m; m=m>=r?RMAX:m;   // handle negative rank
+// obsolete  jt->ranks=(RANK2T)(m);  // install rank for called routine
+ RETF(IRS1(f1,jtfg,w,m,fs))   // call with embedded rank parm
+// obsolete  jt->ranks=R2MAX;  // reset rank to infinite
+// obsolete  RETF(z);
 }
 
 // dyadic forms also check agreement wrt the given ranks.  pass inplaceability through.
 static DF2(rank2i){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; ARGCHK1(w);
- I ar=FAV(self)->localuse.lu1.srank[1]; I r=AR(a); ar+=REPSGN(ar)&r; ar=ar<0?0:ar; ar=ar>=r?RMAX:ar; I af=r-ar;   // left rank and frame
+ FILLREG(f2)  // get routine address
+ I ar=FAV(self)->localuse.lu1.srank[1]; I r=AR(a); ar+=REPSGN(ar)&r; ar=ar<0?0:ar; ar=ar>=r?RMAX:ar; I af=r-ar;   // left rank and frame, possibly negative
  I wr=FAV(self)->localuse.lu1.srank[2];   r=AR(w); wr+=REPSGN(wr)&r; wr=wr<0?0:wr; wr=wr>=r?RMAX:wr; I wf=r-wr;   // right rank and frame
- ASSERTAGREE(AS(a),AS(w),MAX(0,MIN(wf,af)));  // verify agreement before we modify jt->ranks
- jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
- A z=CALL2IP(f2,a,w,fs);   // save ranks, call setup verb, pop rank stack
- jt->ranks=R2MAX;  // reset rank to infinite
- RETF(z);
+ ASSERTAGREE(AS(a),AS(w),MAX(0,MIN(wf,af)));  // verify agreement
+// obsolete  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
+ RETF(IRS2(f2,jtfg,a,ar,w,wr,fs))   // call with embedded rank parm
+// obsolete  jt->ranks=R2MAX;  // reset rank to infinite
+// obsolete  RETF(z);
 }
 
 #define GEMIN0(a,b,c) ((a-b)&(a-c)) // sign is 0 if a>=MIN(b,c): a>=b or a>=c
@@ -847,13 +851,13 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
  // For monads that are not ATOMIC1/IRS1, we use quick rank if r>0, which suppresses the rank loop if r >= mu.  This may erroneously suppress a rank loop that would affect fill.
  // We mitigate the problem by giving the user credit if: u WILLOPEN; u cannot be combined in a rank loop
 // obsolete   if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?(hv[0]>=0&&!(av->id==CQQ)&&!(av->flag2&(VF2RANKONLY1+VF2WILLOPEN1))?rank1q:rank1):jtrank10; flag2|=VF2RANKONLY1;}}
-  if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?rank1:jtrank10; flag2|=VF2RANKONLY1;}}
+  if(av->flag&VISATOMIC1){f1=rank2;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?rank1:jtrank10; flag2|=VF2RANKONLY1;}}
 // obsolete   // if the monad rank in v is 0, we can surely ignore any higher rank, except in the rank of the compound.  We set IRS1 here so any later "n is fast
 // obsolete   vf|=(hv[0]==0)<<VIRS1X;
   // For dyad: atomic verbs take the rank from this block, so we take the action routine, and also the parameter it needs; these parameters mean that only
   // nonnegative rank can be accomodated; otherwise, use processor for IRS; if not IRS, there are processors for:
-  // rank 0; nonneg ranks where fs is NOT a rank operator; general case
-  if(av->flag&VFUSEDOK2&&(hv[1]|hv[2])>=0){f2=av->valencefns[1]; lc=av->lu2.lc;}  // transfer the fn-address and fn-code from the atomic to the fused block
+  // rank 0; general case
+  if(av->flag&VFUSEDOK2&&(hv[1]|hv[2])>=0){f2=rank2atomic; lc=av->lu2.lc;}  // transfer the fn-address and fn-code from the atomic to the fused block
 // obsolete   else if(av->flag&VIRS2){f2=rank2i;}else{f2=(hv[1]|hv[2])?((hv[1]|hv[2])>=0&&!(av->flag2&VF2RANKONLY2)?rank2q:rank2):jtrank20;flag2|=VF2RANKONLY2;}
   else if(av->flag&VIRS2){f2=rank2i;}else{f2=(hv[1]|hv[2])?rank2:jtrank20;flag2|=VF2RANKONLY2;}
   // Test for special cases

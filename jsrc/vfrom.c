@@ -378,11 +378,12 @@ endaxes:;
 }
 
 // a is numeric
-F2(jtifrom){F12IP;A z;C*wv,*zv;I acr,an,ar,*av,j,k,p,pq,q,wcr,wf,wn,wr,*ws,zn;
- ARGCHK2(a,w);
+FI2(jtifrom){A z;C*wv,*zv;I an,*av,j,k,p,pq,q,wf,wn,*ws,zn;
+ IARG2CR F12IP;
  // IRS supported but only for a single a value.  This has implications for empty arguments.
- ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
- wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
+// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
+// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
+ wf=wr-wcr;
  if(unlikely(ar>acr))R rank2ex(a,w,DUMMYSELF,acr,wcr,acr,wcr,jtifrom);  // split a into cells if needed.  Only 1 level of rank loop is used
  // From here on, execution on a single cell of a (on matching cell(s) of w, or all w).  The cell of a may have any rank
  an=AN(a); wn=AN(w); ws=AS(w);
@@ -474,10 +475,11 @@ A jtfrombu(J jtfg,A a,A w,I wf){F12IP;
 }    /* (<"1 a){"r w, dense w, integer array a */
 
 // general boxed a
-static F2(jtafrom){F12IP; PROLOG(0073);
- ARGCHK2(a,w);
- I ar=AR(a); I acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
- I wr=AR(w); I wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; I wf=wr-wcr; RESETRANK;
+static FI2(jtafrom){
+ IARG2CR F12IP; PROLOG(0073);
+// obsolete  I ar=AR(a); I acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
+// obsolete  I wr=AR(w); I wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
+ I wf=wr-wcr;
  // We have IRS on w, but not a.  If there are multiple cells of a we use a rank loop.
  if(unlikely(ar!=0)){A t0,t1,t2;  // if there is an array of boxes
   // Since the native rank of a is 0, if w has only one cell we can loop over boxes of a
@@ -561,14 +563,15 @@ static F2(jtafrom){F12IP; PROLOG(0073);
 }    /* a{"r w for boxed index a */
 
 // a{"r w  We handle the fast cases (atom{array) and (empty{"r array) here.  For others we go to a type-dependent processor for a that will build index lists
-DF2(jtfrom){F12IP;A z;
- ARGCHK2(a,w);
- I at=AT(a), wt=AT(w), ar=AR(a), wr=AR(w);
+DFI2(jtfrom){A z;
+ IARG2CR F12IP;
+ I at=AT(a), wt=AT(w);
  if(likely(!ISSPARSE(at|wt))){
   PROLOG(000);
   // Handle the simple case of unboxed atom { array, and no frame: single cell
   // We don't process NJA through here because it might create a virtual block & we don't want NJAs rendered unmodifiable by virtual blocks
-  if(!((at&BOX)+ar+(SGNTO0((((RANKT)jt->ranks-wr)|(wr-1)))))&&likely(!(AFLAG(w)&AFNJA))){   // if AR is unboxed atom and w has no frame
+// obsolete   if(!((at&BOX)+ar+(SGNTO0((((RANKT)jt->ranks-wr)|(wr-1)))))&&likely(!(AFLAG(w)&AFNJA))){   // if AR is unboxed atom and w has no frame
+  if(!((at&BOX)+ar+(SGNTO0(((wcr-wr)|(wr-1)))))&&likely(!(AFLAG(w)&AFNJA))){   // if AR is unboxed atom and w has no frame
    I av;  // selector value
    if(likely(at&(B01|INT))){av=BIV0(a);  // B01/INT index.  We don't set at=INT for B01 because we aren't sure it's OK to overwrite a, which might be NJA.  Questionable analysis.
    }else{
@@ -601,7 +604,8 @@ DF2(jtfrom){F12IP;A z;
    }
   }else if(unlikely(AN(a)==0)){  // a is empty, so the result must be also.  Doesn't happen often but we save big when it does
    I zr=wr-1+SGNTO0(SGNIF(at,BOXX));  // rank of w, -1 if a is not boxed
-   if(!((jt->ranks-((ar<<RANKTX)+wr))&(((RMAX+1)<<RANKTX)+(RMAX+1)))){  // is there frame?
+// obsolete    if(!((jt->ranks-((ar<<RANKTX)+wr))&(((RMAX+1)<<RANKTX)+(RMAX+1)))){  // is there frame?
+   if(((acr-ar)|(wcr-wr))>=0){  // is there no frame?
     // The case of (empty array) { y (no frame).  Result is (($x),(}.^:(32~:3!:0 x) $y)) ($,) y.
     // $ (i.0 0) { (i. 4 5)  is 0 0 5;  $ (0 0$a:) { (i. 4 5) is 0 0 4 5.  $ (0$a:) { 5  is  $ (0$0) { 5  is 0
     zr=zr<0?0:zr;  // rank of cell of w
@@ -611,25 +615,26 @@ DF2(jtfrom){F12IP;A z;
     }
    }else{
     // There is frame.  We have to check agreement.  shape is (long frame),(a cell shape),(w cell shape possibly beheaded)
-    I af=ar-(jt->ranks>>RANKTX); af=af<0?0:af; I wf=wr-(RANKT)jt->ranks; wf=wf<0?0:wf; I lf=af<wf?wf:af; I cf=af<wf?af:wf; A la=af<wf?w:a;  // af, wf=lens of outer frame; lf=len of long frame; la->longer frame
+// obsolete     I af=ar-(jt->ranks>>RANKTX); af=af<0?0:af; I wf=wr-(RANKT)jt->ranks; wf=wf<0?0:wf; I lf=af<wf?wf:af; I cf=af<wf?af:wf; A la=af<wf?w:a;  // af, wf=lens of outer frame; lf=len of long frame; la->longer frame
+    I af=ar-acr; I wf=wr-wcr; I lf=af<wf?wf:af; I cf=af<wf?af:wf; A la=af<wf?w:a;  // af, wf=lens of outer frame; lf=len of long frame; la->longer frame
     ASSERTAGREE(AS(a)+af-cf,AS(w)+wf-cf,cf)  // cf=common frame; verify common frames agree
     zr-=wf; zr=zr<0?0:zr;  // remove the w frame from w rank to get the cell-rank
     GA00(z,wt,0,lf+ar-af+zr); MCISH(AS(z),AS(la),lf) MCISH(AS(z)+lf,AS(a)+af,ar-af) MCISH(AS(z)+lf+ar-af,AS(w)+wr-zr,zr) // allocate the empty array & move in shape
    }
   }else{
    // not (atom/empty){array.  Process according to type of a
-    RANK2T origranks=jt->ranks;  // remember original ranks in case of error
-   if(!(at&BOX))z=jtifrom(jtfg,a,w);else z=jtafrom(jtfg,a,w);
-   // If there was an error, call eformat while we still have the ranks.  convert default rank back to R2MAX to avoid "0 0 in msg
-   if(unlikely(z==0)){jt->ranks=origranks!=RMAX?origranks:R2MAX; jteformat(jt,self,a,w,0); RESETRANK; R0}
+// obsolete     RANK2T origranks=jt->ranks;  // remember original ranks in case of error
+   if(!(at&BOX))z=jtifrom(jtfg,afg,wfg);else z=jtafrom(jtfg,afg,wfg);  // call main processor, preserving IRS
+// obsolete    if(unlikely(z==0)){jt->ranks=origranks!=RMAX?origranks:R2MAX; jteformat(jt,self,a,w,0); RESETRANK; R0}
+   if(unlikely(z==0)){jteformat(jt,self,afg,wfg,0); R0}   // If there was an error, call eformat while we still have the ranks, and exit
    // Here we transferred out of w.  We must mark w non-pristine unless the result was virtual
    // Since there may have been duplicates, we cannot mark z as pristine.  We overwrite w because it is no longer in use
    if(!(AFLAG(z)&AFVIRTUAL))PRISTCLRF(w)
   }
   EPILOG(z);
- }else if(ISSPARSE(at&wt)){z=fromss(a,w);  // sparse cases
- }else if(ISSPARSE(wt)){z=at&BOX?frombs(a,w) : fromis(a,w);
- }else{z=fromsd(a,w);}
+ }else if(ISSPARSE(at&wt)){z=fromss(afg,wfg);  // sparse cases, depending on sparsity of a and w
+ }else if(ISSPARSE(wt)){z=at&BOX?frombs(afg,wfg) : fromis(afg,wfg);
+ }else{z=fromsd(afg,wfg);}
  RETF(z);
 }   /* a{"r w main control */
 

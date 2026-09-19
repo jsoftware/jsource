@@ -395,16 +395,18 @@ PREFIXPFX(bw1111pfxI, UI,UI, BW1111, bw1111II,R EVOK;)
 
 // This old prefix support is needed for sparse matrices
 
-static DF1(jtprefix){F12IP;A fs=FAV(self)->fgh[0]; I r;
- ARGCHK1(w);
- r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtprefix);}
- R eachl(apv(SETIC(w,r),1L,1L),w,atop(fs,ds(CTAKE)));
+static DFI1(jtprefix){F12IP;A fs=FAV(self)->fgh[0];
+ IARG1R
+// obsolete  r = (RANKT)jt->ranks; RESETRANK;
+ if(unlikely(wcr<wr)){R rank1ex(w,self,wr,jtprefix);}
+ R eachl(apv(SETIC(w,wr),1L,1L),w,atop(fs,ds(CTAKE)));
 }    /* f\"r w for general f */
 
-static DF1(jtgprefix){F12IP;A h,*hv,z,*zv;I m,n,r;
- ARGCHK1(w);
+static DFI1(jtgprefix){F12IP;A h,*hv,z,*zv;I m,n,r;
+ IARG1R
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
- r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtgprefix);}
+// obsolete   r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtgprefix);}
+ if(unlikely(wcr<wr)){R rank1ex(w,self,wr,jtgprefix);}
  SETIC(w,n); 
  h=FAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV1(z); I imod=0;
@@ -674,26 +676,30 @@ static DF2(jtinfixprefix2){F12IP;PROLOG(00202);A fs;I cger[128/SZI];
 }
 
 // prefix, vectors to common processor.  Handles IRS.  Supports inplacing
-static DF1(jtinfixprefix1){F12IP;
- I r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R jtrank1ex(jtfg,w,self,r,jtinfixprefix1);}
+static DFI1(jtinfixprefix1){
+ IARG1R; F12IP;
+// obsolete I r = (RANKT)jt->ranks; RESETRANK;
+ if(wcr<wr){R jtrank1ex(jtfg,w,self,wcr,jtinfixprefix1);}
  R jtinfixprefix2(jtfg,mark,w,self);
 }
 
 //  f/\"r y    w is y, fs is in self
-static DF1(jtpscan){F12IP;A z;I f,n,r,t,wn,wr,*ws,wt;
- ARGCHK1(w);
+static DFI1(jtpscan){A z;I f,n,t,wn,wr,*ws,wt;
+ IARG1CR F12IP;
  wt=AT(w);   // get type of w
- if(unlikely(ISSPARSE(wt)))R scansp(w,self,jtpscan);  // if sparse, go do it separately
+ if(unlikely(ISSPARSE(wt)))R scansp(wfg,self,jtpscan);  // if sparse, go do it separately
  // wn = #atoms in w, wr=rank of w, r=effective rank, f=length of frame, ws->shape of w
- wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; f=wr-r; ws=AS(w);
+ wn=AN(w); f=wr-wcr; ws=AS(w);
+
+// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  // m = #cells, c=#atoms/cell, n = #items per cell
- SETICFR(w,f,r,n);  // wn=0 doesn't matter
+ SETICFR(w,f,wcr,n);  // wn=0 doesn't matter
  // If there are 0 or 1 items, or w is empty, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
  if(((1-n)&-wn)>=0){R r?RETARG(w):reshape(apip(shape(w),zeroionei(1)),w);}  // n<2 or wn=0
  VARPS adocv; varps(adocv,self,wt,1);  // fetch info for f/\ and this type of arg
- if(!adocv.f)R IRS1(w,self,r,jtinfixprefix1,z);  // if there is no special function for this type, do general scan
+ if(!adocv.f)R IRS1(w,self,wcr,jtinfixprefix1,z);  // if there is no special function for this type, do general scan
  // Here is the fast special reduce for +/ etc
- I d,m; PROD(m,f,ws); PROD(d,r-1,ws+f+1);   // m=#scans, d=#atoms in a cell of each scan
+ I d,m; PROD(m,f,ws); PROD(d,wcr-1,ws+f+1);   // m=#scans, d=#atoms in a cell of each scan
  if(unlikely(isatype(adocv.cv))&&(t=atype(adocv.cv))&&TYPESNE(t,wt))RZ(w=cvt(t,w));  // convert input if necessary
  // if inplaceable, reuse the input area for the result
  if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&SGNIF(adocv.cv,VIPOKWX),w))z=w; else GA(z,rtype(adocv.cv),wn,wr,ws);  // use result type from f  
@@ -925,7 +931,8 @@ static DF2(jtmovfslash){F12IP;A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt
  varps(adocv,self,wt,0); if(!adocv.f)R jtinfixprefix2(jt,a,w,self);  // if no special routine for insert, do general case
  if(m0>=0){zi=MAX(0,1+p-m);}else{zi=1+(p-1)/m; zi=(p==0)?p:zi;}  // zi = # result cells
  PROD(d,AR(w)-1,AS(w)+1) b=0>m0&&zi*m!=p;   // b='has shard'
- zt=rtype(adocv.cv); RESETRANK;
+ zt=rtype(adocv.cv);
+// obsolete  RESETRANK;
  GA(z,zt,d*zi,MAX(1,AR(w)),AS(w)); AS(z)[0]=zi;
  if(d*zi==0){RETF(z);}  // mustn't call adocv on empty arg!
  if(unlikely(isatype(adocv.cv))&&(t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}

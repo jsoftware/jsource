@@ -952,7 +952,7 @@ extern void jfree4gmp(void*,size_t);
 #define ras(x)                      ((x) = jtras(jt,x))
 #define ra00s(x)                    ((x) = jtra00s(jt,x))
 #define rat(x)                      jtrat(jt,(x))
-#define ravel(x)                    jtravel(jt,(x))   
+#define ravel(x)                    jtravel(jt,(x),0)     // ravel has IRS & thus needs unused self arg
 #define ravelW(x)                   jtravel((J)((I)jt+JTINPLACEW),(x))   
 #define raze(x)                     jtraze(jt,(x))    
 #define razecut2(x,y,z)             jtrazecut2(jt,(x),(y),(z))    

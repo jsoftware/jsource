@@ -33,15 +33,16 @@ I levelle(J jt,A w,I l){
 
 F1(jtlevel1){F12IP;ARGCHK1(w); I z=level(jt,w); RE(0) R sc(z);}
 
-
-F1(jtbox){F12IP;A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws; 
- ARGCHK1(w);I wt=AT(w); FLAGT waf=AFLAG(w);
+// < y with IRS
+FI1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,*ws; 
+ IARG1CR F12IP; I wt=AT(w); FLAGT waf=AFLAG(w);
 #ifndef BOXEDSPARSE
  ASSERTF(!ISSPARSE(wt),EVNONCE,"can't box sparse arrays");
 #else
  ASSERTF(fboxedsparse||!ISSPARSE(wt),EVNONCE,"can't box sparse arrays");
 #endif
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r;   // no RESETRANK because we call no primitives
+// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;
+ f=wr-wcr;
  if(likely(!f)){
   // single box: fast path.  Allocate a scalar box and point it to w.
   INCORPNC(w);  // this realizes w if virtual or ANCHORED
@@ -59,7 +60,7 @@ F1(jtbox){F12IP;A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
  ASSERTF(fboxedsparse||!ISSPARSE(wt),EVNONCE,"can't box sparse arrays");    // <"r not implemented
 #endif
   ws=AS(w);
-  CPROD(AN(w),n,f,ws); CPROD(AN(w),m,r,f+ws);
+  CPROD(AN(w),n,f,ws); CPROD(AN(w),m,wcr,f+ws);
   k=m<<bplg(wt); wv=CAV(w);
   // Since we are allocating the new boxes, the result will ipso facto be PRISTINE, as long as w is DIRECT and the result does not contain virtuals.  If w is not DIRECT, we can be PRISTINE if we ensure that
   // w is PRISTINE inplaceable, but we don't bother to do that because PRISTINE is used only for DIRECT contents.
@@ -78,13 +79,13 @@ F1(jtbox){F12IP;A y,z,*zv;C*wv;I f,k,m,n,r,wr,*ws;
   A wback=ABACK(w); wback=AFLAG(w)&AFVIRTUAL?wback:w;   // w is the backer for new blocks unless it is itself virtual
   while(n--){
    if(!((I)jtfg&JTWILLBEOPENED)){
-    GAE(y,wt,m,r,f+ws,break); JMCR(CAVn(r,y),wv,k,0,endmask); INCORPRAZAPPED(y,wt);   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
+    GAE(y,wt,m,wcr,f+ws,break); JMCR(CAVn(wcr,y),wv,k,0,endmask); INCORPRAZAPPED(y,wt);   // allocate, but don't grow the tstack.  Set usecount of cell to 1.  ra0() if recursible.  Put allocated addr into *jt->tnextpushp++
    }else{
     // WILLBEOPENED case.  We must make the block virtual.  We avoid the call overhead
     if((y=gafv(SZI*(NORMAH+wr)-1))==0)break;  // allocate the block, abort loop if error
     AT(y)=wt;
     ACINIT(y,ACUC1)   // transfer inplaceability from original block
-    ARINIT(y,(RANKT)r); AN(y)=m;
+    ARINIT(y,(RANKT)wcr); AN(y)=m;
     AK(y)=(wv-(C*)y);
     AFLAGINIT(y,AFVIRTUAL | (wt&RECURSIBLE))  // flags: recursive, not UNINCORPABLE, not NJA.
     MCISH(AS(y),f+ws,wr) // install shape

@@ -154,9 +154,10 @@ static A jtgrd1spdd(J jt,A w,I wf,I wcr){F1PREFJT;A x,z;I n,*ws;P*wp;
 /*  frame axes: all sparse or all dense                 */
 /*  cell  axes: 0 or more sparse axes, then dense axes  */
 
-F1(jtgrd1sp){F12JT;PROLOG(0077);A z;B b,c,*wb;I j,m,wcr,wf,wr;P*wp;
- ARGCHK1(w);
- wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
+FI1(jtgrd1sp){A z;B b,c,*wb;I j,m,wf;P*wp;
+ IARG1CR F12JT;PROLOG(0077);
+// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
+ wf=wr-wcr;
  wp=PAV(w);
  RZ(wb=bfi(wr,SPA(wp,a),1));
  m=0; j=wr; b=c=0; 
@@ -236,10 +237,11 @@ static A jtgrd2spsd(J jt,A w,I wf,I wcr){F1PREFJT;A x,z;P*zp;
  R z;
 }    /* sparse frame, dense cell */
 
-F2(jtgrd2sp){F12JT;PROLOG(0078);A z;B b,c,*wb;I acr,af,am,ar,*as,j,m,wcr,wf,wm,wr,*ws;P*wp;
- ARGCHK2(a,w);
- ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
- wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
+FI2(jtgrd2sp){A z;B b,c,*wb;I af,am,*as,j,m,wf,wm,*ws;P*wp;
+ IARG2CR F12JT;PROLOG(0078);
+// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
+ af=ar-acr; wf=wr-wcr;
+// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  as=AS(a); am=acr?as[af]:1;
  ws=AS(w); wm=wcr?ws[wf]:1;
  ASSERT(am<=wm,EVINDEX);

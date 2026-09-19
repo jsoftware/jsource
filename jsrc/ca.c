@@ -553,10 +553,9 @@ F2(jtampco){F12IP;AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*wv;
 // m&v and u&n.  Never inplace the noun argument, since the verb may
 // be repeated; preserve the inplacing of the argument given (i. e. move w to a for u&n).  Bit 1 of jtfg is always 0 for monad.
 // We marked the derived verb inplaceable only if the dyad of u/v was inplaceable
-// This supports IRS so that it can pass the rank on to the called function; no need to revalidate here.  jt is inplaceable but we don't use it except to fiddle with flags
-// We pass the WILLOPEN flags through. We don't need full IRS2 because jt->ranks is known to be OK for the monad
-static DF1(withl){F12IP;AF f2=FAV(self)->localuse.lu1.bondfn; ((C*)&jt->ranks)[1]=RMAX; A z=f2(jtfg,FAV(self)->fgh[0],w,FAV(self)->fgh[1]); RETF(z);}  // m&v.  Leave inplacing of w
-static DF1(withr){F12IP;AF f2=FAV(self)->localuse.lu1.bondfn; jt->ranks=(jt->ranks<<RANKTX)+RMAX; jtfg=(J)(intptr_t)((I)jtfg+((I)jtfg&JTINPLACEW)); A z=f2(jtfg,w,FAV(self)->fgh[1],FAV(self)->fgh[0]); RETF(z);}  // u&n.  Move inplacing of w to a
+// We pass the WILLOPEN flags through.
+static DF1(withl){F12IP;AF f2=FAV(self)->localuse.lu1.bondfn; A z=f2(jtfg,FAV(self)->fgh[0],w,FAV(self)->fgh[1]); RETF(z);}  // m&v.  Leave inplacing of w
+static DF1(withr){F12IP;AF f2=FAV(self)->localuse.lu1.bondfn; jtfg=(J)(intptr_t)((I)jtfg+((I)jtfg&JTINPLACEW)); A z=f2(jtfg,w,FAV(self)->fgh[1],FAV(self)->fgh[0]); RETF(z);}  // u&n.  Move inplacing of w to a
 
 
 // a.&i., {&a.

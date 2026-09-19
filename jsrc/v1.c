@@ -471,10 +471,10 @@ static B jtmatchsub(J jtfg,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){F12IP;C
  R 0;  // Return value matters only for single compare (x=0); we have returned already in that case
 }
 
-static F2(jtmatchs){F12IP;A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,k,m,n,r,*s,*v,wcr,wn=0,wr;P*ap,*wp;
- ARGCHK2(a,w);
- ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; r=ar;
- wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
+static FI2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I an=0,c,j,k,m,n,r,*s,*v,wn=0;P*ap,*wp;
+ IARG2CR F12IP;
+// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; r=ar;
+// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  if(ar>acr||wr>wcr)R rank2ex(a,w,DUMMYSELF,acr,wcr,acr,wcr,jtmatchs);
  if(ar!=wr||memcmpne(AS(a),AS(w),r*SZI)||!HOMO(AT(a),AT(w)))R num(0);
  GATV0(x,B01,r,1L); b=BAVn(1L,x); mvc(r,b,MEMSET00LEN,MEMSET00);
@@ -498,12 +498,13 @@ static F2(jtmatchs){F12IP;A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I acr,an=0,ar,c,j,
 
 
 // x -:"r y or x -.@-:"r y depending on LSB of jt
-F2(jtmatch){F12JT;A z;I af,m,n,mn,wf;
+FI2(jtmatch){A z;I m,n,mn;
+ IARG2CR F12JT;
  I eqis0 = !!((I)jtfg&JTNOTMATCH);   // remember whether we are -: or -.@-:
- ARGCHK2(a,w);
  I isatoms = (-AN(a))&(-AN(w));  // neg if both args have atoms
  if(unlikely(ISSPARSE(AT(a)|AT(w))))R ne(num(eqis0),matchs(a,w));
- af=AR(a)-(I)(jt->ranks>>RANKTX); af=af<0?0:af; wf=AR(w)-(I)((RANKT)jt->ranks); wf=wf<0?0:wf; RESETRANK;
+ I af=ar-acr; af=af<0?0:af; I wf=wr-wcr; wf=wf<0?0:wf; 
+// obsolete  RESETRANK;
  // exchange a and w as needed to ensure a has the shorter frame, i. e. is the repeated argument
  {A ta=a; I ti=af; I afhi=af-wf; a=afhi>=0?w:a; w=afhi>=0?ta:w; af=afhi>=0?wf:af; wf=afhi>=0?ti:wf;} 
  // If either operand is empty return without any comparisons.  In this case we have to worry that the

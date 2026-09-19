@@ -804,10 +804,11 @@ A jtccvt(J jt,I tflagged,A w,I natoms){A d,z;I n,r,*s,wt; void *wv,*yv;I t=tflag
   ASSERTSYS(!((t|wt)&FUNC),"non-noun in cvt");
   // Handle sparse
   if(likely(ISSPARSE(t|wt))){
-   RANK2T oqr=jt->ranks; RESETRANK;  // scafrk are ranks ever set over call to ccvt?
+// obsolete    RANK2T oqr=jt->ranks; RESETRANK;  // scafrk are ranks ever set over call to ccvt?
    switch((ISSPARSE(t)?2:0)+(ISSPARSE(AT(w))?1:0)){I t1;P*wp,*yp;
    case 1: RZ(w=denseit(w)); break;  // sparse to dense
-   case 2: RZ(z=sparseit(cvt(DTYPE(t),w),IX(r),cvt(DTYPE(t),num(0)))); jt->ranks=oqr; R z;  // dense to sparse; convert type first (even if same dtype)
+   case 2: RZ(z=sparseit(cvt(DTYPE(t),w),IX(r),cvt(DTYPE(t),num(0)))); R z;  // dense to sparse; convert type first (even if same dtype)
+// obsolete  jt->ranks=oqr;
    case 3: // sparse to sparse
     t1=DTYPE(t);
     GASPARSE(z,t,1,r,s); yp=PAV(z); wp=PAV(w);
@@ -815,10 +816,10 @@ A jtccvt(J jt,I tflagged,A w,I natoms){A d,z;I n,r,*s,wt; void *wv,*yv;I t=tflag
     SPB(yp,i,ca(SPA(wp,i)));
     SPB(yp,e,cvt(t1,SPA(wp,e)));
     SPB(yp,x,cvt(t1,SPA(wp,x)));
-    jt->ranks=oqr; R z;
+// obsolete     jt->ranks=oqr; R z;
    }
    // must be sparse to dense.  Carry on now that w is dense
-   jt->ranks=oqr;
+// obsolete    jt->ranks=oqr;
   }else{
    // conversion of BOXED.  Types better be equal
    ASSERT(n==0||TYPESEQ(t,wt),EVINHOMO)
@@ -1036,9 +1037,11 @@ F1(jticvt){F12IP;A z;D*v,x;I i,n,*u;
  R z;
 }
 
-A jtpcvt(J jt,I t,A w){B b;RANK2T oqr=jt->ranks;
- RESETRANK; A z; WITHJTJERROFF(z=ccvt(t,w,0);) jt->ranks=oqr;  // scafrk ranks needed?
- RESETERR; R z?z:w;
+A jtpcvt(J jt,I t,A w){
+// obsolete RANK2T oqr=jt->ranks;B b;
+// obsolete  RESETRANK;
+ A z; WITHJTJERROFF(z=ccvt(t,w,0);) RESETERR; R z?z:w;
+// obsolete  jt->ranks=oqr;  // scafrk ranks needed?
 }    /* convert w to type t, if possible, otherwise just return w.  Leave ranks unaffected */
 
 #if !(C_VIAVX)

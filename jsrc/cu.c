@@ -29,7 +29,8 @@ static A jteverysp(J jt,A w,A fs){A*wv,x,z,*zv;P*wp,*zp;
 DF1(jteveryself){F12IP;R jtevery(jtfg,w,FAV(self)->fgh[0]);}   // replace u&.> with u and process.  Pass inplaceability through
 // u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
 A jtevery(J jtfg, A w, A fs){F12IP;A * RESTRICT wv,x,z,* RESTRICT zv;
- ARGCHK1(w);RESETRANK;  // we claim to support IRS1 but really there's nothing to do for it
+ ARGCHK1(w);  // we claim to support IRS1 but really there's nothing to do for it
+// obsolete RESETRANK;
  I wt=AT(w), wflag=AFLAG(w), wr=AR(w);
  if(unlikely(ISSPARSE(wt)))R everysp(w,fs);
  I natoms=AN(w);

@@ -588,10 +588,11 @@ F2(jtrdot2){F12IP;R tymes(a,rdot1(w));}
 
 F1(jtpolar){F12IP;ARGCHK1(w); A z; R cvt((AT(w)&SPARSE)+FL,dfv2(z,v2(10L,12L),w,qq(ds(CCIRCLE),v2(1L,0L))));}
 
-// split into real & imaginary parts
+// +. y split into real & imaginary parts.  No IRS
 DF1(jtrect){F12IP;A e,z;B b;I r,t;P*wp,*zp;Z c;
  ARGCHK1(w); 
- t=AT(w); r=AR(w); RESETRANK;   // Run as infinite rank
+ t=AT(w); r=AR(w);
+// obsolete  RESETRANK;   // Run as infinite rank
  ASSERT(!AN(w)||t&NUMERIC,EVDOMAIN);
  if(ISDENSETYPE(t,CMPX)){GATV0(z,FL,2*AN(w),1+r); MCISH(AS(z),AS(w),r) AS(z)[r]=2; MC(AVn(1+r,z),AV(w),AN(z)*sizeof(D)); R z;}
  else if(unlikely(ISSPARSE(t))){

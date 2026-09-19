@@ -158,9 +158,9 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be initialized
  C initnon0area[0];
  void* fillv;            // &fill value, during primitive execution - used during parsing to hold pointer to routine to execute - init immaterial
- US ranks;            // low half: rank of w high half: rank of a; for IRS. init for task to 3F3F
+ // obsolete US ranks;            // low half: rank of w high half: rank of a; for IRS. init for task to 3F3F
  I1 fillvlen;   // length of fill pointed to by fillv (max 16).  Modified only within primitives, so inheritance/init immaterial
- C filler0[5];
+ C filler0[7];
 // end of cacheline 0, heavily used
  C _cl1[0];
  I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1  should be 2 bytes?

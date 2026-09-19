@@ -388,10 +388,11 @@ static REPF(jtrep1s){F12IP;A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*
 }    /* scalar #"r sparse   or  sparse #"0 (dense or sparse) */
 
 A (*reptab[])() = {jtrepisx,jtrepidx,jtrepbsx,jtrepbdx,jtrepzsx,jtrepzdx,jtrep1s,jtrep1d};
-F2(jtrepeat){F12IP;A z;I acr,ar,wcr,wf,wr;
- ARGCHK2(a,w);
- ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
- wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;
+FI2(jtrepeat){A z;
+ IARG2CR F12IP;
+// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
+// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
+ I wf=wr-wcr;
  I adense=SGNIFDENSE(AT(a));  // sign set if a is dense
  I att=(AT(a)&B01)+((AT(a)&CMPX)>>(CMPXX-1));  // 0 if INT/FL 1 if B01 2 if CMPX
  att=(-acr&-wcr)>=0?3:att;  // override with 3 if either a or w is an atom

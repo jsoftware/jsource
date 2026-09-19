@@ -1004,13 +1004,14 @@ static CR condrange2(US *s,I n,I min,I max,I maxrange){CR ret;I i;US x;
 
 #define MAXBYTEBOOL 65536  // if p exceeds this, we switch over to packed bits
 
-A jtindexofsub(J jtfg,I mode,A a,A w){F12JT;PROLOG(0079);A h=0,hi=mtv,z;B mk=w==mark,th;fauxblockINT(zfaux,1,0);
-    I ac,acr,af,ak,an,ar,*as,at,datamin,f,f1,k,k1,n,r,*s,t,wc,wcr,wf,wk,wn,wr,*ws,wt,zn;UI c,m,p;I forkeyresult;
- ARGCHK2(a,w);
+A jtindexofsub(J jtfg,I mode,A afg,A wfg){A h=0,hi=mtv,z;B mk=wfg==mark,th;fauxblockINT(zfaux,1,0);
+    I ac,af,ak,an,*as,at,datamin,f,f1,k,k1,n,r,*s,t,wc,wf,wk,wn,*ws,wt,zn;UI c,m,p;I forkeyresult;
+ IARG2CR F12JT;PROLOG(0079);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
- // mk is set if w argument is omitted (we are just prehashing the a arg)
- ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
- wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; wf=wr-wcr; RESETRANK;  // note: mark is an atom
+ // mk is set if w argument is omitted (we are just prehashing the a arg)   note: mark is an atom
+// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
+ af=ar-acr; wf=wr-wcr;
+// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK; 
  as=AS(a); at=AT(a); an=AN(a);
  ws=AS(w); wt=AT(w); wn=AN(w);
  if(mk){f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
@@ -1344,7 +1345,7 @@ A jtindexofsub(J jtfg,I mode,A a,A w){F12JT;PROLOG(0079);A h=0,hi=mtv,z;B mk=w==
 }    /* a i."r w main control */
 
 // verb to vector combine@e. compounds.  The i. code is in the self
-// because these are e. compounds we swap a and w
+// because these are e. compounds we swap a and w.  No IRS
 DF2(jtcombineeps){F12IP;ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>>3)&7),w,a);}
 
 // verb to handle compounds like m&i. e.&n .  m/n has already been hashed and the result saved away
@@ -1390,20 +1391,20 @@ A jtindexofprehashed(J jtfg,A a,A w,A hs,A self){F12IP;A h,hi,*hv,x,z;AF fn;I ar
 
 // Now, support for the primitives that use indexof
 
-// x i. y
-F2(jtindexof){F12IP; R indexofsub(IIDOT,a,w);}
+// x i. y, with IRS
+FI2(jtindexof){IARG2 F12IP; R indexofsub(IIDOT,afg,wfg);}
      /* a i."r w */
 
-// x i: y
-F2(jtjico2){F12IP; R indexofsub(IICO,a,w);}
+// x i: y, with IRS
+FI2(jtjico2){IARG2 F12IP; R indexofsub(IICO,afg,wfg);}
      /* a i:"r w */
 
 // ~: y
-F1(jtnubsieve){F12IP;
- ARGCHK1(w);
- if(unlikely(ISSPARSE(AT(w))))R nubsievesp(w); 
- jt->ranks=(RANKT)jt->ranks + ((RANKT)jt->ranks<<RANKTX);  // we process as if dyad; make left rank=right rank
- R indexofsub(INUBSV,w,w); 
+FI1(jtnubsieve){
+ IARG1 F12IP;
+ if(unlikely(ISSPARSE(AT(w))))R nubsievesp(wfg); 
+// obsolete  jt->ranks=(RANKT)jt->ranks + ((RANKT)jt->ranks<<RANKTX);  // we process as if dyad; make left rank=right rank
+ R indexofsub(INUBSV,wfg,wfg); 
 }    /* ~:"r w */
 
 // ~. y  - does not have IRS
@@ -1433,13 +1434,13 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws,wt;
 }    /* a-.w */
 
 // x e. y
-F2(jteps){F12IP;I l,r;
- ARGCHK2(a,w);
- l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
- r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
- if(ISSPARSE(AT(a)|AT(w)))R lt(irs2(w,a,0L,r,l,jtindexof),sc(r?*(AS(w)+AR(w)-r):1));  // for sparse, implement as (# cell of y) > y i. x
- jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
- R indexofsub(IEPS,w,a);
+FI2(jteps){
+ IARG2CR F12IP;
+// obsolete  l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
+// obsolete  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
+ if(ISSPARSE(AT(a)|AT(w)))R lt(irs2(w,a,0L,wcr,acr,jtindexof),sc(wcr?*(AS(w)+AR(w)-wcr):1));  // for sparse, implement as (# cell of y) > y i. x
+// obsolete  jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
+ R indexofsub(IEPS,wfg,afg);  // swap args (& ranks)
 }    /* a e."r w */
 
 // I.@~: y   does not have IRS

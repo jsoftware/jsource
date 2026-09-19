@@ -178,15 +178,17 @@ SUFFIXPFX(bw1110sfxI, UI,UI, BW1110, bw1110II,R EVOK;)
 SUFFIXPFX(bw1111sfxI, UI,UI, BW1111, bw1111II,R EVOK;)
 
 
-static DF1(jtsuffix){F12IP;A fs=FAV(self)->fgh[0]; I r;
- ARGCHK1(w);
- r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtsuffix);
- R eachl(IX(SETIC(w,r)),w,atop(fs,ds(CDROP)));
+static DFI1(jtsuffix){A fs=FAV(self)->fgh[0];
+ IARG1R F12IP;
+// obsolete  r=(RANKT)jt->ranks; RESETRANK;
+ if(wcr<wr)R rank1ex(w,self,wcr,jtsuffix);
+ R eachl(IX(SETIC(w,wcr)),w,atop(fs,ds(CDROP)));
 }    /* f\."r w for general f */
 
-static DF1(jtgsuffix){F12IP;A h,*hv,z,*zv;I m,n,r;
- ARGCHK1(w);
- r=(RANKT)jt->ranks; RESETRANK; if(r<AR(w))R rank1ex(w,self,r,jtgsuffix);
+static DFI1(jtgsuffix){A h,*hv,z,*zv;I m,n;
+ IARG1R F12IP;
+// obsolete  r=(RANKT)jt->ranks; RESETRANK;
+ if(wcr<wr)R rank1ex(w,self,wcr,jtgsuffix);
  SETIC(w,n); 
  h=FAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV1(z); I imod=0;
@@ -202,11 +204,12 @@ static DF1(jtgsuffix){F12IP;A h,*hv,z,*zv;I m,n,r;
    AK(x)-=k; AK(y)-=k; tpop(old);  \
  }}
 
-static DF1(jtssg){F12IP;PROLOG(0020);A a,z;I i,n,r,wr;
- ARGCHK1(w);
+static DFI1(jtssg){A a,z;I i,n;
+ IARG1CR F12IP;PROLOG(0020);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  // loop over rank - we claim to handle IRS
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; if(r<wr)R rank1ex(w,self,r,jtssg);
+// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
+ if(wcr<wr)R rank1ex(w,self,wcr,jtssg);
 
  // From here on we are doing a single scan
  n=AS(w)[0]; // n=#cells
@@ -224,16 +227,16 @@ static DF1(jtssg){F12IP;PROLOG(0020);A a,z;I i,n,r,wr;
 #define ZZWILLBEOPENEDNEVER 1
 
  // Allocate virtual block for the running x argument.  UNINCORPABLE.
- fauxblock(virtafaux); fauxvirtual(a,virtafaux,w,r-1,ACUC1);
+ fauxblock(virtafaux); fauxvirtual(a,virtafaux,w,wcr-1,ACUC1);
  // z will hold the result from the iterations.  Init to value of last cell
  // Since there are multiple cells, z will be in a virtual block to begin with (usually)
  // Allocate fauxvirtual arg for the first cell, so it can be inplaceable/pristine if needed (tail returned a noninplaceable virtual block, which messed things up for high rank)
- fauxblock(virtwfaux); fauxvirtual(z,virtwfaux,w,r-1,ACUC1);  // allocate UNINCORPORABLE block, mark inplaceable - used only once
+ fauxblock(virtwfaux); fauxvirtual(z,virtwfaux,w,wcr-1,ACUC1);  // allocate UNINCORPORABLE block, mark inplaceable - used only once
  // fill in the shape, offset, and item-count of the virtual block
- I k; PROD(k,r-1,AS(w)+1);  // k=#atoms of cell of w
+ I k; PROD(k,wcr-1,AS(w)+1);  // k=#atoms of cell of w
  AN(z)=k; AN(a)=k;
  k<<=bplg(AT(w)); // k now=length of input cell in bytes, where it will remain
- AK(z)+=(n-1)*k; AK(a)+=(n-1)*k; MCISH(AS(z),AS(w)+1,r-1); MCISH(AS(a),AS(w)+1,r-1);  // a points to tail; it will be decremented before first use
+ AK(z)+=(n-1)*k; AK(a)+=(n-1)*k; MCISH(AS(z),AS(w)+1,wcr-1); MCISH(AS(a),AS(w)+1,wcr-1);  // a points to tail; it will be decremented before first use
  // Calculate inplaceability.  We can inplace the left arg, which is always virtual, if w is inplaceable and (w is direct or (fs is &.> and w is recursive))
  // We include contextual inplaceability (from jtfg) here because if the block is returned, its pristinity will be checked if it is inplaceable.  Thus
  // we do not want to call a faux argument inplaceable if it really isn't.  This gives us leeway with jtfg itself
@@ -285,15 +288,17 @@ static DF1(jtssg){F12IP;PROLOG(0020);A a,z;I i,n,r,wr;
  EPILOG(zz);  // this frees the virtual block, at the least
 }    /* f/\."r w for general f and 1<(-r){$w and -.0 e.$w */
 
-A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,wr;P*wp,*zp;
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK; f=wr-r;
+A jtscansp(J jt,A wfg,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,t;P*wp,*zp;
+ IARG1CR
+// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
+ f=wr-wcr;
  wp=PAV(w); e=SPA(wp,e); RZ(ee=over(e,e));
  if(!equ(ee,CALL1(sf,ee,self))){
   RZ(x=denseit(w));
-  R IRS1(x,self,r,sf,z);
+  R IRS1(x,self,wcr,sf,z);
  }else{
   RZ(b=bfi(wr,SPA(wp,a),1));
-  if(r&&b[f]){b[f]=0; RZ(w=reaxis(ifb(wr,b),w));}
+  if(wcr&&b[f]){b[f]=0; RZ(w=reaxis(ifb(wr,b),w));}
   j=f; m=0; DQ(wr-f, m+=!b[j++];);
  }
  wp=PAV(w); e=SPA(wp,e); x=SPA(wp,x);
@@ -308,14 +313,14 @@ A jtscansp(J jt,A w,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,r,t,wr;P*wp,*zp;
  R z;
 }    /* f/\"r or f/\."r on sparse w */
 
-static DF1(jtsscan){F12IP;A y,z;I d,f,m,n,r,t,wn,wr,*ws,wt;
- ARGCHK1(w);
- wt=AT(w);
- if(unlikely(ISSPARSE(wt)))R scansp(w,self,jtsscan);
- wn=AN(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; ws=AS(w); RESETRANK;
- PROD(m,f,ws); PROD(d,r-1,f+ws+1); I *nn=&ws[f]; nn=r?nn:I1mem; n=*nn;   // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
+static DFI1(jtsscan){A y,z;I d,f,m,n,t,wn,*ws,wt;
+ IARG1CR F12IP;
+ wt=AT(w); if(unlikely(ISSPARSE(wt)))R scansp(wfg,self,jtsscan);
+ wn=AN(w); ws=AS(w);
+// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; f=wr-r; RESETRANK;
+ PROD(m,f,ws); PROD(d,wcr-1,f+ws+1); I *nn=&ws[f]; nn=wcr?nn:I1mem; n=*nn;   // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
  y=FAV(self)->fgh[0]; // y is f/
- if(((n-2)|(wn-1))<0){if(FAV(FAV(y)->fgh[0])->flag&VISATOMIC2){R r?RETARG(w):reshape(apip(shape(w),zeroionei(1)),w);}else R IRS1(w,self,r,jtsuffix,z);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
+ if(((n-2)|(wn-1))<0){if(FAV(FAV(y)->fgh[0])->flag&VISATOMIC2){R wcr?RETARG(w):reshape(apip(shape(w),zeroionei(1)),w);}else R IRS1(w,self,r,jtsuffix,z);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
 
    // note that the above line always takes the r==0 case
  VARPS adocv; varps(adocv,self,wt,2);  // analyze f - get suffix routine

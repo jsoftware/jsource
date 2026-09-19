@@ -304,7 +304,7 @@ extern F1(jtquerybloom);
 extern F1(jtranking);
 extern F1(jtrankle);
 extern F1(jtrat);
-extern F1(jtravel);
+extern DF1(jtravel);
 extern F1(jtraze);
 extern F1(jtrazeh);
 extern F1(jtrazein);

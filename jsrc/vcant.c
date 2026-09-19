@@ -25,35 +25,36 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
  R z;
 }    /* w is sparse */
 
-// do the innermost loop fast.  r must be >= 1
+// do the innermost loop fast.  wcr must be >= 1
 // we create result items in order.  tv[] is the representation in the index space of the result.  When
 // we move a cell we increment the low-order index and propagate carries up the line.  Each entry of mv[] tells
 // how many bytes to move the input pointer for a move of 1 in the result axis
 // exp moves one cell into the result area with postincrement, e. g. *u++=*(C*)v;
 #define CANTA(T,exp)  \
  {T*u=(T*)zv; C*v=(C*)wv;                                                  \
-  NOUNROLL do{j = r-1; I mvr1=mv[j]; DQ(sv[j], exp; v+=mvr1;)                        \
+  NOUNROLL do{j = wcr-1; I mvr1=mv[j]; DQ(sv[j], exp; v+=mvr1;)                        \
    NOUNROLL do{v-=mv[j]*sv[j]; tv[j]=0; --j; if(j<0)break; v+=mv[j]; ++tv[j];}while(sv[j]==tv[j]);  \
   }while(j>=0); \
  }
 #define CANTB(T,exp)  \
- {T*u=(T*)zv; C*v=(C*)wv; I v1=mv[r-1]; I v3=3*v1; I dofst=-sv[r-1]&3; UI dlct=(sv[r-1]+3)>>2;  \
+ {T*u=(T*)zv; C*v=(C*)wv; I v1=mv[wcr-1]; I v3=3*v1; I dofst=-sv[wcr-1]&3; UI dlct=(sv[wcr-1]+3)>>2;  \
   NOUNROLL do{UI dlct0=dlct; v-=dofst*v1; u-=dofst; switch(dofst){do{case 0: u[0]=*(T*)v; case 1: u[1]=*(T*)(v+v1); case 2: u[2]=*(T*)(v+2*v1); case 3: u[3]=*(T*)(v+v3); v+=4*v1; u+=4; }while(--dlct0);}                        \
-   j = r-1; NOUNROLL do{v-=mv[j]*sv[j]; tv[j]=0; --j; if(j<0)break; v+=mv[j]; ++tv[j];}while(sv[j]==tv[j]);  \
+   j = wcr-1; NOUNROLL do{v-=mv[j]*sv[j]; tv[j]=0; --j; if(j<0)break; v+=mv[j]; ++tv[j];}while(sv[j]==tv[j]);  \
   }while(j>=0); \
  }
 
 // a[i] is the axis of the result that axis i of w contributes to - known to be valid and INT type
 // This is the inverse permutation of the x in x |: y
 // This routine handles IRS on w only (by making higher axes passthroughs), and ignores the rank of a (assumes 1)
-static F2(jtcanta){F12IP;A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr,ms[4],ss[4],ts[4];
- ARGCHK2(a,w);
- av=AV(a); ws=AS(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
- ASSERT(r==AN(a),EVLENGTH);
+static FI2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,*sv,*tv,wf,*ws,zn,zr,ms[4],ss[4],ts[4];
+ IARG2CR F12IP;
+ av=AV(a); ws=AS(w);
+// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
+ ASSERT(wcr==AN(a),EVLENGTH);
  fauxblockINT(afaux,4,1);
- if(wf=wr-r){  // if |:"r, handle the rank by prefixing a with leading axes 0 1 2...
+ if(wf=wr-wcr){  // if |:"r, handle the rank by prefixing a with leading axes 0 1 2...
   fauxINT(a,afaux,wr,1) tv=AV(a); 
-  DO(wf, tv[i]=i;); DO(r, tv[wf+i]=wf+av[i];);  // adjust other axes up to move out of the way of the prefix axes
+  DO(wf, tv[i]=i;); DO(wcr, tv[wf+i]=wf+av[i];);  // adjust other axes up to move out of the way of the prefix axes
   av=tv;
  }
  zr=-1; DO(wr, zr=MAX(zr,av[i]);); ++zr;  // zr = result rank: largest axis number in a + 1 (0 if a is atomic)
@@ -69,9 +70,9 @@ static F2(jtcanta){F12IP;A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr
  // we include it in the cell size but not in the number of cells for the axis; and we reduce the ranks.  If there are axes run together,
  // ipso facto the largest number in a must be less than the (length of a)-1, and this loop aborts immediately.
  // r will hold number of unelided trailing axes of result
- I noelideend=0; I cellsizeb=bpnoun(AT(w)); r=zr; I scanws=1; j=wr;  // cellsizeb is number of bytes in a cell of the transpose, after deleting trailing axes
- DQ(wr, --j; tv[j]=scanws; if(noelideend|=(j^av[j])){scanws*=ws[j];}else{cellsizeb*=ws[j]; --r;});  // tv = */\. ws
- if(!r)R RETARG(w);  // if all the axes are elided, just return the input unchanged
+ I noelideend=0; I cellsizeb=bpnoun(AT(w)); wcr=zr; I scanws=1; j=wr;  // cellsizeb is number of bytes in a cell of the transpose, after deleting trailing axes
+ DQ(wr, --j; tv[j]=scanws; if(noelideend|=(j^av[j])){scanws*=ws[j];}else{cellsizeb*=ws[j]; --wcr;});  // tv = */\. ws
+ if(!wcr)R RETARG(w);  // if all the axes are elided, just return the input unchanged
  for(j=0,zn=1;j<zr;++j){  // for each axis of the result...  (must include deleted axes to get the shape of result axis, and total # items)
   UI axislenres=~0; I axislenin=0;  // axislenin will hold length of axis (in the input), axislenres is length of axis in result
   // look at all input axes, and accumulate info for each one that matches the result axis we are working on.
@@ -85,7 +86,7 @@ static F2(jtcanta){F12IP;A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr
  GA(z,AT(w),zn,zr,sv); if(!zn)R z;  // allocate result.  If result is empty, return it now
  // now run the transpose
  zv=CAVn(zr,z); wv=CAV(w);
- mvc(r*SZI,tv,MEMSET00LEN,MEMSET00);  // repurpose tv to be the index list of the input pointer, and set to 0s.  Only the first r axes matter
+ mvc(wcr*SZI,tv,MEMSET00LEN,MEMSET00);  // repurpose tv to be the index list of the input pointer, and set to 0s.  Only the first r axes matter
  switch(cellsizeb){
  case sizeof(I): CANTB(I, *u++=*(I*)v;); break;
  case sizeof(C): CANTB(C, *u++=*(C*)v;); break;
@@ -102,29 +103,29 @@ static F2(jtcanta){F12IP;A m,s,t,z;C*wv,*zv;I*av,j,*mv,r,*sv,*tv,wf,wr,*ws,zn,zr
  RETF(z);
 }    /* dyadic transpose in APL\360, a f"(1,r) w where 1>:#$a  */
 
-DF1(jtcant1){F12IP;I r; A z;
- ARGCHK1(w);
- r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;   // no RESETRANK; we pass the rank of w on
-  // !!!!! this might be an else-clause from the conditional section!!!!
- z=canta(apv(r,r-1,-1L),w); RZ(z);  // rank is set scafrk
+DFI1(jtcant1){A z;
+ IARG1 F12IP;
+// obsolete  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;   // no RESETRANK; we pass the rank of w on
+// obsolete   // !!!!! this might be an else-clause from the conditional section!!!!
+ RZ(z=canta(apv(wcr,wcr-1,-1L),wfg));  // pass cell-rank through to canta
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result
  // But if we are returning the input block unchanged, leave pristinity unchanged
  if(z!=w){PRISTXFERF(z,w)}
  RETF(z);  // This verb propagates WILLOPEN and must not perform EPILOG
 }    /* |:"r w */
 
-F2(jtcant2){F12IP;A*av,p,t,y;I j,k,m,n,*pv,q,r,*v;
- ARGCHK2(a,w); 
- r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; 
- q=jt->ranks>>RANKTX; q=AR(a)<q?AR(a):q; RESETRANK;
- if(((q-2)&(AR(a)-q-1))>=0){t=rank2ex(a,w,DUMMYSELF,MIN(q,1),r,q,r,jtcant2); PRISTCLRF(w) RETF(t);} // rank loop on a.  Loses pristinity
+FI2(jtcant2){F12IP;A*av,p,t,y;I j,k,m,n,*pv,*v;
+ IARG2CR F12IP;
+// obsolete  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; 
+// obsolete  q=jt->ranks>>RANKTX; q=AR(a)<q?AR(a):q; RESETRANK;
+ if(((acr-2)&(ar-acr-1))>=0){t=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtcant2); PRISTCLRF(w) RETF(t);} // rank loop on a.  Loses pristinity
  if(BOX&AT(a)){
-  RZ(y=pfill(r,t=raze(a))); v=AV(y);
+  RZ(y=pfill(wcr,t=raze(a))); v=AV(y);
   GATV0(p,INT,AN(y),1); pv=AV1(p);
   m=AN(a); n=AN(t); av=AAV(a); 
-  j=0; DO(r-n,pv[*v++]=j++;); DO(m, k=AN(C(av[i])); DQ(k,pv[*v++]=j;); j+=(k!=0););
- }else RZ(p=pinv(pfill(r,a)));
- A z; IRS2(p,w,0L,1L,r,jtcanta,z); RZ(z);  // Set rank for w in canta.  p is now INT type.  No need to check agreement since a has rank 1
+  j=0; DO(wcr-n,pv[*v++]=j++;); DO(m, k=AN(C(av[i])); DQ(k,pv[*v++]=j;); j+=(k!=0););
+ }else RZ(p=pinv(pfill(wcr,a)));
+ A z; IRS2(p,w,0L,1L,wcr,jtcanta,z); RZ(z);  // Set rank for w in canta.  p is now INT type.  No need to check agreement since a has rank 1
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result
  PRISTXFERF(z,w)
  RETF(z);

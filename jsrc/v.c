@@ -13,17 +13,18 @@ F1(jtisempty){F12IP;ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R eps(zeroionei(0),
 F1(jtisnotempty){F12IP;ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R not(eps(zeroionei(0),shape(w))); R num(AN(w)!=0);}  // *@#@,
 F1(jtisitems){F12IP;ARGCHK1(w); R num(!AR(w)|!!AS(w)[0]);}   // *@#   *@:#
 F1(jtrank){F12IP; ARGCHK1(w); R sc(AR(w));}  // #@$
-F1(jtnatoms){F12IP; A z; ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R dfv1(z,shape(w),slash(ds(CSTAR))); R sc(AN(w));}   // */@$  #@,
+F1(jtnatoms){F12IP; A z; ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R dfv1(z,shape(w),slash(ds(CSTAR))); R sc(AN(w));}   // */@$  #@,   sparse has AN=1 always
 
 // ,y and ,"r y - producing virtual blocks
-F1(jtravel){F12IP;A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
-  ARGCHK1(w); 
- r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; f=AR(w)-r; // r=effective rank (jt->rank is effective rank from irs1), f=frame
+DFI1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,*u,*v,*yv;P*wp,*zp;
+  IARG1CR F12IP;
+// obsolete  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;
+ f=wr-wcr; // r=effective rank (jt->rank is effective rank from irs1), f=frame
  if(likely(!ISSPARSE(AT(w)))){
-  if(r==1)R RETARG(w);  // if we are enfiling 1-cells, there's nothing to do, return the input (note: AN of sparse array is always 1)
+  if(wcr==1)R RETARG(w);  // if we are enfiling 1-cells, there's nothing to do, return the input (note: AN of sparse array is always 1)
   if(likely(AR(w)>0)){  // don't bother creating a virtual block for an atom
-   CPROD(AN(w),m,r,f+AS(w));   // m=#atoms in cell
-   if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&(-r),w) && !(AFLAG(w)&AFUNINCORPABLE)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
+   CPROD(AN(w),m,wcr,f+AS(w));   // m=#atoms in cell
+   if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&(-wcr),w) && !(AFLAG(w)&AFUNINCORPABLE)){  // inplace allowed, rank not 0 (so shape will fit), usecount is right
     // operation is loosely inplaceable.  Just shorten the shape to frame,(#atoms in cell).  We do this here rather than relying on
     // the self-virtual-block code in virtual() because we can do it for indirect types also, since we know we are not changing
     // the number of atoms
@@ -42,22 +43,22 @@ F1(jtravel){F12IP;A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
   RETF(z);   // This verb propagates WILLOPEN and must not perform EPILOG
  }
  // the rest handles sparse matrix enfile
- RESETRANK;   // clear IRS for calls made here
- RE(m=prod(r,f+AS(w)));  // # atoms in cell
+// obsolete  RESETRANK;   // clear IRS for calls made here
+ RE(m=prod(wcr,f+AS(w)));  // # atoms in cell
  GASPARSE(z,AT(w),1,1+f,AS(w)); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
  wp=PAV(w); zp=PAV(z);
  RZ(b=bfi(AR(w),SPA(wp,a),1)); 
- if(memchr(b+f,C1,r)){
-  if(memchr(b+f,C0,r)){mvc(r,b+f,MEMSET01LEN,MEMSET01); RZ(w=reaxis(ifb(AR(w),b),w)); wp=PAV(w); x=SPA(wp,x);}
+ if(memchr(b+f,C1,wcr)){
+  if(memchr(b+f,C0,wcr)){mvc(wcr,b+f,MEMSET01LEN,MEMSET01); RZ(w=reaxis(ifb(AR(w),b),w)); wp=PAV(w); x=SPA(wp,x);}
   else RZ(x=ca(SPA(wp,x)));
   a=ifb(1+f,b); makewritable(a)   // avoid readonly block
-  GATV0(c,INT,r,1L); v=r+AVn(1L,c); j=AR(w); m=1; DQ(r, *--v=m; m*=AS(w)[--j];);
+  GATV0(c,INT,wcr,1L); v=wcr+AVn(1L,c); j=AR(w); m=1; DQ(wcr, *--v=m; m*=AS(w)[--j];);
   y0=SPA(wp,i); v=AS(y0); m=v[0]; I n=v[1];
-  RZ(q=pdt(dropr(n-r,y0),c));
-  GATV0(y,INT,m*(1+n-r),2); v=AS(y); v[0]=m; v[1]=1+n-r;
+  RZ(q=pdt(dropr(n-wcr,y0),c));
+  GATV0(y,INT,m*(1+n-wcr),2); v=AS(y); v[0]=m; v[1]=1+n-r;
   yv=AV(y); u=AV(y0); v=AV(q); j=n-r;
   DQ(m, ICPY(yv,u,j); yv[j]=*v++; yv+=1+j; u+=n;);
- }else{RZ(a=ca(SPA(wp,a))); A spax=SPA(wp,x); RZ(x=IRS1(spax,0L,r,jtravel,y0)); RZ(y=ca(SPA(wp,i)));}
+ }else{RZ(a=ca(SPA(wp,a))); A spax=SPA(wp,x); RZ(x=IRS1(spax,0L,wcr,jtravel,y0)); RZ(y=ca(SPA(wp,i)));}
  SPB(zp,a,a); 
  SPB(zp,e,ca(SPA(wp,e)));
  SPB(zp,x,x);
@@ -65,12 +66,12 @@ F1(jtravel){F12IP;A a,c,q,x,y,y0,z;B*b;I f,j,m,r,*u,*v,*yv;P*wp,*zp;
  RETF(z);
 }
 
-F1(jttable){F12IP;A z,zz;I r,wr;
- ARGCHK1(w);
+FI1(jttable){A z,zz;
+ IARG1CR F12IP;
  // We accept the pristine calculations from ravel
- wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;  // r=rank to use
- RZ(IRSIP1(w,0L,r-((UI)r>0),jtravel,z));  // perform ravel on items
- R r?z:IRSIP1(z,0L,0L,jtravel,zz);  // If we are raveling atoms, do it one more time on atoms
+// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;  // r=rank to use
+ RZ(z=0)=IRS1(wcr-((UI)wcr>0).jt.jtravel.w.jtfg);  // perform ravel on items
+ R wcr?z:IRS1(jtravel,jt,z,0L,0L);  // If we are raveling atoms, do it one more time on atoms
 } // ,."r y
 
 // ]"n, dyadic - also ["n, implemented as ] with args switched
@@ -85,12 +86,13 @@ static A jtlr2(J jt,RANK2T ranks,A a,A w){I acr,af,ar,wcr,wf,wr;
  // is the one being discarded (eg (i. 10 10) ["0 i. 10), the replication doesn't matter, and we
  // simply keep the surviving argument intact.
  if(wf>=af){RETF(w);}  // no replication - quick out
- RESETRANK; a=apip(drop(sc(wf),take(sc(af),shape(a))),drop(sc(wf),shape(w))); A z; IRS2(a,w,0L,RMAX,wcr,jtreshape,z); RETF(z);  // ((wf }. af {. $a) , wf }. $w) ($,)"(_,wcr) w
+// obsolete  RESETRANK;
+ a=apip(drop(sc(wf),take(sc(af),shape(a))),drop(sc(wf),shape(w))); A z; IRS2(a,w,0L,RMAX,wcr,jtreshape,z); RETF(z);  // ((wf }. af {. $a) , wf }. $w) ($,)"(_,wcr) w
 } 
 
 // ][.  Must not call EPILOG because the verb propagates WILLOPEN.  When rank is specified ]"n does not propagate
-F2(jtleft2 ){F12IP;RANK2T jtr=jt->ranks; if(likely(jtr==R2MAX))RETF(RETARG(a)); RETF(lr2((jtr<<RANKTX)|(jtr>>RANKTX),w,a));}  // swap a & w, and their ranks
-F2(jtright2){F12IP;RANK2T jtr=jt->ranks; if(likely(jtr==R2MAX))RETF(RETARG(w)); RETF(lr2(jtr,a,w));}
+FI2(jtleft2){IARG2R F12IP; if(likely(acr&wcr==RMAX))RETF(RETARG(a)); RETF(lr2((wcr<<RANKTX)|acr,w,a));}  // swap a & w, and their ranks
+FI2(jtright2){IARG2R F12IP;if(likely(acr&wcr==R2MAX))RETF(RETARG(w)); RETF(lr2((acr<<RANKTX)|wcr,a,w));}
 
 F1(jtright1){F12IP;RETF(RETARG(w));}
 // lev, dex, and ident - identity adverb/conjunction  (ident uses the same code as lev)
@@ -125,14 +127,16 @@ DF1(jtjico1){F12IP;A y,z;B b;D d,*v;I c,m,n;
 }
 
 // _9: to 9: and _:, return the saved value.  If we can inplace the operation (i. e. 0:"0), do so for DIRECT types, preserving the existing precision
-DF1(jtnum1){F12IP;A z=0;
- ARGCHK2(w,self); RANKT rank=(RANKT)jt->ranks; rank=rank>AR(w)?AR(w):rank; A a=FAV(self)->fgh[2];  // fetch value to store: always an INT/boolean, but if boolean the high-order bytes are 0, so 0 is valid INT/FL and 1 a valid INT
- if(rank==AR(w))R a;  // at infinite rank, just return the value.  Because VFATOP[LR] puns with comparison flags,
+DFI1(jtnum1){A z=0;
+ IARG1CR F12IP;
+// obsolete  RANKT rank=(RANKT)jt->ranks; rank=rank>AR(w)?AR(w):rank;
+ A a=FAV(self)->fgh[2];  // fetch value to store: always an INT/boolean, but if boolean the high-order bytes are 0, so 0 is valid INT/FL and 1 a valid INT
+ if(likely(wcr==wr))R a;  // at infinite rank, just return the value.  Because VFATOP[LR] puns with comparison flags,
    // it is possible that inplacing flags are set; so we must handle infinite rank before looking at inplacing
  // rank given, must replicate the value.  if rank 0, we can do it inplace
  I natoms;  // number of atoms to allocate
  I k=bplg(AT(a));  // lg2 of size of atoms moved
- if(rank==0){
+ if(wcr==0){
   natoms=AN(w);  // result has same # atoms as input
   if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&-(AT(w)&B01+INT+FL)&~((AT(w)&B01+INT+FL)-(AT(a)&B01+INT+FL)),w)){  // inplaceable, and direct numeric and type of a is not bigger than that of w
    // inplace: we will cast the atom of a to the (never smaller) size of w.  This is OK because a is never a bigger type
@@ -142,9 +146,9 @@ DF1(jtnum1){F12IP;A z=0;
   }
  }else{
   // not inplace: count the atoms of the result
-  PROD(natoms,AR(w)-rank,AS(w));  // # atoms in result: 1 per cell
+  PROD(natoms,AR(w)-wcr,AS(w));  // # atoms in result: 1 per cell
  }
- if(!z)GA(z,AT(a),natoms,AR(w)-rank,AS(w));  // allocate result if not inplace
+ if(!z)GA(z,AT(a),natoms,AR(w)-wcr,AS(w));  // allocate result if not inplace
  // We now have the result area, with the right type.  Fill it
  mvc(natoms<<k,voidAV(z),1LL<<k,voidAV(a));  // could use voidAV0(a)
  R z;

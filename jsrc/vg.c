@@ -709,20 +709,21 @@ static B (*grroutine[])(J,I,I,I,A,I*) = {  // index is [bitx]
 [B01X]=jtgrc, [LITX]=jtgrc, [INTX]=jtgri, [FLX]=jtgrd, [CMPXX]=jtgrx,[BOXX]=jtgrx, [XNUMX]=jtgrx, [RATX]=jtgrx, [QPX]=jtgrx,[C2TX]=jtgrc, [C4TX]=jtgru, [INT2X]=jtgrx, [INT4X]=jtgrx};
 
 // /: and \: with IRS support
-A jtgr1(J jt,A w){F1PREFJT;PROLOG(0075);A z;I f,ai,m,n,r,*s,t,wn,wr,zn;
- ARGCHK1(w);
- t=AT(w); wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
- f=wr-r; s=AS(w);
+A jtgr1(J jt,A wfg){A z;I f,ai,m,n,*s,t,wn,wr,zn;
+ IARG1CR F1PREFJT;PROLOG(0075);
+ t=AT(w);
+// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
+ f=wr-wcr; s=AS(w);
  // Calculate m: #cells in w   n: #items in a cell of w   ai: #atoms in an item of a cell of w  c: #atoms in a cell of w  
- SETICFR(w,f,r,n);  if(wn=AN(w)){
+ SETICFR(w,f,wcr,n);  if(wn=AN(w)){
   // If w is not empty, it must have an acceptable number of cells
-  PROD(m,f,s); PROD(ai,r-1,f+s+1); zn=m*n;
+  PROD(m,f,s); PROD(ai,wcr-1,f+s+1); zn=m*n;
  }else{
   // empty w.  The number of cells may overflow, but reshape will catch that
   DPMULDE(prod(f,s),n,zn);
  }
  // allocate the entire result area, one int per item in each input cell
- GATV0(z,INT,zn,1+f); MCISH(AS(z),s,f) if(unlikely(!r))AS(z)[f]=1;else AS(z)[f]=AS(w)[f];  // mustn't overfetch shape if r=0
+ GATV0(z,INT,zn,1+f); MCISH(AS(z),s,f) if(unlikely(!wcr))AS(z)[f]=1;else AS(z)[f]=AS(w)[f];  // mustn't overfetch shape if r=0
  // if there are no atoms, or we are grading things with 0-1 item, return an index vector of the appropriate shape 
  if(((wn-1)|(n-2))<0)R reshape(shape(z),IX(n));
  // do the grade, using a special-case routine if possible
@@ -730,13 +731,14 @@ A jtgr1(J jt,A w){F1PREFJT;PROLOG(0075);A z;I f,ai,m,n,r,*s,t,wn,wr,zn;
  EPILOG(z);
 }    /*   grade"r w main control for dense w */
 
-F1(jtgrade1){F12IP;A z; ARGCHK1(w); jtfg=(J)((I)jtfg&~JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(w)); RETF(grd1sp(w));}
-F1(jtdgrade1){F12IP;A z; ARGCHK1(w); jtfg=(J)(((I)jtfg&~JTFLAGMSK)+JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(w)); RETF(grd1sp(w));}
+FI1(jtgrade1){IARG1 F12IP;A z; jtfg=(J)((I)jtfg&~JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(wfg)); RETF(grd1sp(wfg));}
+FI1(jtdgrade1){IARG1 F12IP;A z; jtfg=(J)(((I)jtfg&~JTFLAGMSK)+JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(wfg)); RETF(grd1sp(wfg));}
 // Since grade2 pulls from a, mark a as non-pristine.  But since there can be no repeats, transfer a's pristinity to result if a is inplaceable
 // We do this in jtgr2 because it has a branch where all boxed values go
-F2(jtgrade2){F12IP;A z; ARGCHK2(a,w); if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jtfg&~JTDESCEND),a,w)); RETF(jtgrd2sp((J)((I)jtfg&~JTDESCEND),a,w));}
-F2(jtdgrade2){F12IP;A z; ARGCHK2(a,w); if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jtfg+JTDESCEND),a,w)); RETF(jtgrd2sp((J)((I)jtfg+JTDESCEND),a,w));}
+FI2(jtgrade2){IARG2 F12IP;A z; if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jtfg&~JTDESCEND),afg,wfg)); RETF(jtgrd2sp((J)((I)jtfg&~JTDESCEND),afg,wfg));}
+FI2(jtdgrade2){IARG2 F12IP;A z; if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jtfg+JTDESCEND),afg,wfg)); RETF(jtgrd2sp((J)((I)jtfg+JTDESCEND),afg,wfg));}
 
+// the rest of this file handles order statistics
 
 #define OSGT(i,j) (u[i]>u[j])
 

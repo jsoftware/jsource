@@ -519,7 +519,8 @@ jobfound:;  // come here or fall through when we got a job while we were waiting
     if((I)startloc&1){startloc=jtfindnl(jt,IAV((A)(I*)~(I)startloc)[ndxinthreadpool]); ASSERTGOTO(startloc!=0,EVLOCALE,fail)}  // get locale#; convert to globals address
    }
    ((PYXBLOK*)AAV0(pyx))->pyxorigthread=THREADID(jt);  // install the running thread# into the pyx
-   jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBALS(jt->locsyms,startloc); RESETRANK; jt->currslistx=-1; jt->recurstate=RECSTATERUNNING;  // init what needs initing.  Notably clear the local symbols
+   jt->locsyms=(A)(*JT(jt,emptylocale))[THREADID(jt)]; SYMSETGLOBALS(jt->locsyms,startloc); jt->currslistx=-1; jt->recurstate=RECSTATERUNNING;  // init what needs initing.  Notably clear the local symbols
+ // obsolete RESETRANK; 
   // run the task, putting the starting locale into execution by raising & lowering the locale execct.  Bivalent
    jt->uflags.bstkreqd=1; INCREXECCTIF(startloc);  // start new exec chain; raise execcount of current locale to protect it while running
   jt->parserstackframe.sf=self;  // each thread starts a new recursion point
@@ -654,7 +655,8 @@ UI forcetask=REPSGN((taskflags&0x500)-1);  // 0 if the user wants to force this 
     // For this execution we do not change the current locale.  This decision allows us to bypass tasks when the user gives a mask with no worker threads.  It's reasonable anyway.
     A pyx=AAV1(ppyx)[0]; // get pyx (AAV1 ok)
     ((PYXBLOK*)AAV0(pyx))->pyxorigthread=THREADID(jt);  // install the running thread# into the pyx
-    RESETRANK; jt->parserstackframe.sf=self;  // each thread starts a new recursion point
+// obsolete     RESETRANK;
+    jt->parserstackframe.sf=self;  // each thread starts a new recursion point
     A uself=FAV(self)->fgh[0], uarg2=arg2!=self?arg2:uself;  // get self, positioned after the last noun arg
    A z=(FAV(uself)->valencefns[arg2!=self])(jt,arg1,uarg2,uself);  // execute the u in u t. v
     C errcode=0;

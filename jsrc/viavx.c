@@ -726,15 +726,15 @@ static const S fnflags[]={  // 0 values reserved for small-range.  They turn off
 #define OVERHEADSHAPES 100  // checking shapes, types, etc costs this many compares
 
 // mode indicates the type of operation, defined in j.h
-A jtindexofsub(J jtfg,I mode,AD * RESTRICT a,AD * RESTRICT w){F12IP;PROLOG(0079);A h=0;fauxblockINT(zfaux,1,0);
+A jtindexofsub(J jtfg,I mode,AD * RESTRICT afg,AD * RESTRICT wfg){A h=0;fauxblockINT(zfaux,1,0);
     I ac,ak,datamin,f,f1,k,klg,n,r,*s,t,wc,wk,zn;UI c,m,p;
- ARGCHK2(a,w);
+ IARG2CR F12IP;PROLOG(0079);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
- // prehash is set if w argument is omitted (we are just prehashing the a arg)
- I ar=AR(a); I acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
- I wr=AR(w); I wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;  // note: mark is an atom
+ // prehash is set if w argument is omitted (we are just prehashing the a arg)   note: mark is an atom
+// obsolete  I ar=AR(a); I acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
+// obsolete  I wr=AR(w); I wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;  //
  I at=AT(a); I an=AN(a); I wt=AT(w); I wn=AN(w);
-  I af=ar-acr;I wf=wr-wcr; I *as=AS(a); I *ws=AS(w);
+ I af=ar-acr;I wf=wr-wcr; I *as=AS(a); I *ws=AS(w);
  // NOTE: from here on we may add modifiers to mode, indicating FULL/BITS/PACK etc.  These flags are needed in the action routine, and must be
  // preserved if the resulting hashtable is saved as part of a prehash.  They are not valid on input to this routine.
  if(unlikely(w==mark)){mode|=IPHCALC; f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
@@ -1210,23 +1210,23 @@ A jtindexofprehashed(J jtfg,A a,A w,A hs,A self){F12IP;A h,*hv,x,z;IFN fn;I ar,*
  EPILOG(z);  // necessary to make result recursive
 }
 
-// x i. y, supports inplacing (in subroutine)
-F2(jtindexof){F12IP;
- if(unlikely(((UI)a^(UI)ds(CALP))<(UI)(AT(w)&LIT))&&likely(!ISSPARSE(AT(w)))){R jtadotidot(jt,w);}
- R jtindexofsub(jtfg,IIDOT,a,w);  // pass inplaceability through
+// x i. y, with IRS, supports inplacing (in subroutine)
+FI2(jtindexof){IARG2CR F12IP;
+ if(unlikely(a==ds(CALP))&&likely(AT(w)&LIT)&&likely(acr==1)&&likely(!ISSPARSE(AT(w)))){R jtadotidot(jt,w);}  // catch special case of a. i. y
+ R jtindexofsub(jtfg,IIDOT,afg,wfg);  // pass inplaceability through
 }
      /* a i."r w */
 
-// x i: y, supports inplacing (in subroutine)
-F2(jtjico2){F12IP;R jtindexofsub(jtfg,IICO,a,w);}  // pass inplaceability through
+// x i: y, with IRS, supports inplacing (in subroutine)
+F2(jtjico2){IARG2 F12IP;R jtindexofsub(jtfg,IICO,afg,wfg);}  // pass inplaceability through
      /* a i:"r w */
 
 // ~: y
-F1(jtnubsieve){F12IP;
- ARGCHK1(w);
- if(unlikely(ISSPARSE(AT(w))))R nubsievesp(w); 
- jt->ranks=(RANKT)jt->ranks + ((RANKT)jt->ranks<<RANKTX);  // we process as if dyad; make left rank=right rank
- R indexofsub(INUBSV,w,w);   // not inplace
+FI1(jtnubsieve){
+ IARG1 F12IP;
+ if(unlikely(ISSPARSE(AT(w))))R nubsievesp(wfg); 
+// obsolete  jt->ranks=(RANKT)jt->ranks + ((RANKT)jt->ranks<<RANKTX);  // we process as if dyad; make left rank=right rank
+ R indexofsub(INUBSV,wfg,wfg);   // not inplace
 }    /* ~:"r w */
 
 // ~. y  - does not have IRS.  Supports inplacing
@@ -1290,14 +1290,14 @@ errexit:;
  EPILOG(x);
 }
 
-// x e. y
-F2(jteps){F12IP;I l,r;
- ARGCHK2(a,w);
- l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
- r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
- if(unlikely(ISSPARSE(AT(a)|AT(w))))R lt(irs2(w,a,0L,r,l,(AF)jtindexof),sc(r?AS(w)[AR(w)-r]:1));  // for sparse, implement as (# cell of y) > y i. x
- jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
- R indexofsub(IEPS,w,a);  // no inplacing
+// x e. y with IRS
+FI2(jteps){
+ IARG2CR F12IP;
+// obsolete  l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
+// obsolete  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
+ if(unlikely(ISSPARSE(AT(a)|AT(w))))R lt(irs2(w,a,0L,wcr,ac,(AF)jtindexof),sc(wcr?AS(w)[AR(w)-wcr]:1));  // for sparse, implement as (# cell of y) > y i. x
+// obsolete  jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
+ R indexofsub(IEPS,wfg,afg);  // no inplacing.  swap args
 }    /* a e."r w */
 
 // I.@~: y   does not have IRS
@@ -1330,11 +1330,11 @@ DF2(jtepsind0){F12IP;A z;
 
 
 // x i.!.1 y - assumes xy -: /:~ xy (integer atoms only for now)
-F2(jtsfu){F12IP;
- ARGCHK2(a,w);
- I type=ISFU+IIDOT; type=((NOUN|SPARSE)&~(INT))&(AT(a)|AT(w))?IIDOT:type;
- I l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l; type=l!=1?IIDOT:type; // If the cells of a are not atoms, we revert to standard methods
- R indexofsub(type,a,w);
+FI2(jtsfu){
+ IARG2CR F12IP;
+ I type=ISFU+IIDOT; type=((NOUN|SPARSE)&~(INT))&(AT(a)|AT(w))?IIDOT:type; type=wcr!=1?IIDOT:type; // If the cells of a are not dense integer atoms, we revert to standard methods
+// obsolete  I l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
+ R indexofsub(type,afg,wfg);
 }    /* a i.!.1"r w */
 
 // = y    

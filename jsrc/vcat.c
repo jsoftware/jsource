@@ -50,10 +50,10 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
  R z;
 }    /* a,"r w (0=p) or w,"r a (1=p) where a is scalar and w is sparse */
 
-static F2(jtovs){F12IP;A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I acr,ar,*as,at,c,m,n,r,t,*v,wcr,wr,*ws,wt,*zs;P*ap,*wp,*zp;
- ARGCHK2(a,w);
- acr=jt->ranks>>RANKTX; ar=AR(a); at=AT(a); acr=ar<acr?ar:acr; 
- wcr=(RANKT)jt->ranks; wr=AR(w); wt=AT(w); wcr=wr<wcr?wr:wcr; RESETRANK; 
+static FI2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I *as,at,c,m,n,r,t,*v,*ws,wt,*zs;P*ap,*wp,*zp;
+ IARG2CR F12IP;
+// obsolete  acr=jt->ranks>>RANKTX; ar=AR(a); at=AT(a); acr=ar<acr?ar:acr; 
+// obsolete  wcr=(RANKT)jt->ranks; wr=AR(w); wt=AT(w); wcr=wr<wcr?wr:wcr; RESETRANK; 
  if(!ar)R ovs0(0,wcr,a,w);
  if(!wr)R ovs0(1,acr,w,a);
  if(ar>acr||wr>wcr)R sprank2(a,w,NOEMSGSELF,acr,wcr,jtover);
@@ -167,16 +167,18 @@ static void moveawS(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset,
   if(!anotatomic)JMCR(zv,wv,mw,0,endmask) else mvc(mw,zv,k,wv); zv+=mw; --wrptct; wv+=REPSGN(wrptct)&wadv; wrptct+=REPSGN(wrptct)&wrptreset;
  }
 }
-DF2(jtover){F12IP;AD * RESTRICT z;I replct,framect,acr,ar,ma,mw,p,q,t,wcr,wr,zn;
- ARGCHK2(a,w);
- UI jtr=jt->ranks; //  fetch early
+DFI2(jtover){F12IP;AD * RESTRICT z;I replct,framect,ma,mw,p,q,t,zn;
+ IARG2CR
+// obsolete  UI jtr=jt->ranks; //  fetch early
  if(unlikely(ISSPARSE(AT(a)|AT(w)))){R ovs(a,w);}  // if either arg is sparse, switch to sparse code
  // Examine args for compatibility.  Treat empty arg as boolean if the other is nonempty.  Do not convert until we know whether we have fill, to avoid a second conversion
  I an=AN(a); if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|((UI)-an<(UI)AN(w)),t|((UI)-AN(w)<(UI)an)); t=LOWESTBIT(t)+RPAR; t+=t&AT(a)?0:CONJ;}  // t is result type; if it contains RPAR, a conversion is needed, CONJ is set if a must convert
- ar=AR(a); wr=AR(w);
- acr=jtr>>RANKTX; acr=ar<acr?ar:acr; I af=ar-acr;  // acr=rank of cell, af=len of frame, as->shape
- wcr=(RANKT)jtr; wcr=wr<wcr?wr:wcr; I wf=wr-wcr;  // wcr=rank of cell, wf=len of frame, ws->shape
- // no RESETRANK - not required by ovv or main line here
+// obsolete  ar=AR(a); wr=AR(w);
+// obsolete  acr=jtr>>RANKTX; acr=ar<acr?ar:acr;
+// obsolete  wcr=(RANKT)jtr; wcr=wr<wcr?wr:wcr;
+ I af=ar-acr; I wf=wr-wcr;  // ?cr=rank of cell, ?f=len of frame, ?s->shape
+// obsolete   // wcr=rank of cell, wf=len of frame, ws->shape
+// obsolete  // no RESETRANK - not required by ovv or main line here
  PROLOG(000);   // we will allocate our result first so that we can tpop back to it without EPILOG.
  if(af+wf==0){
 #if 0  // we don't use ALLOWRETARG anywhere yet
@@ -382,38 +384,40 @@ DF2(jtstitch){F12IP;I ar,wr; A z;
  R stitchsp2(a,w);  // sparse rank <=2 separately
 }
 
-F1(jtlamin1){F12IP;I* RESTRICT s,* RESTRICT v,wcr,wf,wr; 
- ARGCHK1(w);
- wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK; wf=wr-wcr;
+FI1(jtlamin1){I* RESTRICT s,* RESTRICT v,wf; 
+ IARG1CR F12IP;
+// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
+ wf=wr-wcr;
  fauxblockINT(wfaux,4,1); A x; fauxINT(x,wfaux,1+wr,1) v=IAV(x);
  s=AS(w); MCISH(v,s,wf); v[wf]=1; MCISH(v+wf+1,s+wf,wcr);  // frame, 1, shape - the final shape
  R jtreshape(jtfg,x,w);   // scaf do the virtual here - too much overhead in reshape
 }    /* ,:"r w */
 
-DF2(jtlamin2){F12IP;A z;I ar,p,q,wr;
+DF2(jtlamin2){F12IP;A z;
  // Because we don't support inplacing here, the inputs & results will be marked non-pristine.  That's OK because scalar replication might have happened.
- ARGCHK2(a,w); 
+ IARG2CR F12IP;
  PROLOG(000);
- ar=AR(a); p=jt->ranks>>RANKTX; p=ar<p?ar:p;  // p=cell rank of a, q=cell rank of w
- wr=AR(w); q=(RANKT)jt->ranks; q=wr<q?wr:q; RESETRANK;
- if(p)RZ(a=IRS1(a,0L,p,jtlamin1,z));
- if(q)RZ(w=IRS1(w,0L,q,jtlamin1,z));
- RZ(IRS2(a,w,self,p+!!p,q+!!q,jtover,z));
- if(!(p|q))z=IRS1(z,0L,0L,jtlamin1,a);
+// obsolete  ar=AR(a); p=jt->ranks>>RANKTX; p=ar<p?ar:p;  // p=cell rank of a, q=cell rank of w
+// obsolete  wr=AR(w); q=(RANKT)jt->ranks; q=wr<q?wr:q; RESETRANK;
+ if(acr)RZ(a=IRS1(a,0L,acr,jtlamin1,z));
+ if(wcr)RZ(w=IRS1(w,0L,wcr,jtlamin1,z));
+ RZ(IRS2(a,w,self,acr+!!acr,wcr+!!wcr,jtover,z));
+ if(!(acr|wcr))z=IRS1(z,0L,0L,jtlamin1,a);
  EPILOG(z);
 }    /* a,:"r w */
 
 // Append, including tests for append-in-place
-F2(jtapip){F12IP;A h;
- ARGCHK2(a,w);
+FI2(jtapip){A h;
+ IARG2 F12IP;
  // if exactly one arg has no items in cell, and the empty does not have longer frame, and the frames agree,
  // and items have the same rank, and the empty item has no axis larger than the nonempty: return the nonempty
  // here we require no frame as well
- I at=AT(a), ar=AR(a), wr=AR(w), ac=AC(a), an=AN(a), jtrm=(I)jt->ranks-(I)R2MAX;  // unchanging values
+// obsolete I at=AT(a), ar=AR(a), wr=AR(w), ac=AC(a), an=AN(a), jtrm=(I)jt->ranks-(I)R2MAX;  // unchanging values
+ I at=AT(a), ar=AR(a), wr=AR(w), ac=AC(a), an=AN(a), rnotmax=((I)afg|(I)wfg)&0x3f;  // unchanging values; rnotmax>0 if ranks are not _ _
  A jtzv=__atomic_load_n(&jt->zombieval,__ATOMIC_RELAXED);  // extract table line from the primitive
 
  I ai=AS(a)[0], wi=AS(w)[0]; wi=wr?wi:ai;  // item counts of args; force miscompare if both atoms
- if(unlikely((I)SGNTO0(-ai^-wi)>((ar^wr)-jtrm))){  // appending empty to nonempty, no frame, equal rank (not 0), no rank given
+ if(unlikely((I)SGNTO0(-ai^-wi)>((ar^wr)+rnotmax))){  // appending empty to nonempty, no frame, equal rank (not 0), no rank given
   if(likely(!ISSPARSE(at|AT(w)))){   // sparse blocks have weird shape - we can't handle them
    A ea=ai?w:a, nea=ai?a:w;  // empty & nonempty args
    I emptybig; TESTXITEMSMALL(emptybig,AS(ea),AS(nea),ar) if(!emptybig)R RETARG(nea);  // if item not changing, return nonempty argument unchanged
@@ -425,7 +429,7 @@ F2(jtapip){F12IP;A h;
  // one of the uses is for the mapping header.
  // In both cases we require the inplaceable bit in jt, so that a =: (, , ,) a  , which has zombieval set, will inplace only the last append
  // Allow only DIRECT and BOX types, to simplify usecounting (we don't have to EPILOG for RAT/XNUM)
- if((SGNIF((I)jtfg,JTINPLACEAX)&-ar&~(ar-wr)&~jtrm)<0){  // inplaceable, ar!=0, wr<=ar, ranks=MAX, all close at hand  scaf! but virt exten is OK even if noninplaceable
+ if((SGNIF((I)jtfg,JTINPLACEAX)&-ar&~(ar-wr)&(rnotmax-1))<0){  // inplaceable, ar!=0, wr<=ar, ranks=MAX, all close at hand  scaf! but virt exten is OK even if noninplaceable
    // collect some values into a flags register
 #define FGLGK 0x7
 #define FGVIRTREQDX 3    // if virtual extension required
@@ -472,7 +476,7 @@ pipok:;  //
    // in the shape that are part of the shape of an item), or if a is atomic (because
    // we would have to replicate a, and anyway how much are you saving?), or if w has higher rank than a (because the rank of the
    // result would increase, and there's no room in the shape)
-   // jt->ranks is ~0 unless there are operand cells, which disqualify us.  There are some cases where it
+   // Existence of operand cells disqualify us.  There are some cases where it
    // would be OK to inplace an operation where the frame of a (and maybe even w) is all 1s, but that's not worth checking for
    // We use type priority to decide whether a would have to be converted
    I zt=maxtyped(at,AT(w));  // the type of the result

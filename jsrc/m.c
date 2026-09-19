@@ -139,7 +139,7 @@ int logfirsttime=1;
 int logparm=0;  // set to control logging inside m.c
 char logarea[200];  // where messages are built
 void writetolog(J jt,C *s){A z;
-RESETRANK;
+// obsolete RESETRANK;
 int svlogparm=logparm; logparm=0;
 (logfirsttime?jtjfwrite:jtjfappend)(jt,str(strlen(s),s),box(str(strlen(LOGFILE),LOGFILE)));
 logfirsttime=0; logparm=svlogparm;

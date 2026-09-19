@@ -290,11 +290,11 @@ static F2(jtpoly2a){F12IP;A c,e,x;I m;D rkblk[16];
 }    /* multinomial: (<c,.e0,.e1,.e2) p. <x0,x1,x2, left argument opened */
 
 // x p. y    Supports IRS on the y argument; supports inplace
-DF2(jtpoly2){F12IP;A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y,*zz;
- ARGCHK2(a,w);
- { RANK2T jtr=jt->ranks;I acr=jtr>>RANKTX; acr=AR(a)<acr?AR(a):acr; RESETRANK; // cell-rank of a
-   if(((1-acr)|(acr-AR(a)))<0){R rank2ex(a,w,self,MIN(acr,1),0,acr,MIN(AR(w),jtr&RMAX),jtpoly2);}  // loop if multiple cells of a
- }
+DFI2(jtpoly2){A c,za;I b;D*ad,d,p,*x,u,*z;I an,at,j,t,n,wt;Z*az,e,q,*wz,y,*zz;
+ IARG2CR F12IP;
+// obsolete  { RANK2T jtr=jt->ranks;I acr=jtr>>RANKTX; acr=AR(a)<acr?AR(a):acr; RESETRANK; // cell-rank of a
+ if(((1-acr)|(acr-ar))<0){R rank2ex(a,w,self,MIN(acr,1),0,acr,MIN(wr,wcr),jtpoly2);}  // loop if multiple cells of a
+// obsolete  }
  an=AN(a); at=AT(a); b=BOX&at;   // b if mplr/roots form or multinomial; otherwise coeff
  n=AN(w); wt=AT(w);
  ASSERT(!ISSPARSE(at),EVNONCE);  // sparse polynomial not supported

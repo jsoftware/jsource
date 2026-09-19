@@ -12,9 +12,9 @@ static DFI1(swap1){IARG1;F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns
  R f2(jtfg,wfg,wfg,self);   // keep ranks if any
 // obsolete  A z; IRS2(f2,jtfg,w,w,fs,(RANKT)jt->ranks,(RANKT)jt->ranks,f2,z); R z;  // scafrk just swap ranks and f2
 }
-static DF2(swap2){IARG2;F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; jtfg=MOVEIPWA(jtfg);
+static DFI2(swap2){IARG2;F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; jtfg=MOVEIPWA(jtfg);
  R f2(jtfg,wfg,afg,self);   // keep ranks if any
-// obsolete  A z; IRSIP2(w,a,fs,(RANKT)jt->ranks,jt->ranks>>RANKTX,f2,z); R z;  // scafrk just swap ranks and f2
+// obsolete  A z; z=IRSIP2(f2,jt,w,(RANKT)jt->ranks,a,jt->ranks>>RANKTX,fs); R z;  // scafrk just swap ranks and f2
 }
 
 // w~, which is either reflexive/passive or evoke

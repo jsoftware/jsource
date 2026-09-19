@@ -15,8 +15,8 @@ static REPF(jtrepzdx){F12IP;A p,q,x;P*wp;
  if(ISSPARSE(AT(w))){wp=PAV(w); x=SPA(wp,e);}
  else x=jt->fill&&AN(jt->fill)?jt->fill:jtfiller(jt,AT(w),0,(I*)jt);
  RZ(p=repeat(ravel(rect(a)),ravel(stitch(IX(wcr?AS(w)[wf]:1),num(-1)))));
- RZ(IRS2(w,x,NOEMSGSELF,wcr,0L,jtover,q));
- R IRS2(p,q,0L,1L,wcr+!wcr,jtfrom,x);
+ RZ(q=IRS2(jtover,jt,w,wcr,x,0L,NOEMSGSELF));
+ R IRS2(jtfrom,jt,p,1L,q,wcr+!wcr,0L);
 }    /* (dense complex) # (dense or sparse) */
 
 static REPF(jtrepzsx){F12IP;A q,x,y;I c,d,j,k=-1,m,p=0,*qv,*xv,*yv;P*ap;
@@ -232,7 +232,7 @@ static REPF(jtrepidx){F12IP;A y;I j,m,p=0,*v,*x;A z;
  if(unlikely(ISSPARSE(AT(w)))){
   GATV0(y,INT,p,1); v=AV1(y); 
   DO(m, j=i; DQ(x[j], *v++=j;););  // fill index vector with all the indexes
-  R IRS2(y,w,0L,1L,wcr,jtfrom,z);
+  R IRS2(jtfrom,jt,y,1L,w,wcr,0L);
  }else{I itemsize, ncells, zn, j;  // # atoms in an item (then bytes), #cells to process, #atoms in result
   // non-sparse code.  copy the repeated items directly
   PROD(itemsize,wcr-1,AS(w)+wf+1) PROD(ncells,wf,AS(w)) DPMULDE(itemsize*ncells,p,zn) // itematoms*ncells cannot overflow in valid w unless p=0
@@ -312,7 +312,7 @@ static REPF(jtrep1d){F12IP;A z;C*wv,*zv;I c,k,m,n,p=0,q,t,*ws,zk,zn;
  t=m?t:B01;  // 
  if(t&CMPX){
   if(wcr)R repzdx(from(apv(n,0L,0L),a),w,                wf,wcr);
-  else{A za; RZ(za=apv(m,0L,0L)); R repzdx(a,IRS2(za,w,0L,1L,0L,jtfrom,z),wf,1L );}
+  else{A za; RZ(za=apv(m,0L,0L)); R repzdx(a,IRS2(jtfrom,jt,za,1L,w,0L,0L),wf,1L );}
  }
  if(t&B01){p=bsum(m,BAV(a)); // bsum in case a is big.  Atomic boolean was handled earlier
  }else{I*x; 
@@ -388,7 +388,7 @@ static REPF(jtrep1s){F12IP;A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*
 }    /* scalar #"r sparse   or  sparse #"0 (dense or sparse) */
 
 A (*reptab[])() = {jtrepisx,jtrepidx,jtrepbsx,jtrepbdx,jtrepzsx,jtrepzdx,jtrep1s,jtrep1d};
-FI2(jtrepeat){A z;
+DFI2(jtrepeat){A z;
  IARG2CR F12IP;
 // obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
 // obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;

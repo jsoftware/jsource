@@ -33,8 +33,8 @@ static F1(jtrsort){F12IP;A t,z;
  ARGCHK1(w);
  PUSHCCT(1.0-FUZZ)
  RZ(t=over(mag(w),cant1(rect(w))));
- A tt; RZ(IRS2(t,t,0L,1L,1L,jtindexof,tt));
- z=dgrade2(w,cant1(IRS2(tt,t,0L,1L,1L,jtfrom,z)));
+ A tt; RZ(tt=IRS2(jtindexof,jt,t,1L,t,1L,0L));
+ z=dgrade2(w,cant1(IRS2(jtfrom,jt,tt,1L,t,1L,0L)));
  POPCCT
  RETF(z);
 }

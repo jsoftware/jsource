@@ -281,7 +281,7 @@ static DF2(jtcut2bx){F12IP;A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws
  }
  RZ(x=ope(catalog(x)));
  RZ(y=ope(catalog(y)));
- if(AN(x)){RZ(IRS2(x,y,0L,1L,1L,jtlamin2,t));}else{RZ(t=iota(apip(shape(x),v2(2L,0L))));}
+ if(AN(x)){RZ(t=IRS2(jtlamin2,jt,x,1L,y,1L,0L));}else{RZ(t=iota(apip(shape(x),v2(2L,0L))));}
  R cut02(t,w,self);
 }    /* a f;.n w for boxed a, with special code for matrix w */
 
@@ -292,7 +292,7 @@ static DF2(jtcut2bx){F12IP;A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws
   GATV0(z,INT,m,1); zi=AV1(z); EACHC(*zi++=d;); R z;                          \
  case CDOLLAR:                                                              \
   GATV0(z,INT,m,1); zi=AV1(z); EACHC(*zi++=d;);                               \
-  A zz,zw; RZ(zw=vec(INT,MAX(0,r-1),1+s)); IRS2(z,zw,NOEMSGSELF,0L,1L,jtover,zz); RETF(zz);  \
+  A zw; RZ(zw=vec(INT,MAX(0,r-1),1+s)); RETF(IRS2(jtover,jt,z,0L,zw,1L,NOEMSGSELF));  \
  case CHEAD:                                                                \
   GA(z,t,m*c,r,s); zc=CAVn(r,z); AS(z)[0]=m;                                     \
   EACHC(ASSERT(d!=0,EVINDEX); MC(zc,v1,k); zc+=k;);                            \
@@ -870,7 +870,7 @@ DF2(jtcut2){F12IP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/S
   break;
  case CDOLLAR:   // calculate as #;.n ,"0 1 }. $ w
   GATV0(zz,INT,m,1); zi=AV1(zz); EACHCUT(*zi++=d;); A zw=vec(INT,MAX(0,r-1),AS(w)+1);  // could use virt block
-  R IRS2(zz,zw,NOEMSGSELF,0L,1L,jtover,z);
+  R IRS2(jtover,jt,zz,0L,zw,1L,NOEMSGSELF);
  case CTAIL:
  case CHEAD: ;
   // remove pristinity from w since a contents is escaping
@@ -1080,7 +1080,7 @@ static DF2(jttess2){F12IP;A z,zz=0,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
   // trailing axes taken in full will be omitted from the shape of the result
   RZ(p=tesos(a,w,n,0));  // recalculate all the result shapes
   A za, zw; RZ(za=cant1(tymesW(head(a),cant1(abase2(p,iota(p)))))); RZ(zw=tail(a));
-  RETF(cut02(IRS2(za, zw,self,1L,1L,jtlamin2,z),w,self));  // ((|: ({.a) * |: (#: i.)p) ,:"1 ({:a)) u;.0 w    the self is for error display
+  RETF(cut02(IRS2(jtlamin2,jt,za,1L, zw,1L,self),w,self));  // ((|: ({.a) * |: (#: i.)p) ,:"1 ({:a)) u;.0 w    the self is for error display
  }
  V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; AF f1=FAV(fs)->valencefns[0];   // get the function pointers
  I *ws=AS(w);  // ws-> shape of w

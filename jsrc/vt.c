@@ -5,8 +5,8 @@
 
 #include "j.h"
 
-DFI1(jtbehead){F12IP; R jtdrop(jtfg,zeroionei(1),wfg);}  //  }. with IRS
-FI1(jtcurtail){F12IP; R jtdrop(jtfg,num(-1),wfg);}  // }: with IRS
+DFI1(jtbehead){F12IP; R jtdrop(jtfg,zeroionei(1),wfg,0);}  //  }. with IRS
+FI1(jtcurtail){F12IP; R jtdrop(jtfg,num(-1),wfg,0);}  // }: with IRS
 
 F1(jtshift1){F12IP;R drop(num(-1),over(zeroionei(1),w));}  // !.!.f, without IRS
 
@@ -68,10 +68,9 @@ static INLINE A jttk(A w, I *u, I n, I wf, J jtfg, I istake, I wcr, A a, I wt){F
   }else{  // drop
    DO(n, I m=u[i]; I ut=ws[wf+i]; ut-=ABS(m); ut=ut<0?0:ut; m=~REPSGN(m); ut=(ut^m)-m; v[wf+i]=ut;)   // convert the drops to takes
   }
-  if(wf==wr){A z;IRS2(vec(INT,n,shape1),w,0,1,0,jtreshape,z);RZ(z);w=z;}  // if w is an atom, change it to a singleton of rank #$a
+  if(wf==wr){A z;0,jtreshape,z=IRS2(jtreshape,jt,vec(INT,n,shape1),1,w,0,0);RZ(z);w=z;}  // if w is an atom, change it to a singleton of rank #$a
   R tks(s,w);
  }
-
  // see if a virtual can be returned
  if(!((AN(a)^1)|wf|!wcr)&&likely(AN(w)>0)&&likely(!(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic; and avoid virtualling NJA
   // if the length of take is within the bounds of the first axis
@@ -153,7 +152,7 @@ endcopy:;
 }
 
 // x {."r y, which allows infinities in x
-FI2(jttake){A z;I n,*v;
+DFI2(jttake){A z;I n,*v;
  IARG2CR F12IP; I wt=AT(w);  // wt=type of w
 // obsolete  acr=jt->ranks>>RANKTX; wcr=(RANKT)jt->ranks; RESETRANK;  // save ranks before they are destroyed 
  if(unlikely(ISSPARSE(AT(a))))RZ(a=denseit(a));  // force a to dense
@@ -177,7 +176,7 @@ FI2(jttake){A z;I n,*v;
  RETF(z);
 }
 
-FI2(jtdrop){A z;I d,m,n,*u,*v;
+DFI2(jtdrop){A z;I d,m,n,*u,*v;
  IARG2CR F12IP;
  RZ(a=vib(a));  // convert & audit a
 // obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
@@ -224,7 +223,7 @@ DFI1(jthead){
  // pristinity from the called verb
 }
 
-FI1(jttail){
+DFI1(jttail){
  IARG1CR F12IP;
 // obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr;  // no RESETRANK: rank is passed into from/take/rsh0.  Left rank is garbage but that's OK
  I wf=wr-wcr;

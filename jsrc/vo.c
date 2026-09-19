@@ -104,7 +104,7 @@ DFI1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,*ws;
  RETF(z);
 }    /* <"r w */
 
-F1(jtboxopen){F12IP; ARGCHK1(w); if((-AN(w)&-(AT(w)&BOX))>=0){w = jtbox(jtfg,w);} R w;}
+F1(jtboxopen){F12IP; ARGCHK1(w); if((-AN(w)&-(AT(w)&BOX))>=0){w = jtbox(jtfg,w,0);} R w;}
 
 // x ; y, with options for x (,<) y   x (;<) y   x ,&< y
 // This verb propagates WILLOPEN, so it must not raise usecounts or EPILOG or call a verb that does EPILOG if WILLBEOPENED is set on input.
@@ -201,8 +201,8 @@ ARGCHK2(a,w);
  // else fall through to handle general case
  // if WILLBEOPENED, any virtual boxes in w must be realized
  if(unlikely(optype&AT(w)&~AFLAG(w)&BOX))RZ(realizeboxedvirtuals(w));  // realize virtuals, in place.  Required only if WILLOPEN is set, and w is nonrecursive boxed.  Result 0 is error
- if((-AN(w)&SGNIF(AT(w),BOXX))>=0){w = jtbox(JTIPWonly,w);}   // box empty or unboxed w
- RETF(jtover(jtfg,jtbox(JTIPAtoW,a),w,ds(CSEMICO)));  // join to boxed a
+ if((-AN(w)&SGNIF(AT(w),BOXX))>=0){w = jtbox(JTIPWonly,w,0);}   // box empty or unboxed w
+ RETF(jtover(jtfg,jtbox(JTIPAtoW,a,0),w,ds(CSEMICO)));  // join to boxed a
 }
 
 // Calculate the value to use for rf arg of copyresultcell: bit 0=ra() flag, next 15=rank requiring fill, higher=-(#leading axes of 1)

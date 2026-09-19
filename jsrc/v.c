@@ -55,8 +55,8 @@ DFI1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,*u,*v,*yv;P*wp,*zp;
   GATV0(c,INT,wcr,1L); v=wcr+AVn(1L,c); j=AR(w); m=1; DQ(wcr, *--v=m; m*=AS(w)[--j];);
   y0=SPA(wp,i); v=AS(y0); m=v[0]; I n=v[1];
   RZ(q=pdt(dropr(n-wcr,y0),c));
-  GATV0(y,INT,m*(1+n-wcr),2); v=AS(y); v[0]=m; v[1]=1+n-r;
-  yv=AV(y); u=AV(y0); v=AV(q); j=n-r;
+  GATV0(y,INT,m*(1+n-wcr),2); v=AS(y); v[0]=m; v[1]=1+n-wcr;
+  yv=AV(y); u=AV(y0); v=AV(q); j=n-wcr;
   DQ(m, ICPY(yv,u,j); yv[j]=*v++; yv+=1+j; u+=n;);
  }else{RZ(a=ca(SPA(wp,a))); A spax=SPA(wp,x); RZ(x=IRS1(jtravel,jt,spax,wcr,0L)); RZ(y=ca(SPA(wp,i)));}
  SPB(zp,a,a); 
@@ -87,12 +87,12 @@ static A jtlr2(J jt,RANK2T ranks,A a,A w){I acr,af,ar,wcr,wf,wr;
  // simply keep the surviving argument intact.
  if(wf>=af){RETF(w);}  // no replication - quick out
 // obsolete  RESETRANK;
- a=apip(drop(sc(wf),take(sc(af),shape(a))),drop(sc(wf),shape(w))); A z; IRS2(a,w,0L,RMAX,wcr,jtreshape,z); RETF(z);  // ((wf }. af {. $a) , wf }. $w) ($,)"(_,wcr) w
+ a=apip(drop(sc(wf),take(sc(af),shape(a))),drop(sc(wf),shape(w))); RETF(IRS2(jtreshape,jt,a,RMAX,w,wcr,0L));  // ((wf }. af {. $a) , wf }. $w) ($,)"(_,wcr) w
 } 
 
-// ][.  Must not call EPILOG because the verb propagates WILLOPEN.  When rank is specified ]"n does not propagate
+// ][, with IRS.  Must not call EPILOG because the verb propagates WILLOPEN.  When rank is specified ]"n does not propagate
 FI2(jtleft2){IARG2R F12IP; if(likely(acr&wcr==RMAX))RETF(RETARG(a)); RETF(lr2((wcr<<RANKTX)|acr,w,a));}  // swap a & w, and their ranks
-FI2(jtright2){IARG2R F12IP;if(likely(acr&wcr==R2MAX))RETF(RETARG(w)); RETF(lr2((acr<<RANKTX)|wcr,a,w));}
+DFI2(jtright2){IARG2R F12IP;if(likely(acr&wcr==R2MAX))RETF(RETARG(w)); RETF(lr2((acr<<RANKTX)|wcr,a,w));}
 
 F1(jtright1){F12IP;RETF(RETARG(w));}
 // lev, dex, and ident - identity adverb/conjunction  (ident uses the same code as lev)
@@ -155,11 +155,11 @@ DFI1(jtnum1){A z=0;
 }
 DF2(jtnum2){F12IP;ARGCHK3(a,w,self); RETF(FAV(self)->fgh[2])}
 
-F2(jtfromr  ){F12IP;ARGCHK2(a,w); A z; R IRS2(a,w,0, RMAX,1L,jtfrom  ,z);} // no agreement check because left rank is infinite - no frame  {"_ 1
-F2(jtrepeatr){F12IP;ARGCHK2(a,w); A z; R IRS2(a,w,0, RMAX,1L,jtrepeat,z);}  // #"_ 1
+F2(jtfromr){F12IP;ARGCHK2(a,w); A z; R IRS2(jtfrom,jt,a, RMAX,w,1L,0);} // no agreement check because left rank is infinite - no frame  {"_ 1
+F2(jtrepeatr){F12IP;ARGCHK2(a,w); A z; R z=IRS2(jtrepeat,jt,a, RMAX,w,1L,0);}  // #"_ 1
 
-A jttaker(J jt,I n,A w){ARGCHK1(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jttake,z);}  // n {."1 w
-A jtdropr(J jt,I n,A w){ARGCHK1(w); A a,z; RZ(a=sc(n)); R IRS2(a,w,0, RMAX,1L,jtdrop,z);}  // n }."1 w
+A jttaker(J jt,I n,A w){ARGCHK1(w); A a,z; RZ(a=sc(n)); R z=IRS2(jttake,jt,a, RMAX,w,1L,0);}  // n {."1 w
+A jtdropr(J jt,I n,A w){ARGCHK1(w); A a,z; RZ(a=sc(n)); R z=IRS2(jtdrop,jt,a, RMAX,w,1L,0);}  // n }."1 w
 
 // I. y
 DF1(jticap){F12IP;A a,e;I n;P*p;

@@ -577,7 +577,7 @@ F2(jtjdot2){F12IP;
   I ar=AR(a), wr=AR(w);
   ASSERTAGREE(AS(a),AS(w),MIN(ar,wr))  // verify agreement
   if(!(at&FL))RZ(a=ccvt(FL,a,0)) if(!(wt&FL))RZ(w=ccvt(FL,w,0))  // convert to FL if needed
-  RZ(IRS2(a,w,DUMMYSELF,0,0,jtover,z)) makewritable(z) AN(z)>>=1; AR(z)=MAX(AR(a),AR(w)); AT(z)=CMPX;  // z=a ,"0 w, then switch to CMPX
+  RZ(z=IRS2(jtover,jt,a,0,w,0,DUMMYSELF)) makewritable(z) AN(z)>>=1; AR(z)=MAX(AR(a),AR(w)); AT(z)=CMPX;  // z=a ,"0 w, then switch to CMPX
   R z;
  }
  R plus(a,tymes(a0j1,w));
@@ -605,5 +605,5 @@ DF1(jtrect){F12IP;A e,z;B b;I r,t;P*wp,*zp;Z c;
   SPB(zp,i,ca(SPA(wp,i)));
   SPB(zp,x,rect(SPA(wp,x)));
   R z;
- }else R IRS2(w,num(0),self,0,0,jtover,z);
+ }else R IRS2(jtover,jt,w,0,num(0),0,self);
 }

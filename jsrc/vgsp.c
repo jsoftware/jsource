@@ -96,7 +96,7 @@ static A jtgrd1spss(J jt,A w,I wf,I wcr){F1PREFJT;A c,d,t,x,y,z;I cn,*cv,*dv,i,n
 static A jtgrd1spsd(J jt,A w,I wf,I wcr){F1PREFJT;A d,t,y,z;I*dv,i,n,p,*tv,yc,*ws,*ys,*yv,*zv;P*wp;
  wp=PAV(w); ws=AS(w); n=wcr?ws[wf]:1; 
  RZ(z=grd1spz(w,wf,wcr)); zv=AV(z);
- A spax=SPA(wp,x); RZ(t=IRS1(jtgr1,jtfg,spax,wcr,0L)); tv=AV(t);  /* grade dense cells              */
+ A spax=SPA(wp,x); RZ(t=IRS1(jtgr1,jt,spax,wcr,0)); tv=AV(t);  // grade dense cells - should inplace?
  RZ(d=apvwr(wf,0L,0L)); dv=AV(d);                 /* odometer for frame             */
  y=SPA(wp,i); ys=AS(y); p=ys[0]; yc=ys[1]; yv=AV(y);
  for(i=0;i<p;++i){                              /* now merge dense & sparse cells */
@@ -147,7 +147,7 @@ static A jtgrd1spds(J jt,A w,I wf,I wcr){F1PREFJT;A c,t,x,y,z;I*cv,m,n,n1,p,*tv,
 static A jtgrd1spdd(J jt,A w,I wf,I wcr){F1PREFJT;A x,z;I n,*ws;P*wp;
  wp=PAV(w); ws=AS(w); n=wcr?ws[wf]:1;
  x=SPA(wp,x);
- if(AN(x)){RZ(z=from(num(0),x)); R IRS1(jtgr1,jtfg,z,wcr,0L);}else{R reshape(vec(INT,1+wf,ws),IX(n));}
+ if(AN(x)){RZ(z=from(num(0),x)); R IRS1(jtgr1,jt,z,wcr,0);}else{R reshape(vec(INT,1+wf,ws),IX(n));}
 }    /* grade"r w , dense frame, dense cell */
 
 /* sparse right argument:                               */
@@ -252,7 +252,7 @@ FI2(jtgrd2sp){A z;B b,c,*wb;I af,am,*as,j,m,wf,wm,*ws;P*wp;
  DQ(wcr, --j; if(wb[j])b=1; else if(b){c=1; wb[j]=1;});
  if(c){b=a==w; RZ(w=reaxis(ifb(wr,wb),w)); if(b)a=w;}
  switch((2*wb[0]+wb[wf])*(a==w&&af==wf&&acr==wcr)){
-  default: z=irs2(z=IRS1((I)jtfg&JTDESCEND?jtdgrade1:jtgrade1,jt,w,wcr,0L),a,VFLAGNONE, RMAX,acr,jtfrom); break;
+  default: z=IRS1(((I)jtfg&JTDESCEND?jtdgrade1:jtgrade1),jt,w,wcr,0L); z=irs2(z,a,VFLAGNONE, RMAX,acr,jtfrom); break;
   case 2: /* sparse dense  */ z=grd2spsd(w,wf,wcr); break;
   case 3: /* sparse sparse */ z=grd2spss(w,wf,wcr); break;
  } 

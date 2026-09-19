@@ -471,18 +471,18 @@ static B jtmatchsub(J jtfg,A a,A w,B* RESTRICT x,I af,I wf,I m,I n,I b1){F12IP;C
  R 0;  // Return value matters only for single compare (x=0); we have returned already in that case
 }
 
-static FI2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I an=0,c,j,k,m,n,r,*s,*v,wn=0;P*ap,*wp;
+static FI2(jtmatchs){A ae,ax,p,q,we,wx,x;B*b,*pv,*qv;D d;I an=0,c,j,k,m,n,*s,*v,wn=0;P*ap,*wp;
  IARG2CR F12IP;
 // obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; r=ar;
 // obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  if(ar>acr||wr>wcr)R rank2ex(a,w,DUMMYSELF,acr,wcr,acr,wcr,jtmatchs);
- if(ar!=wr||memcmpne(AS(a),AS(w),r*SZI)||!HOMO(AT(a),AT(w)))R num(0);
- GATV0(x,B01,r,1L); b=BAVn(1L,x); mvc(r,b,MEMSET00LEN,MEMSET00);
+ if(ar!=wr||memcmpne(AS(a),AS(w),ar*SZI)||!HOMO(AT(a),AT(w)))R num(0);
+ GATV0(x,B01,ar,1L); b=BAVn(1L,x); mvc(ar,b,MEMSET00LEN,MEMSET00);
  if(ISSPARSE(AT(a))){ap=PAV(a); x=SPA(ap,a); v=AV(x); an=AN(x); DO(an, b[v[i]]=1;);}
  if(ISSPARSE(AT(w))){wp=PAV(w); x=SPA(wp,a); v=AV(x); wn=AN(x); DO(wn, b[v[i]]=1;);} 
- c=0; DO(r, c+=b[i];);
- if(an<c||!ISSPARSE(AT(a)))RZ(a=reaxis(ifb(r,b),a)); ap=PAV(a); ae=SPA(ap,e); ax=SPA(ap,x); m=AS(ax)[0];
- if(wn<c||!ISSPARSE(AT(w)))RZ(w=reaxis(ifb(r,b),w)); wp=PAV(w); we=SPA(wp,e); wx=SPA(wp,x); n=AS(wx)[0];
+ c=0; DO(ar, c+=b[i];);
+ if(an<c||!ISSPARSE(AT(a)))RZ(a=reaxis(ifb(ar,b),a)); ap=PAV(a); ae=SPA(ap,e); ax=SPA(ap,x); m=AS(ax)[0];
+ if(wn<c||!ISSPARSE(AT(w)))RZ(w=reaxis(ifb(ar,b),w)); wp=PAV(w); we=SPA(wp,e); wx=SPA(wp,x); n=AS(wx)[0];
  RZ(x=indexof(SPA(ap,i),SPA(wp,i))); v=AV(x);
  GATV0(p,B01,m,1); pv=BAV1(p);
  GATV0(q,B01,n,1); qv=BAV1(q); 

@@ -1848,7 +1848,7 @@ DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 // Consolidated entry point for ATOMIC2 verbs.  These can be called with self pointing either to a rank block or to the block for
 // the atomic.  self always has the 
 DFI2(jtatomic2){F12IP;A z;
- IARG2R
+ IARG2
 takestats(++stats[0x0];)
  // load initial values, many of them since there is nothing else to do while the first reads are completing.  We overrule the compiler, which would load jtranks and selfranks after the first test,
  // to get an early start down that path.  We use atomic_load to inhibit load reordering, but clang creates a mov/movzx pair when loading anything shorter than an I, so we avoid loading a short value
@@ -1856,7 +1856,7 @@ takestats(++stats[0x0];)
  UI opcode=FAV(self)->lu2.lc;
 // obsolete UI jtranks=jt->ranks; // VA2C* code from the primitive (used if we predict to ssing), jt->ranks (used if we predict to va2)
 // obsolete  UI selfranks=FAV(self)->lrr;
- I at=AT(a);  //  ranks from "n (if we predict to va2); at, for bidcase/densbid0
+ I at=AT(a);  //  at, for bidcase/densbid0
  UI awr=AR(a); I wt=__atomic_load_n(&AT(w),__ATOMIC_RELAXED);   // ar, wt, for bidcase/densbid0
 // obsolete  awr<<=RANKTX;
  I wr=AR(w);   // wr, one cycle after ar.  We cannot load any more here without overrunning registers
@@ -1878,7 +1878,7 @@ retryss:;  // here when non-atomic singleton retries.  bidcase and densbid0 have
 // obsolete self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
 // obsolete  opline=__atomic_load_n(&FAV(self)->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
  // find frames
- acr-=awr; acr=acr<0?0:acr; wcr-=wr; wcr=wcr<0?0:wcr; awr<<=RANKTX; awr+=wr; afwf=(acr<<=RANKTX)+wcr;  // awr=0/0/ar/wr afwf=0/0/af/wf
+ acr-=0x3f; wcr-=0x3f; acr+=awr; acr=acr<0?0:acr; wcr+=wr; wcr=wcr<0?0:wcr; awr<<=RANKTX; awr+=wr; afwf=(acr<<=RANKTX)+wcr;  // awr=0/0/ar/wr afwf=0/0/af/wf
  // obsolete  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
  // check for non-atomic singletons, which are rare (in testcases)
  if(withprob((notoneatom|densbid0)!=0,0.95)){

@@ -45,11 +45,11 @@ static A jtfromis1(J jt,A ind,A w,A z,I wf){A a,a1,j1,p,q,x,x1,y,y1;C*xu,*xuu,*x
  R z;
 }    /* ind{"r w along a sparse axis  */
 
-FI2(jtfromis){A ind,x,z;B*b;I af,an,*av,k,m,*v,wf,*ws,wt;P*wp,*zp;
+FI2(jtfromis){A ind,x,z;B*b;I an,*av,k,m,*v,*ws,wt;P*wp,*zp;
  IARG2CR F12IP;
-// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
+// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
 // obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
- wf=wr-wcr;
+ I af=ar-acr, wf=wr-wcr;
  if(af)R rank2ex(a,w,DUMMYSELF,acr,wcr,acr,wcr,jtfromis);
  ws=AS(w); wt=AT(w);
  RZ(ind=pind(wcr?ws[wf]:1,a));  // ind is the INT list of indexes being selected
@@ -161,21 +161,21 @@ A jtaindex(J jt,A a,A w,I wf){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
  R z;
 }    /* <"1 a to a where a is an integer index array */
 
-FI2(jtfrombs){A ind;I af,wf;
+FI2(jtfrombs){A ind;
  IARG2CR F12IP;
-// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
+// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
 // obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
- wf=wr-wcr;
+ I af=ar-acr, wf=wr-wcr;
  ASSERT(!af,EVNONCE);
  if(ar){RZ(ind=aindex(a,w,wf)); ind=(A)((I)ind&~1LL); ASSERT(ind!=0,EVNONCE); R frombsn(ind,w,wf);}
  else R frombs1(C(AAV(a)[0]),w,wf);
 }    /* a{"r w for boxed a and sparse w */
 
-FI2(jtfromsd){A e,x,z;I af,*v,wf,*ws;P*ap,*zp;
+FI2(jtfromsd){A e,x,z;I *v,*ws;P*ap,*zp;
  IARG2CR F12IP;
-// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
+// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
 // obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
- wf=wr-wcr;
+ I af=ar-acr, wf=wr-wcr;
  if(af)R sprank2(a,w,NOEMSGSELF,acr,wcr,jtfrom);
  ASSERT(AT(w)&B01+INT+FL+CMPX,EVNONCE);
  ap=PAV(a); ws=AS(w);
@@ -194,11 +194,11 @@ FI2(jtfromsd){A e,x,z;I af,*v,wf,*ws;P*ap,*zp;
  RETF(z);
 }    /* a{"r w, sparse a, dense w */
 
-FI2(jtfromss){A e,x,y,z;B*b;I af,c,d,k,m,n,p,*u,*v,wf,*ws,*yv;P*ap,*wp,*xp,*zp;
+FI2(jtfromss){A e,x,y,z;B*b;I c,d,k,m,n,p,*u,*v,*ws,*yv;P*ap,*wp,*xp,*zp;
  IARG2CR F12IP;
-// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
+// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
 // obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
- wf=wr-wcr;
+ I af=ar-acr, wf=wr-wcr;
  if(af)R sprank2(a,w,NOEMSGSELF,acr,wcr,jtfrom);
  ASSERT(DTYPE(AT(w))&B01+INT+FL+CMPX,EVNONCE);
  ap=PAV(a); wp=PAV(w); ws=AS(w);

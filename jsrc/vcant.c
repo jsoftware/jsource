@@ -5,7 +5,7 @@
 
 #include "j.h"
 
-static F2(jtcanta);
+static DF2(jtcanta);
 
 static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
  ARGCHK3(a,w,z);
@@ -46,7 +46,7 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
 // a[i] is the axis of the result that axis i of w contributes to - known to be valid and INT type
 // This is the inverse permutation of the x in x |: y
 // This routine handles IRS on w only (by making higher axes passthroughs), and ignores the rank of a (assumes 1)
-static FI2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,*sv,*tv,wf,*ws,zn,zr,ms[4],ss[4],ts[4];
+static DFI2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,*sv,*tv,wf,*ws,zn,zr,ms[4],ss[4],ts[4];
  IARG2CR F12IP;
  av=AV(a); ws=AS(w);
 // obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
@@ -114,7 +114,7 @@ DFI1(jtcant1){A z;
  RETF(z);  // This verb propagates WILLOPEN and must not perform EPILOG
 }    /* |:"r w */
 
-FI2(jtcant2){F12IP;A*av,p,t,y;I j,k,m,n,*pv,*v;
+FI2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,*v;
  IARG2CR F12IP;
 // obsolete  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; 
 // obsolete  q=jt->ranks>>RANKTX; q=AR(a)<q?AR(a):q; RESETRANK;
@@ -125,7 +125,7 @@ FI2(jtcant2){F12IP;A*av,p,t,y;I j,k,m,n,*pv,*v;
   m=AN(a); n=AN(t); av=AAV(a); 
   j=0; DO(wcr-n,pv[*v++]=j++;); DO(m, k=AN(C(av[i])); DQ(k,pv[*v++]=j;); j+=(k!=0););
  }else RZ(p=pinv(pfill(wcr,a)));
- A z; IRS2(p,w,0L,1L,wcr,jtcanta,z); RZ(z);  // Set rank for w in canta.  p is now INT type.  No need to check agreement since a has rank 1
+ A z; z=IRS2(jtcanta,jt,p,1L,w,wcr,0L); RZ(z);  // Set rank for w in canta.  p is now INT type.  No need to check agreement since a has rank 1
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result
  PRISTXFERF(z,w)
  RETF(z);

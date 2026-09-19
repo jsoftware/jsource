@@ -687,7 +687,7 @@ static GF(jtgrc){F1PREFJT;A x;B b,q,up;I *g,*h,e,i,p,ps,*xv,yv[256];UC*vv,*wv;
 }    /* grade"r w on boolean or char or unicode w */
 
 F2(jtgrade1p){F12IP;PROLOG(0074);A x,z;I n,*s,*xv,*zv;
- RZ(x=curtail(a)); IRS2(x,w,0L,1L,1L,jtfrom,z); z=grade1(z); EPILOG(z);
+ RZ(x=curtail(a)); z=IRS2(jtfrom,jt,x,1L,w,1L,0L); z=grade1(z); EPILOG(z);
  // A special sort function for this is a bad idea, because the indirection is repeated so often
 }    /* /:(}:a){"1 w , permutation a, integer matrix w */
 
@@ -709,7 +709,7 @@ static B (*grroutine[])(J,I,I,I,A,I*) = {  // index is [bitx]
 [B01X]=jtgrc, [LITX]=jtgrc, [INTX]=jtgri, [FLX]=jtgrd, [CMPXX]=jtgrx,[BOXX]=jtgrx, [XNUMX]=jtgrx, [RATX]=jtgrx, [QPX]=jtgrx,[C2TX]=jtgrc, [C4TX]=jtgru, [INT2X]=jtgrx, [INT4X]=jtgrx};
 
 // /: and \: with IRS support
-DFI1(jtgr1){A z;I f,ai,m,n,*s,t,wn,wr,zn;
+DFI1(jtgr1){A z;I f,ai,m,n,*s,t,wn,zn;
  IARG1CR F12IP;PROLOG(0075);
  t=AT(w);
 // obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
@@ -731,8 +731,8 @@ DFI1(jtgr1){A z;I f,ai,m,n,*s,t,wn,wr,zn;
  EPILOG(z);
 }    /*   grade"r w main control for dense w */
 
-FI1(jtgrade1){IARG1 F12IP;A z; jtfg=(J)((I)jtfg&~JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(wfg)); RETF(grd1sp(wfg));}
-FI1(jtdgrade1){IARG1 F12IP;A z; jtfg=(J)(((I)jtfg&~JTFLAGMSK)+JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(wfg)); RETF(grd1sp(wfg));}
+DFI1(jtgrade1){IARG1 F12IP;A z; jtfg=(J)((I)jtfg&~JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(wfg)); RETF(grd1sp(wfg));}
+DFI1(jtdgrade1){IARG1 F12IP;A z; jtfg=(J)(((I)jtfg&~JTFLAGMSK)+JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(wfg)); RETF(grd1sp(wfg));}
 // Since grade2 pulls from a, mark a as non-pristine.  But since there can be no repeats, transfer a's pristinity to result if a is inplaceable
 // We do this in jtgr2 because it has a branch where all boxed values go
 FI2(jtgrade2){IARG2 F12IP;A z; if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jtfg&~JTDESCEND),afg,wfg)); RETF(jtgrd2sp((J)((I)jtfg&~JTDESCEND),afg,wfg));}

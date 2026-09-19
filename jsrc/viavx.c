@@ -1249,7 +1249,7 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  if(unlikely(MIN(ai,wi)==0)&&(ar!=0))RCA(a);  // if either arg has no items, there's nothing to remove, return a, unless atom must become a list
  jtfg=MOVEIP0A(jtfg);  // only our a argument can be inplaced, and it moves to y in all uses
  if(unlikely(ar==wr+1)){  // is just 1 cell of y, with x a list of such cells?
-  if(wr==0)x=ne(a,w); else IRS2(a,w,0,wr,wr,jtnotmatch,x); RZ(x) RZ(x=jtrepeat(jtfg,x,a))  // y has rank 1 less than x, execute as ((x ~: y) # x) (y atomic) or ((x -.@-:"yr) # x) if (y array).  Inplace x on the #.  Use IRS and leave comparison tolerance as set
+  if(wr==0)x=ne(a,w); else x=IRS2(jtnotmatch,jt,a,wr,w,wr,0); RZ(x) RZ(x=jtrepeat(jtfg,x,a))  // y has rank 1 less than x, execute as ((x ~: y) # x) (y atomic) or ((x -.@-:"yr) # x) if (y array).  Inplace x on the #.  Use IRS and leave comparison tolerance as set
  }else{
   // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
   if(unlikely((-wr&-(r^wr))<0)){RZ(x=virtual(w,0,r)); AN(x)=wn; s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here
@@ -1273,7 +1273,7 @@ DF2(jtintersect){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  jtfg=MOVEIP0A(jtfg);  // only our a argument can be inplaced, and it moves to y in all uses
  PUSHCCTIF(FAV(self)->localuse.lu0.cct,FAV(self)->localuse.lu0.cct!=0)   // if there is a CT, use it  *** no errors till cct restored ***
  if(unlikely(ar==wr+1)){  // is just 1 cell of y, with x a list of such cells?
-  if(wr==0)x=eq(a,w); else IRS2(a,w,0,wr,wr,jtmatch,x); RZGOTO(x,errexit) x=jtrepeat(jtfg,x,a);  // y has rank 1 less than x, execute as ((x = y) # x) (y atomic) or ((x -:"yr) # x) if (y array).  Inplace x on the #.  Use IRS and leave comparison tolerance as set
+  if(wr==0)x=eq(a,w); else x=IRS2(jtmatch,jt,a,wr,w,wr,0); RZGOTO(x,errexit) x=jtrepeat(jtfg,x,a);  // y has rank 1 less than x, execute as ((x = y) # x) (y atomic) or ((x -:"yr) # x) if (y array).  Inplace x on the #.  Use IRS and leave comparison tolerance as set
  }else{
   // if w's rank is larger than that of a cell of a, reheader w to look like a list of such cells
   if(unlikely((-wr&-(r^wr))<0)){RZGOTO(x=virtual(w,0,r),errexit); AN(x)=wn; s=AS(x); ws=AS(w); k=ar>wr?0:1+wr-r; I s0; PRODX(s0,k,ws,1) s[0]=s0; MCISH(1+s,k+ws,r-1);}  //  use fauxvirtual here

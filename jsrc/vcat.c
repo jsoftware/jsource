@@ -50,14 +50,14 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
  R z;
 }    /* a,"r w (0=p) or w,"r a (1=p) where a is scalar and w is sparse */
 
-static FI2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I *as,at,c,m,n,r,t,*v,*ws,wt,*zs;P*ap,*wp,*zp;
+static FI2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I *as,c,m,n,r,t,*v,*ws,*zs;P*ap,*wp,*zp;
  IARG2CR F12IP;
 // obsolete  acr=jt->ranks>>RANKTX; ar=AR(a); at=AT(a); acr=ar<acr?ar:acr; 
 // obsolete  wcr=(RANKT)jt->ranks; wr=AR(w); wt=AT(w); wcr=wr<wcr?wr:wcr; RESETRANK; 
  if(!ar)R ovs0(0,wcr,a,w);
  if(!wr)R ovs0(1,acr,w,a);
  if(ar>acr||wr>wcr)R sprank2(a,w,NOEMSGSELF,acr,wcr,jtover);
- r=MAX(ar,wr);
+ r=MAX(ar,wr); I at=AT(a), wt=AT(w);
  if(r>ar)RZ(a=reshape(over(apv(r-ar,1L,0L),shape(a)),a)); as=AS(a);
  if(r>wr)RZ(w=reshape(over(apv(r-wr,1L,0L),shape(w)),w)); ws=AS(w);
  ASSERT(*as<IMAX-*ws,EVLIMIT);
@@ -380,7 +380,7 @@ DF2(jtstitch){F12IP;I ar,wr; A z;
  ARGCHK2(a,w);
  ar=AR(a); wr=AR(w);
  ASSERT((-ar&-wr&-(AS(a)[0]^AS(w)[0]))>=0,EVLENGTH);  // a or w scalar, or same # items    always OK to fetch s[0]
- if(likely(((SGNIFDENSE(AT(a)|AT(w)))&(2-ar)&(2-wr))>=0))R IRSIP2(a,w,self,(ar-1)&RMAX,(wr-1)&RMAX,jtover,z);  // not sparse or rank>2
+ if(likely(((SGNIFDENSE(AT(a)|AT(w)))&(2-ar)&(2-wr))>=0))R z=IRS2(jtover,jtfg,a,(ar-1)&RMAX,w,(wr-1)&RMAX,self);  // not sparse or rank>2
  R stitchsp2(a,w);  // sparse rank <=2 separately
 }
 
@@ -390,10 +390,10 @@ DFI1(jtlamin1){I* RESTRICT s,* RESTRICT v,wf;
  wf=wr-wcr;
  fauxblockINT(wfaux,4,1); A x; fauxINT(x,wfaux,1+wr,1) v=IAV(x);
  s=AS(w); MCISH(v,s,wf); v[wf]=1; MCISH(v+wf+1,s+wf,wcr);  // frame, 1, shape - the final shape
- R jtreshape(jtfg,x,w);   // scaf do the virtual here - too much overhead in reshape
+ R jtreshape(jtfg,x,w,0);   // scaf do the virtual here - too much overhead in reshape
 }    /* ,:"r w */
 
-DFI2(jtlamin2){F12IP;A z;
+DFI2(jtlamin2){A z;
  // Because we don't support inplacing here, the inputs & results will be marked non-pristine.  That's OK because scalar replication might have happened.
  IARG2CR F12IP;
  PROLOG(000);
@@ -401,7 +401,7 @@ DFI2(jtlamin2){F12IP;A z;
 // obsolete  wr=AR(w); q=(RANKT)jt->ranks; q=wr<q?wr:q; RESETRANK;
  if(acr)RZ(a=IRS1(jtlamin1,jt,a,acr,0L));
  if(wcr)RZ(w=IRS1(jtlamin1,jt,w,wcr,0L));
- RZ(IRS2(a,w,self,acr+!!acr,wcr+!!wcr,jtover,z));
+ RZ(z=IRS2(jtover,jt,a,acr+!!acr,w,wcr+!!wcr,self));
  if(!(acr|wcr))z=IRS1(jtlamin1,jt,z,0L,0L);
  EPILOG(z);
 }    /* a,:"r w */

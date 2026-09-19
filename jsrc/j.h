@@ -1139,8 +1139,10 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define DFI1(f) A f(JJ jtfg,A wfg,A self)
 #define DFI2(f) A f(JJ jtfg,A afg,A wfg,A self)
 // receive args
-#define IARG1 AD * RESTRICT w=wfg; I wcr=(I)wfg; if(unlikely((w=(A)((I)w&~0x3f))==0))R0 wcr=~wcr; wcr&=0x3f;
-#define IARG2 AD * RESTRICT w=wfg; AD * RESTRICT a=afg; I wcr=(I)wfg; I acr=(I)afg; if(unlikely((w=(A)((I)w&~0x3f))==0))R0 if(unlikely((a=(A)((I)a&~0x3f))==0))R0 wcr=~wcr; acr=~acr; wcr&=0x3f; acr&=0x3f;
+#define IARG1C AD * RESTRICT w=wfg; I wcr=(I)wfg; if(unlikely((w=(A)((I)w&~0x3f))==0))R0 wcr=~wcr;   // extracts complement of encoded verb rank = 63-actual rank
+#define IARG2C AD * RESTRICT w=wfg; AD * RESTRICT a=afg; I wcr=(I)wfg; I acr=(I)afg; if(unlikely((w=(A)((I)w&~0x3f))==0))R0 if(unlikely((a=(A)((I)a&~0x3f))==0))R0 wcr=~wcr; acr=~acr;
+#define IARG1 IARG1C wcr&=0x3f;
+#define IARG2 IARG2C wcr&=0x3f; acr&=0x3f;
 // receive args & calc ?cr
 #define IARG1R IARG1 I wr=AR(w);
 #define IARG1CR IARG1R wcr=MIN(wcr,wr);
@@ -1148,7 +1150,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define IARG2CR IARG2R acr=MIN(acr,ar); wcr=MIN(wcr,wr);
 // call IRS
 #define IRS1(f,j,w,wcr,self) f(j,(A)(((I)(w)+0x3f)^(wcr)),self)  // wcr is rank for w
-#define IRS2 (f,j,a,acr,w,wcr,self) f(j,(A)(((I)(a)+0x3f)^(acr)),(A)(((I)(w)+0x3f)^(wcr)),self)  // wcr is rank for w.  Coded assuming w is ready before wcr
+#define IRS2(f,j,a,acr,w,wcr,self) f(j,(A)(((I)(a)+0x3f)^(acr)),(A)(((I)(w)+0x3f)^(wcr)),self)  // wcr is rank for w.  Coded assuming w is ready before wcr
 // obsolete #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lu2.lc=FAV(ds(cxx))->lu2.lc, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
 #define ATOMIC2(jt,a,w,fs,l,r,cxx) IRS2(jtatomic2,jt,a,l,w,r,ds(cxx))   // cxx is the function to execute, l/r ranks
 #define DO(n,stm...)          {I _n=(n); I i=0; for(;i<_n;i++){stm}}  // i runs from 0 to n-1
@@ -1639,10 +1641,10 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // obsolete // args should be names, because they are evaluated repeatedly, and also because rank is set before one of the evaluations
 // obsolete #define IRS1COMMON(j,w,fs,r,f1,z) (z=(A)(r),z=(I)AR(w)>(I)(r)?z:(A)~0,jt->ranks=(RANK2T)(I)z,z=((AF)(f1))(j,(w),(A)(fs)),jt->ranks=R2MAX,z)  // nonneg rank
 // obsolete #define z=IRS1(f1,jt,w,r,fs) IRS1COMMON(jt,w,fs,r,f1,z)  // nonneg rank
-// obsolete #define z=IRS1(f1,jtfg,w,r,fs) IRS1COMMON(jtfg,w,fs,r,f1,z)  // nonneg rank
+// obsolete #define IRSIP1(w,fs,r,f1,z) IRS1COMMON(jtfg,w,fs,r,f1,z)  // nonneg rank
 // obsolete #define IRS2COMMON(j,a,w,fs,l,r,f2,z) (jt->ranks=(RANK2T)(((((I)AR(a)-(l)>0)?(l):RMAX)<<RANKTX)+(((I)AR(w)-(r)>0)?(r):RMAX)),z=((AF)(f2))(j,(a),(w),(A)(fs)),jt->ranks=R2MAX,z) // nonneg rank
-// obsolete #define IRS2(a,w,fs,l,r,f2,z) IRS2COMMON(jt,a,w,fs,l,r,f2,z)
-// obsolete #define IRSIP2(a,w,fs,l,r,f2,z) IRS2COMMON(jtfg,a,w,fs,l,r,f2,z)
+// obsolete #define z=IRS2(f2,jt,a,l,w,r,fs) IRS2COMMON(jt,a,w,fs,l,r,f2,z)
+// obsolete #define z=IRSIP2(f2,jt,a,l,w,r,fs) IRS2COMMON(jtfg,a,w,fs,l,r,f2,z)
 // obsolete // no longer used #define IRS2AGREE(a,w,fs,l,r,f2,z) {I fl=(I)AR(a)-(l); fl=fl<0?0:fl; I fr=(I)AR(w)-(r); fr=fr<0?0:fr; fl=fr<fl?fr:fl; ASSERTAGREE(AS(a),AS(w),fl) IRS2COMMON(jt,(a),(w),fs,(l),(r),(f2),z); } // nonneg rank; check agreement first
 // obsolete // call to atomic2(), similar to IRS2.  fs is a local block to use to hold the rank (declared as D fs[16]), cxx is the Cxx value of the function to be called
 // obsolete #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lu2.lc=FAV(ds(cxx))->lu2.lc, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))

@@ -384,7 +384,7 @@ DFI1(jtcompsum){
  // r cannot be 0 (would be handled above).  Calculate low part of zn first
  I m; PROD(m,f,ws);
  // Allocate the result area
- A z; GATV(z,FL,m*d,MAX(0,wr-1),ws); if(1<r)MCISH(f+AS(z),f+1+ws,r-1);  // allocate, and install shape below the frame
+ A z; GATV(z,FL,m*d,MAX(0,wr-1),ws); if(1<wcr)MCISH(f+AS(z),f+1+ws,wcr-1);  // allocate, and install shape below the frame
  if(unlikely(m*d==0)){RETF(z);}  // mustn't call the function on an empty argument!
  // Do the operation
  NAN0;
@@ -723,7 +723,7 @@ static DFI1(jtreducesp){A a,g,z;B b;I f,n,*v,wn,*ws,wt,zt;P*wp;
  C id; if(AT(g)&VERB){id=FAV(g)->id; id=FAV(g)->flag&VISATOMIC2?id:0;}else id=0;
  VARPS adocv; varps(adocv,self,wt,0);
  if(2==n&&!(adocv.f&&strchr(fca,id))){
-  A x; IRS2(num(0),w,0L,0,wcr,jtfrom,x); A y; IRS2(num(1),w,0L,0,wcr,jtfrom,y);
+  A x; x=IRS2(jtfrom,jt,num(0),0,w,wcr,0L); A y; y=IRS2(jtfrom,jt,num(1),0,w,wcr,0L);
   R df2(z,x,y,g);  // rank has been reset for this call
  }
  if(!adocv.f)R redg(wfg,self);  // no reduction routine: use general, with the original rank
@@ -956,19 +956,19 @@ static DFI1(jtredsemi){I f,n;
 static DFI1(jtredstitch){A c,y;I f,n,*s,*v;
  IARG1CR F12IP;
 // obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
- f=wr-wcr; s=AS(w); SETICFR(w,f,r,n);
+ f=wr-wcr; s=AS(w); SETICFR(w,f,wcr,n);
  ASSERT(n!=0,EVDOMAIN);
  if(1==n)R IRS1(jthead,jt,w,wcr,0L);
- if(1==r){if(2==n)R RETARG(w); A z1,z2,z3; RZ(IRS2(num(-2),w,0L,0L,1L,jtdrop,z1)); RZ(IRS2(num(-2),w,0L,0L,1L,jttake,z2)); R IRS2(z1,z2,self,1L,0L,jtover,z3);}
- if(2==r)R IRS1(jtcant1,jt,w,2L,0L);
+ if(1==wcr){if(2==n)R RETARG(w); A z1,z2,z3; RZ(z1=IRS2(jtdrop,jt,num(-2),0L,w,1L,0L)); RZ(z2=IRS2(jttake,jt,num(-2),0L,w,1L,0L)); R z3=IRS2(jtover,jt,z1,1L,z2,0L,self);}
+ if(2==wcr)R IRS1(jtcant1,jt,w,2L,0L);
  RZ(c=apvwr(wr,0L,1L)); v=AV(c); v[f]=f+1; v[f+1]=f; RZ(y=cant2(c,w));  // transpose last 2 axes
  if(unlikely(ISSPARSE(AT(w)))){A x;
   GATV0(x,INT,f+wcr-1,1); v=AV1(x); MCISH(v,AS(y),f+1);
-  DPMULDE(s[f],s[f+2],v[f+1]); MCISH(v+f+2,s+3+f,r-3);
+  DPMULDE(s[f],s[f+2],v[f+1]); MCISH(v+f+2,s+3+f,wcr-3);
   RETF(reshape(x,y));
  }else{
   v=AS(y); 
-  DPMULDE(s[f],s[f+2],v[f+1]); MCISH(v+f+2,s+3+f,r-3);
+  DPMULDE(s[f],s[f+2],v[f+1]); MCISH(v+f+2,s+3+f,wcr-3);
   --AR(y); 
   RETF(y);
 }}   /* ,./"r w */
@@ -982,12 +982,12 @@ static DF1(jtredstiteach){F12IP;A*wv,y;I n,p,r,t;
  R box(razeh(w));
 }    /* ,.&.>/ w */
 
-static DFI1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I f,m,mn,n,*ws,zm,zn;I n1=0,n2=0;
+static DFI1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I m,mn,n,zm,zn;I n1=0,n2=0;
  IARG1CR F12IP;
-// obsolete  wr=AR(w); ws=AS(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
- f=wr-wcr;
+// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
+ I f=wr-wcr, *ws=AS(w); 
  SETICFR(w,f,wcr,n);
- if(!r||1>=n)R reshape(repeat(ne(sc(f),IX(wr)),shape(w)),n?w:ds(CACE));
+ if(!wcr||1>=n)R reshape(repeat(ne(sc(f),IX(wr)),shape(w)),n?w:ds(CACE));
  if(!(BOX&AT(w))){A t; RZ(t=cant2(sc(f),w)) R IRS1(jtbox,jt,t,1,0);}  // handle unboxed args by transposing on the given axis and then boxing lists
 // bug: ,&.>/ y does scalar replication wrong
 // wv=AN(w)+AAV(w); DQ(AN(w), if(AN(*--wv)&&AR(*wv)&&n1&&n2) ASSERT(0,EVNONCE); if((!AR(*wv))&&n1)n2=1; if(AN(*wv)&&1<AR(*wv))n1=1;);

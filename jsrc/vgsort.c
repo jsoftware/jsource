@@ -477,7 +477,7 @@ FI2(jtgr2){A z=0;I api,d,f,m,n,*s,t;
  // If not a supported reflexive case, grade w and then select those values from a.  IRS is still active
  if(!z){A t;
   I awflg=AFLAG(a);   // Remember original pristinity of a, before calling from which will clear it
-  RZ(t=gr1(wfg)); IRS2(t,a,0L,1L,acr,jtfrom,z); RZ(z);
+  RZ(t=gr1(wfg)); z=IRS2(jtfrom,jt,t,1L,a,acr,0L); RZ(z);
   // Boxed args will come through here.  Because no cell of a is repeated in the result, we know that if a is pristine,
   // the result will be too, as long as the frames have equal length (and thus must be equal).  If from chose to return virtual z,
   // a will now be non-inplaceable and z will be virtual but not inplaceable.

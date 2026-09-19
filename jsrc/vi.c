@@ -1392,7 +1392,7 @@ A jtindexofprehashed(J jtfg,A a,A w,A hs,A self){F12IP;A h,hi,*hv,x,z;AF fn;I ar
 // Now, support for the primitives that use indexof
 
 // x i. y, with IRS
-FI2(jtindexof){IARG2 F12IP; R indexofsub(IIDOT,afg,wfg);}
+DFI2(jtindexof){IARG2 F12IP; R indexofsub(IIDOT,afg,wfg);}
      /* a i."r w */
 
 // x i: y, with IRS

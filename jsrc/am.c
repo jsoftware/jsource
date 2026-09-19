@@ -159,7 +159,7 @@ static A jtmerge2(J jtfg,A a,A w,A ind,I cellframelen){F12IP;A z;I t;
  ASSERTAGREE(as+compalen,ws+wcr-(acr-compalen),acr-compalen)  // the rest of the shape of m{y comes from shape of y
 
  // if there is surplus outer frame for a, replicate w to match the result size
- if(unlikely(aframelen>wframelen)){IRS2(a,w,0L,acr,wcr,jtright2,z); RZ(z); w=z; wframelen=aframelen;}  // w =. a ]"ranks w
+ if(unlikely(aframelen>wframelen)){z=IRS2(jtright2,jt,a,acr,w,wcr,0L); RZ(z); w=z; wframelen=aframelen;}  // w =. a ]"ranks w
  if(unlikely(!AN(w)))RCA(w);  // if y empty, return.  It's small.  Ignore inplacing
  if(unlikely(!AN(a)))RCA(w);  // if nothing to amend, return.  Ignore inplacing
 
@@ -593,7 +593,7 @@ A jtamendn2(J jtfg,A afg,A wfg,AD * RESTRICT ind,A self){A e,z; I atd,wtd,t,t1;P
  I cellframelen,cellx,indframe;  // for single-cell amend: frame of cell; its index; number of surplus leading axes of 1s in selector
  if(unlikely(ISSPARSE(wt|indt)))R rank2ex(a,w,self,acr,wcr,acr,wcr,jtamendn2sp);
  // non-sparse.
- I ar=AR(a), wr=AR(w), aframelen=ar-acr,wframelen=wr-wcr;  // number of axes in frame
+ I aframelen=ar-acr,wframelen=wr-wcr;  // number of axes in frame
  // handle fast and common case, where ind selects a single non-DIRECT cell (must be no frame), and not -@(|:){`[`]}
  I notonecelldirect=aframelen+wframelen+(wt&~DIRECT)+SGNTO0(AN(a));  // nonzero if cannot use single-cell code
  if((notonecelldirect+(AN(ind)^1)+(indt&~NUMERIC))==0){

@@ -5,10 +5,10 @@
 
 #include "j.h"
 
-F1(jtbehead ){F12IP; R jtdrop(jtfg,zeroionei(1),w);}
-F1(jtcurtail){F12IP; R jtdrop(jtfg,num(-1),w);}
+DFI1(jtbehead){F12IP; R jtdrop(jtfg,zeroionei(1),wfg);}  //  }. with IRS
+FI1(jtcurtail){F12IP; R jtdrop(jtfg,num(-1),wfg);}  // }: with IRS
 
-F1(jtshift1){F12IP;R drop(num(-1),over(zeroionei(1),w));}
+F1(jtshift1){F12IP;R drop(num(-1),over(zeroionei(1),w));}  // !.!.f, without IRS
 
 static I shape1[RMAX+1]={[0 ... RMAX]=1};  // use as cell-shape for atomic cell, to allow extension to any rank
 
@@ -210,7 +210,7 @@ static FI1(jtrsh0){A x,y;
  // not pristine
 }
 
-FI1(jthead){
+DFI1(jthead){
  IARG1CR F12IP;
  // obsolete wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr;
  I wf=wr-wcr;

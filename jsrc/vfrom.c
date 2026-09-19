@@ -481,11 +481,11 @@ static FI2(jtafrom){
 // obsolete  I wr=AR(w); I wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  I wf=wr-wcr;
  // We have IRS on w, but not a.  If there are multiple cells of a we use a rank loop.
- if(unlikely(ar!=0)){A t0,t1,t2;  // if there is an array of boxes
+ if(unlikely(ar!=0)){A t0;  // if there is an array of boxes
   // Since the native rank of a is 0, if w has only one cell we can loop over boxes of a
   R wr==wcr?rank2ex(a,w,DUMMYSELF,0L,wcr,0L,wcr,jtafrom):  // if a has frame, rank-loop over a
     // If both a and w have cells, we must match them up by boxing
-      dfv2(t0,t1=IRS1(jtbox,jt,a,acr,0L),t2=IRS1(jtbox,jt,w,wcr,0L),amp(ds(CLBRACE),ds(COPE)));  // > (<"arank a) {&> <"wrank w
+      dfv2(t0,IRS1(jtbox,jt,a,acr,0L),IRS1(jtbox,jt,w,wcr,0L),amp(ds(CLBRACE),ds(COPE)));  // > (<"arank a) {&> <"wrank w
  }
  // a is an atomic box.  Open it
  A c=C(AAV(a)[0]);  // contents of a

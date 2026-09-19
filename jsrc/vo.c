@@ -34,7 +34,7 @@ I levelle(J jt,A w,I l){
 F1(jtlevel1){F12IP;ARGCHK1(w); I z=level(jt,w); RE(0) R sc(z);}
 
 // < y with IRS
-FI1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,*ws; 
+DFI1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,*ws; 
  IARG1CR F12IP; I wt=AT(w); FLAGT waf=AFLAG(w);
 #ifndef BOXEDSPARSE
  ASSERTF(!ISSPARSE(wt),EVNONCE,"can't box sparse arrays");

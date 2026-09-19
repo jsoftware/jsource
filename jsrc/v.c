@@ -58,7 +58,7 @@ DFI1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,*u,*v,*yv;P*wp,*zp;
   GATV0(y,INT,m*(1+n-wcr),2); v=AS(y); v[0]=m; v[1]=1+n-r;
   yv=AV(y); u=AV(y0); v=AV(q); j=n-r;
   DQ(m, ICPY(yv,u,j); yv[j]=*v++; yv+=1+j; u+=n;);
- }else{RZ(a=ca(SPA(wp,a))); A spax=SPA(wp,x); RZ(x=y0=IRS1(jtravel,jt,spax,wcr,0L)); RZ(y=ca(SPA(wp,i)));}
+ }else{RZ(a=ca(SPA(wp,a))); A spax=SPA(wp,x); RZ(x=IRS1(jtravel,jt,spax,wcr,0L)); RZ(y=ca(SPA(wp,i)));}
  SPB(zp,a,a); 
  SPB(zp,e,ca(SPA(wp,e)));
  SPB(zp,x,x);
@@ -70,8 +70,8 @@ FI1(jttable){A z,zz;
  IARG1CR F12IP;
  // We accept the pristine calculations from ravel
 // obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;  // r=rank to use
- RZ(z=0)=IRS1(wcr-((UI)wcr>0).jt.jtravel.w.jtfg);  // perform ravel on items
- R wcr?z:IRS1(jtravel,jt,z,0L,0L);  // If we are raveling atoms, do it one more time on atoms
+ RZ(z=IRS1(jtravel,jtfg,w,wcr-((UI)wcr>0),0))  // perform ravel on items
+ R wcr?z:IRS1(jtravel,jtfg,w,0L,0L);  // If we are raveling atoms, do it one more time on atoms
 } // ,."r y
 
 // ]"n, dyadic - also ["n, implemented as ] with args switched
@@ -109,7 +109,7 @@ DF1(jtiota){F12IP;A z;I m,n,*v;
  if(n==1){if(unlikely(v[0]==0))R mtvi; m=*v; I rs=REPSGN(m); R apv((m^rs)-rs,(m^rs)&rs,2*rs+1); }   // if list required, create it (ascending or descending) and return it forthwith.  i. 0 special
  if(n==2&&(v[0]|v[1])==0)R mtmi;  // i. 0 0 special
  A mg; RZ(mg=mag(w)); PRODX(m,n,IAV(mg),1); RZ(z=IX(m)); RZ(z=reshape(mg,z));  // rank>1.  Take */|y, create index vector, reshape to (|y) i. */|y
- DO(n, A zz; if(0>v[i])z=zz=IRS1(jtreverse,jt,z,n-i,0L););  // reverse negative axes in input
+ DO(n, if(0>v[i])z=IRS1(jtreverse,jt,z,n-i,0L););  // reverse negative axes in input
  EPILOG(z);
 }
 

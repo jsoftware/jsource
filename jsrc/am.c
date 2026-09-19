@@ -558,7 +558,7 @@ DF2(jtamendn2sp){F12IP;PROLOG(0007);
     // calculate agreement: ($a)-:(-#$a){.!._1(#ind),({:$ind)}.$w
     A temp; ASSERT(equ(shape(a),dfv2(temp,negate(jtrank(jt,a)),over(tally(ind),drop(tail(shape(ind)),shape(w))),fit(ds(CTAKE),num(-1)))),EVLENGTH);
     EPILOG(w);  // nothing to amend - return w
-   }else{RZ(ind=IRS1(jtbox,jt,ind,0,ds(CBOX)));  // ind =. <"1 ind
+   }else{RZ(ind=IRS1(jtbox,jt,ind,1,0));  // ind =. <"1 ind
    }
   }  // Convert empty 2-d to atom so aindex doesn't fail
  }

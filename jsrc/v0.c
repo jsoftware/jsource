@@ -283,7 +283,7 @@ static F2(jtpoly2a){F12IP;A c,e,x;I m;D rkblk[16];
  ASSERT(AT(a)&NUMERIC,EVDOMAIN);
  ASSERT(2==AR(a),EVRANK);
  ASSERT(0<m,EVLENGTH);
- RZ(c  =IRS1(jthead,jt,a,1L,0L) );   // c={."1 a
+ RZ(c=IRS1(jthead,jt,a,1L,0L) );   // c={."1 a
  RZ(e=cant1(e=IRS1(jtbehead,jt,a,1L,0L)));  // e =. }."1 a
  RZ(x=mnomx(m,w));
  if(1==m){A er; RZ(er=ravel(e)); R pdt(ATOMIC2(jt,x,er,rkblk,0L,2L,CEXP),c);}else{A z; R pdt(dfv2(z,x,e,dot(slash(ds(CSTAR)),ds(CEXP))),c);}

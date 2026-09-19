@@ -1147,7 +1147,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define IARG2R IARG2 I ar=AR(a); I wr=AR(w);
 #define IARG2CR IARG2R acr=MIN(acr,ar); wcr=MIN(wcr,wr);
 // call IRS
-#define IRS1 (f,j,w,wcr,self) f(j,(A)(((I)(w)+0x3f)^(wcr)),self)  // wcr is rank for w
+#define IRS1(f,j,w,wcr,self) f(j,(A)(((I)(w)+0x3f)^(wcr)),self)  // wcr is rank for w
 #define IRS2 (f,j,a,acr,w,wcr,self) f(j,(A)(((I)(a)+0x3f)^(acr)),(A)(((I)(w)+0x3f)^(wcr)),self)  // wcr is rank for w.  Coded assuming w is ready before wcr
 // obsolete #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lu2.lc=FAV(ds(cxx))->lu2.lc, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
 #define ATOMIC2(jt,a,w,fs,l,r,cxx) IRS2(jtatomic2,jt,a,l,w,r,ds(cxx))   // cxx is the function to execute, l/r ranks

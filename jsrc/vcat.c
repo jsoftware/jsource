@@ -384,7 +384,7 @@ DF2(jtstitch){F12IP;I ar,wr; A z;
  R stitchsp2(a,w);  // sparse rank <=2 separately
 }
 
-FI1(jtlamin1){I* RESTRICT s,* RESTRICT v,wf; 
+DFI1(jtlamin1){I* RESTRICT s,* RESTRICT v,wf; 
  IARG1CR F12IP;
 // obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  wf=wr-wcr;
@@ -393,16 +393,16 @@ FI1(jtlamin1){I* RESTRICT s,* RESTRICT v,wf;
  R jtreshape(jtfg,x,w);   // scaf do the virtual here - too much overhead in reshape
 }    /* ,:"r w */
 
-DF2(jtlamin2){F12IP;A z;
+DFI2(jtlamin2){F12IP;A z;
  // Because we don't support inplacing here, the inputs & results will be marked non-pristine.  That's OK because scalar replication might have happened.
  IARG2CR F12IP;
  PROLOG(000);
 // obsolete  ar=AR(a); p=jt->ranks>>RANKTX; p=ar<p?ar:p;  // p=cell rank of a, q=cell rank of w
 // obsolete  wr=AR(w); q=(RANKT)jt->ranks; q=wr<q?wr:q; RESETRANK;
- if(acr)RZ(a=IRS1(a,0L,acr,jtlamin1,z));
- if(wcr)RZ(w=IRS1(w,0L,wcr,jtlamin1,z));
+ if(acr)RZ(a=IRS1(jtlamin1,jt,a,acr,0L));
+ if(wcr)RZ(w=IRS1(jtlamin1,jt,w,wcr,0L));
  RZ(IRS2(a,w,self,acr+!!acr,wcr+!!wcr,jtover,z));
- if(!(acr|wcr))z=IRS1(z,0L,0L,jtlamin1,a);
+ if(!(acr|wcr))z=IRS1(jtlamin1,jt,z,0L,0L);
  EPILOG(z);
 }    /* a,:"r w */
 

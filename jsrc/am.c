@@ -591,7 +591,7 @@ A jtamendn2(J jtfg,A afg,A wfg,AD * RESTRICT ind,A self){A e,z; I atd,wtd,t,t1;P
 // obsolete  I wcr=(RANKT)jt->ranks; wcr=AR(w)<wcr?AR(w):wcr; RESETRANK;
  I at=AT(a), wt=AT(w), indt=AT(ind);
  I cellframelen,cellx,indframe;  // for single-cell amend: frame of cell; its index; number of surplus leading axes of 1s in selector
- if(unlikely(ISSPARSE(wt|indt)))R rank2ex(a,w,self,acr,wcr,acr,wcr,jtamendn2sp);
+ if(unlikely(ISSPARSE(wt|indt)))R rank2exip(a,w,self,acr,wcr,acr,wcr,jtamendn2sp);
  // non-sparse.
  I aframelen=ar-acr,wframelen=wr-wcr;  // number of axes in frame
  // handle fast and common case, where ind selects a single non-DIRECT cell (must be no frame), and not -@(|:){`[`]}

@@ -614,7 +614,7 @@ A jtirs2(J jtfg,A a,A w,A fs,I l,I r,AF f2){F12IP;A z;I ar,wr;
  ar=AR(a); l=l>=ar?RMAX:l; ar+=l; ar=ar<0?0:ar; ar=l>=0?l:ar; l=AR(a)-ar;   // ar=requested rank, after negative resolution, or ~0; l=frame of a, possibly negative if no frame
  ASSERTAGREE(AS(a),AS(w),MAX(0,MIN(r,l)))  // verify agreement before we modify jt->ranks
 // obsolete  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
- z=IRS2(f2,jtfg,a,l,w,r,fs);   // save ranks, call setup verb, pop rank stack.  Pass inplaceability through
+ z=IRS2(f2,jtfg,a,ar,w,wr,fs);   // save ranks, call setup verb, pop rank stack.  Pass inplaceability through
    // Not all verbs (*f2)() use the fs argument.
 // obsolete  jt->ranks=R2MAX;  // reset rank to infinite
  RETF(z);
@@ -723,7 +723,7 @@ static DF1(rank1q){F12IP;  // fast version: nonneg rank, no check for multiple R
 #endif
 
 // Version for rank 0.  Call rank1ex0, pointing to the u"r
-static DF1(jtrank10atom){F12IP; A fs=FAV(self)->fgh[0]; RETF(CALL1IP(FAV(fs)->valencefns[0],w,fs))}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop.  Pass inplaceability through
+static DF1(jtrank10atom){F12IP; A fs=FAV(self)->fgh[0]; RETF(CALL1IP(FAV(fs)->valencefns[0],w,fs))}  // rank is immaterial, since these are ATOMIC1
 static DF1(jtrank10){F12IP;RETF(jtrank1ex0(jtfg,w,self,jtrank10atom))}  // pass inplaceability through.
 
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
@@ -851,7 +851,7 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
  // For monads that are not ATOMIC1/IRS1, we use quick rank if r>0, which suppresses the rank loop if r >= mu.  This may erroneously suppress a rank loop that would affect fill.
  // We mitigate the problem by giving the user credit if: u WILLOPEN; u cannot be combined in a rank loop
 // obsolete   if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?(hv[0]>=0&&!(av->id==CQQ)&&!(av->flag2&(VF2RANKONLY1+VF2WILLOPEN1))?rank1q:rank1):jtrank10; flag2|=VF2RANKONLY1;}}
-  if(av->flag&VISATOMIC1){f1=rank2;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?rank1:jtrank10; flag2|=VF2RANKONLY1;}}
+  if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?rank1:jtrank10; flag2|=VF2RANKONLY1;}}
 // obsolete   // if the monad rank in v is 0, we can surely ignore any higher rank, except in the rank of the compound.  We set IRS1 here so any later "n is fast
 // obsolete   vf|=(hv[0]==0)<<VIRS1X;
   // For dyad: atomic verbs take the rank from this block, so we take the action routine, and also the parameter it needs; these parameters mean that only

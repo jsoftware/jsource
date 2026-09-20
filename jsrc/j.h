@@ -1139,10 +1139,10 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define DFI1(f) A f(JJ jtfg,A wfg,A self)
 #define DFI2(f) A f(JJ jtfg,A afg,A wfg,A self)
 // receive args
-#define IARG1C AD * RESTRICT w=wfg; I wcr=(I)wfg; if(unlikely((w=(A)((I)w&~0x3f))==0))R0 wcr=~wcr;   // extracts complement of encoded verb rank = 63-actual rank
-#define IARG2C AD * RESTRICT w=wfg; AD * RESTRICT a=afg; I wcr=(I)wfg; I acr=(I)afg; if(unlikely((w=(A)((I)w&~0x3f))==0))R0 if(unlikely((a=(A)((I)a&~0x3f))==0))R0 wcr=~wcr; acr=~acr;
-#define IARG1 IARG1C wcr&=0x3f;
-#define IARG2 IARG2C wcr&=0x3f; acr&=0x3f;
+#define IARG2C w=wfg; a=afg; wcr=(I)wfg; acr=(I)afg; if(unlikely((w=(A)((I)w&~0x3f))==0))R0 if(unlikely((a=(A)((I)a&~0x3f))==0))R0 wcr&=0x3f; acr&=0x3f;  // no decls here - multiuse
+#define IARG2D AD * RESTRICT w; AD * RESTRICT a; I wcr, acr;
+#define IARG1 AD * RESTRICT w=wfg; I wcr=(I)wfg; if(unlikely((w=(A)((I)w&~0x3f))==0))R0 wcr=~wcr; wcr&=0x3f;  // extracts encoded verb rank
+#define IARG2 AD * RESTRICT w=wfg; AD * RESTRICT a=afg; I wcr=(I)wfg; I acr=(I)afg; if(unlikely((w=(A)((I)w&~0x3f))==0))R0 if(unlikely((a=(A)((I)a&~0x3f))==0))R0 wcr=~wcr; acr=~acr; wcr&=0x3f; acr&=0x3f;
 // receive args & calc ?cr
 #define IARG1R IARG1 I wr=AR(w);
 #define IARG1CR IARG1R wcr=MIN(wcr,wr);
@@ -1590,7 +1590,7 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 // Item count
 #define SETIC(w,targ)   (targ=AS(w)[0], targ=AR(w)?targ:1)  //   (AR(w) ? AS(w)[0] : 1L).  Always safe to fetch from AS()[0]
 // Item count given frame and rank: AS(f) unless r is 0; then 1 
-#define SETICFR(w,f,r,targ) (targ=(I)(AS(w)+f), targ=(r)?targ:(I)I1mem, targ=*(I*)targ)
+#define SETICFR(w,f,r,targ) (targ=(I)(AS(w)+(f)), targ=(r)?targ:(I)I1mem, targ=*(I*)targ)
 // Shape item s, but 1 if index is < 0
 #define ICMP(z,w,n)     memcmpne((z),(w),(n)*SZI)
 #define ICPY(z,w,n)     memcpy((z),(w),(n)*SZI)

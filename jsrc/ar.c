@@ -497,7 +497,7 @@ DFI1(jtcompsum){
   DQ(m, D *wv0; DQ(d, wv0=wv; D acc=0.0; D c=0.0; DQ(n, y=*wv0-c; t=acc+y; acc=t-acc; c=acc-y; acc=t; wv0+=d;) *zv++=acc; ++wv;) wv=wv0-(d-1); )
  }
 #endif
- if(unlikely(NANTEST))R reduce(w,FAV(self)->fgh[0]);  // if NaN error, fail over to normal summation.  Infinities can cause it.  Ranks still set
+ if(unlikely(NANTEST))R reduce(wfg,FAV(self)->fgh[0]);  // if NaN error, fail over to normal summation.  Infinities can cause it.
 
  RETF(z);
 }
@@ -947,8 +947,8 @@ DFI1(jtredcat){A z;B b;I f,*s,*v;
 static DFI1(jtredsemi){I f,n;
  IARG1CR F12IP;
 // obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;
- f=wr-wcr; SETICFR(w,f,wcr,n);   // scafrk let the rank run into tail   n=#items in a cell of w
- if(2>n){ASSERT(n!=0,EVDOMAIN); R tail(wfg);}  // rank still set
+ f=wr-wcr; SETICFR(w,f,wcr,n);   //    n=#items in a cell of w
+ if(2>n){ASSERT(n!=0,EVDOMAIN); R tail(wfg);}  // pass IRS into tail
  if(BOX&AT(w))R jtredg(jt,wfg,self);  // the old way failed because it did not mimic scalar replication; revert to the long way.  ranks are still set
  else{A z; R IRS1(jtbox,jt,w,wcr-1,0L);}  // unboxed, just box the cells
 }    /* ;/"r w */

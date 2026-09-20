@@ -71,7 +71,7 @@ FI1(jttable){A z,zz;
  // We accept the pristine calculations from ravel
 // obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;  // r=rank to use
  RZ(z=IRS1(jtravel,jtfg,w,wcr-((UI)wcr>0),0))  // perform ravel on items
- R wcr?z:IRS1(jtravel,jtfg,w,0L,0L);  // If we are raveling atoms, do it one more time on atoms
+ R wcr?z:IRS1(jtravel,jtfg,z,0L,0L);  // If we are raveling atoms, do it one more time on atoms
 } // ,."r y
 
 // ]"n, dyadic - also ["n, implemented as ] with args switched

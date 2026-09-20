@@ -563,7 +563,7 @@ extern DF2(jtlocpath2);
 extern F2(jtlogar2);
 extern F2(jtlowerupper);
 extern F2(jtlrtrim);
-extern F2(jtmatch);
+extern DF2(jtmatch);
 extern DF2(jtmdiv);
 extern F2(jtmdot);
 extern F2(jtmemu2);

@@ -816,7 +816,8 @@ A jtccvt(J jt,I tflagged,A w,I natoms){A d,z;I n,r,*s,wt; void *wv,*yv;I t=tflag
     SPB(yp,i,ca(SPA(wp,i)));
     SPB(yp,e,cvt(t1,SPA(wp,e)));
     SPB(yp,x,cvt(t1,SPA(wp,x)));
-// obsolete     jt->ranks=oqr; R z;
+// obsolete     jt->ranks=oqr;
+    R z;
    }
    // must be sparse to dense.  Carry on now that w is dense
 // obsolete    jt->ranks=oqr;

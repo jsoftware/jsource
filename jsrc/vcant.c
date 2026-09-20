@@ -104,7 +104,7 @@ static DFI2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,*sv,*tv,wf,*ws,zn,zr,ms[4],ss
 }    /* dyadic transpose in APL\360, a f"(1,r) w where 1>:#$a  */
 
 DFI1(jtcant1){A z;
- IARG1 F12IP;
+ IARG1CR F12IP;
 // obsolete  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;   // no RESETRANK; we pass the rank of w on
 // obsolete   // !!!!! this might be an else-clause from the conditional section!!!!
  RZ(z=canta(apv(wcr,wcr-1,-1L),wfg));  // pass cell-rank through to canta

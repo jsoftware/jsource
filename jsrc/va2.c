@@ -1847,24 +1847,22 @@ DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 
 // Consolidated entry point for ATOMIC2 verbs.  These can be called with self pointing either to a rank block or to the block for
 // the atomic.  self always has the 
-DFI2(jtatomic2){F12IP;A z;
+DFI2(jtatomic2){A z;
  IARG2D IARG2C
 takestats(++stats[0x0];)
- // load initial values, many of them since there is nothing else to do while the first reads are completing.  We overrule the compiler, which would load jtranks and selfranks after the first test,
- // to get an early start down that path.  We use atomic_load to inhibit load reordering, but clang creates a mov/movzx pair when loading anything shorter than an I, so we avoid loading a short value
- // using atomic_load.  Best sequence would be at , wt/ar , wr, but we have to delay the gating wt a clock to force the loads of jtranks and selfranks (added to misprediction latency of the first branch)
- UI opcode=FAV(self)->lu2.lc;
+ I at=AT(a); I awr=AR(a); I wt=AT(w); I wr=AR(w); UI opcode=FAV(self)->lu2.lc;  // reel off the reads we need: bidcase/densbid first, then opcode.  at 1 cycle before wt
 // obsolete UI jtranks=jt->ranks; // VA2C* code from the primitive (used if we predict to ssing), jt->ranks (used if we predict to va2)
 // obsolete  UI selfranks=FAV(self)->lrr;
- I at=AT(a);  //  at, for bidcase/densbid0
- UI awr=AR(a); I wt=__atomic_load_n(&AT(w),__ATOMIC_RELAXED);   // ar, wt, for bidcase/densbid0
+// obsolete    //  at, for bidcase/densbid0
+// obsolete    // ar, wt, for bidcase/densbid0
 // obsolete  awr<<=RANKTX;
- I wr=AR(w);   // wr, one cycle after ar.  We cannot load any more here without overrunning registers
- I afwf, af;  // finish combining rank; afwf will be both frames; af is rank of singleton result
+ // extract acr/wcr from the input parameters
+ F12IP;  // remove flags bit from jt
+ I afwf;  // afwf will be both frames, or duplicated rank of singleton result
  // Retries of singletons branch back to points at the top.  We must take care to save only what's needed, refetching the rest to save reg spills
  // singletons dominate the testcases.  We check them before any non-singleton fetches
  UI bidcase=3*at; bidcase&=(FL+INT)*5; UI densbid0=(UI)((at|=wt)&((NOUN|SPARSE)&~(B01+INT+FL))); bidcase+=wt;   // arg type info, with possibly 1 bit set in bits 0-1; bid0=not singleable
- if(withprob((awr+wr+densbid0)==0,0.7)){takestats(++stats[0x1];) af=0*0x101; goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
+ if(withprob((awr+wr+densbid0)==0,0.7)){takestats(++stats[0x1];) afwf=0*0x101; goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
  // falling through, not atomic singleton.
 // obsolete  UI notoneatom=(an-1)|(wn-1);
 takestats(if((AN(a)-1)|(AN(w)-1))++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
@@ -1878,12 +1876,13 @@ takestats(if((AN(a)-1)|(AN(w)-1))++stats[0x3];) takestats(if(densbid0)++stats[0x
 // obsolete self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
 // obsolete  opline=__atomic_load_n(&FAV(self)->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
  // find frames
- acr-=0x3f; wcr-=0x3f; acr+=awr; acr=acr<0?0:acr; wcr+=wr; wcr=wcr<0?0:wcr; awr<<=RANKTX; awr+=wr; afwf=(acr<<=RANKTX)+wcr;  // awr=0/0/ar/wr afwf=0/0/af/wf
+ acr-=0x3f; wcr-=0x3f; acr+=awr; acr=acr<0?0:acr; wcr+=wr; wcr=wcr<0?0:wcr;   // ?cr=frame
  // obsolete  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
  // check for non-atomic singletons, which are rare (in testcases)
  if(withprob((notoneatom|densbid0)!=0,0.95)){
+  awr<<=RANKTX; awr+=wr; afwf=(acr<<=RANKTX)+wcr;  // awr=0/0/ar/wr afwf=0/0/af/wf
   bidcase&=(FL+INT)*5; bidcase=bidcase+(SY_64?(densbid0<<=15):!!densbid0);  // clear possibly-invalid bits of bidcase; if args are not BID, set to 'invalid' bidcase
-retryss:;  // Here any atomic singleton retries.  Noun ranks (awr) have been set, and afwf has been set to 0.  bidcase=1 (invalid)  at/wt are garbage
+retryss:;  // Here for any singleton retries.  Noun ranks (awr) have been set, and afwf has been set to 0.  bidcase=1 (invalid)  at/wt are garbage
   // either not singleton BID, or singleton needing retry: carry on with normal setup
   opcode&=0x7f; opcode*=sizeof(VA); opcode+=bidcase*=(sizeof(VA2)/INT); // point to the VA2 block for the BID if valid; VA block if not
   NOUNROLL while(1){
@@ -1897,7 +1896,8 @@ retryss:;  // Here any atomic singleton retries.  Noun ranks (awr) have been set
    IARG2C awr=AR(a); wr=AR(w); // restore aw vars so they won't be saved over the call
 // obsolete    opline=FAV(self)->localuse.lu1.uavandx[1];  // extract table line from the primitive to avoid save
    opcode=(FAV(self)->lu2.lc&0x7f)*sizeof(VA)+0x1*(sizeof(VA2)/INT);  // set opcode to 'invalid' BID
-   acr-=0x3f; wcr-=0x3f; acr+=awr; acr=acr<0?0:acr; wcr+=wr; wcr=wcr<0?0:wcr; awr<<=RANKTX; awr+=wr; afwf=(acr<<=RANKTX)+wcr;  // (copied from above) restore awr/afwf to avoid save
+   acr-=0x3f; wcr-=0x3f; acr+=awr; acr=acr<0?0:acr; wcr+=wr; wcr=wcr<0?0:wcr;
+   awr<<=RANKTX; awr+=wr; afwf=(acr<<=RANKTX)+wcr;  // (copied from above) restore awr/afwf to avoid save
   }
   // We hit an error.  We will format it now because we have the IRS ranks that were used in selfranks.
  // obsolete  // convert 0 rank back to R2MAX to avoid "0 0 in msg
@@ -1918,11 +1918,13 @@ retryss:;  // Here any atomic singleton retries.  Noun ranks (awr) have been set
   RETF(z);
  }else{
 takestats(++stats[0x2];)
-  // singleton BID, rank>0.  we need the rank of the result.  Rare to come in this way (singletons with rank)
-  I awcr=awr-afwf; af=MAX((UI1)awcr,(UI1)(awcr>>RANKTX)); af+=MAX((UI1)afwf,(UI1)(afwf>>RANKTX)); af*=0x101;   // af=max framelen + max rank = resultrank, in 2 lanes
+  // singleton BID, rank>0.  we need the rank of the result.  Rare to come in this way (singletons with rank) awr/wr=noun ranks, acr/wcr=frames
+// obsolete   I awcr=awr-afwf; af=MAX((UI1)awcr,(UI1)(awcr>>RANKTX)); af+=MAX((UI1)afwf,(UI1)(afwf>>RANKTX));
+  afwf=MAX(acr,wcr); acr-=awr; wcr-=wr; acr=acr<wcr?acr:wcr; afwf-=acr; afwf*=0x101; awr<<=RANKTX; awr+=wr;   // af=max framelen + max cell rank = resultrank, in 2 lanes; combine awr
+// obsolete   acr=wcr>acr?wcr:acr; afwf=acr+MAX(awr,wr); afwf*=0x101; awr<<=RANKTX; awr+=wr; 
 forcess:;  // branch point for rank-0 singletons from above, always with atomic result (awr is 0, so is af)
-  // any singleton.  awr is the rank of the result, with shape all 1s
-  z=jtssingleton(jtfg,a,w,awr,af,bidcase,opcode);
+  // any singleton.  afwf is the duplicated rank of the result, with shape all 1s; awr is ar/wr
+  z=jtssingleton(jtfg,a,w,awr,afwf,bidcase,opcode);
   if(likely(z!=0)){RETF(z);}  // normal case is good return; the rest is retry for singletons
   // error cases: exit and retry
   JTFROMJTFG(J);  // restore jt to avoid save

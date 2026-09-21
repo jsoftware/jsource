@@ -1845,18 +1845,18 @@ DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
  RE(0); RETF(z);
 }    /* a f/@:g w where f and g are atomic*/
 
-#if 0
+// Consolidated entry point for ATOMIC2 verbs.  These can be called with self pointing either to a rank block or to the block for the atomic.  self always has the opcode
+// The linkage is designed for speed.  Passing verb-rank in through a/w would require that they settle before use, which will take several cycles to IRS.  We avoid
+// this settling on 64-bit machines by passing the IRS ranks in through the top bits of jtfgfg, normally 0.
+#if 1
 // REFG is used for a retry, to reinit everything that was read initially, so that no intermediate values have to be stored in case of error
-#define REFG a=(A)((I)afg&~0x3f); w=(A)((I)wfg&~0x3f); at=AT(a); wt=AT(w); awr=AR(a); wr=AR(w); acr=(I)afg&0x3f; wcr=(I)wfg&0x3f; opcode=FAV(self)->lu2.lc; JTFROMJTFG;
+#define REFG a=(A)((I)afg&~0x3f); w=(A)((I)wfg&~0x3f); at=AT(a); wt=AT(w); awr=AR(a); wr=AR(w); acr=(I)afg&0x3f; wcr=(I)wfg&0x3f; opcode=FAV(self)->lu2.lc; JTFROMJTFG(J);
 A jtatomic2(J jtfg,A afg,A wfg,A self){
- I a; if(unlikely((a=(A)((I)afg&~0x3f))==0)R0; I at=AT(a); I awr=AR(a);
- I w; if(unlikely((w=(A)((I)wfg&~0x3f))==0)R0; I wt=AT(w); I wr=AR(a);
+ A a; if(unlikely((a=(A)((I)afg&~0x3f))==0))R0; I at=AT(a); I awr=AR(a);  // 
+ A w; if(unlikely((w=(A)((I)wfg&~0x3f))==0))R0; I wt=AT(w); I wr=AR(w);
  UI opcode=FAV(self)->lu2.lc; I acr=(I)afg&0x3f; I wcr=(I)wfg&0x3f;
  F12IP;
-#endif
-
-// Consolidated entry point for ATOMIC2 verbs.  These can be called with self pointing either to a rank block or to the block for
-// the atomic.  self always has the opcode
+#else  // obsolete 
 DFI2(jtatomic2){A z;
  IARG2D IARG2C
  I at=AT(a); I awr=AR(a); I wt=AT(w); I wr=AR(w); UI opcode=FAV(self)->lu2.lc;  // reel off the reads we need: bidcase/densbid first, then opcode.  at 1 cycle before wt
@@ -1867,8 +1867,9 @@ DFI2(jtatomic2){A z;
 // obsolete  awr<<=RANKTX;
  // extract acr/wcr from the input parameters
  F12IP;  // remove flags bit from jt
+#endif
 takestats(++stats[0x0];)
- I afwf;  // afwf will be both frames, or duplicated rank of singleton result
+ I afwf; A z;  // afwf will be both frames, or duplicated rank of singleton result
  // Retries of singletons branch back to points at the top.  We must take care to save only what's needed, refetching the rest to save reg spills
  // singletons dominate the testcases.  We check them before any non-singleton fetches
  UI bidcase=3*at; bidcase&=(FL+INT)*5; UI densbid0=(UI)((at|=wt)&((NOUN|SPARSE)&~(B01+INT+FL))); bidcase+=wt;   // arg type info, with possibly 1 bit set in bits 0-1; bid0=not singleable
@@ -1901,11 +1902,12 @@ retryss:;  // Here for any singleton retries.  Noun ranks (awr) have been set, a
    z=jtva2(jtfg,a,w,afwf,awr,opcode);  // execute the verb. jtfg/a/w/selfranks/self  must be preserved over call
    if(likely(z!=0)){RETF(z);}  // normal case is good return
    // error cases: exit and retry
-   JTFROMJTFG(J);  // restore jt to avoid save
+// obsolete    JTFROMJTFG(J);  // restore jt to avoid save
+   REFG  // restore state that was read from the arguments
    if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
-   IARG2C awr=AR(a); wr=AR(w); // restore aw vars so they won't be saved over the call
+// obsolete    IARG2C awr=AR(a); wr=AR(w); // restore aw vars so they won't be saved over the call
 // obsolete    opline=FAV(self)->localuse.lu1.uavandx[1];  // extract table line from the primitive to avoid save
-   opcode=(FAV(self)->lu2.lc&0x7f)*sizeof(VA)+0x1*(sizeof(VA2)/INT);  // set opcode to 'invalid' BID
+   opcode=opcode*sizeof(VA)+0x1*(sizeof(VA2)/INT);  // set opcode to 'invalid' BID
    acr-=0x3f; wcr-=0x3f; acr+=awr; acr=acr<0?0:acr; wcr+=wr; wcr=wcr<0?0:wcr;
    awr<<=RANKTX; awr+=wr; afwf=(acr<<=RANKTX)+wcr;  // (copied from above) restore awr/afwf to avoid save
   }
@@ -1937,12 +1939,15 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
   z=jtssingleton(jtfg,a,w,awr,afwf,bidcase,opcode);
   if(likely(z!=0)){RETF(z);}  // normal case is good return; the rest is retry for singletons
   // error cases: exit and retry
-  JTFROMJTFG(J);  // restore jt to avoid save
+// obsolete   JTFROMJTFG(J);  // restore jt to avoid save
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
 // obsolete   awr=AR(a); awr<<=RANKTX; awr+=AR(w); // restore aw vars so they won't be saved over the call
-  bidcase=0x1; opcode=FAV(self)->lu2.lc;  // bidcase must be 'invalid'; restore opcode to prevent save
-  IARG2C awr=AR(a); wr=AR(w); awr<<=RANKTX; awr+=wr; afwf=0;  // restore awr/afwf to avoid save.  afwf=0 to select fast path
+  REFG bidcase=0x1; afwf=0; // bidcase must be 'invalid';  afwf=0 to select fast path
+// obsolete  opcode=FAV(self)->lu2.lc;  // bidcase must be 'invalid'; restore opcode to prevent save
+// obsolete   IARG2C awr=AR(a); wr=AR(w);
+  awr<<=RANKTX; awr+=wr;  // restore awr/afwf to avoid save. 
+// obsolete  afwf=0;  afwf=0 to select fast path
 // obsolete   jtranks=jt->ranks; selfranks=FAV(self)->lrr;  // Restore verb ranks, from user or from "n.
 // obsolete   if(likely(awr==0)){selfranks=R2MAX; realself=FAV(self)->fgh[0]; self=realself?realself:self;} goto retryss;  // retry.  atomic singletons must advance self (selfranks max to have no frame); others must not, using the incumbent self & selfranks
 // obsolete   if(likely(awr==0)){selfranks=R2MAX;}

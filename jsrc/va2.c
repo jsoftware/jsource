@@ -1848,25 +1848,31 @@ DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 // Consolidated entry point for ATOMIC2 verbs.  These can be called with self pointing either to a rank block or to the block for the atomic.  self always has the opcode
 // The linkage is designed for speed.  Passing verb-rank in through a/w would require that they settle before use, which will take several cycles to IRS.  We avoid
 // this settling on 64-bit machines by passing the IRS ranks in through the top bits of jtfgfg, normally 0.
-#if 1
 // REFG is used for a retry, to reinit everything that was read initially, so that no intermediate values have to be stored in case of error
-#define REFG a=(A)((I)afg&~0x3f); w=(A)((I)wfg&~0x3f); at=AT(a); wt=AT(w); awr=AR(a); wr=AR(w); acr=(I)afg&0x3f; wcr=(I)wfg&0x3f; opcode=FAV(self)->lu2.lc; JTFROMJTFG(J);
-A jtatomic2(J jtfg,A afg,A wfg,A self){
- A a; if(unlikely((a=(A)((I)afg&~0x3f))==0))R0; I at=AT(a); I awr=AR(a);  // 
- A w; if(unlikely((w=(A)((I)wfg&~0x3f))==0))R0; I wt=AT(w); I wr=AR(w);
- UI opcode=FAV(self)->lu2.lc; I acr=(I)afg&0x3f; I wcr=(I)wfg&0x3f;
- F12IP;
-#else  // obsolete 
-DFI2(jtatomic2){A z;
- IARG2D IARG2C
- I at=AT(a); I awr=AR(a); I wt=AT(w); I wr=AR(w); UI opcode=FAV(self)->lu2.lc;  // reel off the reads we need: bidcase/densbid first, then opcode.  at 1 cycle before wt
+#if SY_64
+#define REFG at=AT(a); wt=AT(w); awr=AR(a); wr=AR(w); opcode=FAV(self)->lu2.lc; acr=(UI)jtfgfg>>56; wcr=((UI)jtfgfg>>48)&0x3f; JTFGFROMJTFGFG; JTFROMJTFG(J);
+A jtatomic2(J jtfgfg,A a,A w,A self){  // linkage for 64-bit machines, through jt
+ ARGCHK1(a) I at=AT(a); I awr=AR(a);  // a/w/self are settled.  read from a before w
+ ARGCHK1(w) I wt=AT(w); I wr=AR(w);
+ UI opcode=FAV(self)->lu2.lc; I acr=(UI)jtfgfg>>56; I wcr=((UI)jtfgfg>>48)&0x3f;  // extract complemented ranks from jtfgfg
+ J JTFGFROMJTFGFG; F12IP;
+// obsolete DFI2(jtatomic2){A z;
+// obsolete  IARG2D IARG2C
+// obsolete  I at=AT(a); I awr=AR(a); I wt=AT(w); I wr=AR(w); UI opcode=FAV(self)->lu2.lc;  // reel off the reads we need: bidcase/densbid first, then opcode.  at 1 cycle before wt
 // obsolete UI jtranks=jt->ranks; // VA2C* code from the primitive (used if we predict to ssing), jt->ranks (used if we predict to va2)
 // obsolete  UI selfranks=FAV(self)->lrr;
 // obsolete    //  at, for bidcase/densbid0
 // obsolete    // ar, wt, for bidcase/densbid0
 // obsolete  awr<<=RANKTX;
- // extract acr/wcr from the input parameters
- F12IP;  // remove flags bit from jt
+// obsolete  // extract acr/wcr from the input parameters
+// obsolete  F12IP;  // remove flags bit from jt
+#else
+#define REFG opcode=FAV(self)->lu2.lc; a=(A)((I)afg&~0x3f); w=(A)((I)wfg&~0x3f); at=AT(a); wt=AT(w); awr=AR(a); wr=AR(w); acr=(I)afg&0x3f; wcr=(I)wfg&0x3f; JTFROMJTFG(J);
+A jtatomic2(J jtfg,A afg,A wfg,A self){  // linkage for 32-bit machines, through a/w
+ UI opcode=FAV(self)->lu2.lc; A a; if(unlikely((a=(A)((I)afg&~0x3f))==0))R0; I at=AT(a); I awr=AR(a);  // self is ready right away; read from a before w
+ A w; if(unlikely((w=(A)((I)wfg&~0x3f))==0))R0; I wt=AT(w); I wr=AR(w);
+ I acr=(I)afg&0x3f; I wcr=(I)wfg&0x3f;
+ F12IP;
 #endif
 takestats(++stats[0x0];)
  I afwf; A z;  // afwf will be both frames, or duplicated rank of singleton result
@@ -1915,6 +1921,9 @@ retryss:;  // Here for any singleton retries.  Noun ranks (awr) have been set, a
  // obsolete  // convert 0 rank back to R2MAX to avoid "0 0 in msg
  // obsolete   jt->ranks=selfranks?selfranks:R2MAX;
   self=resolveself(self);   // reconstruct true self from its original value (it might be a monadic shorthand)
+#if SY_64
+  A afg=(A)((I)a+acr), wfg=(A)((I)w+wcr);  // input to eformat is IRS form.  We have not complemented ?cr yet 
+#endif
   if(FAV(self)->flag&VWASUNARY){  // originally monadic shorthand?
    // the verb was translated from a unary shorthand like -: to 0.5 * .  We must translate back for display.
    switch(FAV(self)->id){  // for each id, revert to the original id.  If the original arg was in w, move it to a.

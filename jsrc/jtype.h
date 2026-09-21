@@ -1280,7 +1280,7 @@ union{
 #define VNOLOCCHG      (((I)1)<<VNOLOCCHGX)     // Execution does not alter locale/path.
 // 27 free   it appears that u !: n forms were envisaged
 #define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
-#define VISATOMIC2      ((I)(1L<<29))    // dyad is atomic.  localuse will point to the VA entry for the verb
+#define VISATOMIC2      ((I)(1L<<29))    // dyad is atomic.
 #define VFUSEDOK2  ((I)(1L<<30))    // this block can be executed by passing in another block (containing rank) whose fgh[0] points to the native block for this primitive
 
 // bits in flag2:

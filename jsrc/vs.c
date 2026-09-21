@@ -5,7 +5,7 @@
 
 #include "j.h"
 
-B jtscheck(J jt,A w){A a,e,x,y;I k1,k2,r,*s,t;P*p;D rkblk[16];
+B jtscheck(J jt,A w){A a,e,x,y;I k1,k2,r,*s,t;P*p;
  ARGCHK1(w);
  r=AR(w); s=AS(w); t=AT(w);
  if(!ISSPARSE(t))R 1;
@@ -28,7 +28,7 @@ B jtscheck(J jt,A w){A a,e,x,y;I k1,k2,r,*s,t;P*p;D rkblk[16];
  ASSERTSYS(AS(y)[1]==SETIC(a,k1),"scheck i/a length");
  ASSERTSYS(equ(y,nub(y)),"scheck i unique");
  ASSERTSYS(all1(le(num(0),y)),"scheck i negative");
- ASSERTSYS(all1(ATOMIC2(jt,y,from(a,shape(w)),rkblk,1L,1L,CLT)),"scheck i index");
+ ASSERTSYS(all1(ATOMIC2(jt,y,1L,from(a,shape(w)),1L,ds(CLT))),"scheck i index");
  ASSERTSYS(equ(grade1(y),IX(AS(y)[0])),"scheck i sorted");
  ASSERTSYS(AR(x)==1+r-AN(a),"scheck x rank");
  ASSERTSYS(equ(behead(shape(x)),from(less(IX(r),a),shape(w))),"scheck x shape");

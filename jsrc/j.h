@@ -1152,7 +1152,17 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define IRS1(f,j,w,wcr,self) f(j,(A)(((I)(w)+0x3f)^(wcr)),self)  // wcr is rank for w
 #define IRS2(f,j,a,acr,w,wcr,self) f(j,(A)(((I)(a)+0x3f)^(acr)),(A)(((I)(w)+0x3f)^(wcr)),self)  // wcr is rank for w.  Coded assuming w is ready before wcr
 // obsolete #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lu2.lc=FAV(ds(cxx))->lu2.lc, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
-#define ATOMIC2(jt,a,w,fs,l,r,cxx) IRS2(jtatomic2,jt,a,l,w,r,ds(cxx))   // cxx is the function to execute, l/r ranks
+#if SY_64   // 64-bit linkage
+#define ATOMIC2(jt,a,acr,w,wcr,self) jtatomic2((J)((I)jt+(((((I)(acr)<<RANKTX)+(I)(wcr))^0x3f3f)<<48)),a,w,self)   // cxx is the function to execute, l/r ranks (nonnegative)
+// if we are putting IRS on a call for the first time & we don't know from the names which linkage it needs.  cond evaluates to 1 to go ATOMIC
+#define IRSorATOMIC2(cond,f,jt,a,acr,w,wcr,self) ((cond)?ATOMIC2(jt,a,acr,w,wcr,self):IRS2(f,jt,a,acr,w,wcr,self))   // cxx is the function to execute, l/r ranks (nonnegative)
+// if we have to cross the boundary from (normal IRS linkage) to (ATOMIC2 linkage), run A2LINKIF
+#define A2LINKIF(cond,jt,a,w) if(cond){jt=(J)((I)jt+(((I)a&0x3f)<<56)+(((I)w&0x3f)<<48)); a=(A)((I)a&~0x3f); w=(A)((I)w&~0x3f);}
+#else   // 32-bit linkage
+#define ATOMIC2(jt,a,acr,w,wcr,self) IRS2(jtatomic2,jt,a,acr,w,wcr,self)   // cxx is the function to execute, l/r ranks (nonnegative)
+#define IRSorATOMIC2(cond,f,jt,a,acr,w,wcr,self) IRS2(f,jt,a,acr,w,wcr,self)   // cxx is the function to execute, l/r ranks (nonnegative)
+#define A2LINKIF(cond,jt,a,w)
+#endif
 #define DO(n,stm...)          {I _n=(n); I i=0; for(;i<_n;i++){stm}}  // i runs from 0 to n-1
 #define DONOUNROLL(n,stm...)  {I _n=(n); I i=0; NOUNROLL for(;i<_n;i++){stm}}  // i runs from 0 to n-1
 #define DP(n,stm...)          {I i=-(n);    for(;i<0;++i){stm}}   // i runs from -n to -1 (faster than DO)
@@ -1206,7 +1216,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define F1(f)           A f(JJ jtfg,    A w)  // whether in an interface routine or not, these must use the internal parameter type
 #define F2(f)           A f(JJ jtfg,A a,A w)
 #define JTFROMJTFG(T) jt=(T)(intptr_t)((I)jtfg&~JTFLAGMSK)
-#define JTFGFROMJTFGFG(T) jtfg=(T)(intptr_t)((I)jtfgfg&-BIT(48))   // jt if flagged first in the low bits, and then in the top 16 bits.  This peels off the top flags, leaving jtfg with the bottom flags
+#define JTFGFROMJTFGFG jtfg=(J)(intptr_t)((I)jtfgfg&(BIT(48)-1))   // jt if flagged first in the low bits, and then in the top 16 bits.  This peels off the top flags, leaving jtfg with the bottom flags
 #define F12IP JJ JTFROMJTFG(JJ)
 #define F12JT JJ JTFROMJTFG(JJ)  // for documentation, when flags are not IP flags
 #define FPREFIP(T)         T jtfg=jt; JTFROMJTFG(T)  // turn off all flag bits in jt, leave them in jtfg

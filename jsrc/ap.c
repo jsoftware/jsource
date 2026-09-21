@@ -474,7 +474,7 @@ static DF2(jtinfix){F12IP;PROLOG(0018);A fs=FAV(self)->fgh[0]; A x,z;I m;
 
 static DF1(jtinfix2){F12IP;PROLOG(0019);A f; 
  f=FAV(self)->fgh[0]; f=FAV(f)->fgh[0];  // f=u in u/\ y
- A l=curtail(w), r=behead(w), z; z=IRS2(FAV(f)->valencefns[1],jt,l,AR(w)-1,r,AR(w)-1,f); // (}: u"_1 }.) y
+ A l=curtail(w), r=behead(w), z; z=IRSorATOMIC2(FAV(f)->flag&VFUSEDOK2,FAV(f)->valencefns[1],jt,l,AR(w)-1,r,AR(w)-1,f); // (}: u"_1 }.) y
  EPILOG(z);
 }    /* 2 f/\w, where f supports IRS */
 

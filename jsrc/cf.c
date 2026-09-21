@@ -326,7 +326,7 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    // Set flag to use: NOLOCCHG if both operands are safe; and FLGOK init to OK as for hook, but change as needed to match f1,f2
    flag=((u->flag&v->flag)&VNOLOCCHG+VNONAME+VNOSELF);  // start with in-place enabled, as befits hook1/hook2
    if(d==CCOMMA){   // all forms except for ($,) is handled by virtual blocks
-    if(c==CDOLLAR){f2=jtreshape; flag+=VIRS2;}  // ($,) is inplace
+    if(c==CDOLLAR){f2=jtreshape; flag+=VIRS2;}  // ($,) has IRS
    }else if(d==CBOX){
     if(c==CRAZE){f2=jtjlink; linktype=ACINPLACE;  // (;<)
     }else if(c==CCOMMA){f2=jtjlink; linktype=ACINPLACE+1;  // (,<)

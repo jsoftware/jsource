@@ -614,7 +614,7 @@ A jtirs2(J jtfg,A a,A w,A fs,I l,I r,AF f2){F12IP;A z;I ar,wr;
  ar=AR(a); l=l>=ar?RMAX:l; ar+=l; ar=ar<0?0:ar; ar=l>=0?l:ar; l=AR(a)-ar;   // ar=requested rank, after negative resolution, or ~0; l=frame of a, possibly negative if no frame
  ASSERTAGREE(AS(a),AS(w),MAX(0,MIN(r,l)))  // verify agreement before we modify jt->ranks
 // obsolete  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
- z=IRS2(f2,jtfg,a,ar,w,wr,fs);   // save ranks, call setup verb, pop rank stack.  Pass inplaceability through
+ z=IRSorATOMIC2(f2==jtatomic2,f2,jtfg,a,ar,w,wr,fs);   // save ranks, call setup verb, pop rank stack.  Pass inplaceability through
    // Not all verbs (*f2)() use the fs argument.
 // obsolete  jt->ranks=R2MAX;  // reset rank to infinite
  RETF(z);
@@ -651,9 +651,16 @@ static DF2(cycr2){F12IP;V*sv=FAV(self); I cger[128/SZI];
  RETF(rank2ex(a,w,self,lr2,rr2,lr2,rr2,FAV(self)->valencefns[1]))  // callback is to the cyclic-execution function
 }
 
-// fast path for atomic2 verbs, whose rank is passed in like IRS.  We don't check agreement and we don't clamp the rank to the arg rank
-static DF2(rank2atomic){F12IP;ARGCHK1(w); RETF(IRS2(jtatomic2,jtfg,a,FAV(self)->localuse.lu1.srank[1],w,FAV(self)->localuse.lu1.srank[2],self)) }  // self is used only for lc byte and ranks
-static DF2(rank2atomicneg){F12IP;ARGCHK1(w); I elr=efr(AR(a),FAV(self)->localuse.lu1.srank[1]), err=efr(AR(w),FAV(self)->localuse.lu1.srank[2]); RETF(IRS2(jtatomic2,jtfg,a,elr,w,err,self)) }  // self is used only for lc byte and ranks
+// fast path for atomic2 verbs.  We don't check agreement and we don't clamp the rank to the arg rank
+#if SY_64
+// 64-bit linkage, through upper jt
+static DF2(rank2atomic){F12IP; RETF(ATOMIC2(jtfg,a,FAV(self)->localuse.lu1.srank[1],w,FAV(self)->localuse.lu1.srank[2],self)) }  // self is used only for lc byte and ranks
+static DF2(rank2atomicneg){F12IP;ARGCHK2(a,w); I elr=efr(AR(a),FAV(self)->localuse.lu1.srank[1]), err=efr(AR(w),FAV(self)->localuse.lu1.srank[2]); RETF(ATOMIC2(jtfg,a,elr,w,err,self)) }  // self is used only for lc byte and ranks
+#else
+// 32-bit linkage, through lower a/w
+static DF2(rank2atomic){F12IP; RETF(IRS2(jtatomic2,jtfg,a,FAV(self)->localuse.lu1.srank[1],w,FAV(self)->localuse.lu1.srank[2],self)) }  // self is used only for lc byte and ranks
+static DF2(rank2atomicneg){F12IP;ARGCHK2(a,w); I elr=efr(AR(a),FAV(self)->localuse.lu1.srank[1]), err=efr(AR(w),FAV(self)->localuse.lu1.srank[2]); RETF(IRS2(jtatomic2,jtfg,a,elr,w,err,self)) }  // self is used only for lc byte and ranks
+#endif
 
 // Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass inplaceability through.
 static DF1(rank1i){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];ARGCHK1(w);
@@ -843,20 +850,19 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   if(unlikely((av->mr==hv[0])&&(alr==hv[1])&&(arr==hv[2])&&((alr!=RMAX&&arr!=RMAX)||alr==arr)&&!(VERB&AT(w))))R a;  // first test is usually enough
   // The flags for u indicate its IRS and atomic status.  If atomic (for monads only), ignore the rank, just point to
   // the action routine for the verb.  Otherwise, choose the appropriate rank routine, depending on whether the verb
-  // supports IRS.  The IRS verbs may profitably support inplacing, so we enable it for them.
+  // supports IRS.
   vf|=av->flag&VNOLOCCHG; vf&=av->flag|~(VNONAME+VNOSELF);  // inherit NOLOCCHG from u; keep VNONAME+VNOSELF only if both args allow it
   // For monads: atomic verbs ignore rank, but they require the localuse field, so we can't just point the rank verb at them; we use a passthrough routine instead.  Otherwise, if the verb supports
   // IRS, go to the appropriate routine depending on the sign of rank; otherwise we will be doing an explicit rank loop: distinguish
-  // rank-0, quick rank (rank is positive and a is NOT a rankonly type that may need to be combined), and all-purpose cases
+  // rank-0, IRS, and all-purpose cases
   flag2|=av->flag2&VF2WILLOPEN1;  // if u will open, so will u"n
- // For monads that are not ATOMIC1/IRS1, we use quick rank if r>0, which suppresses the rank loop if r >= mu.  This may erroneously suppress a rank loop that would affect fill.
- // We mitigate the problem by giving the user credit if: u WILLOPEN; u cannot be combined in a rank loop
+  // If the user specifies rank 0 for an ATOMIC[12] verb, change the rank to _ since rank 0 can never matter
 // obsolete   if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?(hv[0]>=0&&!(av->id==CQQ)&&!(av->flag2&(VF2RANKONLY1+VF2WILLOPEN1))?rank1q:rank1):jtrank10; flag2|=VF2RANKONLY1;}}
-  if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?rank1:jtrank10; flag2|=VF2RANKONLY1;}}
+  if(av->flag&VISATOMIC1){if(unlikely(hv[0]==0))hv[0]=RMAX; f1=jtrank10atom;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?rank1:jtrank10; flag2|=VF2RANKONLY1;}}
 // obsolete   // if the monad rank in v is 0, we can surely ignore any higher rank, except in the rank of the compound.  We set IRS1 here so any later "n is fast
 // obsolete   vf|=(hv[0]==0)<<VIRS1X;
   // For dyad: atomic verbs take the rank from this block, so we take the action routine, and also the parameter it needs; otherwise, use processor for IRS, or rank 0, or general case
-  if(av->flag&VFUSEDOK2){f2=(hv[1]|hv[2])>=0?rank2atomic:rank2atomicneg; lc=av->lu2.lc;}  // transfer the fn-address and fn-code from the atomic to the fused block
+  if(av->flag&VFUSEDOK2){if(unlikely((hv[1]|hv[2])==0))hv[1]=hv[2]=RMAX; f2=(hv[1]|hv[2])>=0?rank2atomic:rank2atomicneg; lc=av->lu2.lc;}  // transfer the fn-address and fn-code from the atomic to the fused block
 // obsolete   else if(av->flag&VIRS2){f2=rank2i;}else{f2=(hv[1]|hv[2])?((hv[1]|hv[2])>=0&&!(av->flag2&VF2RANKONLY2)?rank2q:rank2):jtrank20;flag2|=VF2RANKONLY2;}
   else if(av->flag&VIRS2){f2=rank2i;}else{f2=(hv[1]|hv[2])?rank2:jtrank20;flag2|=VF2RANKONLY2;}
   // Test for special cases

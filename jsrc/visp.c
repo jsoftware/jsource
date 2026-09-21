@@ -176,11 +176,11 @@ A jtindexofss(J jt,I mode,A a,A w){A ai,aj,ax,wi,wj,wx,x,y,z;B aw=a!=w;I ar,c,m,
  R z;
 }    /* sparse i. sparse */
 
-FI1(jtnubsievesp){A e,x,y,z;I c,j,m,n,*s,*u,*v,*vv,*yv;P*p;D rkblk[16];
+FI1(jtnubsievesp){A e,x,y,z;I c,j,m,n,*s,*u,*v,*vv,*yv;P*p;
  IARG1CR F12IP;
 // obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  n=wcr?AS(w)[wr-wcr]:1;
- if(wcr<wr)R ATOMIC2(jt,IX(n),irs2(w,w,0L,wcr,wcr,jtindexof),rkblk,1L,wcr?1L:0L,CEQ);  // seems to fail
+ if(wcr<wr)R ATOMIC2(jt,IX(n),1L,irs2(w,w,0L,wcr,wcr,jtindexof),wcr?1L:0L,ds(CEQ));  // seems to fail
  RZ(x=indexof(w,w)); p=PAV(x);
  y=SPA(p,i); u=AV(y); c=AS(y)[0];
  x=SPA(p,x); v=AV(x);

@@ -10,14 +10,14 @@
 #endif
 
 // This is the derived verb for f/. y
-static DF1(jtoblique){F12IP;A x,y,z;I m,n,r;D rkblk[16];
+static DF1(jtoblique){F12IP;A x,y,z;I m,n,r;
  ARGCHK1(w);
  r=AR(w);  // r = rank of w
  // create y= ,/ w - the _2-cells of w arranged in a list (virtual block)
  RZ(y=redcat(w,self)); if(1>=r){m=AN(w); n=1;}else{m=AS(w)[0]; n=AS(w)[1];}
  // Create x=+"0 1&i./ 2 {. $w
  A xm; RZ(xm=IX(m)); A xn; RZ(xn=IX(n));
- RZ(x=ATOMIC2(jt,xm,xn,rkblk,0L,1L,CPLUS)); AR(x)=1; AS(x)[0]=AN(x);
+ RZ(x=ATOMIC2(jt,xm,0L,xn,1L,ds(CPLUS))); AR(x)=1; AS(x)[0]=AN(x);
  // perform x f/. y, which does the requested operation, collecting the identical keys
  RZ(df2ip(z,x,y,sldot(FAV(self)->fgh[0])));
  // Final tweak: the result should have (0 >. <: +/ 2 {. $y) cells.  It will, as long as

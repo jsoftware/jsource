@@ -628,12 +628,12 @@ static DF2(cons2a){F12IP;RETF(FAV(self)->fgh[0])}
 // Constant verbs do not inplace because we loop over cells.  We could speed this up if it were worthwhile.
 static DF1(cons1){F12IP;
  ARGCHK1(w);
- I mr; efr(mr,AR(w),(I)FAV(self)->localuse.lu1.srank[0]);
+ I mr=efr(AR(w),(I)FAV(self)->localuse.lu1.srank[0]);
  RETF(rank1ex(w,self,mr,cons1a))
 }
 static DF2(cons2){F12IP;
  ARGCHK2(a,w);
- I lr2,rr2; efr(lr2,AR(a),(I)FAV(self)->localuse.lu1.srank[1]); efr(rr2,AR(w),(I)FAV(self)->localuse.lu1.srank[2]);
+ I lr2=efr(AR(a),(I)FAV(self)->localuse.lu1.srank[1]), rr2=efr(AR(w),(I)FAV(self)->localuse.lu1.srank[2]);
  RETF(rank2ex(a,w,self,lr2,rr2,lr2,rr2,cons2a))
 }
 
@@ -641,18 +641,19 @@ static DF2(cons2){F12IP;
 static DF1(cycr1){F12IP;V*sv=FAV(self); I cger[128/SZI];
  ARGCHK1(w);
  RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund
- I mr; efr(mr,AR(w),(I)sv->localuse.lu1.srank[0]);
+ I mr=efr(AR(w),(I)sv->localuse.lu1.srank[0]);
  RETF(rank1ex(w,self,mr,FAV(self)->valencefns[0]))  // callback is to the cyclic-execution function
 }
 static DF2(cycr2){F12IP;V*sv=FAV(self); I cger[128/SZI];
  ARGCHK2(a,w);
  RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund
- I lr2,rr2; efr(lr2,AR(a),(I)sv->localuse.lu1.srank[1]); efr(rr2,AR(w),(I)sv->localuse.lu1.srank[2]);
+ I lr2=efr(AR(a),(I)sv->localuse.lu1.srank[1]), rr2=efr(AR(w),(I)sv->localuse.lu1.srank[2]);
  RETF(rank2ex(a,w,self,lr2,rr2,lr2,rr2,FAV(self)->valencefns[1]))  // callback is to the cyclic-execution function
 }
 
-// fast path for atomic2 verbs, whose rank is passed in like IRS.  We don't check agreement, we don't support negative rank, and we don't clamp the rank to the arg rank
+// fast path for atomic2 verbs, whose rank is passed in like IRS.  We don't check agreement and we don't clamp the rank to the arg rank
 static DF2(rank2atomic){F12IP;ARGCHK1(w); RETF(IRS2(jtatomic2,jtfg,a,FAV(self)->localuse.lu1.srank[1],w,FAV(self)->localuse.lu1.srank[2],self)) }  // self is used only for lc byte and ranks
+static DF2(rank2atomicneg){F12IP;ARGCHK1(w); I elr=efr(AR(a),FAV(self)->localuse.lu1.srank[1]), err=efr(AR(w),FAV(self)->localuse.lu1.srank[2]); RETF(IRS2(jtatomic2,jtfg,a,elr,w,err,self)) }  // self is used only for lc byte and ranks
 
 // Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass inplaceability through.
 static DF1(rank1i){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];ARGCHK1(w);
@@ -688,7 +689,7 @@ static DF1(rank1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];
  // If you run this at rank 0, the fill will be calculated over the whole array, while if you interpose a rank-1 step
  // the last row will fill separately.
  // We give a performance message if rank of u <= n unless the rank of arg is <= rank of u.  User can give a floating-point rank to suppress the message
- I wr=AR(w), m=FAV(self)->localuse.lu1.srank[0], em=efr(em,wr,m); I um=FAV(fs)->mr;  // wr=arg rank, m=effective rank, um=rank of u
+ I wr=AR(w), m=FAV(self)->localuse.lu1.srank[0], em=efr(wr,m); I um=FAV(fs)->mr;  // wr=arg rank, m=effective rank, um=rank of u
  FILLREG(f1);  // bring routine address in early
  if(withprob(GEMIN0(em,wr,um)>=0,0.2)){  // is em>=wr (must be =) or em>=rank of u?
   if(unlikely(m==um))if(unlikely(!FAV(self)->localuse.lu1.srank[3]))
@@ -704,7 +705,7 @@ static DF1(rank1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];
  // fs/f1 to rank1ex.  Until we can handle multiple fill neighborhoods, we mustn't consume a verb of lower rank  scaf should consume anyway, let user control?
  if(likely(!FAV(self)->localuse.lu1.srank[3])){  // unless the user has said this rank must be separate...
   NOUNROLL while(FAV(fs)->flag2&VF2RANKONLY1){
-   I hm=FAV(fs)->localuse.lu1.srank[0]; efr(hm,m,hm); if(hm<m)break;  // if new rank smaller than old, abort
+   I hm=efr(m,FAV(fs)->localuse.lu1.srank[0]); if(hm<m)break;  // if new rank smaller than old, abort
    m=hm; fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];
   }
  }
@@ -734,9 +735,9 @@ static DF2(rank2){F12IP;A fs=FAV(self)->fgh[0];
  I l=FAV(self)->localuse.lu1.srank[1], r=FAV(self)->localuse.lu1.srank[2], ul=FAV(fs)->lrr>>RANKTX, ur=FAV(fs)->lrr&RANKTMSK;   // ranks (possibly neg) of self and u
  if(unlikely(FAV(fs)->id==CQQ)){ul=FAV(fs)->localuse.lu1.srank[1]; ur=FAV(fs)->localuse.lu1.srank[2];}   // if u is u"r, get its possibly neg r
  AF f2=FAV(fs)->valencefns[1]; FILLREG(f2);  // bring function address into a register early.  Should survive till needed
- I ar=AR(a); I el=efr(el,ar,l);   // [aw]r arg ranks, [lr] ranks from u"n
- I wr=AR(w); I er=efr(er,wr,r);  // now el<=ar, er<=wr
- I eul=efr(eul,ar,ul), eur=efr(eur,wr,ur);  // left & right ranks of u when if applied directly to input
+ I ar=AR(a); I el=efr(ar,l);   // [aw]r arg ranks, [lr] ranks from u"n
+ I wr=AR(w); I er=efr(wr,r);  // now el<=ar, er<=wr
+ I eul=efr(ar,ul), eur=efr(wr,ur);  // left & right ranks of u when if applied directly to input
  I anug=GEMIN0(el,ar,eul), wnug=GEMIN0(er,wr,eur);  // anug>=0 if l>=ar (must be =) or l>=lr of u; wnug similarly.  Indicates rank of self has no effect
  if((anug&wnug)>=0){
   // at least one of the ranks is nugatory, that is, is can affect the result only in the case of weird fill
@@ -760,7 +761,7 @@ static DF2(rank2){F12IP;A fs=FAV(self)->fgh[0];
  // This may lead to error until we support multiple fill neighborhoods - use floating-point n to suppress
  if(likely(!FAV(self)->localuse.lu1.srank[3])){  // unless the user has said this rank must be separate...
   NOUNROLL while(FAV(fs)->flag2&VF2RANKONLY2){
-   I hlr=FAV(fs)->localuse.lu1.srank[1]; I hrr=FAV(fs)->localuse.lu1.srank[2]; efr(hlr,llr,hlr); efr(hrr,lrr,hrr);  // fetch ranks of new verb, resolve negative, clamp against old inner rank
+   I hlr=efr(llr,FAV(fs)->localuse.lu1.srank[1]), hrr=efr(lrr,FAV(fs)->localuse.lu1.srank[2]);  // fetch ranks of new verb, resolve negative, clamp against old inner rank
    if((hlr^llr)|(hrr^lrr)){  // if there is a new rank to insert...
     if((l^llr)|(r^lrr))break;  // if lower slot full, exit, we can't add a new one
     llr=hlr; lrr=hrr;  // install new inner ranks, where they are new lows
@@ -854,10 +855,8 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?rank1:jtrank10; flag2|=VF2RANKONLY1;}}
 // obsolete   // if the monad rank in v is 0, we can surely ignore any higher rank, except in the rank of the compound.  We set IRS1 here so any later "n is fast
 // obsolete   vf|=(hv[0]==0)<<VIRS1X;
-  // For dyad: atomic verbs take the rank from this block, so we take the action routine, and also the parameter it needs; these parameters mean that only
-  // nonnegative rank can be accomodated; otherwise, use processor for IRS; if not IRS, there are processors for:
-  // rank 0; general case
-  if(av->flag&VFUSEDOK2&&(hv[1]|hv[2])>=0){f2=rank2atomic; lc=av->lu2.lc;}  // transfer the fn-address and fn-code from the atomic to the fused block
+  // For dyad: atomic verbs take the rank from this block, so we take the action routine, and also the parameter it needs; otherwise, use processor for IRS, or rank 0, or general case
+  if(av->flag&VFUSEDOK2){f2=(hv[1]|hv[2])>=0?rank2atomic:rank2atomicneg; lc=av->lu2.lc;}  // transfer the fn-address and fn-code from the atomic to the fused block
 // obsolete   else if(av->flag&VIRS2){f2=rank2i;}else{f2=(hv[1]|hv[2])?((hv[1]|hv[2])>=0&&!(av->flag2&VF2RANKONLY2)?rank2q:rank2):jtrank20;flag2|=VF2RANKONLY2;}
   else if(av->flag&VIRS2){f2=rank2i;}else{f2=(hv[1]|hv[2])?rank2:jtrank20;flag2|=VF2RANKONLY2;}
   // Test for special cases

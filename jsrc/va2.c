@@ -1845,11 +1845,20 @@ DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
  RE(0); RETF(z);
 }    /* a f/@:g w where f and g are atomic*/
 
+#if 0
+// REFG is used for a retry, to reinit everything that was read initially, so that no intermediate values have to be stored in case of error
+#define REFG a=(A)((I)afg&~0x3f); w=(A)((I)wfg&~0x3f); at=AT(a); wt=AT(w); awr=AR(a); wr=AR(w); acr=(I)afg&0x3f; wcr=(I)wfg&0x3f; opcode=FAV(self)->lu2.lc; JTFROMJTFG;
+A jtatomic2(J jtfg,A afg,A wfg,A self){
+ I a; if(unlikely((a=(A)((I)afg&~0x3f))==0)R0; I at=AT(a); I awr=AR(a);
+ I w; if(unlikely((w=(A)((I)wfg&~0x3f))==0)R0; I wt=AT(w); I wr=AR(a);
+ UI opcode=FAV(self)->lu2.lc; I acr=(I)afg&0x3f; I wcr=(I)wfg&0x3f;
+ F12IP;
+#endif
+
 // Consolidated entry point for ATOMIC2 verbs.  These can be called with self pointing either to a rank block or to the block for
-// the atomic.  self always has the 
+// the atomic.  self always has the opcode
 DFI2(jtatomic2){A z;
  IARG2D IARG2C
-takestats(++stats[0x0];)
  I at=AT(a); I awr=AR(a); I wt=AT(w); I wr=AR(w); UI opcode=FAV(self)->lu2.lc;  // reel off the reads we need: bidcase/densbid first, then opcode.  at 1 cycle before wt
 // obsolete UI jtranks=jt->ranks; // VA2C* code from the primitive (used if we predict to ssing), jt->ranks (used if we predict to va2)
 // obsolete  UI selfranks=FAV(self)->lrr;
@@ -1858,6 +1867,7 @@ takestats(++stats[0x0];)
 // obsolete  awr<<=RANKTX;
  // extract acr/wcr from the input parameters
  F12IP;  // remove flags bit from jt
+takestats(++stats[0x0];)
  I afwf;  // afwf will be both frames, or duplicated rank of singleton result
  // Retries of singletons branch back to points at the top.  We must take care to save only what's needed, refetching the rest to save reg spills
  // singletons dominate the testcases.  We check them before any non-singleton fetches
@@ -1920,7 +1930,7 @@ retryss:;  // Here for any singleton retries.  Noun ranks (awr) have been set, a
 takestats(++stats[0x2];)
   // singleton BID, rank>0.  we need the rank of the result.  Rare to come in this way (singletons with rank) awr/wr=noun ranks, acr/wcr=frames
 // obsolete   I awcr=awr-afwf; af=MAX((UI1)awcr,(UI1)(awcr>>RANKTX)); af+=MAX((UI1)afwf,(UI1)(afwf>>RANKTX));
-  afwf=MAX(acr,wcr); acr-=awr; wcr-=wr; acr=acr<wcr?acr:wcr; afwf-=acr; afwf*=0x101; awr<<=RANKTX; awr+=wr;   // af=max framelen + max cell rank = resultrank, in 2 lanes; combine awr
+  afwf=MAX(acr,wcr); acr-=awr; wcr-=wr; acr=acr<wcr?acr:wcr; afwf-=acr; afwf*=0x101; awr<<=RANKTX; awr+=wr;   // af=max framelen + max cell rank = resultrank, in 2 lanes; combine awr into ar/wr
 // obsolete   acr=wcr>acr?wcr:acr; afwf=acr+MAX(awr,wr); afwf*=0x101; awr<<=RANKTX; awr+=wr; 
 forcess:;  // branch point for rank-0 singletons from above, always with atomic result (awr is 0, so is af)
   // any singleton.  afwf is the duplicated rank of the result, with shape all 1s; awr is ar/wr

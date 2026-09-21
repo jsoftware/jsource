@@ -112,7 +112,7 @@ pcheck 18!:_2 ''
 NB. 18!:_5 y ------------------------------
 a =: ".@> 18!:3 ''
 h =: 18!:_4 a  NB. locale header
-=/ <. 2&^. (0 , #18!:_5 a) + (7*SZI) + (5 { h) * 4  NB. Verify Bloom doesn't exceed allocation
+=/ <. 2&^. (0 , #18!:_5 a) + ((9!:56'normah')*SZI) + (5 { h) * 4  NB. Verify Bloom doesn't exceed allocation
 0 = +/ , #: a. i. 18!:_5 a  NB. starts empty
 nm1__a =: 0
 1 = +/ , #: a. i. 18!:_5 a  NB. add names

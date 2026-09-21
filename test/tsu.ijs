@@ -268,7 +268,8 @@ if. 0~:4!:0<'ECHOFILENAME' do.
   ECHOFILENAME=: IFIOS+.IFRASPI+.((<UNAME)e.'Android';'Wasm')  NB. echo file name
 end.
 if. 0~:4!:0<'QKTEST' do.
-  QKTEST=: (*9!:56'memaudit')+.(-.IF64)+.IFIOS+.IFRASPI+.((<UNAME)e.'Android';'OpenBSD';'FreeBSD';'Wasm')  NB. run quick test
+NB.  QKTEST=: (9!:56'pyxes') < (*9!:56'memaudit')+.(-.IF64)+.IFIOS+.IFRASPI+.((<UNAME)e.'Android';'OpenBSD';'FreeBSD';'Wasm')  NB. run quick test
+  QKTEST=: (9!:56'pyxes') < (*9!:56'memaudit')  NB. run quick test
 end.
 ''
 )

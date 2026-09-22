@@ -76,25 +76,29 @@ FI1(jttable){A z,zz;
 
 // ]"n, dyadic - also ["n, implemented as ] with args switched
 // length error has already been detected, in irs
-static A jtlr2(J jt,RANK2T ranks,A a,A w){I acr,af,ar,wcr,wf,wr;
- ARGCHK2(a,w);
- // ?r=rank of ? arg; ?cr= verb-rank for that arg; ?f=frame for ?; ?s->shape
- // We know that jt->rank is nonzero, because the caller checked it
- ar=AR(a); acr=ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
- wr=AR(w); wcr=(RANKT)ranks; wcr=wr<wcr?wr:wcr;  wf=wr-wcr;
+// obsolete static A jtlr2(J jt,RANK2T ranks,A a,A w){I acr,af,ar,wcr,wf,wr;
+// obsolete  ARGCHK2(a,w);
+// obsolete  // ?r=rank of ? arg; ?cr= verb-rank for that arg; ?f=frame for ?; ?s->shape
+// obsolete  // We know that jt->rank is nonzero, because the caller checked it
+// obsolete  ar=AR(a); acr=ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
+// obsolete  wr=AR(w); wcr=(RANKT)ranks; wcr=wr<wcr?wr:wcr;  wf=wr-wcr;
+static A jtlr2(J jt,A afg,A wfg){
+ IARG2CR I wf=wr-wcr, af=ar-acr;  // Extract cell-ranks, calculate frames
  // Cells of the shorter-frame argument are repeated.  If the shorter- (or equal-)-frame argument
  // is the one being discarded (eg (i. 10 10) ["0 i. 10), the replication doesn't matter, and we
  // simply keep the surviving argument intact.
- if(wf>=af){RETF(w);}  // no replication - quick out
+ if(wf>=af){RETF(w);}  // no replication of surviving arg - quick out
 // obsolete  RESETRANK;
  a=apip(drop(sc(wf),take(sc(af),shape(a))),drop(sc(wf),shape(w))); RETF(IRS2(jtreshape,jt,a,RMAX,w,wcr,0L));  // ((wf }. af {. $a) , wf }. $w) ($,)"(_,wcr) w
 } 
 
 // ][, with IRS.  Must not call EPILOG because the verb propagates WILLOPEN.  When rank is specified ]"n does not propagate
-FI2(jtleft2){IARG2R F12IP; if(likely(acr&wcr==RMAX))RETF(RETARG(a)); RETF(lr2((wcr<<RANKTX)|acr,w,a));}  // swap a & w, and their ranks
-DFI2(jtright2){IARG2R F12IP;if(likely(acr&wcr==R2MAX))RETF(RETARG(w)); RETF(lr2((acr<<RANKTX)|wcr,a,w));}
+// obsolete FI2(jtleft2){IARG2 F12IP; if(likely((acr&wcr)==RMAX))RETF(RETARG(a)); RETF(lr2((wcr<<RANKTX)|acr,w,a));}  // swap a & w, and their ranks
+// obsolete DFI2(jtright2){IARG2 F12IP;if(likely((acr&wcr)==RMAX))RETF(RETARG(w)); RETF(lr2((acr<<RANKTX)|wcr,a,w));}
+FI2(jtleft2){IARG2 F12IP; if(likely((acr&wcr)==RMAX))RETF(RETARG(a)); RETF(jtlr2(jt,wfg,afg));}  // swap a & w, and their ranks
+DFI2(jtright2){IARG2 F12IP;if(likely((acr&wcr)==RMAX))RETF(RETARG(w)); RETF(jtlr2(jt,afg,wfg));}
 
-F1(jtright1){F12IP;RETF(RETARG(w));}
+F1(jtright1){F12IP;RETF(RETARG(w));} // no IRS
 // lev, dex, and ident - identity adverb/conjunction  (ident uses the same code as lev)
 F2(jtlev){F12IP;RETF(RETARG(a));}  F2(jtdex){F12IP;RETF(RETARG(w));}
 

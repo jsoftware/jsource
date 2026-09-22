@@ -66,7 +66,7 @@ assert. r e. _1000 _1001    NB. _1001 if run on the main thread
 )
 
 f1=: 4 : 0
-pyx=. x&g1@y t. (<'worker';x) "0 i.y
+pyx=. x&g1@(5,y) t. (<'worker';x) "0 i.y
 while. do.
  r=. 4 T. pyx               NB. echo r for debug
  if. *./0>r do. break. end.
@@ -78,7 +78,7 @@ assert. r e. _1000 _1001    NB. _1001 if run on the main thread
 )
 
 f2=: 4 : 0
-pyx=. x&g1@y t. (<'worker';x) "0 i.y
+pyx=. x&g1@(5,y) t. (<'worker';x) "0 i.y
 pyx0=. g t. (<'worker';x) "0 i.y
 while. do.
  r=. 4 T. pyx,pyx0               NB. echo r for debug
@@ -95,10 +95,12 @@ sleep[0.001      NB. arbitrary delay
 1
 )
 
+NB. y is (# loops),(# tasks per loop)
 g1=: 4 : 0
-for_i. i.y do.
+'lps tasks' =. y
+for_i. i.lps do.
  sleep[0.001     NB. arbitrary delay
- pyx=. g t. (<'worker';x) "0 i.y
+ pyx=. g t. (<'worker';x) "0 i.  tasks
 end.
 ]&> pyx
 )

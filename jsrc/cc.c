@@ -591,7 +591,7 @@ void jtcopyTT(J jt, void *zv, void *wv, I n, I zt, I wt){
 
 DF2(jtcut2){F12IP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/SZI];
      I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
- F2RANKIP(lr(self),RMAX,jtcut2,self);  // left rank of ;.2 is 1, but left rank of /. is _.  Right rank always _.  For the monad, mark has rank 0
+ F2RANKIP(lr(self),RMAX,jtcut2,self);  // left rank of ;.2 is 1, but left rank of /. is _ .  Right rank always _ .  For the monad, mark has rank 0
  SETIC(w,n); wt=AT(w);   // n=#items of w; wt=type of w
  // a may have come from /. or /.., in which case it is incompletely filled in.  We look at the type, but nothing else
  if(unlikely(((SGNIFSPARSE(AT(a))&SGNIF(AT(a),B01X))|SGNIFSPARSE(AT(w)))<0)){
@@ -1421,9 +1421,9 @@ F2(jtcut){F12IP;A h=0;I flag=0,k;
   fdeffillall(z,0,CCUT,VERB, jtcut01,(FAV(a)->id&~1)==CLEFT?jtrightcut0:jtcut02, a,w,h, flag, RMAX,2L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
  case 2: case -2:
 #if 0 && C_AVX2 && PYXES //temp. disabled; broken scaf
-   if(FAV(a)->id==CBOX){ //<;._2
+  if(FAV(a)->id==CBOX){ //<;._2
    fdeffillall(z,0,CCUT,VERB,jtboxcutm21,jtcut2, a,w,h, flag,RMAX,1,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
- }
+  }
 #endif
 // fall through to...
  case 1: case -1: fdeffillall(z,0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;

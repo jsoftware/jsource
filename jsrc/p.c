@@ -499,7 +499,7 @@ A jtparsea(J jtfg, A *queue, I nwds){F12IP;PSTK *stack;
 #define FLGPMSKX 24   // init to 0101 for monad, 0000 for dyad.  Counts up
 #define FLGPMSK (0x7<<FLGPMSKX)  // the full field
 // lines 0-2:
-#define FLGPLINE2 (0x4<<FLGPMSKX)  // set for monad
+#define FLGPLINE2 (0x4<<FLGPMSKX)  // set for dyadic verb
 #define FLGPLINE1 (0x2<<FLGPMSKX)  // goes to 1 to end loop
 #define FLGPLINE0 (0x1<<FLGPMSKX)  // goes to 1 to end loop
 // lines 3-6:

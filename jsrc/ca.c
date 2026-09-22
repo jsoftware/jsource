@@ -45,11 +45,11 @@ restore:;
 */
 static A jtintfloorlog2(J jt, A w, A compself) {  // compself is the floor/ceil op, possibly with fit
  ARGCHK1(w);
- if ((INT | FL) & AT(w)) { // Special cases only for integers and floats ([<>].@f for extended integers is handled in vx.c).
-  A z; I wn = AN(w); I wr = AR(w); I *ws = AS(w); // GATV documentation advises using variables for arguments.
+ if ((INT|FL) & AT(w)) { // Special cases only for integers and floats ([<>].@f for extended integers is handled in vx.c).
+  A z; I wn=AN(w); I wr=AR(w); I *ws=AS(w); // GATV documentation advises using variables for arguments.
   GATV(z, INT, wn, wr, ws); I *zv = IAVn(wr,z); // zv points to allocated result area.
-  if (INT & AT(w)) { // Case with integers.
-   I *wv = IAV(w);
+  if (INT&AT(w)) { // Case with integers.
+   I *wv=IAV(w);
    DO(wn,
     I d = wv[i]; if (unlikely(d <= 0))goto revert; // Failover to by hand if d <= 0.
     zv[i] = CTLZI(d); // When d >= 1 then <.@(2&^.) d is equal to the position of the highest 1-bit in d (CTLZI).
@@ -80,7 +80,7 @@ revert:;  // must do by hand
 // >.@(2&^.) monad with variants <.  !.f  2^][
 static A jtintceillog2(J jt, A w, A compself) { // Similar to the above case with floor (almost rewritten, but inner loops differ).
  ARGCHK1(w);
- if ((INT | FL) & AT(w)) {
+ if ((INT|FL) & AT(w)) {
   A z; I wn = AN(w); I wr = AR(w); I *ws = AS(w);
   GATV(z, INT, wn, wr, ws); I *zv = IAVn(wr,z);
   if (INT & AT(w)) { // Case with integers.
@@ -337,19 +337,18 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
   case CSTAR&0x3f:   f1=d==CPOUND?jtisitems:f1; break;  // *@#
   case CFIT&0x3f:
    if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG && (FAV(av->fgh[0])->id&~1)==CFLOOR){  // if w is 2&v, v must be a verb
-    f1=FAV(av->fgh[0])->id==CCEIL?jtintceillog2at:jtintfloorlog2at; flag|=VIRS1;  //  [<>].!.f@(2&^.)
+    f1=FAV(av->fgh[0])->id==CCEIL?jtintceillog2at:jtintfloorlog2at; flag+=VISATOMIC1;   //  [<>].!.f@(2&^.)
    }else if(unlikely(wv->fgh[0]==num(2)) && (d==CFORK) && FAV(wv->fgh[1])->id==CLOG && (FAV(wv->fgh[2])->id&~1)==CLEFT && (FAV(av->fgh[0])->id&~1)==CFLOOR)
-    {f1=f2=FAV(av->fgh[0])->id==CFLOOR?FAV(wv->fgh[2])->id==CLEFT?jtintfloorlog2left:jtintfloorlog2right:FAV(wv->fgh[2])->id==CLEFT?jtintceillog2left:jtintceillog2right;  //  [<>].!.f@(2^.][)
-   }
+    {f1=f2=FAV(av->fgh[0])->id==CFLOOR?FAV(wv->fgh[2])->id==CLEFT?jtintfloorlog2left:jtintfloorlog2right:FAV(wv->fgh[2])->id==CLEFT?jtintceillog2left:jtintceillog2right; flag+=VISATOMIC1;}  //  [<>].!.f@(2^.][)
    break;
   case CFLOOR&0x3f:
-   if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG){f1=jtintfloorlog2at; flag|=VIRS1;}  // <.@(2&^.)  2 must be SDT; if w is 2&v, v must be a verb
-   else if(unlikely(wv->fgh[0]==num(2)) && (d==CFORK) && FAV(wv->fgh[1])->id==CLOG && (FAV(wv->fgh[2])->id&~1)==CLEFT)f1=f2=FAV(wv->fgh[2])->id==CLEFT?jtintfloorlog2left:jtintfloorlog2right; // <.@(2^][)
+   if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG){f1=jtintfloorlog2at;  flag+=VISATOMIC1;}  // <.@(2&^.)  2 must be SDT; if w is 2&v, v must be a verb
+   else if(unlikely(wv->fgh[0]==num(2)) && (d==CFORK) && FAV(wv->fgh[1])->id==CLOG && (FAV(wv->fgh[2])->id&~1)==CLEFT){f1=f2=FAV(wv->fgh[2])->id==CLEFT?jtintfloorlog2left:jtintfloorlog2right; flag+=VISATOMIC1;} // <.@(2^][)
    else{f1=jtonf1; f2=jtuponf2; flag+=VFLR;}  // any other <.@v
    break;
   case CCEIL&0x3f:
-   if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG){f1=jtintceillog2at; flag|=VIRS1;}  // >.@(2&^.)  2 must be SDT if w is 2&v, v must be a verb;
-   else if(unlikely(wv->fgh[0]==num(2)) && (d==CFORK) && FAV(wv->fgh[1])->id==CLOG && (FAV(wv->fgh[2])->id&~1)==CLEFT)f1=f2=FAV(wv->fgh[2])->id==CLEFT?jtintceillog2left:jtintceillog2right; // >.@(2^][)
+   if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG){f1=jtintceillog2at;  flag+=VISATOMIC1;}  // >.@(2&^.)  2 must be SDT if w is 2&v, v must be a verb;
+   else if(unlikely(wv->fgh[0]==num(2)) && (d==CFORK) && FAV(wv->fgh[1])->id==CLOG && (FAV(wv->fgh[2])->id&~1)==CLEFT){f1=f2=FAV(wv->fgh[2])->id==CLEFT?jtintceillog2left:jtintceillog2right; flag+=VISATOMIC1;} // >.@(2^][)
    else{f1=jtonf1; f2=jtuponf2; flag+=VCEIL;}  // any other >.@v
    break;
   case CICAP&0x3f:   if(d==CNE){f1=jtnubind;} else if(FIT0(CNE,wv)){f1=jtnubind0;}
@@ -448,19 +447,18 @@ F2(jtatco){F12IP;A f,g;AF f1=on1cell,f2=jtupon2cell;C c,d,e;I flag, flag2=0,m=-1
   case CGRADE&0x3f:  if(d==CGRADE){f1=jtranking; flag+=VIRS1;} break;  // /:@:/: y
   case CFIT&0x3f:
    if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG && (FAV(av->fgh[0])->id&~1)==CFLOOR){    //   if w is 2&v, v must be a verb
-    f1=FAV(av->fgh[0])->id==CCEIL?jtintceillog2at:jtintfloorlog2at; flag|=VIRS1;  //  [<>].!.f@:(2&^.)
+    f1=FAV(av->fgh[0])->id==CCEIL?jtintceillog2at:jtintfloorlog2at; flag+=VISATOMIC1;   //  [<>].!.f@:(2&^.)
    }else if(unlikely(wv->fgh[0]==num(2)) && (d==CFORK) && FAV(wv->fgh[1])->id==CLOG && (FAV(wv->fgh[2])->id&~1)==CLEFT && (FAV(av->fgh[0])->id&~1)==CFLOOR)
-    {f1=f2=FAV(av->fgh[0])->id==CFLOOR?FAV(wv->fgh[2])->id==CLEFT?jtintfloorlog2left:jtintfloorlog2right:FAV(wv->fgh[2])->id==CLEFT?jtintceillog2left:jtintceillog2right;  //  [<>].!.f@:(2^.][)
-   }
+    {f1=f2=FAV(av->fgh[0])->id==CFLOOR?FAV(wv->fgh[2])->id==CLEFT?jtintfloorlog2left:jtintfloorlog2right:FAV(wv->fgh[2])->id==CLEFT?jtintceillog2left:jtintceillog2right; flag+=VISATOMIC1;}  //  [<>].!.f@:(2^.][)
    break;
   case CFLOOR&0x3f:
-   if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG){f1=jtintfloorlog2at; flag|=VIRS1;}  // <.@(2&^.)  2 must be SDT; if w is 2&v, v must be a verb
-   else if(unlikely(wv->fgh[0]==num(2)) && (d==CFORK) && FAV(wv->fgh[1])->id==CLOG && (FAV(wv->fgh[2])->id&~1)==CLEFT)f1=f2=FAV(wv->fgh[2])->id==CLEFT?jtintfloorlog2left:jtintfloorlog2right; // <.@:(2^][)
+   if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG){f1=jtintfloorlog2at; flag+=VISATOMIC1;}  // <.@(2&^.)  2 must be SDT; if w is 2&v, v must be a verb
+   else if(unlikely(wv->fgh[0]==num(2)) && (d==CFORK) && FAV(wv->fgh[1])->id==CLOG && (FAV(wv->fgh[2])->id&~1)==CLEFT){f1=f2=FAV(wv->fgh[2])->id==CLEFT?jtintfloorlog2left:jtintfloorlog2right; flag+=VISATOMIC1;} // <.@:(2^][)
    else{f1=jtonf1; f2=jtuponf2; flag+=VFLR;}  // any other <.@:v
    break;
   case CCEIL&0x3f:
-   if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG){f1=jtintceillog2at; flag|=VIRS1;}  // >.@:(2&^.)  2 must be SDT; if w is 2&v, v must be a verb
-   else if(unlikely(wv->fgh[0]==num(2)) && (d==CFORK) && FAV(wv->fgh[1])->id==CLOG && (FAV(wv->fgh[2])->id&~1)==CLEFT)f1=f2=FAV(wv->fgh[2])->id==CLEFT?jtintceillog2left:jtintceillog2right; // >.@:(2^][)
+   if(unlikely(wv->fgh[0]==num(2)) && (d==CAMP) && FAV(wv->fgh[1])->id==CLOG){f1=jtintceillog2at; flag+=VISATOMIC1;}  // >.@:(2&^.)  2 must be SDT; if w is 2&v, v must be a verb
+   else if(unlikely(wv->fgh[0]==num(2)) && (d==CFORK) && FAV(wv->fgh[1])->id==CLOG && (FAV(wv->fgh[2])->id&~1)==CLEFT){f1=f2=FAV(wv->fgh[2])->id==CLEFT?jtintceillog2left:jtintceillog2right; flag+=VISATOMIC1;} // >.@:(2^][)
    else{f1=jtonf1; f2=jtuponf2; flag+=VCEIL;}  // any other >.@:v
    break;
   case CQUERY&0x3f:  if((d&~1)==CPOUND){f2=jtrollk;}  break;  // x ?@:# y or x ?@:$ y

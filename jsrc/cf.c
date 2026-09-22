@@ -90,9 +90,9 @@ A jtfolk(J jtfg,A f,A g,A h){F12IP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fla
    else if(unlikely(BOTHEQ8(gi,hi,CSLASH,CDOLLAR))&&FAV(gv->fgh[0])->id==CSTAR){f1=jtnatoms;}  // [: */ $
    else if(unlikely(gi==CPOUND)){f1=hi==CCOMMA?jtnatoms:f1; f1=hi==CDOLLAR?jtrank:f1;}  // [: # ,   [: # $
    else if(unlikely(hv->fgh[0]==num(2)) && BOTHEQ8(gi,hi,CFIT,CAMP) && FAV(hv->fgh[1])->id==CLOG && (FAV(gv->fgh[0])->id&~1)==CFLOOR){  // if h is 2&v, v must be a verb
-    f1=FAV(gv->fgh[0])->id==CCEIL?jtintceillog2cap:jtintfloorlog2cap; flag|=VIRS1;  //  [: [<>].!.f 2&^.
+    f1=FAV(gv->fgh[0])->id==CCEIL?jtintceillog2cap:jtintfloorlog2cap; flag|=VISATOMIC1;  //  [: [<>].!.f 2&^.
    }else if(unlikely(hv->fgh[0]==num(2)) && hi==CAMP && FAV(hv->fgh[1])->id==CLOG && (gi&~1)==CFLOOR){  // if h is 2&v, v must be a verb
-    f1=gi==CCEIL?jtintceillog2cap:jtintfloorlog2cap; flag|=VIRS1;  //  [: [<>].!.f 2&^.
+    f1=gi==CCEIL?jtintceillog2cap:jtintfloorlog2cap; flag|=VISATOMIC1;  //  [: [<>].!.f 2&^.
    }
    break;
   case CSLASH: if(unlikely(BOTHEQ8(gi,hi,CDIV,CPOUND))&&CPLUS==FAV(fv->fgh[0])->id){f1=jtmean; flag|=VIRS1;} break;  /* +/%# */

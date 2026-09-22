@@ -568,7 +568,7 @@ NB. Also [: ; <;.0
 
 NB. Verify ;@:(<@(f);.0) recognized & correct
 b =: (100*i.1e4) ,:"0 ] 155 + (1e4) ?@$ 5
-(7!:2 '; b (<@(]"]);.0) a') > 1.5 * 7!:2 'b ;@:(<@(]"]);.0) a'
+(7!:2 '; b (<@(]"]);.0) a') > (1.5) * 7!:2 'b ;@:(<@(]"]);.0) a'
 (; b (<@(]"]);.0) a) -: b ;@:(<@(]"]);.0) a
  
 NB. Verify boxatop detected only at high rank

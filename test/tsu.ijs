@@ -47,15 +47,15 @@ NB. gmbx.ijs is not an independent test
 NB. gfft and glapack - run separately with additional addons
 blacklist=: ((<testpath),each 'gmbx.ijs';'gfft.ijs';'glapack.ijs';'glapackcb.ijs'),testfiles 'gmbx'  NB. mapped boxed arrays no longer supported
 blacklist=: blacklist, (IFIOS)#(<testpath),each <'gregex.ijs' NB. require libjpcre2 binary
-blacklist=: blacklist, (0=(9!:56'c_avx2')+.9!:56'emu_avx2')#(<testpath),each 'g6x14.ijs';'g128x14.ijs';'g128x19.ijs' NB. avx2 or emu_avx2
+blacklist=: blacklist, (0=(9!:56'c_avx2')+.9!:56'emu_avx2')#(<testpath),each 'g128x14.ijs';'g128x19.ijs' NB. avx2 or emu_avx2
+blacklist=: blacklist, (-.IF64)#(<testpath),each <'g6x14.ijs'
 blacklist=: blacklist, (0=9!:56'pyxes')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs';'g128x14.ijs';'g128x19.ijs' NB. require multithreading
 blacklist=: blacklist, (0=15!:23'')#(<testpath),each 'g15x.ijs';'g7x5.ijs';'gdll.ijs';'gdll_df.ijs';'gmmf.ijs';'gmmf1s.ijs';'gmmf1u.ijs';'gmmf1w.ijs';'gfft.ijs';'glapack.ijs';'glapackcb.ijs';'gregex.ijs'  NB. 15!:0 unavailable
 blacklist=: blacklist, ('Wasm'-:UNAME)#(<testpath),each <'gstack.ijs'  NB. crash
 blacklist=: blacklist, (IFQT*.'Wasm'-:UNAME)#(<testpath),each 'g331ps.ijs';'gsp422.ijs';'gsp432.ijs'  NB. crash
 blacklist=: blacklist, IFIOS#(<testpath),each <'gipht.ijs'  NB. crash if included in the whole suite, but ok if running alone
-blacklist=: blacklist, (IFRASPI+.'OpenBSD'-:UNAME)#(<testpath),each <'g128x14.ijs'  NB. raspberry crash; OpenBSD fail
+blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each <'g128x14.ijs'
 blacklist=: blacklist, (2 *@(17 b.) 9!:56'memaudit')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs' NB. multithreading block in multiple tstacks
-NB. blacklist=: blacklist, (UNAME-:'Wasm')#(<testpath),each <'g331ps.ijs'    NB. crash on special code for [: ; <@f;.n 
 
 NB. too slow
 blacklist=: blacklist, '' [ (2 *@(17 b.) 9!:56'memaudit')#(<testpath),each  <@(,&'.ijs');._2 [ 0 : 0
@@ -268,7 +268,8 @@ if. 0~:4!:0<'ECHOFILENAME' do.
   ECHOFILENAME=: IFIOS+.IFRASPI+.((<UNAME)e.'Android';'Wasm')  NB. echo file name
 end.
 if. 0~:4!:0<'QKTEST' do.
-  QKTEST=: (*9!:56'memaudit')+.(-.IF64)+.IFIOS+.IFRASPI+.((<UNAME)e.'Android';'OpenBSD';'FreeBSD';'Wasm')  NB. run quick test
+NB.  QKTEST=: (9!:56'pyxes') < (*9!:56'memaudit')+.(-.IF64)+.IFIOS+.IFRASPI+.((<UNAME)e.'Android';'OpenBSD';'FreeBSD';'Wasm')  NB. run quick test
+  QKTEST=: (9!:56'pyxes') < (*9!:56'memaudit')  NB. run quick test
 end.
 ''
 )

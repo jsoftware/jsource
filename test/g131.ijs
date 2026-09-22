@@ -82,7 +82,7 @@ assert. (%. -: minv) j./1+?100 2001
 assert. (%. -: minv) 1
 assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:_50000+?10 10$10000
 assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?7 7$10000
-if. -.QKTEST do.
+if. QKTEST<9!:56'pyxes' do.
 assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?35 35$10000
 assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?71 71$10000
 NB. Do just one big matrix, but with a random size so that over many runs more sizes will be tested

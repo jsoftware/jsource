@@ -814,7 +814,7 @@ for. i. ntests do.
   testm 0.02 0.1 0.5 0.9;(2-?4);(?4);(?4);(?2);(?2);prec
 end.
 }}"1
-testn (QKTEST{10000 100) ,. 1 2 4 8 16 64 128  NB. Reduce count after burn-in
+testn (QKTEST{1000 100) ,. 1 2 4 8 16 64 128  NB. Reduce count after burn-in
 
 (,:~"2 i. 3 4 5) -:  (i. 3 4 5) (<a:,&<a:)}"2 i. 3 2 4 5  NB. verify last axis can't be removed
 

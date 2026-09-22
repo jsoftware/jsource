@@ -63,6 +63,8 @@ iy =: (($bx) ,3 5) $ IMAX,IMIN,3 5 6 7,IMIN,2 3,IMAX
 ((0 +. bx) -"1 2 iy) -: bx -"0"1 2 iy
 ((0 +. bx) -"1 2 (iy - 0)) -: bx -"0"1 2 iy
 
+4 = # $ (1$00) |"(]"0 3) 1 1 1 $ 0.  NB. non-atomic singleton retry
+
 
 NB. x is selection;shapes;prediction
 NB.  selection selects a prediction

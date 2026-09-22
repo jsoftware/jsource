@@ -1892,14 +1892,16 @@ takestats(if((AN(a)-1)|(AN(w)-1))++stats[0x3];) takestats(if(densbid0)++stats[0x
 // obsolete retryss0:;  // here when an atomic singleton fails.  self has not been touched so we must advance it to the primitive.  We must process as non-rank array, so we have set selfranks=0x3f3f to go through no-rank code, and notoneatom=1
 // obsolete self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
 // obsolete  opline=__atomic_load_n(&FAV(self)->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
+retryss:;  // Here for non-atomic singleton retries.  REFG and notoneatom/bidcase/densbid0 are set to 'not BID, not atom'
  // find frames
  acr-=0x3f; wcr-=0x3f; acr+=awr; acr=acr<0?0:acr; wcr+=wr; wcr=wcr<0?0:wcr;   // ?cr=frame
  // obsolete  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
  // check for non-atomic singletons, which are rare (in testcases)
  if(withprob((notoneatom|densbid0)!=0,0.95)){
-  awr<<=RANKTX; awr+=wr; afwf=(acr<<=RANKTX)+wcr;  // awr=0/0/ar/wr afwf=0/0/af/wf
+  afwf=(acr<<=RANKTX)+wcr;  // afwf=0/0/af/wf
+retryss0:;  // Here for atomic singleton retries.  Noun ranks (awr/wr) have been set, and afwf has been set to 0 to force the fast path through va2.  bidcase=1 (invalid)  at/wt/acr/wcr are garbage
+  awr<<=RANKTX; awr+=wr;   // awr=0/0/ar/wr
   bidcase&=(FL+INT)*5; bidcase=bidcase+(SY_64?(densbid0<<=15):!!densbid0);  // clear possibly-invalid bits of bidcase; if args are not BID, set to 'invalid' bidcase
-retryss:;  // Here for any singleton retries.  Noun ranks (awr) have been set, and afwf has been set to 0.  bidcase=1 (invalid)  at/wt are garbage
   // either not singleton BID, or singleton needing retry: carry on with normal setup
   opcode&=0x7f; opcode*=sizeof(VA); opcode+=bidcase*=(sizeof(VA2)/INT); // point to the VA2 block for the BID if valid; VA block if not
   NOUNROLL while(1){
@@ -1952,16 +1954,16 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
 // obsolete   awr=AR(a); awr<<=RANKTX; awr+=AR(w); // restore aw vars so they won't be saved over the call
-  REFG bidcase=0x1; afwf=0; // bidcase must be 'invalid';  afwf=0 to select fast path
+  REFG densbid0=bidcase=0x1; // reture values from input args; bidcase and densbid0 must be 'not BID'
 // obsolete  opcode=FAV(self)->lu2.lc;  // bidcase must be 'invalid'; restore opcode to prevent save
 // obsolete   IARG2C awr=AR(a); wr=AR(w);
-  awr<<=RANKTX; awr+=wr;  // restore awr/afwf to avoid save. 
+  if(likely(awr+wr==0)){afwf=0; goto retryss0;}  // if atomic singleton retry, set afwf=0 to go through fast path in va2
+  else{notoneatom=1; goto retryss;}   // non-atomic singleton retry: process ranks and frames, suppressing the singleton path
 // obsolete  afwf=0;  afwf=0 to select fast path
 // obsolete   jtranks=jt->ranks; selfranks=FAV(self)->lrr;  // Restore verb ranks, from user or from "n.
 // obsolete   if(likely(awr==0)){selfranks=R2MAX; realself=FAV(self)->fgh[0]; self=realself?realself:self;} goto retryss;  // retry.  atomic singletons must advance self (selfranks max to have no frame); others must not, using the incumbent self & selfranks
 // obsolete   if(likely(awr==0)){selfranks=R2MAX;}
 // obsolete   if(likely(awr==0)){afwf=0; goto retryss0;} notoneatom=densbid0=1;
-  goto retryss;  // retry, loading the actual ranks of the verb.  If not atomic, set 'not BID' to force through var
   // (no fallthrough here)
  }
 }

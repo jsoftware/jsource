@@ -1070,7 +1070,7 @@ static A jtipbx(J jt,A a,A w,C c,C d){A g=0,x0,x1,z;B*av,*av0,b,*v0,*v1,*zv;C c0
 static DF2(jtdotprod){F12IP;A fs,gs;C c;I r;V*sv;
  ARGCHK3(a,w,self);
  sv=FAV(self); fs=sv->fgh[0]; gs=sv->fgh[1];  // op is fs . gs
- if(((UI)(AT(a)&AT(w)&B01)>SGNTO0((SGNIFSPARSE(AT(a)|AT(w)))))&&(-AN(a)&-AN(w)&-(FAV(gs)->flag&VISATOMIC2))<0&&CSLASH==FAV(fs)->id&&  // fs is c/
+ if(((UI)(AT(a)&AT(w)&B01)>SGNTO0((SGNIFSPARSE(AT(a)|AT(w)))))&&(-AN(a)&-AN(w)&-(FAV(gs)->flag&VFUSEDOK2))<0&&CSLASH==FAV(fs)->id&&  // fs is c/
      (c=FAV(FAV(fs)->fgh[0])->id,BETWEENC((c^(CPLUSDOT^CEQ)),CSTARDOT,CNE)))R ipbx(a,w,c,FAV(gs)->id);  // [+.*.~:]/ . boolean   swap = and +., then test for range
  r=lr(gs);   // left rank of v
  A z; R dfv2(z,a,w,atop(fs,qq(gs,v2(r==RMAX?r:1+r,RMAX))));  // inner product according to the Dic

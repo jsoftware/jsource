@@ -472,9 +472,9 @@ static DF2(jtinfix){F12IP;PROLOG(0018);A fs=FAV(self)->fgh[0]; A x,z;I m;
  EPILOG(z);
 }
 
-static DF1(jtinfix2){F12IP;PROLOG(0019);A f; 
- f=FAV(self)->fgh[0]; f=FAV(f)->fgh[0];  // f=u in u/\ y
- A l=curtail(w), r=behead(w), z; z=IRSorATOMIC2(FAV(f)->flag&VFUSEDOK2,FAV(f)->valencefns[1],jt,l,AR(w)-1,r,AR(w)-1,f); // (}: u"_1 }.) y
+static DF1(jtinfix2){F12IP;PROLOG(0019);
+ A f=FAV(FAV(self)->fgh[0])->fgh[0];  // f=u in u/\ y
+  I rk=AR(w)-1; A l,r,z; RZ(l=curtail(w)) RZ(r=behead(w)) rk=FAV(f)->flag&VISATOMIC2?RMAX:rk; z=IRSorATOMIC2(FAV(f)->flag&VFUSEDOK2,FAV(f)->valencefns[1],jt,l,rk,r,rk,f); // (}: u"_1 }.) y (}: u }. if atomic u).  Might be ATOMIC2 but not FUSED
  EPILOG(z);
 }    /* 2 f/\w, where f supports IRS */
 
@@ -961,7 +961,7 @@ F1(jtbslash){F12IP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(
  case CSLASH: ;  // never gerund/ which is coded as GRCO
   A u=v->fgh[0];  // the u in u/\ y
   if(AT(u)&VERB)flag |= (FAV(u)->flag >> (VIRS2X-VFSCANIRSX)) & VFSCANIRS;  // indic if we should use {: f }: for 2 /\ y
-  f2=jtmovfslash; if(FAV(u)->flag&VISATOMIC2){f1=jtpscan;} break;
+  f2=jtmovfslash; if(FAV(u)->flag&VISATOMIC2){f1=jtpscan;} break;  // if atomic (even if not primitive) use methods understanding it
  case CPOUND:
   f1=jtiota1; break;
  case CLEFT: case CRIGHT: case CCOMMA:

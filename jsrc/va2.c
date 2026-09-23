@@ -11,8 +11,6 @@
 #define takestats(s)
 #endif
 
-takestats(static int stats[0x30]={0};)
-takestats(int statsoldcaseno=-1; VF statsoldadocvfn[2]=0;)
 
 #include "j.h"
 #include "ve.h"
@@ -21,6 +19,9 @@ takestats(int statsoldcaseno=-1; VF statsoldadocvfn[2]=0;)
 // Speedy Singletons, moved here to be inlined
 
 #include <fenv.h>
+takestats(static int stats[0x30]={0};)
+takestats(int statsoldcaseno=-1;)
+takestats(VF statsoldadocvfn[2];)
 
 #define SSINGENC(a,w) ((3*(a)+((w)&INT+FL))>>INTX)
 #define SSINGBB SSINGENC(B01,B01)
@@ -1019,7 +1020,7 @@ takestats(++stats[0x11];)
 
  I agreefr=afwf==0?awr:afwf; agreefr=MIN((UI1)agreefr,(UI1)(agreefr>>RANKTX));    // for agreement, we test shorter noun-rank if no frame, shorter frame if there is frame
 takestats(if(agreefr)++stats[0x12];)
- ASSERTAGREE(AS(a),AS(w),agreefr);  // outermost (or only) agreement check.  frame is 0 30% of the time, not worth a test for 10 inst
+ ASSERTAGREE(AS(a),AS(w),agreefr);  // outermost (or only) agreement check.  frame is 0 45% of the time, not worth a test for 10 inst
 
  // If op specifies forced input conversion AND if both arguments are non-sparse: convert them to the selected type.
  // Failed conversion are real errors, but they have priority below agreement errors.  If the conversion error is EVDOMAIN, we defer it by
@@ -1040,14 +1041,14 @@ takestats(if(agreefr)++stats[0x12];)
 
  // Analyze the rank and calculate cell shapes, counts, and sizes.
  // We detect agreement error before domain error
- A awlongcr,awlongfr;  // The arg with the longer-or-equal frame.
+ A awlongcr,awlongfr;  // The arg with the longer-or-equal cell-rank, and longer-or-equal frame.
  {
-  if(withprob(afwf==0,0.98)||unlikely((awr+~0x80)&0x4040)){ // rank 0 0 means no outer frames, sets up faster.  If either arg atomic, take this path since rank can't matter.
-takestats(++stats[0x13];)
+  if(withprob(afwf==0,0.95)||((awr+~0x80)&0x4040)){ // no outer frames sets up faster.  If either arg atomic, take this path since rank can't matter.
+takestats(++stats[0x13]; if(afwf==0)++stats[0x1c];)
    if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
 takestats(++stats[0x14];)
     I atommsk;
-    if(withprob((atommsk=(awr+~0x80)&0x4040)>=((awr^(awr>>RANKTX))&0xff),0.94)){
+    if(withprob((atommsk=(awr+~0x80)&0x4040)>=((awr^(awr>>RANKTX))&0xff),0.8)){
      // Ranks are equal or at least one arg is atomic
 takestats(++stats[0x15]; if(atommsk&0x4040)++stats[0x16]; if((awr&0xff)==(awr>>RANKTX))++stats[0x17];)
      I isatom=SGNTO0(-atommsk);  // 1 if there is an atomic arg
@@ -1061,7 +1062,7 @@ takestats(++stats[0x15]; if(atommsk&0x4040)++stats[0x16]; if((awr&0xff)==(awr>>R
      m=zn<<isatom; m^=isatom-=1; m+=atommsk>>=14;  // m is encoded length/repeata flag if atomic (n set to 1 in next line), or ~length if nonatomic (n implied 1)
      aawwzknfxrz[5]=1;  // in case an arg is atomic, indicate only one inner loop 
     }else{
-        // all other cases without "n.  Arg ranks must be different
+     // No rank specified, arg ranks must be different and neither atomic.
      fr=awr>>RANKTX; I shortr=(RANKT)awr; I wl=fr-shortr;  // separate ar and wr; wl neg if w high rank
      awlongcr=wl<0?w:a; awlongfr=wl<0?a:w; shortr=wl<0?fr:shortr; fr=wl<0?(RANKT)awr:fr;  // arg with high rank; other arg
      zn=AN(awlongcr); m=AN(awlongfr);  // high-rank arg gives len of result, other gives short-arg len i. e. # repeats
@@ -1082,7 +1083,7 @@ takestats(if(n==1){++stats[0x1a]; stats[0x1b]+=m;})
     R vasp(a,w,va2ctoc[vandx/sizeof(VA)],adocvfn==(VF)err00?0:adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),0,ar,0,wr,0,MAX(ar,wr));
    }
   }else{I ak,wk;UI wcr;
-   // Here, a rank was specified.  That means there must be a frame, according to the IRS rules
+   // Here, a rank was specified and there was no atomic argument.
     // Heavy register pressure here.
     // vbls needed: cv a w afwf awr
 takestats(++stats[0x20];)
@@ -1854,7 +1855,7 @@ DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 A jtatomic2(J jtfgfg,A a,A w,A self){  // linkage for 64-bit machines, through jt
  ARGCHK1(a) I at=AT(a); I awr=AR(a);  // a/w/self are settled.  read from a before w
  ARGCHK1(w) I wt=AT(w); I wr=AR(w);
- UI opcode=FAV(self)->lu2.lc; I acr=(UI)jtfgfg>>56; I wcr=((UI)jtfgfg>>48)&0x3f;  // extract complemented ranks from jtfgfg
+ UI opcode=FAV(self)->lu2.lc; I acr=(UI)jtfgfg>>56; I wcr=((UI)jtfgfg>>48)&0x3f;  // extract complemented ranks from jtfgfg which is settling
  J JTFGFROMJTFGFG; F12IP;
 // obsolete DFI2(jtatomic2){A z;
 // obsolete  IARG2D IARG2C
@@ -1892,7 +1893,7 @@ takestats(if((AN(a)-1)|(AN(w)-1))++stats[0x3];) takestats(if(densbid0)++stats[0x
 // obsolete retryss0:;  // here when an atomic singleton fails.  self has not been touched so we must advance it to the primitive.  We must process as non-rank array, so we have set selfranks=0x3f3f to go through no-rank code, and notoneatom=1
 // obsolete self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
 // obsolete  opline=__atomic_load_n(&FAV(self)->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
-retryss:;  // Here for non-atomic singleton retries.  REFG and notoneatom/bidcase/densbid0 are set to 'not BID, not atom'
+retryss:;  // Here for non-atomic singleton retries.  REFG has been executed and notoneatom/bidcase/densbid0 are set to 'not BID, not atom'
  // find frames
  acr-=0x3f; wcr-=0x3f; acr+=awr; acr=acr<0?0:acr; wcr+=wr; wcr=wcr<0?0:wcr;   // ?cr=frame
  // obsolete  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
@@ -1900,12 +1901,12 @@ retryss:;  // Here for non-atomic singleton retries.  REFG and notoneatom/bidcas
  if(withprob((notoneatom|densbid0)!=0,0.95)){
   afwf=(acr<<=RANKTX)+wcr;  // afwf=0/0/af/wf
 retryss0:;  // Here for atomic singleton retries.  Noun ranks (awr/wr) have been set, and afwf has been set to 0 to force the fast path through va2.  bidcase=1 (invalid)  at/wt/acr/wcr are garbage
-  awr<<=RANKTX; awr+=wr;   // awr=0/0/ar/wr
   bidcase&=(FL+INT)*5; bidcase=bidcase+(SY_64?(densbid0<<=15):!!densbid0);  // clear possibly-invalid bits of bidcase; if args are not BID, set to 'invalid' bidcase
   // either not singleton BID, or singleton needing retry: carry on with normal setup
-  opcode&=0x7f; opcode*=sizeof(VA); opcode+=bidcase*=(sizeof(VA2)/INT); // point to the VA2 block for the BID if valid; VA block if not
   NOUNROLL while(1){
 // obsolete not needed?   afwf=selfranks==0?0:afwf;   // if ranks were 0 0, ignore them and shift down to working on frame wrt 0.  afwf=0 signals that case (& happens naturally if there is no frame wrt actual rank).    It uses simpler setup
+   opcode&=0x7f; opcode*=sizeof(VA); opcode+=bidcase*=(sizeof(VA2)/INT); // point to the VA2 block for the BID if valid; VA block if not
+   awr<<=RANKTX; awr+=wr;   // awr=0/0/ar/wr
    // Run the full dyad, retrying if a retryable error is returned.  self has been modified to point to the actual primitive rather than the rank block
    z=jtva2(jtfg,a,w,afwf,awr,opcode);  // execute the verb. jtfg/a/w/selfranks/self  must be preserved over call
    if(likely(z!=0)){RETF(z);}  // normal case is good return
@@ -1915,9 +1916,9 @@ retryss0:;  // Here for atomic singleton retries.  Noun ranks (awr/wr) have been
    if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
 // obsolete    IARG2C awr=AR(a); wr=AR(w); // restore aw vars so they won't be saved over the call
 // obsolete    opline=FAV(self)->localuse.lu1.uavandx[1];  // extract table line from the primitive to avoid save
-   opcode=opcode*sizeof(VA)+0x1*(sizeof(VA2)/INT);  // set opcode to 'invalid' BID
-   acr-=0x3f; wcr-=0x3f; acr+=awr; acr=acr<0?0:acr; wcr+=wr; wcr=wcr<0?0:wcr;
-   awr<<=RANKTX; awr+=wr; afwf=(acr<<=RANKTX)+wcr;  // (copied from above) restore awr/afwf to avoid save
+   bidcase=1;   // set opcode to 'invalid' BID
+   acr-=0x3f; wcr-=0x3f; acr+=awr; acr=acr<0?0:acr; wcr+=wr; wcr=wcr<0?0:wcr; afwf=(acr<<=RANKTX)+wcr;  // (copied from above) restore awr/afwf to avoid save
+// obsolete     awr<<=RANKTX; awr+=wr;
   }
   // We hit an error.  We will format it now because we have the IRS ranks that were used in selfranks.
  // obsolete  // convert 0 rank back to R2MAX to avoid "0 0 in msg

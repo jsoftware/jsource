@@ -420,6 +420,6 @@ F1(jtbsdot){F12IP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag&~(
  fdeffillall(z,0,CBSDOT,VERB,f1,f2,w,0L,0L,flag|(v->flag&VNONAME+VNOSELF),RMAX,0L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->id==CSLASH?v->localuse.lu1.redfn:0)
  // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\ .   f is nonnull if f/\ .
  RETF(z);
- // Fill in the lvp[1] field: with 0 if not f/\.; with the lookup field for f/ if f/\. .
- R f;
+// obsolete  // Fill in the lvp[1] field: with 0 if not f/\.; with the lookup field for f/ if f/\. .
+// obsolete  R f;
 }

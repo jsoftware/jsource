@@ -24,8 +24,8 @@ static DFI2(swap2){IARG2;F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns
 F1(jtswap){F12IP;A y;C*s;I n;
  ARGCHK1(w); 
  if(VERB&AT(w)){
-  // reflexive/passive.  Create verb that swaps.  Most flags do not apply to the derived verb
-  I flag = FAV(w)->flag&VIRS2; flag = (FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF)+flag+(flag>>1);  // set NOLOCCHG, both irs bits from dyad; ISATOMIC immaterial, since always dyad
+  // reflexive/passive.  Create verb that swaps.  Most flags do not apply to the derived verb, but if u is atomic, so is u~
+  I flag = FAV(w)->flag&VIRS2; flag = (FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF+VISATOMIC2)+flag+(flag>>1);  // set NOLOCCHG, both irs bits from dyad; ISATOMIC immaterial, since always dyad
   I flag2 = ((FAV(w)->flag2&(VF2WILLOPEN2WPROP|VF2WILLOPEN2W))<<(VF2WILLOPEN2APROPX-VF2WILLOPEN2WPROPX)) | ((FAV(w)->flag2&(VF2WILLOPEN2APROP|VF2WILLOPEN2A))>>(VF2WILLOPEN2APROPX-VF2WILLOPEN2WPROPX));   // exchange WILLOPEN for dyad, clear for monad
   R fdef(flag2,CTILDE,VERB,(AF)(swap1),(AF)(swap2),w,0L,0L,flag,(I)(RMAX),(I)(rr(w)),(I)(lr(w)));
  }else{

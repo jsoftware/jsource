@@ -368,7 +368,7 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
     }
    }
    break;
-  case CSLDOT&0x3f:  if(d==CSLASH&&AT(wv->fgh[0])&VERB&&FAV(wv->fgh[0])->flag&VISATOMIC2 && CSLASH==ID(av->fgh[0])&&AT(FAV(av->fgh[0])->fgh[0])&VERB&&FAV(FAV(av->fgh[0])->fgh[0])->flag&VISATOMIC2){f2=jtpolymult;} break;  // f//.@(g/) for atomic fg
+  case CSLDOT&0x3f:  if(d==CSLASH&&AT(wv->fgh[0])&VERB&&FAV(wv->fgh[0])->flag&VFUSEDOK2 && CSLASH==ID(av->fgh[0])&&AT(FAV(av->fgh[0])->fgh[0])&VERB&&FAV(FAV(av->fgh[0])->fgh[0])->flag&VFUSEDOK2){f2=jtpolymult;} break;  // f//.@(g/) for primitive atomic fg
   case CQQ&0x3f:     if(d==CTHORN&&CEXEC==IDD(av->fgh[0])&&av->fgh[1]==num(0)){f1=jtdigits10;} break;  // "."0@":
   case CEXP&0x3f:    if(d==CCIRCLE){f1=jtexppi;} break;   // ^@o.
   case CAMP&0x3f:

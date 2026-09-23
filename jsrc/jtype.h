@@ -1255,7 +1255,7 @@ union{
 #define VIRS1X          11
 #define VIRS1           (I)2048         /* 11 monad has integral rank support */
 #define VIRS2X          12
-#define VIRS2           (((I)1)<<VIRS2X)         /* 12 dyad  has integral rank support */
+#define VIRS2           (((I)1)<<VIRS2X)         // 12 dyad  has integral rank support   paired with VIRS1
 #define VFLR            (I)0x2000         /* function is <.@g                */
 #define VCEIL           (I)0x4000       /* function is >.@g                */
 #define VNOSELFX        15  // this node and its descndants DO NOT contain $:
@@ -1280,8 +1280,8 @@ union{
 #define VNOLOCCHG      (((I)1)<<VNOLOCCHGX)     // Execution does not alter locale/path.
 // 27 free   it appears that u !: n forms were envisaged
 #define VISATOMIC1      ((I)(1L<<28))     // processes each atom individually (logically rank 0, but handles all ranks)
-#define VISATOMIC2      ((I)(1L<<29))    // dyad is atomic.
-#define VFUSEDOK2  ((I)(1L<<30))    // this block can be executed by passing in another block (containing rank) whose fgh[0] points to the native block for this primitive
+#define VISATOMIC2      ((I)(1L<<29))    // dyad is semantically atomic; might not be primitive
+#define VFUSEDOK2  ((I)(1L<<30))    // this dyad uses ATOMIC2 linkage; must be a primitive.  Primitive can be called with skeletal A containing rank and id.
 
 // bits in flag2:
 #define VF2NONE 0

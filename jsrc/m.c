@@ -18,12 +18,6 @@
 
 #include "j.h"
 
-#if MEMAUDIT&1
-#define CHKAFCHAIN(z) {A z1=z; while(z1){if(z1&&(((uintptr_t)z1)<0x10000))SEGFAULT;z1=AFCHAIN(z1);}}
-#else
-#define CHKAFCHAIN(z)
-#endif
-
 #if 0    // already defined in m.h
 #define LEAKSNIFF 0
 #define SHOWALLALLOC 0 // to display log of allo/free
@@ -304,7 +298,6 @@ B jtspfree(J jt){I i;A p;
    I nexpats=IMIN;  // number of expats repatriated
    for(p=jt->mempool[i];p;){
 #if MEMAUDIT&1
-    CHKAFCHAIN(p);
     if(FHRHPOOLBIN(AFHRH(p))!=i)SEGFAULT;  // make sure chains are valid
     if(ISGMP(p)&&!ACISPERM(p)&&!AZAPLOC(p))SEGFAULT; // catch an old libgmp integration failure mode
 #endif
@@ -319,6 +312,7 @@ B jtspfree(J jt){I i;A p;
    }
    // if any blocks can be freed, pass through the chain to remove them.
    if(FHRHISROOTALLOFREE(freereqd)) {   // if any of the base blocks were freed...
+#if 0
     A survivetail=(A)&jt->mempool[i];  // running pointer to last block in chain of blocks that are NOT dropped off.  Chain is rooted in jt->mempool[i], i. e. it replaces the previous chain there
       // NOTE PUN: AFCHAIN(a) must be offset 0 of a
     for(p=jt->mempool[i];p;p=AFCHAIN(p)){   // for each free block
@@ -327,6 +321,15 @@ B jtspfree(J jt){I i;A p;
      }
     }
     AFCHAIN(survivetail)=0;  // terminate the chain of surviving buffers.  We leave the [].pool entry pointing to the free list
+#else
+    A *survivetail=(A*)&jt->mempool[i];  // running pointer to last block in chain of blocks that are NOT dropped off.  Chain is rooted in jt->mempool[i], i. e. it replaces the previous chain there
+    for(p=jt->mempool[i];p;p=AFCHAIN(p)){   // for each free block
+     if(!FHRHISALLOFREE(p,offsetmask)) {  // if the whole allocation containing this block is NOT deleted...
+      *survivetail=p;survivetail=(A*)p;  // ...add it as tail of survival chain
+     }
+    }
+    *survivetail=0;  // terminate the chain of surviving buffers.  We leave the [].pool entry pointing to the free list
+#endif
    }
 
    // We have kept the surviving buffers in order because the head of the free list is the most-recently-freed buffer
@@ -519,6 +522,7 @@ void jtspendtracking(J jt){I i;
 // Make sure all deletecounts start at 0
 static void auditsimverify0(J jt,A w){
  if(!w)R;
+#if !PYXES
  if(AFLAG(w)>>AFAUDITUCX){
   fprintf(stderr, "auditsimverify0 w: %llx, AFLAG(w)>>AFUDITUCX: %llx, ", (UI)w, AFLAG(w)>>AFAUDITUCX);
   fprintf(stderr,"AK(w): %llx (%lli), ", AK(w), AK(w));
@@ -530,6 +534,7 @@ static void auditsimverify0(J jt,A w){
   fprintf(stderr,"AFHRH(w): %hx (%hi)\n", AFHRH(w), AFHRH(w));
   SEGFAULT;
  }   // hang if nonzero count
+#endif
  if(ACISPERM(AC(w)))R;  // PERMANENT block may be referred to; don't touch it
  if(likely(!(AFLAG(w)&AFNJA))&&(AFHRH(w)==0))SEGFAULT;  // pool number must be valid if not GMP block and not mem-mapped
  if(AC(w)==0 || (AC(w)<0 && AC(w)!=ACINPLACE+ACUC1 && AC(w)!=ACINPLACE+2 && AC(w)!=ACINPLACE+3))SEGFAULT;   // could go higher but doesn't in our tests
@@ -548,11 +553,13 @@ static void auditsimverify0(J jt,A w){
 
 // Simulate tpop on the input block.  If that produces a delete count that equals the usecount,
 // recur on children if any.  If it produces a delete count higher than the use count in the block, abort
-static void auditsimdelete(J jt,A w){I delct;
+static void auditsimdelete(J jt,A w){I delct=0;
  if(!w)R;
  if((UI)AN(w)==0xdeadbeefdeadbeef||(UI)AN(w)==0xfeeefeeefeeefeee)SEGFAULT;
  if(ACISPERM(AC(w)))R;  // PERMANENT block may be referred to; don't touch it
+#if !PYXES
  if((delct=((AFLAG(w)+=AFAUDITUC)>>AFAUDITUCX))>ACUC(w))SEGFAULT;   // hang if too many deletes
+#endif
  if(AFLAG(w)&AFVIRTUAL && (AT(w)^AFLAG(w))&RECURSIBLE)SEGFAULT;   // hang if nonrecursive virtual
  if(delct==ACUC(w)&&AFLAG(w)&AFVIRTUAL){A wb=ABACK(w);
   // we fa() the backer, while we mf() the block itself.  So if the backer is NOT recursive, we have to
@@ -1333,9 +1340,6 @@ if((I)jt&3)SEGFAULT;
  if(withprob(blockx<PLIML,0.8)){
   // small block: allocate from pool
   z=jt->mempool[-PMINL+1+blockx];   // head of free list.  We wait till blockx is valid because an allo of 2^29 bytes could fetch out of JTT.  Rearranging could get to 2^33, not enough
-#if MEMAUDIT&1
-  CHKAFCHAIN(z);
-#endif
   if(likely(z!=0)){         // allocate from a chain of free blocks
    jt->mempool[-PMINL+1+blockx]=AFCHAIN(z);  // remove & use the head of the free chain
    // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it.  Otherwise save the cycles.  All allo routines must do this

@@ -519,6 +519,7 @@ void jtspendtracking(J jt){I i;
 // Make sure all deletecounts start at 0
 static void auditsimverify0(J jt,A w){
  if(!w)R;
+#if !PYXES
  if(AFLAG(w)>>AFAUDITUCX){
   fprintf(stderr, "auditsimverify0 w: %llx, AFLAG(w)>>AFUDITUCX: %llx, ", (UI)w, AFLAG(w)>>AFAUDITUCX);
   fprintf(stderr,"AK(w): %llx (%lli), ", AK(w), AK(w));
@@ -530,6 +531,7 @@ static void auditsimverify0(J jt,A w){
   fprintf(stderr,"AFHRH(w): %hx (%hi)\n", AFHRH(w), AFHRH(w));
   SEGFAULT;
  }   // hang if nonzero count
+#endif
  if(ACISPERM(AC(w)))R;  // PERMANENT block may be referred to; don't touch it
  if(likely(!(AFLAG(w)&AFNJA))&&(AFHRH(w)==0))SEGFAULT;  // pool number must be valid if not GMP block and not mem-mapped
  if(AC(w)==0 || (AC(w)<0 && AC(w)!=ACINPLACE+ACUC1 && AC(w)!=ACINPLACE+2 && AC(w)!=ACINPLACE+3))SEGFAULT;   // could go higher but doesn't in our tests
@@ -548,11 +550,13 @@ static void auditsimverify0(J jt,A w){
 
 // Simulate tpop on the input block.  If that produces a delete count that equals the usecount,
 // recur on children if any.  If it produces a delete count higher than the use count in the block, abort
-static void auditsimdelete(J jt,A w){I delct;
+static void auditsimdelete(J jt,A w){I delct=0;
  if(!w)R;
  if((UI)AN(w)==0xdeadbeefdeadbeef||(UI)AN(w)==0xfeeefeeefeeefeee)SEGFAULT;
  if(ACISPERM(AC(w)))R;  // PERMANENT block may be referred to; don't touch it
+#if !PYXES
  if((delct=((AFLAG(w)+=AFAUDITUC)>>AFAUDITUCX))>ACUC(w))SEGFAULT;   // hang if too many deletes
+#endif
  if(AFLAG(w)&AFVIRTUAL && (AT(w)^AFLAG(w))&RECURSIBLE)SEGFAULT;   // hang if nonrecursive virtual
  if(delct==ACUC(w)&&AFLAG(w)&AFVIRTUAL){A wb=ABACK(w);
   // we fa() the backer, while we mf() the block itself.  So if the backer is NOT recursive, we have to

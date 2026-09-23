@@ -18,12 +18,6 @@
 
 #include "j.h"
 
-#if MEMAUDIT&1
-#define CHKAFCHAIN(z) {A z1=z; while(z1){if(z1&&(((uintptr_t)z1)<0x10000))SEGFAULT;z1=AFCHAIN(z1);}}
-#else
-#define CHKAFCHAIN(z)
-#endif
-
 #if 0    // already defined in m.h
 #define LEAKSNIFF 0
 #define SHOWALLALLOC 0 // to display log of allo/free
@@ -304,7 +298,6 @@ B jtspfree(J jt){I i;A p;
    I nexpats=IMIN;  // number of expats repatriated
    for(p=jt->mempool[i];p;){
 #if MEMAUDIT&1
-    CHKAFCHAIN(p);
     if(FHRHPOOLBIN(AFHRH(p))!=i)SEGFAULT;  // make sure chains are valid
     if(ISGMP(p)&&!ACISPERM(p)&&!AZAPLOC(p))SEGFAULT; // catch an old libgmp integration failure mode
 #endif
@@ -319,6 +312,7 @@ B jtspfree(J jt){I i;A p;
    }
    // if any blocks can be freed, pass through the chain to remove them.
    if(FHRHISROOTALLOFREE(freereqd)) {   // if any of the base blocks were freed...
+#if 0
     A survivetail=(A)&jt->mempool[i];  // running pointer to last block in chain of blocks that are NOT dropped off.  Chain is rooted in jt->mempool[i], i. e. it replaces the previous chain there
       // NOTE PUN: AFCHAIN(a) must be offset 0 of a
     for(p=jt->mempool[i];p;p=AFCHAIN(p)){   // for each free block
@@ -327,6 +321,15 @@ B jtspfree(J jt){I i;A p;
      }
     }
     AFCHAIN(survivetail)=0;  // terminate the chain of surviving buffers.  We leave the [].pool entry pointing to the free list
+#else
+    A *survivetail=(A*)&jt->mempool[i];  // running pointer to last block in chain of blocks that are NOT dropped off.  Chain is rooted in jt->mempool[i], i. e. it replaces the previous chain there
+    for(p=jt->mempool[i];p;p=AFCHAIN(p)){   // for each free block
+     if(!FHRHISALLOFREE(p,offsetmask)) {  // if the whole allocation containing this block is NOT deleted...
+      *survivetail=p;survivetail=(A*)p;  // ...add it as tail of survival chain
+     }
+    }
+    *survivetail=0;  // terminate the chain of surviving buffers.  We leave the [].pool entry pointing to the free list
+#endif
    }
 
    // We have kept the surviving buffers in order because the head of the free list is the most-recently-freed buffer
@@ -1337,9 +1340,6 @@ if((I)jt&3)SEGFAULT;
  if(withprob(blockx<PLIML,0.8)){
   // small block: allocate from pool
   z=jt->mempool[-PMINL+1+blockx];   // head of free list.  We wait till blockx is valid because an allo of 2^29 bytes could fetch out of JTT.  Rearranging could get to 2^33, not enough
-#if MEMAUDIT&1
-  CHKAFCHAIN(z);
-#endif
   if(likely(z!=0)){         // allocate from a chain of free blocks
    jt->mempool[-PMINL+1+blockx]=AFCHAIN(z);  // remove & use the head of the free chain
    // If the user is keeping track of memory high-water mark with 7!:2, figure it out & keep track of it.  Otherwise save the cycles.  All allo routines must do this

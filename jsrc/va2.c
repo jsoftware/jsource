@@ -947,12 +947,6 @@ VA va[]={
   {0,0}, {0,0}, {0,0},
   {0,0}, {0,0}, {(VF)gtabsDD,VRNONE+VB}},
  },
-// obsolete // these routines are used only for floating-point types (DD), so they overlap  scaf perhaps save the space & cachelines at the expense of a little decode?
-// obsolete {{0,0}, {0,0}, {0,0},
-// obsolete   {(VF)eqabsDD,VRNONE+VB}, {(VF)neabsDD,VRNONE+VB}, {(VF)ltabsDD,VRNONE+VB},
-// obsolete   {(VF)leabsDD,VRNONE+VB}, {(VF)geabsDD,VRNONE+VB}, {(VF)gtabsDD,VRNONE+VB}, 
-// obsolete   },
-// obsolete   &rpsnull},
 };
 
 A jtcvz(J jt,I cv,A w){I t;
@@ -986,7 +980,6 @@ takestats(++stats[0x10];)
  I aawwzknfxrz[11];  // a outer/only, a inner, w outer/only, w inner, z, n parm to ado, nf, nf wkarea, rc, offset to start of last z result, temp
  if(withprob(!(vandx&(0x3*(sizeof(VA2)/INT)+-BIT(15))),0.95)){  // if vandx is valid, with no upper or lower flags (meaning first pass through on BID args)
   // Here for the fast and important case, where the arguments are both dense B01/INT/FL
-// obsolete   VA2 *aadocv=&((VA*)((I)va+vandx))->p2[bidcase>>INTX];   // read table[primitive][argtype]
   VA2 *aadocv=(VA2*)((I)va+vandx);   // read table[primitive][argtype]
   cv=aadocv->cv; adocvfn=aadocv->f;   // fetch the address of the function and the cv
  }else{
@@ -1066,7 +1059,6 @@ takestats(++stats[0x15]; if(atommsk&0x4040)++stats[0x16]; if((awr&0xff)==(awr>>R
      fr=awr>>RANKTX; I shortr=(RANKT)awr; I wl=fr-shortr;  // separate ar and wr; wl neg if w high rank
      awlongcr=wl<0?w:a; awlongfr=wl<0?a:w; shortr=wl<0?fr:shortr; fr=wl<0?(RANKT)awr:fr;  // arg with high rank; other arg
      zn=AN(awlongcr); m=AN(awlongfr);  // high-rank arg gives len of result, other gives short-arg len i. e. # repeats
-// obsolete      I mf=SGNTO0(wl); nf=2*mf+SGNTO0(-wl);  // each arg uninplaceable if short rank  only 10 and 01 are possible here
 takestats(++stats[0x18]; if(wl<0)++stats[0x19];)
      PRODRNK(n,fr-shortr,AS(awlongcr)+shortr);  // the unmatched part of shape is the cell; get */ shape = n, the length of the inner loop
 takestats(if(n==1){++stats[0x1a]; stats[0x1b]+=m;})
@@ -1079,7 +1071,6 @@ takestats(if(n==1){++stats[0x1a]; stats[0x1b]+=m;})
    }else{
     // Sparse setup
     I ar=awr>>RANKTX, wr=(RANKT)awr;
-// obsolete     R vasp(a,w,va2ctoc[FAV(self)->lu2.lc&0x7f],adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),0,ar,0,wr,0,MAX(ar,wr));
     R vasp(a,w,va2ctoc[vandx/sizeof(VA)],adocvfn==(VF)err00?0:adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),0,ar,0,wr,0,MAX(ar,wr));
    }
   }else{I ak,wk;UI wcr;
@@ -1219,7 +1210,6 @@ takestats(++stats[0x24];)
   }
  }
  // Not sparse.
-// obsolete  RESETRANK;  // Ranks are required for sparse, which calls IRS-enabled routines internally.  We clear in case the action routine calls a function with IRS
  // vbls needed: a w ak wk cv fr n m jt
 
  union {UI4 fr; UI1 lanes[4];} fru;  // place to save the lanes of fr separately
@@ -1247,7 +1237,6 @@ takestats(++stats[0x24];)
   }
   // Here we are running inplace (25% of the time, in testcases).  Skip over the allocation and its overhead
 takestats(++stats[0x28];)
-// obsolete   ASSERT(adocvfn,EVDOMAIN)
   if(withprob(!(cv&VIPOLOOPREQD),0.8))goto noallonoloop; else goto noalloloop;
  }else{
 allocate:;  // come here if no inplaceable block could have the type changed
@@ -1264,7 +1253,6 @@ takestats(++stats[0x29];)
 #if NORMAH*(SY_64?8:4)<(1LL<<(PMINL-1))
   bytes|=(I)1<<(PMINL-1);  // if the memory header itself doesn't meet the minimum buffer length, insert a minimum
 #endif
-// obsolete   ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)   // single-allocation limit
   RZ(z=jtgaf(jt,CTLZI((UI)bytes)));   // allocate the block, filling in AC AFLAG AM
   AT(z)=rtype(cv); AN(z)=zn; ARINIT(z,fru.lanes[frZRANK]); AK(z)=AKXR(fru.lanes[frZRANK]);  // fill in the rest
   if(unlikely(AT(z)&(CMPX|QP|(NOUN&~DIRECT)))){
@@ -1278,7 +1266,6 @@ takestats(++stats[0x29];)
   MCISH(AS(z)+fru.lanes[frFL],AS(awlongcr)+fru.lanes[frFLC],fru.lanes[frZRANK]-fru.lanes[frFL]);  // copy inner shape
      // start of cellshape,    shape of long cell+its frame  rank of long cell (zrank-len of long frame)
   // Signal domain error if appropriate.  Must do this after agreement tests
-// obsolete   ASSERT(adocvfn,EVDOMAIN)  // if no function to run , that's an error.  By waiting till now we hope to keep adocvfn in the call register till execution.  We might have allocated a BOOL result block, which is OK
  } 
  // (we don't get here if we are inplacing: that has branched into the loop or no-loop section)
  // End of setup phase.  The execution phase:
@@ -1595,7 +1582,6 @@ I jtsumattymesprods(J jt,I it,void *avp, void *wvp,I dplen,I nfro,I nfri,I ndpo,
 #if C_AVX2 || EMU_AVX2
 // +/@:*"1 for QP.  Caller has handled any rank loop
 static DF2(jtsumattymes1E){F12IP;
-// obsolete  if(unlikely((I)((1-AR(a))|(1-AR(w)))<0)){I lr=MIN((RANKT)jt->ranks,AR(a)); I rr=MIN(jt->ranks>>RANKTX,AR(w)); R rank2ex(a,w,(A)self,1,1,lr,rr,jtsumattymes1E);}  // if multiple results needed, do rank loop
  I i; I n=AS(a)[AR(a)-1]; ASSERT(AS(w)[AR(w)-1]==n,EVLENGTH);  // length of vector; verify agreement
  E *x=EAV(a)+n, *y=EAV(w)+n;  // input pointers, advanced past end
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff});  /* needed masks: sign, mantissa */
@@ -1630,13 +1616,6 @@ static DF2(jtsumattymes1E){F12IP;
 // +/@:*"1 with IRS, also +/@:*"1!.0 on float args and +/@:*"1!.1 producing a float extended-precision result, a length-2 list per product
 DFI2(jtsumattymes1){
  IARG2CR F12IP;
-// obsolete  I ar=AR(a); I wr=AR(w); I acr=jt->ranks>>RANKTX; I wcr=jt->ranks&RMAX;
-// obsolete   // get the cell-ranks to use 
-// obsolete   acr=ar<acr?ar:acr;   // r=left rank of verb, acr=effective rank
-// obsolete   wcr=wr<wcr?wr:wcr;  // r=right rank of verb, wcr=effective rank
-// obsolete       // note: the prod above can never fail, because it gives the actual # cells of an existing noun
-// obsolete     // Now that we have used the rank info, clear jt->ranks.  All verbs start with jt->ranks=RMAXX unless they have "n applied
-// obsolete     // we do this before we generate failures
 
  I fit=0; if(unlikely(FAV(self)->id==CFIT))fit=1+FAV(self)->localuse.lu1.fittype;  // fit 0=normal, 1=!.0, 2=!.1
  I *as=AS(a), *ws=AS(w);
@@ -1658,7 +1637,6 @@ DFI2(jtsumattymes1){
   }
 #endif
   if(fit!=0)self=FAV(self)->fgh[0];  // lose the !.[01] if we revert
-// obsolete  RESETRANK;  // This is required if we go to slower code
   R rank2ex(a,w,FAV(self)->fgh[0],MIN(acr,1),MIN(wcr,1),acr,wcr,jtfslashatg);
  }
  // We can handle it here, and both ranks are at least 1 or both are rank 0.
@@ -1857,16 +1835,6 @@ A jtatomic2(J jtfgfg,A a,A w,A self){  // linkage for 64-bit machines, through j
  ARGCHK1(w) I wt=AT(w); I wr=AR(w);
  UI opcode=FAV(self)->lu2.lc; I acr=(UI)jtfgfg>>56; I wcr=((UI)jtfgfg>>48)&0x3f;  // extract complemented ranks from jtfgfg which is settling
  J JTFGFROMJTFGFG; F12IP;
-// obsolete DFI2(jtatomic2){A z;
-// obsolete  IARG2D IARG2C
-// obsolete  I at=AT(a); I awr=AR(a); I wt=AT(w); I wr=AR(w); UI opcode=FAV(self)->lu2.lc;  // reel off the reads we need: bidcase/densbid first, then opcode.  at 1 cycle before wt
-// obsolete UI jtranks=jt->ranks; // VA2C* code from the primitive (used if we predict to ssing), jt->ranks (used if we predict to va2)
-// obsolete  UI selfranks=FAV(self)->lrr;
-// obsolete    //  at, for bidcase/densbid0
-// obsolete    // ar, wt, for bidcase/densbid0
-// obsolete  awr<<=RANKTX;
-// obsolete  // extract acr/wcr from the input parameters
-// obsolete  F12IP;  // remove flags bit from jt
 #else
 #define REFG opcode=FAV(self)->lu2.lc; a=(A)((I)afg&~0x3f); w=(A)((I)wfg&~0x3f); at=AT(a); wt=AT(w); awr=AR(a); wr=AR(w); acr=(I)afg&0x3f; wcr=(I)wfg&0x3f; JTFROMJTFG(J);
 A jtatomic2(J jtfg,A afg,A wfg,A self){  // linkage for 32-bit machines, through a/w
@@ -1882,21 +1850,11 @@ takestats(++stats[0x0];)
  UI bidcase=3*at; bidcase&=(FL+INT)*5; UI densbid0=(UI)((at|=wt)&((NOUN|SPARSE)&~(B01+INT+FL))); bidcase+=wt;   // arg type info, with possibly 1 bit set in bits 0-1; bid0=not singleable
  if(withprob((awr+wr+densbid0)==0,0.7)){takestats(++stats[0x1];) afwf=0*0x101; goto forcess;}  // if args are both INT/FL/B01 atoms, verb rank is immaterial - run as singleton.  This is fast; ranked singletons later.  self has routine#
  // falling through, not atomic singleton.
-// obsolete  UI notoneatom=(an-1)|(wn-1);
 takestats(if((AN(a)-1)|(AN(w)-1))++stats[0x3];) takestats(if(densbid0)++stats[0x4];)
-// obsolete  bidcase=densbid0>=1?1:bidcase;  // if args are not BID, set to 'invalid' bidcase (no ADC but compiler works)
  I notoneatom=(AN(a)-1)|(AN(w)-1);   // 0 if both ANs=1: nonatomic singleton.  Now densbid0 is 0 if BID on nonatomic singleton
-// obsolete retryss:;  // here when non-atomic singleton retries.  bidcase and densbid0 have been set to non-BID, and awr has been reconstructed.  at/wt are garbage
-// obsolete  A realself=FAV(self)->fgh[0];  // if rank operator, this is nonzero and points to the left arg of rank.
-// obsolete  UI selfranks=FAV(self)->lrr;  // get left & right rank from rank/primitive
-// obsolete  selfranks=jtranks==R2MAX?selfranks:jtranks;   // ignore IRS if not given, to get the rank to be used for the execution
-// obsolete retryss0:;  // here when an atomic singleton fails.  self has not been touched so we must advance it to the primitive.  We must process as non-rank array, so we have set selfranks=0x3f3f to go through no-rank code, and notoneatom=1
-// obsolete self=realself?realself:self;  // if this is a rank block, move to the primitive to get to the function pointers.  u b. or any atomic primitive has f clear
-// obsolete  opline=__atomic_load_n(&FAV(self)->localuse.lu1.uavandx[1],__ATOMIC_RELAXED);  // extract table line from the primitive
 retryss:;  // Here for non-atomic singleton retries.  REFG has been executed and notoneatom/bidcase/densbid0 are set to 'not BID, not atom'
  // find frames
  acr-=0x3f; wcr-=0x3f; acr+=awr; acr=acr<0?0:acr; wcr+=wr; wcr=wcr<0?0:wcr;   // ?cr=frame
- // obsolete  afwf=(awr|(BIT(2*RANKTX-1)+BIT(RANKTX-1)))-selfranks; afwf&=((afwf>>(RANKTX-2))&(1+BIT(RANKTX)))+((1+BIT(RANKTX))*0x7f);  //  0/0/10anr/10wnr   x/x/xcaf/xcwf  0/0/af/wf by AND with 01111111+c
  // check for non-atomic singletons, which are rare (in testcases)
  if(withprob((notoneatom|densbid0)!=0,0.95)){
   afwf=(acr<<=RANKTX)+wcr;  // afwf=0/0/af/wf
@@ -1904,25 +1862,18 @@ retryss0:;  // Here for atomic singleton retries.  Noun ranks (awr/wr) have been
   bidcase&=(FL+INT)*5; bidcase=bidcase+(SY_64?(densbid0<<=15):!!densbid0);  // clear possibly-invalid bits of bidcase; if args are not BID, set to 'invalid' bidcase
   // either not singleton BID, or singleton needing retry: carry on with normal setup
   NOUNROLL while(1){
-// obsolete not needed?   afwf=selfranks==0?0:afwf;   // if ranks were 0 0, ignore them and shift down to working on frame wrt 0.  afwf=0 signals that case (& happens naturally if there is no frame wrt actual rank).    It uses simpler setup
    opcode&=0x7f; opcode*=sizeof(VA); opcode+=bidcase*=(sizeof(VA2)/INT); // point to the VA2 block for the BID if valid; VA block if not
    awr<<=RANKTX; awr+=wr;   // awr=0/0/ar/wr
    // Run the full dyad, retrying if a retryable error is returned.  self has been modified to point to the actual primitive rather than the rank block
    z=jtva2(jtfg,a,w,afwf,awr,opcode);  // execute the verb. jtfg/a/w/selfranks/self  must be preserved over call
    if(likely(z!=0)){RETF(z);}  // normal case is good return
    // error cases: exit and retry
-// obsolete    JTFROMJTFG(J);  // restore jt to avoid save
    REFG  // restore state that was read from the arguments
    if(unlikely(jt->jerr<=NEVM))break;  // if nonretryable error, exit
-// obsolete    IARG2C awr=AR(a); wr=AR(w); // restore aw vars so they won't be saved over the call
-// obsolete    opline=FAV(self)->localuse.lu1.uavandx[1];  // extract table line from the primitive to avoid save
    bidcase=1;   // set opcode to 'invalid' BID
    acr-=0x3f; wcr-=0x3f; acr+=awr; acr=acr<0?0:acr; wcr+=wr; wcr=wcr<0?0:wcr; afwf=(acr<<=RANKTX)+wcr;  // (copied from above) restore awr/afwf to avoid save
-// obsolete     awr<<=RANKTX; awr+=wr;
   }
   // We hit an error.  We will format it now because we have the IRS ranks that were used in selfranks.
- // obsolete  // convert 0 rank back to R2MAX to avoid "0 0 in msg
- // obsolete   jt->ranks=selfranks?selfranks:R2MAX;
   self=resolveself(self);   // reconstruct true self from its original value (it might be a monadic shorthand)
 #if SY_64
   A afg=(A)((I)a+acr), wfg=(A)((I)w+wcr);  // input to eformat is IRS form.  We have not complemented ?cr yet 
@@ -1938,33 +1889,21 @@ retryss0:;  // Here for atomic singleton retries.  Noun ranks (awr/wr) have been
    wfg=0; // now a monad
   }
   jteformat(jt,self,afg,wfg,0);
-// obsolete   RESETRANK;  // in case we installed something into jt->ranks, remove it
   RETF(z);
  }else{
 takestats(++stats[0x2];)
   // singleton BID, rank>0.  we need the rank of the result.  Rare to come in this way (singletons with rank) awr/wr=noun ranks, acr/wcr=frames
-// obsolete   I awcr=awr-afwf; af=MAX((UI1)awcr,(UI1)(awcr>>RANKTX)); af+=MAX((UI1)afwf,(UI1)(afwf>>RANKTX));
   afwf=MAX(acr,wcr); acr-=awr; wcr-=wr; acr=acr<wcr?acr:wcr; afwf-=acr; afwf*=0x101; awr<<=RANKTX; awr+=wr;   // af=max framelen + max cell rank = resultrank, in 2 lanes; combine awr into ar/wr
-// obsolete   acr=wcr>acr?wcr:acr; afwf=acr+MAX(awr,wr); afwf*=0x101; awr<<=RANKTX; awr+=wr; 
 forcess:;  // branch point for rank-0 singletons from above, always with atomic result (awr is 0, so is af)
   // any singleton.  afwf is the duplicated rank of the result, with shape all 1s; awr is ar/wr
   z=jtssingleton(jtfg,a,w,awr,afwf,bidcase,opcode);
   if(likely(z!=0)){RETF(z);}  // normal case is good return; the rest is retry for singletons
   // error cases: exit and retry
-// obsolete   JTFROMJTFG(J);  // restore jt to avoid save
   if(unlikely(jt->jerr<=NEVM)){RETF(z);}   // if error is unrecoverable, don't retry
   // if retryable error, fall through.  The retry will not be through the singleton code
-// obsolete   awr=AR(a); awr<<=RANKTX; awr+=AR(w); // restore aw vars so they won't be saved over the call
   REFG densbid0=bidcase=0x1; // reture values from input args; bidcase and densbid0 must be 'not BID'
-// obsolete  opcode=FAV(self)->lu2.lc;  // bidcase must be 'invalid'; restore opcode to prevent save
-// obsolete   IARG2C awr=AR(a); wr=AR(w);
   if(likely(awr+wr==0)){afwf=0; goto retryss0;}  // if atomic singleton retry, set afwf=0 to go through fast path in va2
   else{notoneatom=1; goto retryss;}   // non-atomic singleton retry: process ranks and frames, suppressing the singleton path
-// obsolete  afwf=0;  afwf=0 to select fast path
-// obsolete   jtranks=jt->ranks; selfranks=FAV(self)->lrr;  // Restore verb ranks, from user or from "n.
-// obsolete   if(likely(awr==0)){selfranks=R2MAX; realself=FAV(self)->fgh[0]; self=realself?realself:self;} goto retryss;  // retry.  atomic singletons must advance self (selfranks max to have no frame); others must not, using the incumbent self & selfranks
-// obsolete   if(likely(awr==0)){selfranks=R2MAX;}
-// obsolete   if(likely(awr==0)){afwf=0; goto retryss0;} notoneatom=densbid0=1;
   // (no fallthrough here)
  }
 }
@@ -2011,7 +1950,6 @@ static VF eqnetbl[2][11] = {
 // The type has been converted to dense type
 // opchar is the VA2C* code for the operation
 VA2 jtvar(J jt,I opchar,I at,I wt){   // scaf parm should be lu2.lc not self?
-// obsolete  I opchar=(UC)FAV(self)->lu2.lc&0x7f;  //  the index of the opcode - start reading ASAP, needed on main line
  // If there is a pending error, it might be one that can be cured with a retry; for example, fixed-point
  // overflow, where we will convert to float.  If the error is one of those, get the routine and conversion
  // for it, and return.
@@ -2037,7 +1975,6 @@ VA2 jtvar(J jt,I opchar,I at,I wt){   // scaf parm should be lu2.lc not self?
    R retva2;
   }
   // falling through, all args are numeric
-// obsolete   VA *vainfo=((VA*)((I)va+FAV(self)->localuse.lu1.uavandx[1]));  // extract table line from the primitive
   VA *vainfo=((VA*)((I)va+opchar*sizeof(VA)));  // extract table line from the primitive
   if(withprob((t&(NOUN&~(B01|INT|FL))),0.9)){
    // Numeric args, but one of the arguments is CMPX/RAT/XNUM/other numeric precisions 

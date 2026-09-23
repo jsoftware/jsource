@@ -47,8 +47,6 @@ static A jtfromis1(J jt,A ind,A w,A z,I wf){A a,a1,j1,p,q,x,x1,y,y1;C*xu,*xuu,*x
 
 FI2(jtfromis){A ind,x,z;B*b;I an,*av,k,m,*v,*ws,wt;P*wp,*zp;
  IARG2CR F12IP;
-// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  I af=ar-acr, wf=wr-wcr;
  if(af)R rank2ex(a,w,DUMMYSELF,acr,wcr,acr,wcr,jtfromis);
  ws=AS(w); wt=AT(w);
@@ -163,8 +161,6 @@ A jtaindex(J jt,A a,A w,I wf){A*av,q,z;I an,ar,c,j,k,t,*u,*v,*ws;
 
 FI2(jtfrombs){A ind;
  IARG2CR F12IP;
-// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  I af=ar-acr, wf=wr-wcr;
  ASSERT(!af,EVNONCE);
  if(ar){RZ(ind=aindex(a,w,wf)); ind=(A)((I)ind&~1LL); ASSERT(ind!=0,EVNONCE); R frombsn(ind,w,wf);}
@@ -173,8 +169,6 @@ FI2(jtfrombs){A ind;
 
 FI2(jtfromsd){A e,x,z;I *v,*ws;P*ap,*zp;
  IARG2CR F12IP;
-// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  I af=ar-acr, wf=wr-wcr;
  if(af)R sprank2(a,w,NOEMSGSELF,acr,wcr,jtfrom);
  ASSERT(AT(w)&B01+INT+FL+CMPX,EVNONCE);
@@ -196,8 +190,6 @@ FI2(jtfromsd){A e,x,z;I *v,*ws;P*ap,*zp;
 
 FI2(jtfromss){A e,x,y,z;B*b;I c,d,k,m,n,p,*u,*v,*ws,*yv;P*ap,*wp,*xp,*zp;
  IARG2CR F12IP;
-// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  I af=ar-acr, wf=wr-wcr;
  if(af)R sprank2(a,w,NOEMSGSELF,acr,wcr,jtfrom);
  ASSERT(DTYPE(AT(w))&B01+INT+FL+CMPX,EVNONCE);

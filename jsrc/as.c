@@ -180,14 +180,12 @@ SUFFIXPFX(bw1111sfxI, UI,UI, BW1111, bw1111II,R EVOK;)
 
 static DFI1(jtsuffix){A fs=FAV(self)->fgh[0];
  IARG1R F12IP;
-// obsolete  r=(RANKT)jt->ranks; RESETRANK;
  if(wcr<wr)R rank1ex(w,self,wcr,jtsuffix);
  R eachl(IX(SETIC(w,wcr)),w,atop(fs,ds(CDROP)));
 }    /* f\."r w for general f */
 
 static DFI1(jtgsuffix){A h,*hv,z,*zv;I m,n;
  IARG1R F12IP;
-// obsolete  r=(RANKT)jt->ranks; RESETRANK;
  if(wcr<wr)R rank1ex(w,self,wcr,jtgsuffix);
  SETIC(w,n); 
  h=FAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
@@ -208,7 +206,6 @@ static DFI1(jtssg){A a,z;I i,n;
  IARG1CR F12IP;PROLOG(0020);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  // loop over rank - we claim to handle IRS
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  if(wcr<wr)R rank1ex(w,self,wcr,jtssg);
 
  // From here on we are doing a single scan
@@ -290,7 +287,6 @@ static DFI1(jtssg){A a,z;I i,n;
 
 A jtscansp(J jt,A wfg,A self,AF sf){A e,ee,x,z;B*b;I f,m,j,t;P*wp,*zp;
  IARG1CR
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  f=wr-wcr;
  wp=PAV(w); e=SPA(wp,e); RZ(ee=over(e,e));
  if(!equ(ee,CALL1(sf,ee,self))){
@@ -317,7 +313,6 @@ static DFI1(jtsscan){A y,z;I d,m,n,t,wn,*ws,wt;
  IARG1CR F12IP;
  wt=AT(w); if(unlikely(ISSPARSE(wt)))R scansp(wfg,self,jtsscan);
  wn=AN(w); ws=AS(w);
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  I f=wr-wcr; PROD(m,f,ws); PROD(d,wcr-1,f+ws+1); I *nn=&ws[f]; nn=wcr?nn:I1mem; n=*nn;   // will not be used if WN==0, so PROD ok.  n is # items along the selected rank
  y=FAV(self)->fgh[0]; // y is f/
  if(((n-2)|(wn-1))<0){if(FAV(FAV(y)->fgh[0])->flag&VISATOMIC2){R wcr?RETARG(w):reshape(apip(shape(w),zeroionei(1)),w);}else R z=IRS1(jtsuffix,jt,w,wcr,self);}  // if empty arg, or just 1 cell in selected axis, convert to f/\ which handles the short arg 
@@ -420,6 +415,4 @@ F1(jtbsdot){F12IP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag&~(
  fdeffillall(z,0,CBSDOT,VERB,f1,f2,w,0L,0L,flag|(v->flag&VNONAME+VNOSELF),RMAX,0L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->id==CSLASH?v->localuse.lu1.redfn:0)
  // Fill in the lvp[1] field: with 0 if not f/\; with the lookup field for f/ if f/\ .   f is nonnull if f/\ .
  RETF(z);
-// obsolete  // Fill in the lvp[1] field: with 0 if not f/\.; with the lookup field for f/ if f/\. .
-// obsolete  R f;
 }

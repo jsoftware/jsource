@@ -178,7 +178,6 @@ A jtindexofss(J jt,I mode,A a,A w){A ai,aj,ax,wi,wj,wx,x,y,z;B aw=a!=w;I ar,c,m,
 
 FI1(jtnubsievesp){A e,x,y,z;I c,j,m,n,*s,*u,*v,*vv,*yv;P*p;
  IARG1CR F12IP;
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  n=wcr?AS(w)[wr-wcr]:1;
  if(wcr<wr)R ATOMIC2(jt,IX(n),1L,irs2(w,w,0L,wcr,wcr,jtindexof),wcr?1L:0L,ds(CEQ));  // seems to fail
  RZ(x=indexof(w,w)); p=PAV(x);

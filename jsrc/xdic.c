@@ -148,9 +148,9 @@ typedef struct ADic {
  } bloc;
 } DIC;
 _Static_assert(sizeof(DIC)==32*SZI,"DIC not 32 Is");
-#if 0
+#if 0   // temp for debugging
+
 /*
-// temp for debugging
 int getsize_xdic_DIC(int i){
 switch (i) {
  case  0: return (int)sizeof(DIC);

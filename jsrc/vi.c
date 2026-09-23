@@ -1009,9 +1009,7 @@ A jtindexofsub(J jtfg,I mode,A afg,A wfg){A h=0,hi=mtv,z;B mk=wfg==mark,th;fauxb
  IARG2CR F12JT;PROLOG(0079);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
  // mk is set if w argument is omitted (we are just prehashing the a arg)   note: mark is an atom
-// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  af=ar-acr; wf=wr-wcr;
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK; 
  as=AS(a); at=AT(a); an=AN(a);
  ws=AS(w); wt=AT(w); wn=AN(w);
  if(mk){f=af; s=as; r=acr-1; f1=wcr-r;}  // if w is omitted (for prehashing), use info from a
@@ -1403,7 +1401,6 @@ FI2(jtjico2){IARG2 F12IP; R indexofsub(IICO,afg,wfg);}
 FI1(jtnubsieve){
  IARG1 F12IP;
  if(unlikely(ISSPARSE(AT(w))))R nubsievesp(wfg); 
-// obsolete  jt->ranks=(RANKT)jt->ranks + ((RANKT)jt->ranks<<RANKTX);  // we process as if dyad; make left rank=right rank
  R indexofsub(INUBSV,wfg,wfg); 
 }    /* ~:"r w */
 
@@ -1436,10 +1433,7 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws,wt;
 // x e. y
 FI2(jteps){
  IARG2CR F12IP;
-// obsolete  l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
-// obsolete  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
  if(ISSPARSE(AT(a)|AT(w)))R lt(irs2(w,a,0L,wcr,acr,jtindexof),sc(wcr?*(AS(w)+AR(w)-wcr):1));  // for sparse, implement as (# cell of y) > y i. x
-// obsolete  jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
  R indexofsub(IEPS,wfg,afg);  // swap args (& ranks)
 }    /* a e."r w */
 

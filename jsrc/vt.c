@@ -154,10 +154,7 @@ endcopy:;
 // x {."r y, which allows infinities in x
 DFI2(jttake){A z;I n,*v;
  IARG2CR F12IP; I wt=AT(w);  // wt=type of w
-// obsolete  acr=jt->ranks>>RANKTX; wcr=(RANKT)jt->ranks; RESETRANK;  // save ranks before they are destroyed 
  if(unlikely(ISSPARSE(AT(a))))RZ(a=denseit(a));  // force a to dense
-// obsolete  ar=AR(a); acr=ar<acr?ar:acr;
-// obsolete  wr=AR(w); wcr=wr<wcr?wr:wcr;
  I wf=wr-wcr; I af=ar-acr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
 
  if(((af-1)&(acr-2))>=0){  // af>0 || acr>1   a has frame, or cell of a has rank > 1
@@ -179,9 +176,7 @@ DFI2(jttake){A z;I n,*v;
 DFI2(jtdrop){A z;I d,m,n,*u,*v;
  IARG2CR F12IP;
  RZ(a=vib(a));  // convert & audit a
-// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  I af=ar-acr; I wf=wr-wcr;  // ?r=rank, ?cr=cell rank, ?f=length of frame
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  I wt=AT(w);
  // special case: if a is atomic 0, and cells of w are not atomic
  if((-wcr&(ar-1))<0&&(IAV(a)[0]==0))R RETARG(w);   // 0 }. y, return y
@@ -201,7 +196,6 @@ DFI2(jtdrop){A z;I d,m,n,*u,*v;
 // create 1 cell of fill when head/tail of an array with no items (at the given rank)
 static FI1(jtrsh0){A x,y;
  IARG1CR F12IP;
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  I *ws=AS(w); I wf=wr-wcr;
  RZ(x=vec(INT,wr-1,ws)); MCISH(wf+AV(x),ws+wf+1,wcr-1);
  RZ(w=jtsetfv1(jt,w,AT(w))); GA00(y,AT(w),1,0); MC(AV0(y),jt->fillv,bpnoun(AT(w)));
@@ -209,23 +203,21 @@ static FI1(jtrsh0){A x,y;
  // not pristine
 }
 
+// {. y with IRS
 DFI1(jthead){
  IARG1CR F12IP;
- // obsolete wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr;
  I wf=wr-wcr;
  if(unlikely(!wcr)){RETF(RETARG(w))  // {."0, a NOP
  }else if(likely(AS(w)[wf]!=0)){  // if cell is atom, or cell has items - which means it's safe to calculate the size of a cell
-  // Use from.  Note that jt->ranks is still set, so this may produce multiple cells
-  // left rank is garbage, but since zeroionei(0) is an atom it doesn't matter
-  RETF(jtfrom(jtfg,zeroionei(0),wfg,ds(CFROM)));  // scaf could call jtfromi directly for non-sparse w
+  RETF(jtfrom(jtfg,zeroionei(0),wfg,ds(CFROM)));  // pass IRD through on w.   scaf could call jtfromi directly for non-sparse w
  }else{RETF(ISSPARSE(AT(w))?irs2(zeroionei(0),take(zeroionei(1),wfg),0L,0L,wcr,jtfrom):rsh0(wfg));  // sparse or cell of w is empty - create a cell of fills   Left rank is garbage, but that's OK
  }
  // pristinity from the called verb
 }
 
+// {: y with IRS
 DFI1(jttail){
  IARG1CR F12IP;
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr;  // no RESETRANK: rank is passed into from/take/rsh0.  Left rank is garbage but that's OK
  I wf=wr-wcr;
  if(unlikely(!wcr)){RETF(RETARG(w))  // {:"0, a NOP
  }else if(likely(AS(w)[wf]!=0)){  // if cell is atom, or cell has items - which means it's safe to calculate the size of a cell

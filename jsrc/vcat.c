@@ -52,8 +52,6 @@ static A jtovs0(J jt,B p,I r,A a,A w){A a1,e,q,x,y,z;B*b;I at,*av,c,d,j,k,f,m,n,
 
 static FI2(jtovs){A ae,ax,ay,q,we,wx,wy,x,y,z,za,ze;B*ab,*wb,*zb;I *as,c,m,n,r,t,*v,*ws,*zs;P*ap,*wp,*zp;
  IARG2CR F12IP;
-// obsolete  acr=jt->ranks>>RANKTX; ar=AR(a); at=AT(a); acr=ar<acr?ar:acr; 
-// obsolete  wcr=(RANKT)jt->ranks; wr=AR(w); wt=AT(w); wcr=wr<wcr?wr:wcr; RESETRANK; 
  if(!ar)R ovs0(0,wcr,a,w);
  if(!wr)R ovs0(1,acr,w,a);
  if(ar>acr||wr>wcr)R sprank2(a,w,NOEMSGSELF,acr,wcr,jtover);
@@ -169,16 +167,10 @@ static void moveawS(C *zv,C *av,C *wv,I c,I k,I ma,I mw,I arptreset,I wrptreset,
 }
 DFI2(jtover){F12IP;AD * RESTRICT z;I replct,framect,ma,mw,p,q,t,zn;
  IARG2CR
-// obsolete  UI jtr=jt->ranks; //  fetch early
  if(unlikely(ISSPARSE(AT(a)|AT(w)))){R ovs(afg,wfg);}  // if either arg is sparse, switch to sparse code
  // Examine args for compatibility.  Treat empty arg as boolean if the other is nonempty.  Do not convert until we know whether we have fill, to avoid a second conversion
  I an=AN(a); if(unlikely(AT(a)!=(t=AT(w)))){t=maxtypedne(AT(a)|((UI)-an<(UI)AN(w)),t|((UI)-AN(w)<(UI)an)); t=LOWESTBIT(t)+RPAR; t+=t&AT(a)?0:CONJ;}  // t is result type; if it contains RPAR, a conversion is needed, CONJ is set if a must convert
-// obsolete  ar=AR(a); wr=AR(w);
-// obsolete  acr=jtr>>RANKTX; acr=ar<acr?ar:acr;
-// obsolete  wcr=(RANKT)jtr; wcr=wr<wcr?wr:wcr;
  I af=ar-acr; I wf=wr-wcr;  // ?cr=rank of cell, ?f=len of frame, ?s->shape
-// obsolete   // wcr=rank of cell, wf=len of frame, ws->shape
-// obsolete  // no RESETRANK - not required by ovv or main line here
  PROLOG(000);   // we will allocate our result first so that we can tpop back to it without EPILOG.
  if(af+wf==0){
 #if 0  // we don't use ALLOWRETARG anywhere yet
@@ -386,7 +378,6 @@ DF2(jtstitch){F12IP;I ar,wr; A z;
 
 DFI1(jtlamin1){I* RESTRICT s,* RESTRICT v,wf; 
  IARG1CR F12IP;
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  wf=wr-wcr;
  fauxblockINT(wfaux,4,1); A x; fauxINT(x,wfaux,1+wr,1) v=IAV(x);
  s=AS(w); MCISH(v,s,wf); v[wf]=1; MCISH(v+wf+1,s+wf,wcr);  // frame, 1, shape - the final shape
@@ -397,8 +388,6 @@ DFI2(jtlamin2){A z;
  // Because we don't support inplacing here, the inputs & results will be marked non-pristine.  That's OK because scalar replication might have happened.
  IARG2CR F12IP;
  PROLOG(000);
-// obsolete  ar=AR(a); p=jt->ranks>>RANKTX; p=ar<p?ar:p;  // p=cell rank of a, q=cell rank of w
-// obsolete  wr=AR(w); q=(RANKT)jt->ranks; q=wr<q?wr:q; RESETRANK;
  if(acr)RZ(a=IRS1(jtlamin1,jt,a,acr,0L));
  if(wcr)RZ(w=IRS1(jtlamin1,jt,w,wcr,0L));
  RZ(z=IRS2(jtover,jt,a,acr+!!acr,w,wcr+!!wcr,self));
@@ -412,7 +401,6 @@ FI2(jtapip){A h;
  // if exactly one arg has no items in cell, and the empty does not have longer frame, and the frames agree,
  // and items have the same rank, and the empty item has no axis larger than the nonempty: return the nonempty
  // here we require no frame as well
-// obsolete I at=AT(a), ar=AR(a), wr=AR(w), ac=AC(a), an=AN(a), jtrm=(I)jt->ranks-(I)R2MAX;  // unchanging values
  I at=AT(a), ar=AR(a), wr=AR(w), ac=AC(a), an=AN(a), rnotmax=((I)afg|(I)wfg)&0x3f;  // unchanging values; rnotmax>0 if ranks are not _ _
  A jtzv=__atomic_load_n(&jt->zombieval,__ATOMIC_RELAXED);  // extract table line from the primitive
 

@@ -41,7 +41,6 @@ DFI1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,*ws;
 #else
  ASSERTF(fboxedsparse||!ISSPARSE(wt),EVNONCE,"can't box sparse arrays");
 #endif
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;
  f=wr-wcr;
  if(likely(!f)){
   // single box: fast path.  Allocate a scalar box and point it to w.

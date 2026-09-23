@@ -731,8 +731,6 @@ A jtindexofsub(J jtfg,I mode,AD * RESTRICT afg,AD * RESTRICT wfg){A h=0;fauxbloc
  IARG2CR F12IP;PROLOG(0079);
  // ?r=rank of argument, ?cr=rank the verb is applied at, ?f=length of frame, ?s->shape, ?t=type, ?n=#atoms
  // prehash is set if w argument is omitted (we are just prehashing the a arg)   note: mark is an atom
-// obsolete  I ar=AR(a); I acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
-// obsolete  I wr=AR(w); I wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;  //
  I at=AT(a); I an=AN(a); I wt=AT(w); I wn=AN(w);
  I af=ar-acr;I wf=wr-wcr; I *as=AS(a); I *ws=AS(w);
  // NOTE: from here on we may add modifiers to mode, indicating FULL/BITS/PACK etc.  These flags are needed in the action routine, and must be
@@ -1225,7 +1223,6 @@ FI2(jtjico2){IARG2 F12IP;R jtindexofsub(jtfg,IICO,afg,wfg);}  // pass inplaceabi
 FI1(jtnubsieve){
  IARG1 F12IP;
  if(unlikely(ISSPARSE(AT(w))))R nubsievesp(wfg); 
-// obsolete  jt->ranks=(RANKT)jt->ranks + ((RANKT)jt->ranks<<RANKTX);  // we process as if dyad; make left rank=right rank
  R indexofsub(INUBSV,wfg,wfg);   // not inplace
 }    /* ~:"r w */
 
@@ -1293,10 +1290,7 @@ errexit:;
 // x e. y with IRS
 FI2(jteps){
  IARG2CR F12IP;
-// obsolete  l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
-// obsolete  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; RESETRANK;
  if(unlikely(ISSPARSE(AT(a)|AT(w))))R lt(irs2(w,a,0L,wcr,acr,(AF)jtindexof),sc(wcr?AS(w)[AR(w)-wcr]:1));  // for sparse, implement as (# cell of y) > y i. x
-// obsolete  jt->ranks=(RANK2T)((r<<RANKTX)+l);  // swap ranks for subroutine.  Subroutine will reset ranks
  R indexofsub(IEPS,wfg,afg);  // no inplacing.  swap args
 }    /* a e."r w */
 
@@ -1333,7 +1327,6 @@ DF2(jtepsind0){F12IP;A z;
 FI2(jtsfu){
  IARG2CR F12IP;
  I type=ISFU+IIDOT; type=((NOUN|SPARSE)&~(INT))&(AT(a)|AT(w))?IIDOT:type; type=wcr!=1?IIDOT:type; // If the cells of a are not dense integer atoms, we revert to standard methods
-// obsolete  I l=jt->ranks>>RANKTX; l=AR(a)<l?AR(a):l;
  R indexofsub(type,afg,wfg);
 }    /* a i.!.1"r w */
 

@@ -588,7 +588,7 @@ F2(jtfc2){F12IP;A z;I j,m,n,p,zt;float*s;
  case -11: MC(v1,x1,n); {RETF(z);}
  case  11: MC(v1,x1,m); {RETF(z);}
  }
-#if 0
+#if 0 // future types
  } else if(10==j||-10==j){float * RESTRICT x1, * RESTRICT v1;    // single precision
  p=2;
  if(0<j){m=n<<p; zt=LIT; if(!ISDENSETYPE(AT(w),SP))RZ(w=ccvt(SP,w,0));}

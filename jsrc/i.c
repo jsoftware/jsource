@@ -197,7 +197,6 @@ if(((-1) >> 1) != -1)*(I *)4 = 104;
 }
 
 static B jtconsinitt(J jt){
-// obsolete  RESETRANK;  // init both ranks to RMAX
  jt->ppn=6;  // default precision for printf
  jt->ecmtries=3;  // number of tries for elliptic-curve factoring
  jt->cct= 1.0-FUZZ;

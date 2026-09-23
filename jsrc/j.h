@@ -1151,7 +1151,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // call IRS
 #define IRS1(f,j,w,wcr,self) f(j,(A)(((I)(w)+0x3f)^(wcr)),self)  // wcr is rank for w
 #define IRS2(f,j,a,acr,w,wcr,self) f(j,(A)(((I)(a)+0x3f)^(acr)),(A)(((I)(w)+0x3f)^(wcr)),self)  // wcr is rank for w.  Coded assuming w is ready before wcr
-// obsolete #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lu2.lc=FAV(ds(cxx))->lu2.lc, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
 #if SY_64   // 64-bit linkage
 #define ATOMIC2(jt,a,acr,w,wcr,self) jtatomic2((J)((I)jt+(((((I)(acr)<<RANKTX)+(I)(wcr))^0x3f3f)<<48)),a,w,self)   // cxx is the function to execute, l/r ranks (nonnegative)
 // if we are putting IRS on a call for the first time & we don't know from the names which linkage it needs.  cond evaluates to 1 to go ATOMIC
@@ -1552,7 +1551,6 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
  I bytes = ALLOBYTES(atoms,rank,size,(type)&C4T,(type)&NAME); \
  HISTOCALL \
  name = jtgaf(jt, ALLOBLOCK(bytes)); \
-/* obsolete  I akx=AKXR(rank); */   \
  if(likely(name!=0)){   \
  if((rank)!=0)AK(name)=AKXR(rank); if((type)!=FL)AT(name)=(type); if((atoms)!=1)AN(name)=atoms;  /* default is atomic FL */   \
  ARINIT(name,rank);     \
@@ -1648,17 +1646,6 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define INSTALLRAT(x,xv,k,z) if(likely((UCISRECUR(x))!=0)){Q zzZ=xv[k]; ra(z.n); ra(z.d);  xv[k]=z; fa(zzZ.n); fa(zzZ.d);} else xv[k]=z
 #define INSTALLRATNF(x,xv,k,z) if(likely((UCISRECUR(x))!=0)){ra(z.n); ra(z.d);} xv[k]=z   // Don't do the free - if we are installing into known 0
 #define INSTALLRATRECUR(xv,k,z) rifv(z.n); rifv(z.d); {I zzK=(k); {Q zzZ=xv[k]; ra(z.n); ra(z.d); xv[zzK]=z; fa(zzZ.n); fa(zzZ.d);}}  // Don't test - we know we are installing into a recursive block
-// obsolete // Use IRS[12] to call a verb that supports IRS.  Rank is nonnegative; result is assigned to z.  z mustn't be any other arg - it is also used as a temp
-// obsolete // args should be names, because they are evaluated repeatedly, and also because rank is set before one of the evaluations
-// obsolete #define IRS1COMMON(j,w,fs,r,f1,z) (z=(A)(r),z=(I)AR(w)>(I)(r)?z:(A)~0,jt->ranks=(RANK2T)(I)z,z=((AF)(f1))(j,(w),(A)(fs)),jt->ranks=R2MAX,z)  // nonneg rank
-// obsolete #define z=IRS1(f1,jt,w,r,fs) IRS1COMMON(jt,w,fs,r,f1,z)  // nonneg rank
-// obsolete #define IRSIP1(w,fs,r,f1,z) IRS1COMMON(jtfg,w,fs,r,f1,z)  // nonneg rank
-// obsolete #define IRS2COMMON(j,a,w,fs,l,r,f2,z) (jt->ranks=(RANK2T)(((((I)AR(a)-(l)>0)?(l):RMAX)<<RANKTX)+(((I)AR(w)-(r)>0)?(r):RMAX)),z=((AF)(f2))(j,(a),(w),(A)(fs)),jt->ranks=R2MAX,z) // nonneg rank
-// obsolete #define z=IRS2(f2,jt,a,l,w,r,fs) IRS2COMMON(jt,a,w,fs,l,r,f2,z)
-// obsolete #define z=IRSIP2(f2,jt,a,l,w,r,fs) IRS2COMMON(jtfg,a,w,fs,l,r,f2,z)
-// obsolete // no longer used #define IRS2AGREE(a,w,fs,l,r,f2,z) {I fl=(I)AR(a)-(l); fl=fl<0?0:fl; I fr=(I)AR(w)-(r); fr=fr<0?0:fr; fl=fr<fl?fr:fl; ASSERTAGREE(AS(a),AS(w),fl) IRS2COMMON(jt,(a),(w),fs,(l),(r),(f2),z); } // nonneg rank; check agreement first
-// obsolete // call to atomic2(), similar to IRS2.  fs is a local block to use to hold the rank (declared as D fs[16]), cxx is the Cxx value of the function to be called
-// obsolete #define ATOMIC2(jt,a,w,fs,l,r,cxx) (FAV((A)(fs))->fgh[0]=ds(cxx), FAV((A)(fs))->id=CQQ, FAV((A)(fs))->lu2.lc=FAV(ds(cxx))->lu2.lc, FAV((A)(fs))->lrr=(RANK2T)((l)<<RANKTX)+(r), jtatomic2(jt,(a),(w),(A)fs))
 
 // memory copy, for J blocks.  Like memcpy, but knows it can fetch outside the arg boundaries for LIT-type args.  l, the length in bytes, may be 0
 // if bytelen is 1, the arg may be of any length; if 0, will be lengthened to be a multiple of Is; full words only are moved; if -1, aligned fullwords only (not implemented yet)
@@ -2150,7 +2137,6 @@ else{--_i; NOUNROLL do{z*=_zzt[_i-1];}while(--_i); } \
 #define RESETERRC       {jt->jerr=0; jt->etxn=MIN(jt->etxn,0);}  // clear error; clear error text too, but not if frozen.  Used only when formatting ARs or 13!:8
 #define RESETERRNO      {jt->jerr=0;jt->emsgstate&=~(EMSGSTATEFORMATTED|EMSGSTATEPAREN);}  // reset the number but not the message; used in adverse/throw. to keep the user's message
 #define RESIGERR(e)     if(unlikely(jt->emsgstate&EMSGSTATEUSERMSG))R 0; else {RESETERR ASSERT(0,e)}  // clear error and resignal, unless the message was frozen
-// obsolete #define RESETRANK       (jt->ranks=R2MAX)
 #define RZSUFF(exp,suff) {if(unlikely(!(exp))){suff}}
 #define RZ(exp)         RZSUFF(exp,R0)
 #define RZQ(exp)         RZSUFF(exp,R 0;)  // allows FINDNULLRET without jt

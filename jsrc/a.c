@@ -9,15 +9,12 @@
 // create inplace bits as copy of W, or swap A & W
 static DFI1(swap1){IARG1;F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; jtfg=MOVEIPWW(jtfg);
  // a~ carried the IRS flag from a and thus we might have ranks set.  If so, use them, and no need to check agreement again.  For ease, we just use whatever is set
-// obsolete  R f2(jtfg,wfg,wfg,fs);   // keep ranks if any
  A2LINKIF(FAV(fs)->flag&VFUSEDOK2,jtfg,wfg,wfg)
  R f2(jtfg,wfg,wfg,fs);   // duplicate arg, keep rank if any
-// obsolete  A z; IRS2(f2,jtfg,w,w,fs,(RANKT)jt->ranks,(RANKT)jt->ranks,f2,z); R z;  // scafrk just swap ranks and f2
 }
 static DFI2(swap2){IARG2;F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; jtfg=MOVEIPWA(jtfg);
  A2LINKIF(FAV(fs)->flag&VFUSEDOK2,jtfg,wfg,afg)
  R f2(jtfg,wfg,afg,fs);   // swap arg order, keep ranks if any
-// obsolete  A z; z=IRSIP2(f2,jt,w,(RANKT)jt->ranks,a,jt->ranks>>RANKTX,fs); R z;  // scafrk just swap ranks and f2
 }
 
 // w~, which is either reflexive/passive or evoke

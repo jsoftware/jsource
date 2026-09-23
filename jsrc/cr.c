@@ -121,7 +121,6 @@ A jtrank1ex(J jtfg,AD * RESTRICT w,A fs,I rr,AF f1){F12IP;PROLOG(0041);A z;
 A jtrank1ex0(J jtfg,AD * RESTRICT w,A fs,AF f1){F12IP;PROLOG(0041);A z,virtw;
    I wk;
  ARGCHK1(w);
-// obsolete RESETRANK;  // in case we are called with IRS, clear it
  if(unlikely(!AR(w))){R CALL1IP(f1,w,fs);}  // if there's only one cell and no frame, run on it, that's the result.  Make this as fast as possible.
  // Switch to sparse code if argument is sparse
  if(unlikely(ISSPARSE(AT(w))))R sprank1(w,fs,0,f1);
@@ -593,9 +592,7 @@ A jtirs1(J jtfg,A w,A fs,I m,AF f1){F12IP;A z;I wr;
 // Get the rank of w; if the requested rank m is > wr, use ~0 because some verbs test for that as an expedient
 // If m is negative, use wr+m but never < 0
  wr=AR(w); m=m>=wr?R2MAX:m; wr+=m; wr=wr<0?0:wr; wr=m>=0?m:wr;   // requested rank, after negative resolution, or ~0
-// obsolete  jt->ranks=(RANK2T)wr;  // install rank for called routine
  z=IRS1(f1,jtfg,w,wr,fs);    // Pass inplaceability through
-// obsolete  jt->ranks=R2MAX;  // reset rank to infinite
  RETF(z);
 }
 
@@ -613,10 +610,8 @@ A jtirs2(J jtfg,A a,A w,A fs,I l,I r,AF f2){F12IP;A z;I ar,wr;
  wr=AR(w); r=r>=wr?RMAX:r; wr+=r; wr=wr<0?0:wr; wr=r>=0?r:wr; r=AR(w)-wr;   // wr=requested rank, after negative resolution, or ~0; r=frame of w, possibly negative if no frame
  ar=AR(a); l=l>=ar?RMAX:l; ar+=l; ar=ar<0?0:ar; ar=l>=0?l:ar; l=AR(a)-ar;   // ar=requested rank, after negative resolution, or ~0; l=frame of a, possibly negative if no frame
  ASSERTAGREE(AS(a),AS(w),MAX(0,MIN(r,l)))  // verify agreement before we modify jt->ranks
-// obsolete  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
  z=IRSorATOMIC2(f2==jtatomic2,f2,jtfg,a,ar,w,wr,fs);   // save ranks, call setup verb, pop rank stack.  Pass inplaceability through
    // Not all verbs (*f2)() use the fs argument.
-// obsolete  jt->ranks=R2MAX;  // reset rank to infinite
  RETF(z);
 }
 // end of sparse-only
@@ -666,10 +661,7 @@ static DF2(rank2atomicneg){F12IP;ARGCHK2(a,w); I elr=efr(AR(a),FAV(self)->localu
 static DF1(rank1i){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];ARGCHK1(w);
  FILLREG(f1)  // get routine address ready for misbranch
  I m=FAV(self)->localuse.lu1.srank[0]; I r=AR(w); m+=REPSGN(m)&r; m=m<0?0:m; m=m>=r?RMAX:m;   // handle negative rank
-// obsolete  jt->ranks=(RANK2T)(m);  // install rank for called routine
  RETF(IRS1(f1,jtfg,w,m,fs))   // call with embedded rank parm
-// obsolete  jt->ranks=R2MAX;  // reset rank to infinite
-// obsolete  RETF(z);
 }
 
 // dyadic forms also check agreement wrt the given ranks.  pass inplaceability through.
@@ -678,10 +670,7 @@ static DF2(rank2i){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; A
  I ar=FAV(self)->localuse.lu1.srank[1]; I r=AR(a); ar+=REPSGN(ar)&r; ar=ar<0?0:ar; ar=ar>=r?RMAX:ar; I af=r-ar;   // left rank and frame, possibly negative
  I wr=FAV(self)->localuse.lu1.srank[2];   r=AR(w); wr+=REPSGN(wr)&r; wr=wr<0?0:wr; wr=wr>=r?RMAX:wr; I wf=r-wr;   // right rank and frame
  ASSERTAGREE(AS(a),AS(w),MAX(0,MIN(wf,af)));  // verify agreement
-// obsolete  jt->ranks=(RANK2T)((ar<<RANKTX)+wr);  // install as parm to the function.  Set to ~0 if possible
  RETF(IRS2(f2,jtfg,a,ar,w,wr,fs))   // call with embedded rank parm
-// obsolete  jt->ranks=R2MAX;  // reset rank to infinite
-// obsolete  RETF(z);
 }
 
 #define GEMIN0(a,b,c) ((a-b)&(a-c)) // sign is 0 if a>=MIN(b,c): a>=b or a>=c
@@ -706,29 +695,6 @@ static DF1(rank1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];
  }
  RETF(jtrank1ex(jtfg,w,fs,em,f1))  // multiple cells - execute rank loop and return
 }
-
-#if 0  // obsolete 
- // We know that the first call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
- // fs/f1 to rank1ex.  Until we can handle multiple fill neighborhoods, we mustn't consume a verb of lower rank  scaf should consume anyway, let user control?
- if(likely(!FAV(self)->localuse.lu1.srank[3])){  // unless the user has said this rank must be separate...
-  NOUNROLL while(FAV(fs)->flag2&VF2RANKONLY1){
-   I hm=efr(m,FAV(fs)->localuse.lu1.srank[0]); if(hm<m)break;  // if new rank smaller than old, abort
-   m=hm; fs=FAV(fs)->fgh[0]; f1=FAV(fs)->valencefns[0];
-  }
- }
- RETF(m<wr?jtrank1ex(jtfg,w,fs,m,f1):CALL1IP(f1,w,fs))
-}
-
-// Pass inplaceability through
-static DF1(rank1q){F12IP;  // fast version: nonneg rank, no check for multiple RANKONLY
- ARGCHK1(w);
- I r=AR(w); A fs=FAV(self)->fgh[0]; I m=FAV(self)->localuse.lu1.srank[0];   // r=arg rank  fs->u  m=rank from n
- I um=FAV(fs)->mr;
- if(unlikely(GEMIN0(m,r,um)>=0))if(likely(!FAV(self)->localuse.lu1.srank[3]))RETF(CALL1(FAV(fs)->valencefns[0],w,fs))  // rank is nugatory - bypass it
- r=r>m?m:r;  // clamp rank at arg rank - MIN(n, rankarg)
- RETF(jtrank1ex(jtfg,w,fs,r,FAV(fs)->valencefns[0]))
-}
-#endif
 
 // Version for rank 0.  Call rank1ex0, pointing to the u"r
 static DF1(jtrank10atom){F12IP; A fs=FAV(self)->fgh[0]; RETF(CALL1IP(FAV(fs)->valencefns[0],w,fs))}  // rank is immaterial, since these are ATOMIC1
@@ -757,44 +723,6 @@ static DF2(rank2){F12IP;A fs=FAV(self)->fgh[0];
  }
  RETF(rank2exip(a,w,fs,el,er,el,er,f2))
 }
-#if 0 // obsolete 
-
-
-
- if(unlikely((-((ulr^l)|(urr^r))&(LEMIN0(ar,l,ulr)|GEMIN0(r,wr,urr))&(LEMIN0(wr,r,urr)|GEMIN0(l,ar,ulr)))>=0))if(likely(!FAV(self)->localuse.lu1.srank[3]))RETF(CALL2(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
- I llr=l, lrr=r;  // inner ranks, if any
- // We know that the current call is RANKONLY, and we consume any other RANKONLYs in the chain until we get to something else.  The something else becomes the
- // fs/f1 to rank1ex.  We have to stop if the new ranks will not fit in the two slots allotted to them.
- // This may lead to error until we support multiple fill neighborhoods - use floating-point n to suppress
- if(likely(!FAV(self)->localuse.lu1.srank[3])){  // unless the user has said this rank must be separate...
-  NOUNROLL while(FAV(fs)->flag2&VF2RANKONLY2){
-   I hlr=efr(llr,FAV(fs)->localuse.lu1.srank[1]), hrr=efr(lrr,FAV(fs)->localuse.lu1.srank[2]);  // fetch ranks of new verb, resolve negative, clamp against old inner rank
-   if((hlr^llr)|(hrr^lrr)){  // if there is a new rank to insert...
-    if((l^llr)|(r^lrr))break;  // if lower slot full, exit, we can't add a new one
-    llr=hlr; lrr=hrr;  // install new inner ranks, where they are new lows
-   }
-   // either we can ignore the new rank or we can consume it.  In either case pass on to the next one
-   fs=FAV(fs)->fgh[0]; f2=FAV(fs)->valencefns[1];   // advance to the new function
-  }
- }
- RETF(rank2exip(a,w,fs,llr,lrr,l,r,f2))
-}
-
-// This version for use when the ranks are nonnegative and u is not RANKONLY
-// This routine supports jtflags by not touching jt - pass inplaceability through
-static DF2(rank2q){F12IP;
- ARGCHK2(a,w);
- A fs=FAV(self)->fgh[0]; I ulr=FAV(fs)->lrr>>RANKTX, urr=FAV(fs)->lrr&RANKTMSK;  // u, left & right ranks of u
- I ar=AR(a), wr=AR(w), l=FAV(self)->localuse.lu1.srank[1], r=FAV(self)->localuse.lu1.srank[2];  // ranks of args, ranks from n
- // See if this use of rank is nugatory.  An arg has 1 cell if rank of arg<=MIN(n,rank of u); middle cells if n<MIN(rank of arg,rank of u) and rank of u not _; unchanged rank if n=rank of u.
- // Rank can be omitted if it is true for either arg that (arg has 1 cell and other arg does not have middle cells), or both args have unchanged rank
- //              0=unch rnk        0=ar<=MIN     0=n>=MIN (right)      0=wr<MIN       0=n>=MIN (left)
- ulr+=(UI)ulr>=RMAX; urr+=(UI)urr>=RMAX;  // rank _ can be hiding negative rank, for which we don't know the cells; force mismatch then, and below assume inner cells
- if(unlikely((-((ulr^l)|(urr^r))&(LEMIN0(ar,l,ulr)|GEMIN0(r,wr,urr)|SGNIF(ulr,LGRMAX))&(LEMIN0(wr,r,urr)|GEMIN0(l,ar,ulr)|SGNIF(urr,LGRMAX)))>=0))if(likely(!FAV(self)->localuse.lu1.srank[3]))RETF(CALL2(FAV(fs)->valencefns[1],a,w,fs))  // rank is nugatory - bypass it
- ar=ar>l?l:ar; wr=wr>r?r:wr;   // clamp ranks at argument rank
- RETF(rank2exip(a,w,fs,ar,wr,ar,wr,FAV(fs)->valencefns[1]))
-}
-#endif
 
 // Version for rank 0.  Call rank2ex0, pointing to the u"r
 static DF2(jtrank20atom){F12IP; A fs=FAV(self)->fgh[0]; RETF((FAV(fs)->valencefns[1])(jtfg,a,w,fs))}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop.  pass inplaceability through.
@@ -856,13 +784,9 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   // IRS, go to the appropriate routine depending on the sign of rank; otherwise we will be doing an explicit rank loop: distinguish
   // rank-0, IRS, and all-purpose cases
   flag2|=av->flag2&VF2WILLOPEN1;  // if u will open, so will u"n
-// obsolete   if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?(hv[0]>=0&&!(av->id==CQQ)&&!(av->flag2&(VF2RANKONLY1+VF2WILLOPEN1))?rank1q:rank1):jtrank10; flag2|=VF2RANKONLY1;}}
   if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?rank1:jtrank10; flag2|=VF2RANKONLY1;}}  // ATOMIC calls a routine that ignores ranks
-// obsolete   // if the monad rank in v is 0, we can surely ignore any higher rank, except in the rank of the compound.  We set IRS1 here so any later "n is fast
-// obsolete   vf|=(hv[0]==0)<<VIRS1X;
   // For dyad: atomic verbs take the rank from this block, so we take the action routine, and also the parameter it needs; otherwise, use processor for IRS, or rank 0, or general case
   if(av->flag&VFUSEDOK2){if(unlikely((hv[1]|hv[2])==0))hv[1]=hv[2]=RMAX; f2=(hv[1]|hv[2])>=0?rank2atomic:rank2atomicneg; lc=av->lu2.lc;}  // transfer the fn-address and fn-code from the atomic to the fused block
-// obsolete   else if(av->flag&VIRS2){f2=rank2i;}else{f2=(hv[1]|hv[2])?((hv[1]|hv[2])>=0&&!(av->flag2&VF2RANKONLY2)?rank2q:rank2):jtrank20;flag2|=VF2RANKONLY2;}
   else if(av->flag&VIRS2){f2=rank2i;}else{f2=(hv[1]|hv[2])?rank2:jtrank20;flag2|=VF2RANKONLY2;}
   // Test for special cases
   if(av->valencefns[1]==jtfslashatg && r[1]==1 && r[2]==1){  // f/@:g"1 1 where f and g are known atomic

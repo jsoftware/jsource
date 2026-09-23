@@ -18,7 +18,6 @@ F1(jtnatoms){F12IP; A z; ARGCHK1(w); if(unlikely(ISSPARSE(AT(w))))R dfv1(z,shape
 // ,y and ,"r y - producing virtual blocks
 DFI1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,*u,*v,*yv;P*wp,*zp;
   IARG1CR F12IP;
-// obsolete  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;
  f=wr-wcr; // r=effective rank (jt->rank is effective rank from irs1), f=frame
  if(likely(!ISSPARSE(AT(w)))){
   if(wcr==1)R RETARG(w);  // if we are enfiling 1-cells, there's nothing to do, return the input (note: AN of sparse array is always 1)
@@ -43,7 +42,6 @@ DFI1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,*u,*v,*yv;P*wp,*zp;
   RETF(z);   // This verb propagates WILLOPEN and must not perform EPILOG
  }
  // the rest handles sparse matrix enfile
-// obsolete  RESETRANK;   // clear IRS for calls made here
  RE(m=prod(wcr,f+AS(w)));  // # atoms in cell
  GASPARSE(z,AT(w),1,1+f,AS(w)); AS(z)[f]=m;   // allocate result area, shape=frame+1 more to hold size of cell; fill in shape
  wp=PAV(w); zp=PAV(z);
@@ -69,32 +67,22 @@ DFI1(jtravel){A a,c,q,x,y,y0,z;B*b;I f,j,m,*u,*v,*yv;P*wp,*zp;
 FI1(jttable){A z,zz;
  IARG1CR F12IP;
  // We accept the pristine calculations from ravel
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;  // r=rank to use
  RZ(z=IRS1(jtravel,jtfg,w,wcr-((UI)wcr>0),0))  // perform ravel on items
  R wcr?z:IRS1(jtravel,jtfg,z,0L,0L);  // If we are raveling atoms, do it one more time on atoms
 } // ,."r y
 
 // ]"n, dyadic - also ["n, implemented as ] with args switched
 // length error has already been detected, in irs
-// obsolete static A jtlr2(J jt,RANK2T ranks,A a,A w){I acr,af,ar,wcr,wf,wr;
-// obsolete  ARGCHK2(a,w);
-// obsolete  // ?r=rank of ? arg; ?cr= verb-rank for that arg; ?f=frame for ?; ?s->shape
-// obsolete  // We know that jt->rank is nonzero, because the caller checked it
-// obsolete  ar=AR(a); acr=ranks>>RANKTX; acr=ar<acr?ar:acr; af=ar-acr;
-// obsolete  wr=AR(w); wcr=(RANKT)ranks; wcr=wr<wcr?wr:wcr;  wf=wr-wcr;
 static A jtlr2(J jt,A afg,A wfg){
  IARG2CR I wf=wr-wcr, af=ar-acr;  // Extract cell-ranks, calculate frames
  // Cells of the shorter-frame argument are repeated.  If the shorter- (or equal-)-frame argument
  // is the one being discarded (eg (i. 10 10) ["0 i. 10), the replication doesn't matter, and we
  // simply keep the surviving argument intact.
  if(wf>=af){RETF(w);}  // no replication of surviving arg - quick out
-// obsolete  RESETRANK;
  a=apip(drop(sc(wf),take(sc(af),shape(a))),drop(sc(wf),shape(w))); RETF(IRS2(jtreshape,jt,a,RMAX,w,wcr,0L));  // ((wf }. af {. $a) , wf }. $w) ($,)"(_,wcr) w
 } 
 
 // ][, with IRS.  Must not call EPILOG because the verb propagates WILLOPEN.  When rank is specified ]"n does not propagate
-// obsolete FI2(jtleft2){IARG2 F12IP; if(likely((acr&wcr)==RMAX))RETF(RETARG(a)); RETF(lr2((wcr<<RANKTX)|acr,w,a));}  // swap a & w, and their ranks
-// obsolete DFI2(jtright2){IARG2 F12IP;if(likely((acr&wcr)==RMAX))RETF(RETARG(w)); RETF(lr2((acr<<RANKTX)|wcr,a,w));}
 FI2(jtleft2){IARG2 F12IP; if(likely((acr&wcr)==RMAX))RETF(RETARG(a)); RETF(jtlr2(jt,wfg,afg));}  // swap a & w, and their ranks
 DFI2(jtright2){IARG2 F12IP;if(likely((acr&wcr)==RMAX))RETF(RETARG(w)); RETF(jtlr2(jt,afg,wfg));}
 
@@ -133,7 +121,6 @@ DF1(jtjico1){F12IP;A y,z;B b;D d,*v;I c,m,n;
 // _9: to 9: and _:, return the saved value.  If we can inplace the operation (i. e. 0:"0), do so for DIRECT types, preserving the existing precision
 DFI1(jtnum1){A z=0;
  IARG1CR F12IP;
-// obsolete  RANKT rank=(RANKT)jt->ranks; rank=rank>AR(w)?AR(w):rank;
  A a=FAV(self)->fgh[2];  // fetch value to store: always an INT/boolean, but if boolean the high-order bytes are 0, so 0 is valid INT/FL and 1 a valid INT
  if(likely(wcr==wr))R a;  // at infinite rank, just return the value.  Because VFATOP[LR] puns with comparison flags,
    // it is possible that inplacing flags are set; so we must handle infinite rank before looking at inplacing

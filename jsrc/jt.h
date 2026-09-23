@@ -157,12 +157,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  struct foldstatus *afoldinfo;  // nonzero if fold is running, and points to current fold info 
 // ************************************** here starts the part that is initialized to non0 values when the task is started.  Earlier values may also be initialized
  C initnon0area[0];
- void* fillv;            // &fill value, during primitive execution - used during parsing to hold pointer to routine to execute - init immaterial
- // obsolete US ranks;            // low half: rank of w high half: rank of a; for IRS. init for task to 3F3F
- I1 fillvlen;   // length of fill pointed to by fillv (max 16).  Modified only within primitives, so inheritance/init immaterial
- C filler0[7];
-// end of cacheline 0, heavily used
- C _cl1[0];
+ void* fillv;            // &fill value, during primitive execution - init immaterial
  I4 currslistx;    // index into slist of the current script being executed (or -1 if none) init for task to -1  should be 2 bytes?
  C recurstate;       // state of recursions through JDo    init for task to RECSTATERUNNING
 #define RECSTATERUNNINGX 0  // JE is running, recursive call not allowed
@@ -171,6 +166,11 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define RECSTATERENT BIT(RECSTATERENTX)
 #define RECSTATEPROMPTINGX 2  // JE is at a prompt, a second prompt is not allowed
 #define RECSTATEPROMPTING BIT(RECSTATEPROMPTINGX)
+ I1 fillvlen;   // length of fill pointed to by fillv (max 16).  Modified only within primitives, so inheritance/init immaterial
+// 2 bytes free
+ C filler0[2];
+// end of cacheline 0, heavily used
+ C _cl1[0];
 // **************************************  end of initialized part
 
  C persistarea[0];  // end of area set at task startup
@@ -188,15 +188,15 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 #define TASKSTATEFUTEXWAKE BIT(TASKSTATEFUTEXWAKEX)
  B threadpoolno;  // number of thread-pool this thread is in.  Filled in when thread created.
  C ndxinthreadpool;  // Sequential #in the threadpool of this thread.  Filled in when thread created
- C scriptskipbyte;  // when not NUL, reading script discards lines up till the first one that starts NB. followed by skipbyte
+ C scriptskipbyte;  // when not NUL, reading script discards lines up till the first one that starts (NB. followed by skipbyte)
  C dissectrunning;  // set by the dissect instrumented sentence
-// 6 bytes free
+// 3 bytes free
  DC pmstacktop;  // Top (i. e. end) of the postmortem stack.  The pm stack is just the chain of private SYMB namespaces.  When there is an error that will go all the way back to console, the namespaces are preserved.  If the next
            // keyboard command turns on debug, they will be converted into a debug stack and moved out of this field.  They are deleted when debug mode is turned off or the stack is deleted by 13!:0.
  UI4 *futexwt; // value this thread is currently waiting on, 0 if not waiting.  Used to wake sleeping threads during systemlock/jbreak.  In same cacheline as taskstate
  A* tstacknext;       // if not 0, points to the recently-used tstack allocation, whose first entry points to the current allocation  
  A* tstackcurr;       // current allocation, holding NTSTACK bytes+1 block for alignment.  First entry points to next-lower allocation   
- A filler1[2];
+ A filler1[3];
 // end of cacheline 1 - not heavily used
 
  C _cl2[0];
@@ -211,7 +211,7 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
  A zombieval;    // the value that the verb result will be assigned to, if the assignment is safe and has inplaceable usecount and is not read-only
             // zombieval may have a stale address, if the name it came from was deleted after zombieval was set.  That's OK, because we use zombieval only to compare
             // against a named value that we have stacked; that value is guaranteed protected so zombieval cannot match it unless zombieval is valid.
-// end of cacheline 
+// end of cacheline 2
 
  C _cl3[0];
 // things needed for memory allocation

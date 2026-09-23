@@ -34,7 +34,6 @@ static A jtrankingb(J jt,A w,I wf,I wcr,I m,I n,I k){A z;C*wv;I i,j,p,t,*zv;TTYP
 // /:@/:
 FI1(jtranking){A y,z;C*wv;I icn,i,k,m,n,t,wf,wn,*ws,wt,*zv;CR rng;TTYPE *yv,*yu;
  IARG1CR F12IP;
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  wf=wr-wcr;
  wt=AT(w); wv=CAV(w); wn=AN(w);
  ws=AS(w); SETICFR(w,wf,wcr,n);   // n=#cells in w; m is number of atoms in w

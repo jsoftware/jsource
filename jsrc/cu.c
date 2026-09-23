@@ -30,7 +30,6 @@ DF1(jteveryself){F12IP;R jtevery(jtfg,w,FAV(self)->fgh[0]);}   // replace u&.> w
 // u&.>, but w may be a gerund, which makes the result a list of functions masquerading as an aray of boxes
 A jtevery(J jtfg, A wfg, A fs){A * RESTRICT wv,x,z,* RESTRICT zv;
  IARG1 F12IP;  // we claim to support IRS1 but really there's nothing to do for it since the operation is guaranteed atomic
-// obsolete RESETRANK;
  I wt=AT(w), wflag=AFLAG(w), wr=AR(w);
  if(unlikely(ISSPARSE(wt)))R everysp(w,fs);
  I natoms=AN(w);

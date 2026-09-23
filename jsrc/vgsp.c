@@ -156,7 +156,6 @@ static A jtgrd1spdd(J jt,A w,I wf,I wcr){F1PREFJT;A x,z;I n,*ws;P*wp;
 
 FI1(jtgrd1sp){A z;B b,c,*wb;I j,m,wf;P*wp;
  IARG1CR F12JT;PROLOG(0077);
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  wf=wr-wcr;
  wp=PAV(w);
  RZ(wb=bfi(wr,SPA(wp,a),1));
@@ -239,9 +238,7 @@ static A jtgrd2spsd(J jt,A w,I wf,I wcr){F1PREFJT;A x,z;P*zp;
 
 FI2(jtgrd2sp){A z;B b,c,*wb;I af,am,*as,j,m,wf,wm,*ws;P*wp;
  IARG2CR F12JT;PROLOG(0078);
-// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  af=ar-acr; wf=wr-wcr;
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  as=AS(a); am=acr?as[af]:1;
  ws=AS(w); wm=wcr?ws[wf]:1;
  ASSERT(am<=wm,EVINDEX);

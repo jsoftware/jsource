@@ -49,7 +49,6 @@ static A jtcants(J jt,A a,A w,A z){A a1,q,y;B*b,*c;I*u,wr,zr;P*wp,*zp;
 static DFI2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,*sv,*tv,wf,*ws,zn,zr,ms[4],ss[4],ts[4];
  IARG2CR F12IP;
  av=AV(a); ws=AS(w);
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  ASSERT(wcr==AN(a),EVLENGTH);
  fauxblockINT(afaux,4,1);
  if(wf=wr-wcr){  // if |:"r, handle the rank by prefixing a with leading axes 0 1 2...
@@ -105,8 +104,6 @@ static DFI2(jtcanta){A m,s,t,z;C*wv,*zv;I*av,j,*mv,*sv,*tv,wf,*ws,zn,zr,ms[4],ss
 
 DFI1(jtcant1){A z;
  IARG1CR F12IP;
-// obsolete  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r;   // no RESETRANK; we pass the rank of w on
-// obsolete   // !!!!! this might be an else-clause from the conditional section!!!!
  RZ(z=canta(apv(wcr,wcr-1,-1L),wfg));  // pass cell-rank through to canta
  // We extracted from w, so mark it (or its backer if virtual) non-pristine.  If w was pristine and inplaceable, transfer its pristine status to the result
  // But if we are returning the input block unchanged, leave pristinity unchanged
@@ -116,8 +113,6 @@ DFI1(jtcant1){A z;
 
 FI2(jtcant2){A*av,p,t,y;I j,k,m,n,*pv,*v;
  IARG2CR F12IP;
-// obsolete  r=(RANKT)jt->ranks; r=AR(w)<r?AR(w):r; 
-// obsolete  q=jt->ranks>>RANKTX; q=AR(a)<q?AR(a):q; RESETRANK;
  if(((acr-2)&(ar-acr-1))>=0){t=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtcant2); PRISTCLRF(w) RETF(t);} // rank loop on a.  Loses pristinity
  if(BOX&AT(a)){
   RZ(y=pfill(wcr,t=raze(a))); v=AV(y);

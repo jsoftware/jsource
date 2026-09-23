@@ -18,23 +18,6 @@
 
 #include "j.h"
 
-#if 0    // already defined in m.h
-#define LEAKSNIFF 0
-#define SHOWALLALLOC 0 // to display log of allo/free
-/*  to analyze
-;@:(<@({.~  2 | #)/.)~ (#~ ('0000' -: 4&{.)@>) {.@;:;._2 wd 'clippaste'
-*/
-
-//NOTE: alignment to cache is now required because of LSB flags in enqueue()
-#define ALIGNTOCACHE 1   // set to 1 to align each OS-allocated block block to cache-line boundary.  Will reduce cache usage for headers
-#define ALIGNPOOLTOCACHE 1   // set to 1 to align each pool block to cache-line boundary.  Will reduce cache usage for headers
-#define TAILPAD (32)  // we must ensure that a 32-byte masked op fetch to the last+1 byte doesn't run off into unallocated memory
-
-#define MEMJMASK 0xf   // these bits of j contain subpool #; higher bits used for computation for subpool entries
-#define SBFREEBLG (14+PMINL)   // lg2(SBFREEB)
-#define SBFREEB (1L<<SBFREEBLG)   // number of bytes that need to be freed before we rescan
-#define MFREEBCOUNTING 1   // When this bit is set in mfreeb[], we keep track of max space usage
-#endif
 
 #if (MEMAUDIT==0 || !_WIN32) || 1  // windows makes free() a void
 #define FREECHK(x) FREE(x)
@@ -133,7 +116,6 @@ int logfirsttime=1;
 int logparm=0;  // set to control logging inside m.c
 char logarea[200];  // where messages are built
 void writetolog(J jt,C *s){A z;
-// obsolete RESETRANK;
 int svlogparm=logparm; logparm=0;
 (logfirsttime?jtjfwrite:jtjfappend)(jt,str(strlen(s),s),box(str(strlen(LOGFILE),LOGFILE)));
 logfirsttime=0; logparm=svlogparm;
@@ -464,12 +446,9 @@ F1(jtmmaxq){F12IP;ASSERTMTV(w); RETF(sc((I)1<<(JT(jt,lgmmax)+1)));}
      /* 9!:20 space limit query */
 
 F1(jtmmaxs){F12IP;
-// obsolete I j,m=MLEN,n;
  I n=rei0(w);
  ASSERT(n>=100000,EVLIMIT);  // Don't allow so small a value that we can't reset it
  JT(jt,lgmmax)=CTLZI(n-1);  // save lg(rounded-up max blksize)-1
-// obsolete  j=m-1; DO(m, if(n<=(I)1<<i){j=i; break;});
-// obsolete  JT(jt,mmax)=(I)1<<j;
  RETF(mtm);
 }    /* 9!:21 space limit set */
 
@@ -1293,7 +1272,6 @@ __attribute__((noinline)) A jtgafallopool(J jt){
   I jtbytes=jt->bytes+=n; if(jtbytes>jt->bytesmax)jt->bytesmax=jtbytes;  // Add the bytes we just allocated
  }
  jt->memballo[-PMINL+1+blockx]+=(n-PSIZE)>>blockx;  // account for the new free blocks in this queue
-// obsolete  A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
  R z;
 }
 
@@ -1315,7 +1293,6 @@ __attribute__((noinline)) A jtgafalloos(J jt,I blockx,I n){A z;
  jt->malloctotal+=n;  // add to our allocations
  I nt=jt->malloctotalremote+jt->malloctotal;  // get net total allocated from this thread & not freed
  {I ot=jt->malloctotalhwmk; ot=ot>nt?ot:nt; jt->malloctotalhwmk=ot;}
-// obsolete  A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // do the tpop/zaploc chaining
  PYXMEMINIT(z);  // init allocating thread# and clear the lock
  R z;
 }
@@ -1347,7 +1324,6 @@ if((I)jt&3)SEGFAULT;
     jt->bytes+=(I)2<<blockx; if(unlikely(jt->bytes>jt->bytesmax))jt->bytesmax=jt->bytes;   // if tracking hwmk, do
    }
    jt->memballo[-PMINL+1+blockx]+=1<<1;  // add the 1 block (low bit flag)
-// obsolete    A *tp=jt->tnextpushp; AZAPLOC(z)=tp; *tp++=z; jt->tnextpushp=tp; if(unlikely(((I)tp&(NTSTACKBLOCK-1))==0))RZ(z=jttgz(jt,tp,z)); // advance to next slot, allocating a new block as needed
 #if MEMAUDIT&1
    if(AFCHAIN(z)&&FHRHPOOLBIN(AFHRH(AFCHAIN(z)))!=(1+blockx-PMINL))SEGFAULT;  // reference the next block to verify chain not damaged
    if(FHRHPOOLBIN(AFHRH(z))!=(1+blockx-PMINL))SEGFAULT;  // verify block has correct size
@@ -1373,7 +1349,6 @@ if((I)jt&3)SEGFAULT;
  A *tp=jt->tnextpushp;  // we will have to modify pushp
  static I __attribute__ ((aligned (CACHELINESIZE))) inithdr[6]={AKXR(0),0,0,FL,ACINPLACE+ACUC1,1};  // atomic header block, type FL.  Could put into JTT around tpushp, but takes too much space
  memcpy(z,inithdr,sizeof(inithdr));  AZAPLOC(z)=tp; // all blocks are born inplaceable, and point to their deletion entry in tpop
-// obsolete  AFLAGINIT(z,0) ACINIT(z,ACUC1|ACINPLACE)
       // Note: with AVX-512 it is better to insert pushp into the store register using _mm256_insert_epi64
    // Put the new block into the tpop stack and point the blocks to its zappable tpop slot.  We have to check for a new tpop stack block, and we cleverly
    // pass z into that function, which will return it unchanged, so that we don't have to push the value in this routine
@@ -1400,7 +1375,6 @@ RESTRICTF A jtgafv(J jt, I bytes){UI4 j;
  bytes|=(I)1<<(PMINL-1);  // if the memory header itself doesn't meet the minimum buffer length, insert a minimum
 #endif
  j=CTLZI((UI)bytes);  // 3 or 4 should return 2; 5 should return 3
-// obsolete  ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)
  R jtgaf(jt,(I)j);
 }
 
@@ -1449,7 +1423,6 @@ RESTRICTF A jtga0(J jt,I type,I rank,I atoms){A z;
  // This takes several cycles: type->bplg->bytes->CTLZI (and then fetch from [block] in the subroutine).  Unfortunately, stuck in this routine there's nothing to overlap with it.
  I bytes; if(likely(type&(BIT(LASTNOUNX+1)-1)))bytes=ALLOBYTESVSZLG(atoms,rank,bplg(type),(type)&C4T,0);else bytes=ALLOBYTESVSZ(atoms,rank,bpnonnoun(type),0,0);
  ASSERT((UI)rank<=(UI)RMAX,EVLIMIT) ASSERT((UI)atoms<=2147483647,EVLIMIT)   // verify size & rank are in limits
-// obsolete  ASSERT((UI)bytes<=(UI)JT(jt,mmax),EVLIMIT)
     // We never use GA for NAME types, so we don't need to check for it
  RZ(z=jtgaf(jt, CTLZI((UI)bytes)));   // allocate the block, filling in AC AFLAG AM
  AT(z)=type; ARINIT(z,rank); AK(z)=AKXR(rank);
@@ -1566,7 +1539,6 @@ printf("%p-\n",w);
 #endif
 #endif
  if(withprob(FHRHBINISPOOL(hrh),0.8)){   // allocated from subpool
-// obsolete   I allocsize=FHRHPOOLBINTOSIZE(blockx);
 #if MEMAUDIT&4
   I fv=frfillvalue++; DO((FHRHPOOLBINTOSIZE(blockx)>>LGSZI), if(i!=(0+6))((I*)w)[i]=fv;);   // wipe the block clean before we free it - but not the reserved area
 #endif

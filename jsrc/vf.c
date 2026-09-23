@@ -55,9 +55,7 @@ void jtfillv0(J jt,I t){
 static FI2(jtrotsp){A q,x,y,z;B bx,by;I af,*av,d,k,m,n,p,*qv,*s,*v,wf;P*wp,*zp;
  IARG2CR F12IP; PROLOG(0071);
  ASSERT(!jt->fill,EVNONCE);
-// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  af=ar-acr; p=acr?AS(a)[af]:1; wf=wr-wcr;
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  if(1<acr||af)R df2(z,a,w,qq(qq(ds(CROT),v2(1L,wcr)),v2(acr,wcr)));  // wcr to force qq to create loop, as sparse needs
  if(!wcr&&1<p){RZ(w=reshape(over(shape(w),apv(p,1L,0L)),w)); wr=wcr=p;}
  ASSERT(!wcr||p<=wcr,EVLENGTH);
@@ -100,9 +98,7 @@ static FI2(jtrotsp){A q,x,y,z;B bx,by;I af,*av,d,k,m,n,p,*qv,*s,*v,wf;P*wp,*zp;
 FI2(jtrotate){A z;C *u,*v;I af,d,k,m,n,p,*s,wf,wn;
  IARG2CR F12IP;
  if(unlikely(ISSPARSE(AT(w))))R rotsp(afg,wfg);
-// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
  A origw=w; af=ar-acr; p=acr?AS(a)[af]:1; wf=wr-wcr; // p=#axes to rotate
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  RZ(a=vi(a));
  // We support IRS in a limited way.  We revert to the rank loop if:
  // 1 cell-rank of a>1  (we have to replicate w)
@@ -183,7 +179,6 @@ FI2(jtrotate){A z;C *u,*v;I af,d,k,m,n,p,*s,wf,wn;
 static FI1(jtrevsp){A a,q,x,y,z;I c,f,k,m,n,*v;P*wp,*zp;
  IARG1CR F12IP;
  ASSERT(!jt->fill,EVNONCE);
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  f=wr-wcr; m=AS(w)[f]; wp=PAV(w);
  GASPARSE(z,AT(w),1,wr,AS(w)); zp=PAV(z);
  a=SPA(wp,a); n=AN(a); RZ(y=ca(SPA(wp,i))); x=SPA(wp,x);
@@ -202,7 +197,6 @@ DFI1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,*v,*ws,wt;
  IARG1CR F12IP;
  if(unlikely(ISSPARSE(AT(w))))R revsp(wfg);  // if sparse, process, preserving rank
  if(unlikely(jt->fill!=0))R rotate(num(-1),wfg);  // if fill, switch to shift, keeping rank
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;
  f=wr-wcr; ws=AS(w); I *an=ws+f; an=wcr?an:&oneone[0]; n=*an;    // n=number of subitems of the cell to be reversed
  if(unlikely(((-wcr)&(1-n))>=0)){R RETARG(w);}  // rank 0 or 0-1 atoms in item - keep input unchanged
  wt=AT(w); wv=CAV(w);  // wv->source data
@@ -298,8 +292,6 @@ static A jtreshapeblank(J jt, A a, A w, A rndfn, I nlens, I wcr){
 
 DFI2(jtreshape){A z;B filling;C*wv,*zv;I c,k,m,n,p,q,r,*s,t,* RESTRICT u,wf,* RESTRICT ws,zn;
  IARG2CR F12IP;
-// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  wf=wr-wcr; ws=AS(w);
  if((I)(1<acr)|(I )(acr<ar)){z=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtreshape); PRISTCLRF(w) RETF(z);}  // multiple cells of a - w must lose pristinity
  // now a is an atom or a list.  w can have any rank
@@ -342,8 +334,6 @@ DFI2(jtreshape){A z;B filling;C*wv,*zv;I c,k,m,n,p,q,r,*s,t,* RESTRICT u,wf,* RE
 
 FI2(jtreitem){A y,z;I an,r,*v;
  IARG2CR F12IP;
-// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr; RESETRANK;
  r=wcr-1;
  if((I)(1<acr)|(I)(acr<ar)){z=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtreitem); PRISTCLRF(w) RETF(z);}  // multiple cells - must lose pristinity  // We handle only single operations here, where a has rank<2
  // acr<=ar; ar<=acr; therefore ar==acr here
@@ -361,8 +351,6 @@ FI2(jtreitem){A y,z;I an,r,*v;
 // x $[!.n]!.v"r y or x ($,)[!.n]!.v"r y which uses fn v if needed to resolve _ in x
 DFI2(jtreshapeblankfn){I r;
  IARG2CR F12IP;
-// obsolete  ar=AR(a); acr=jt->ranks>>RANKTX; acr=ar<acr?ar:acr;
-// obsolete  wr=AR(w); wcr=(RANKT)jt->ranks; wcr=wr<wcr?wr:wcr;   RESETRANK;
  if((I )(1<acr)|(I )(acr<ar)){A z=rank2ex(a,w,DUMMYSELF,MIN(acr,1),wcr,acr,wcr,jtreshapeblankfn); PRISTCLRF(w) RETF(z);}  // multiple cells - must lose pristinity
  A fs=FAV(self)->fgh[0]; AF reshapefn=FAV(fs)->valencefns[1];  // next routine to call, $ ($,) or !.n
  if(likely(AT(a)&FL)){  // if there might be _, check for it

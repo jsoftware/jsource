@@ -712,7 +712,6 @@ static B (*grroutine[])(J,I,I,I,A,I*) = {  // index is [bitx]
 DFI1(jtgr1){A z;I f,ai,m,n,*s,t,wn,zn;
  IARG1CR F12IP;PROLOG(0075);
  t=AT(w);
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  f=wr-wcr; s=AS(w);
  // Calculate m: #cells in w   n: #items in a cell of w   ai: #atoms in an item of a cell of w  c: #atoms in a cell of w  
  SETICFR(w,f,wcr,n);  if(wn=AN(w)){

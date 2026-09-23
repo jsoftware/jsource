@@ -397,7 +397,6 @@ PREFIXPFX(bw1111pfxI, UI,UI, BW1111, bw1111II,R EVOK;)
 
 static DFI1(jtprefix){F12IP;A fs=FAV(self)->fgh[0];
  IARG1R
-// obsolete  r = (RANKT)jt->ranks; RESETRANK;
  if(unlikely(wcr<wr)){R rank1ex(w,self,wr,jtprefix);}
  R eachl(apv(SETIC(w,wr),1L,1L),w,atop(fs,ds(CTAKE)));
 }    /* f\"r w for general f */
@@ -405,7 +404,6 @@ static DFI1(jtprefix){F12IP;A fs=FAV(self)->fgh[0];
 static DFI1(jtgprefix){F12IP;A h,*hv,z,*zv;I m,n,r;
  IARG1R
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
-// obsolete   r = (RANKT)jt->ranks; RESETRANK; if(r<AR(w)){R rank1ex(w,self,r,jtgprefix);}
  if(unlikely(wcr<wr)){R rank1ex(w,self,wr,jtgprefix);}
  SETIC(w,n); 
  h=FAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
@@ -449,10 +447,6 @@ static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
 static DF2(jtinfix){F12IP;PROLOG(0018);A fs=FAV(self)->fgh[0]; A x,z;I m; 
  F2RANK(0,RMAX,jtinfix,self); // Handle looping over rank.  This returns here for each cell (including this test)
  // The rest of this verb handles a single cell
-// obsolete  // If length is infinite, convert to large integer
-// obsolete  // kludge - test for ==ainf should be replaced with a test for value; will fail if _ is result of expression like {._
-// obsolete  if(a==ainf)m=IMAX;
-// obsolete  else
  m=rei0(a); // get infix length as an integer, -imax to imax
  // Create table of infix positions
  RZ(x=ifxi(m,w));
@@ -678,7 +672,6 @@ static DF2(jtinfixprefix2){F12IP;PROLOG(00202);A fs;I cger[128/SZI];
 // prefix, vectors to common processor.  Handles IRS.  Supports inplacing
 static DFI1(jtinfixprefix1){
  IARG1R; F12IP;
-// obsolete I r = (RANKT)jt->ranks; RESETRANK;
  if(wcr<wr){R jtrank1ex(jtfg,w,self,wcr,jtinfixprefix1);}
  R jtinfixprefix2(jtfg,mark,w,self);
 }
@@ -691,7 +684,6 @@ static DFI1(jtpscan){A z;I f,n,t,wn,*ws,wt;
  // wn = #atoms in w, wr=rank of w, r=effective rank, f=length of frame, ws->shape of w
  wn=AN(w); f=wr-wcr; ws=AS(w);
 
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  // m = #cells, c=#atoms/cell, n = #items per cell
  SETICFR(w,f,wcr,n);  // wn=0 doesn't matter
  // If there are 0 or 1 items, or w is empty, return the input unchanged, except: if rank 0, return (($w),1)($,)w - if atomic op, do it right here, otherwise call the routine to get the shape of result cell
@@ -932,7 +924,6 @@ static DF2(jtmovfslash){F12IP;A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt
  if(m0>=0){zi=MAX(0,1+p-m);}else{zi=1+(p-1)/m; zi=(p==0)?p:zi;}  // zi = # result cells
  PROD(d,AR(w)-1,AS(w)+1) b=0>m0&&zi*m!=p;   // b='has shard'
  zt=rtype(adocv.cv);
-// obsolete  RESETRANK;
  GA(z,zt,d*zi,MAX(1,AR(w)),AS(w)); AS(z)[0]=zi;
  if(d*zi==0){RETF(z);}  // mustn't call adocv on empty arg!
  if(unlikely(isatype(adocv.cv))&&(t=atype(adocv.cv))&&TYPESNE(t,wt)){RZ(w=cvt(t,w)); wt=AT(w);}

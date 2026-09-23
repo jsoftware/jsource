@@ -540,11 +540,8 @@ static A jtcompidx(J jt,I axislen,A ind){
  // ?t = underlying type of ?, s?=nonzero if sparse
 DF2(jtamendn2sp){F12IP;PROLOG(0007);
  A ind=FAV(self)->fgh[0];  // get ind from ind}
-// obsolete I acr=jt->ranks>>RANKTX; acr=AR(a)<acr?AR(a):acr; 
-// obsolete  I wcr=(RANKT)jt->ranks; wcr=AR(w)<wcr?AR(w):wcr; RESETRANK;
  I acr=AR(a), wcr=AR(w);
  I at=AT(a), wt=AT(w), indt=AT(ind);
-// obsolete  F2RANK(acr,wcr,jtamendn2,self);
  I atd=ISSPARSE(AT(a))?DTYPE(AT(a)):AT(a); I wtd=ISSPARSE(AT(w))?DTYPE(AT(w)):AT(w);
  ASSERT(AT(ind)&NUMERIC+BOX||!AN(ind),EVDOMAIN);
  ASSERT(!ISSPARSE(AT(ind)),EVNONCE);  // m must be dense, and numeric or boxed
@@ -587,8 +584,6 @@ exitra:
 A jtamendn2(J jtfg,A afg,A wfg,AD * RESTRICT ind,A self){A e,z; I atd,wtd,t,t1;P*p;
   // ind=m, the indexes to be modified
  IARG2CR; ARGCHK1(ind); F12IP;PROLOG(0007);
-// obsolete  I acr=jt->ranks>>RANKTX; acr=AR(a)<acr?AR(a):acr; 
-// obsolete  I wcr=(RANKT)jt->ranks; wcr=AR(w)<wcr?AR(w):wcr; RESETRANK;
  I at=AT(a), wt=AT(w), indt=AT(ind);
  I cellframelen,cellx,indframe;  // for single-cell amend: frame of cell; its index; number of surplus leading axes of 1s in selector
  if(unlikely(ISSPARSE(wt|indt)))R rank2exip(a,w,self,acr,wcr,acr,wcr,jtamendn2sp);
@@ -908,8 +903,6 @@ static DFI2(jtamnegate){
  // if y is CMPX/FL/QP, execute markd x} y which means negate
  if(AT(w)&FL+CMPX+QP)R jtamendn2(jtfg,markd(PEXT0(AT(w),FLX,FL+CMPX>>FLX)),wfg,afg,self);
  // otherwise, revert to x -@(|:){`[`]}"r y, processed by jtgav2
-// obsolete  US ranks=jt->ranks; RESETRANK;
-// obsolete  R rank2exip(a,w,self,AR(a),MIN((RANKT)ranks,AR(w)),AR(a),MIN((RANKT)ranks,AR(w)),jtgav2);
  R rank2exip(a,w,self,ar,wcr,ar,wcr,jtgav2);
 }
 

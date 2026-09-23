@@ -441,10 +441,7 @@ static SF(jtsortd){F12JT;A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
 FI2(jtgr2){A z=0;I api,d,f,m,n,*s,t; 
  IARG2CR F12IP;PROLOG(0076);
  t=AT(w); // ?cr= rank of the cells being sorted; t= type of w
-// obsolete  acr=jt->ranks>>RANKTX; acr=AR(a)<acr?AR(a):acr; 
-// obsolete  wcr=(RANKT)jt->ranks; wcr=AR(w)<wcr?AR(w):wcr;
  // Handle special reflexive cases, when the arguments are identical and the cells are also.  Only if cells have rank>0 and have atoms
-// obsolete  if(a==w&&likely(acr==wcr)&&likely(wcr>0)&&likely(AN(a)!=0)&&likely(t&(B01+LIT+C2T+C4T+INT+INT2+INT4+FL+CMPX+QP))){  // tests after the first almost always succeed
  if(afg==wfg&&likely(wcr>0)&&likely(AN(a)!=0)&&likely(t&(B01+LIT+C2T+C4T+INT+INT2+INT4+FL+CMPX+QP))){  // tests after the first almost always succeed
   // f = length of frame of w; s->shape of w; m=#cells; n=#items in each cell;
   // d = #bytes in an item of a cell of w

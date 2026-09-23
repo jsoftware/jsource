@@ -374,7 +374,6 @@ DFI1(jtcompsum){
  IARG1CR F12IP;
  I *ws=AS(w);
  // Create  wcr: the cell rank; f: length of frame; n: # items in a CELL of w
-// obsolete   I wr=AR(w); I r=(RANKT)jt->ranks; r=wr<r?wr:r; 
  I f=wr-wcr; I n; SETICFR(w,f,wcr,n);
  // if the argument is not float, or if there are not more than 2 items, process as normal +/
  if(unlikely((-(AT(w)&FL)&(2-n))>=0))R reduce(w,FAV(self)->fgh[0]);
@@ -505,7 +504,6 @@ DFI1(jtcompsum){
 // w is an array with 0 items, self is f, result is frame $ ,: identity-verb cell-shape $ atom-of-type
 static DFI1(jtred0){F12IP;A x,z;I f,*s;
  IARG1CR
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;  RESETRANK;
  f=wr-wcr; s=AS(w);
  if(likely(!ISSPARSE(AT(w)))){GA(x,AT(w),0L,wcr,f+s);}else{GASPARSE(x,AT(w),1,wcr,f+s);}  // x exists only for type and shape
  R reitem(vec(INT,f,s),lamin1(dfv1(z,x,iden(self))));
@@ -516,7 +514,6 @@ static DFI1(jtredg){F12IP;PROLOG(0020);A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->va
  IARG1CR 
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  // loop over rank
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  if(wcr<wr)R rank1ex(w,self,wcr,jtredg);
  // From here on we are doing a single reduction
  n=AS(w)[0]; // n=#cells
@@ -715,7 +712,6 @@ static A jtredsps(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A a,a1,e,sn
 
 static DFI1(jtreducesp){A a,g,z;B b;I f,n,*v,wn,*ws,wt,zt;P*wp;
  IARG1CR F12IP;
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;  // scafrk no RESETRANK
  f=wr-wcr; wn=AN(w); ws=AS(w); n=wcr?ws[f]:1;
  wt=AT(w); wt=wn?DTYPE(wt):B01;
  g=FAV(self)->fgh[0];  // g is the f in f/
@@ -730,7 +726,6 @@ static DFI1(jtreducesp){A a,g,z;B b;I f,n,*v,wn,*ws,wt,zt;P*wp;
  // falling through we are using an internal function
  if(1==n)R tail(wfg);   // if just 1 item, return the item - for each cell
  zt=rtype(adocv.cv);
-// obsolete  RESETRANK;
  if(1==wr)z=redsp1(w,self,id,adocv.f,adocv.cv,f,wcr,zt);
  else{
   wp=PAV(w); a=SPA(wp,a); v=AV(a);
@@ -824,7 +819,6 @@ static DFI1(jtreduce){A z;I d,f,m,n,t,*ws,zt;
  IARG1CR F12IP;
  if(unlikely(ISSPARSE(AT(w))))RETF(reducesp(wfg,self));  // If sparse, go handle it, preserving rank
  // Create  r: the effective rank; f: length of frame; n: # items in a CELL of w
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;;  // scafrk no RESETRANK
  ws=AS(w); f=wr-wcr; SETICFR(w,f,wcr,n);
  // Handle the special cases: neutrals, single items, lists of length 2
  I wt=AT(w); wt=AN(w)?wt:B01;   // Treat empty as Boolean type
@@ -859,7 +853,6 @@ static DFI1(jtreduce){A z;I d,f,m,n,t,*ws,zt;
  // m=*/ frame (i. e. #cells to operate on)
  // r cannot be 0 (would be handled above).  Calculate low part of zn first
  PROD(m,f,ws);
-// obsolete  RESETRANK;   // clear rank now that we've used it - not really required here?
  // Allocate the result area
  zt=rtype(adocv.cv);  // Use specified type
  GA(z,zt,m*d,MAX(0,wr-1),ws); if(1<wcr)MCISH(f+AS(z),f+1+ws,wcr-1);  // allocate, and install shape
@@ -928,7 +921,6 @@ A jtredcatcell(J jtfg,A w,I r){F12IP;A z;
 
 DFI1(jtredcat){A z;B b;I f,*s,*v;
  IARG1CR F12IP;
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;  RESETRANK;
  f=wr-wcr; s=AS(w);
  b=1==wcr&&1==s[f];  // special case: ,/ on last axis which has length 1: in that case, the rules say the axis disappears (because of the way ,/ works on length-1 lists)
  if(2>wcr&&!b)RCA(w);  // in all OTHER cases, result=input for ranks<2
@@ -946,7 +938,6 @@ DFI1(jtredcat){A z;B b;I f,*s,*v;
 
 static DFI1(jtredsemi){I f,n;
  IARG1CR F12IP;
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r;
  f=wr-wcr; SETICFR(w,f,wcr,n);   //    n=#items in a cell of w
  if(2>n){ASSERT(n!=0,EVDOMAIN); R tail(wfg);}  // pass IRS into tail
  if(BOX&AT(w))R jtredg(jt,wfg,self);  // the old way failed because it did not mimic scalar replication; revert to the long way.  ranks are still set
@@ -955,7 +946,6 @@ static DFI1(jtredsemi){I f,n;
 
 static DFI1(jtredstitch){A c,y;I f,n,*s,*v;
  IARG1CR F12IP;
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  f=wr-wcr; s=AS(w); SETICFR(w,f,wcr,n);
  ASSERT(n!=0,EVDOMAIN);
  if(1==n)R IRS1(jthead,jt,w,wcr,0L);
@@ -984,7 +974,6 @@ static DF1(jtredstiteach){F12IP;A*wv,y;I n,p,r,t;
 
 static DFI1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I m,mn,n,zm,zn;I n1=0,n2=0;
  IARG1CR F12IP;
-// obsolete  wr=AR(w); r=(RANKT)jt->ranks; r=wr<r?wr:r; RESETRANK;
  I f=wr-wcr, *ws=AS(w); 
  SETICFR(w,f,wcr,n);
  if(!wcr||1>=n)R reshape(repeat(ne(sc(f),IX(wr)),shape(w)),n?w:ds(CACE));
@@ -1017,7 +1006,6 @@ F1(jtslash){F12IP;A h;AF f1;C c;V*v;
  default: f1=jtreduce; break;  // monad is inplaceable if the dyad for u is
  }
  RZ(h=qq(w,v2(lr(w),RMAX)));  // create the rank compound to use if dyad
-// obsolete  fdeffillall(z,0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|(FAV(ds(CSLASH))->flag&~(VNONAME+VNOSELF)), RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->flag&VISATOMIC2?((VA*)((I)va+v->localuse.lu1.uavandx[1]))->rps:&rpsnull);
  fdeffillall(z,0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|(FAV(ds(CSLASH))->flag&~(VNONAME+VNOSELF)), RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->flag&VFUSEDOK2?va[v->lu2.lc&0x7f].rps:&rpsnull);
  // set localuse to point to the VARPSA block for w if w is primitive atomic dyad; otherwise to the null VARPSA block.  This localuse is valid only in CSLASH block
  R z;
@@ -1029,10 +1017,8 @@ A jtatab   (J jt,C c,A a,A w){ARGCHK2(a,w); A z; R dfv2(z,a,w,   slash(ds(c))   
 
 DFI1(jtmean){
  IARG1CR F12IP;
-// obsolete  I wr=AR(w); I r=(RANKT)jt->ranks; r=wr<r?wr:r;  // scafrk no RESETRANK
  I n=AS(w)[wr-wcr]; n=wcr?n:1;
  A sum=reduce(wfg,FAV(self)->fgh[0]);  // calculate +/"r
-// obsolete  RESETRANK;  // back to infinite rank for the divide
  RZ(sum);
  RZ(w=jtatomic2(JTIPA,sum,sc(n),ds(CDIV)));  // take quotient inplace and return it
  RETF(w);

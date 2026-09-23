@@ -76,7 +76,6 @@ static void sieve(I n,I m,B*b,B*u){I i,j,q;
 static F1(jtprime1){F12IP;A d,t,y,z;B*b,*u;I c,*dv,e,i,j,k,m,n,p,q,*wv,x,*zv;
  ARGCHK1(w);
  k=0; n=AN(w); wv=AV(w); RE(m=sup(n,wv)); JBREAK0;
-// obsolete  RESETRANK;
  I zr=AR(w); GATV(z,INT,n,AR(w),AS(w)); zv= AVn(zr,z);
  RZ(d=grade1(ravel(w)));  dv= AV(d);
  if(JT(jt,p4792)){I*u=AV(JT(jt,p4792)); c=AN(JT(jt,p4792)); while(n>k&&c>(x=wv[dv[k]]))zv[dv[k++]]=u[x];}

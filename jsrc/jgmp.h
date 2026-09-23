@@ -477,9 +477,9 @@ extern void jfree4gmp(void*, size_t);
 #define XHSZ AKXR(1)
 
 #if MEMAUDIT
-#define ZAPONLYONCE(x,p) {if (AZAPLOC(x)||ACISPERM(AC(x))) SEGFAULT; else AZAPLOC(x)= p; jt->tnextpushp= p;}
+#define ZAPONLYONCE(x,p) {if (AZAPLOC(x)||ACISPERM(AC(x))) SEGFAULT; else AZAPLOC(x)= p; jt->tnextpushp=p;}
 #else
-#define ZAPONLYONCE(x,p) {AZAPLOC(x)= p; jt->tnextpushp= p;}
+#define ZAPONLYONCE(x,p) {AZAPLOC(x)= p; jt->tnextpushp=p;}
 #endif
 
 // optimization: 0==AZAPLOC(x) when ACISPERM(AC(x))

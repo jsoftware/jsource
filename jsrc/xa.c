@@ -924,7 +924,7 @@ F1(jtaudittdisab){F12IP;
 F1(jtcheckcompfeatures){F12IP;UI i;I v1,v2,temp;
  RZ(w=vib(w));  // inputs must be integer
  I ttype=IAV(w)[0];  // test type
- I featon=IAV(w)[1];  // 0=run code that does not use the feature, 1=use feature.  The code using the feature will be faster is the feature is present, otherwise slower
+ I featon=IAV(w)[1];  // 0=run code that does not use the feature, 1=use feature.  The code using the feature will be faster if the feature is present, otherwise slower
  ASSERT((featon&-2)==0,EVDOMAIN);
  switch(2*ttype+featon){
  default: ASSERT(0,EVDOMAIN);  // invalid feature

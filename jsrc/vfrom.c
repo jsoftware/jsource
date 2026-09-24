@@ -181,7 +181,7 @@ zbase=zv; }
 // rflags is w minor cell rank/len of w frame/1B rank of result/1B /6B dimension of axes-1
 // if a is inplaceable in jt, ind in the last axis is the area that can be used for the result
 static A jtaxisfrom(J jtfg,A w,struct faxis *axes,I rflags){F12IP;I i;
- I r=rflags&0x3f, zr=PEXT0(rflags,8,0xff), wf=PEXT0(rflags,16,0xff), wcr=PEXT0(rflags,24,0xf), hasr=PEXT0(rflags,7,1);  // number of axes-1; result rank; w framelen; 1 iff 1st axis is from rank
+ I r=rflags&RMAX, zr=PEXT0(rflags,8,0xff), wf=PEXT0(rflags,16,0xff), wcr=PEXT0(rflags,24,0xf), hasr=PEXT0(rflags,7,1);  // number of axes-1; result rank; w framelen; 1 iff 1st axis is from rank
  C *base=voidAV(w);  // will be starting cell number in all axes before last
  // convert lencell to bytes & roll it up; calculate base from sel0 values
  I wt=AT(w);

@@ -1139,24 +1139,24 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define DFI1(f) A f(JJ jtfg,A wfg,A self)
 #define DFI2(f) A f(JJ jtfg,A afg,A wfg,A self)
 // receive args
-#define IARG2C w=wfg; a=afg; wcr=(I)wfg; acr=(I)afg; if(unlikely((w=(A)((I)w&~0x3f))==0))R0 if(unlikely((a=(A)((I)a&~0x3f))==0))R0 wcr&=0x3f; acr&=0x3f;  // no decls here - multiuse
+#define IARG2C w=wfg; a=afg; wcr=(I)wfg; acr=(I)afg; if(unlikely((w=(A)((I)w&~(ABDY-1)))==0))R0 if(unlikely((a=(A)((I)a&~(ABDY-1)))==0))R0 wcr&=RMAX; acr&=RMAX;  // no decls here - multiuse
 #define IARG2D AD * RESTRICT w; AD * RESTRICT a; I wcr, acr;
-#define IARG1 AD * RESTRICT w=wfg; I wcr=(I)wfg; if(unlikely((w=(A)((I)w&~0x3f))==0))R0 wcr=~wcr; wcr&=0x3f;  // extracts encoded verb rank
-#define IARG2 AD * RESTRICT w=wfg; AD * RESTRICT a=afg; I wcr=(I)wfg; I acr=(I)afg; if(unlikely((w=(A)((I)w&~0x3f))==0))R0 if(unlikely((a=(A)((I)a&~0x3f))==0))R0 wcr=~wcr; acr=~acr; wcr&=0x3f; acr&=0x3f;
+#define IARG1 AD * RESTRICT w=wfg; I wcr=(I)wfg; if(unlikely((w=(A)((I)w&~(ABDY-1)))==0))R0 wcr=~wcr; wcr&=RMAX;  // extracts encoded verb rank
+#define IARG2 AD * RESTRICT w=wfg; AD * RESTRICT a=afg; I wcr=(I)wfg; I acr=(I)afg; if(unlikely((w=(A)((I)w&~(ABDY-1)))==0))R0 if(unlikely((a=(A)((I)a&~(ABDY-1)))==0))R0 wcr=~wcr; acr=~acr; wcr&=RMAX; acr&=RMAX;
 // receive args & calc ?cr
 #define IARG1R IARG1 I wr=AR(w);
 #define IARG1CR IARG1R wcr=MIN(wcr,wr);
 #define IARG2R IARG2 I ar=AR(a); I wr=AR(w);
 #define IARG2CR IARG2R acr=MIN(acr,ar); wcr=MIN(wcr,wr);
 // call IRS
-#define IRS1(f,j,w,wcr,self) f(j,(A)(((I)(w)+0x3f)^(wcr)),self)  // wcr is rank for w
-#define IRS2(f,j,a,acr,w,wcr,self) f(j,(A)(((I)(a)+0x3f)^(acr)),(A)(((I)(w)+0x3f)^(wcr)),self)  // wcr is rank for w.  Coded assuming w is ready before wcr
+#define IRS1(f,j,w,wcr,self) f(j,(A)(((I)(w)+RMAX)^(wcr)),self)  // wcr is rank for w
+#define IRS2(f,j,a,acr,w,wcr,self) f(j,(A)(((I)(a)+RMAX)^(acr)),(A)(((I)(w)+RMAX)^(wcr)),self)  // wcr is rank for w.  Coded assuming w is ready before wcr
 #if SY_64   // 64-bit linkage
-#define ATOMIC2(jt,a,acr,w,wcr,self) jtatomic2((J)((I)jt+(((((I)(acr)<<RANKTX)+(I)(wcr))^0x3f3f)<<48)),a,w,self)   // cxx is the function to execute, l/r ranks (nonnegative)
+#define ATOMIC2(jt,a,acr,w,wcr,self) jtatomic2((J)((I)jt+(((((I)(acr)<<RANKTX)+(I)(wcr))^R2MAX)<<48)),a,w,self)   // cxx is the function to execute, l/r ranks (nonnegative)
 // if we are putting IRS on a call for the first time & we don't know from the names which linkage it needs.  cond evaluates to 1 to go ATOMIC
 #define IRSorATOMIC2(cond,f,jt,a,acr,w,wcr,self) ((cond)?ATOMIC2(jt,a,acr,w,wcr,self):IRS2(f,jt,a,acr,w,wcr,self))   // cxx is the function to execute, l/r ranks (nonnegative)
 // if we have to cross the boundary from (normal IRS linkage) to (ATOMIC2 linkage), run A2LINKIF
-#define A2LINKIF(cond,jt,a,w) if(cond){jt=(J)((I)jt+(((I)a&0x3f)<<56)+(((I)w&0x3f)<<48)); a=(A)((I)a&~0x3f); w=(A)((I)w&~0x3f);}
+#define A2LINKIF(cond,jt,a,w) if(cond){jt=(J)((I)jt+(((I)a&RMAX)<<56)+(((I)w&RMAX)<<48)); a=(A)((I)a&~(ABDY-1)); w=(A)((I)w&~(ABDY-1));}
 #else   // 32-bit linkage
 #define ATOMIC2(jt,a,acr,w,wcr,self) IRS2(jtatomic2,jt,a,acr,w,wcr,self)   // cxx is the function to execute, l/r ranks (nonnegative)
 #define IRSorATOMIC2(cond,f,jt,a,acr,w,wcr,self) IRS2(f,jt,a,acr,w,wcr,self)   // cxx is the function to execute, l/r ranks (nonnegative)

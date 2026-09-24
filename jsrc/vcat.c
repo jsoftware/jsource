@@ -401,7 +401,7 @@ FI2(jtapip){A h;
  // if exactly one arg has no items in cell, and the empty does not have longer frame, and the frames agree,
  // and items have the same rank, and the empty item has no axis larger than the nonempty: return the nonempty
  // here we require no frame as well
- I at=AT(a), ar=AR(a), wr=AR(w), ac=AC(a), an=AN(a), rnotmax=((I)afg|(I)wfg)&0x3f;  // unchanging values; rnotmax>0 if ranks are not _ _
+ I at=AT(a), ar=AR(a), wr=AR(w), ac=AC(a), an=AN(a), rnotmax=((I)afg|(I)wfg)&RMAX;  // unchanging values; rnotmax>0 if ranks are not _ _
  A jtzv=__atomic_load_n(&jt->zombieval,__ATOMIC_RELAXED);  // extract table line from the primitive
 
  I ai=AS(a)[0], wi=AS(w)[0]; wi=wr?wi:ai;  // item counts of args; force miscompare if both atoms

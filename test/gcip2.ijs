@@ -6,7 +6,7 @@ delth''  NB. make sure we start with an empty system
 
 thr=: (9!:58)"0 i.3
 {{
-N=: (QKTEST{3 2) <. <: 1 { 8 T. ''  NB. max # worker threads, limited to 3
+N=: ((QKTEST+.-.IF64){3 2) <. <: 1 { 8 T. ''  NB. max # worker threads, limited to 3
 for. i. N do.
 
   X=: +/ . *
@@ -14,7 +14,7 @@ for. i. N do.
 
   empty thr (9!:58)"0 i.3
   techo^:PRINTMSG 'Test blas integer'
-  'a b'=: (1000?@$~2,,~QKTEST{500 100)
+  'a b'=: (1000?@$~2,,~(QKTEST+.-.IF64){500 100)
   (a +/@(*"1 _) b) -: a X b
   0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
   (a +/@(*"1 _) b) -: a X b
@@ -23,7 +23,7 @@ for. i. N do.
 
   empty thr (9!:58)"0 i.3
   techo^:PRINTMSG 'Test blas floating'
-  'a b'=: (0?@$~2,,~QKTEST{500 100)
+  'a b'=: (0?@$~2,,~(QKTEST+.-.IF64){500 100)
   (a +/@(*"1 _) b) -: a X b
   0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
   (a +/@(*"1 _) b) -: a X b
@@ -32,7 +32,7 @@ for. i. N do.
 
   empty thr (9!:58)"0 i.3
   techo^:PRINTMSG 'Test blas complex'
-  'a b'=: (0?@$~2,,~QKTEST{500 100) j. (0?@$~2,,~QKTEST{500 100)
+  'a b'=: (0?@$~2,,~(QKTEST+.-.IF64){500 100) j. (0?@$~2,,~(QKTEST+.-.IF64){500 100)
   (a +/@(*"1 _) b) -: a X b
   0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
   (a +/@(*"1 _) b) -: a X b

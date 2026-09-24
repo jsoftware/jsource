@@ -270,6 +270,7 @@ end.
 if. 0~:4!:0<'QKTEST' do.
 NB.  QKTEST=: (9!:56'pyxes') < (*9!:56'memaudit')+.(-.IF64)+.IFIOS+.IFRASPI+.((<UNAME)e.'Android';'OpenBSD';'FreeBSD';'Wasm')  NB. run quick test
   QKTEST=: (9!:56'pyxes') < (*9!:56'memaudit')  NB. run quick test
+  QKTEST=: QKTEST +. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.(<9!:56'cpu')e.'arm';'arm64'
 end.
 ''
 )

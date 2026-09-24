@@ -77,7 +77,7 @@ assert. (%. -: minv) j./1+?100 2001
 assert. (%. -: minv) 1
 assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:_50000+?10 10$10000
 assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?7 7$10000
-if. -.QKTEST do.
+if. -.(QKTEST+.-.IF64) do.
 assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?35 35$10000
 assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+?71 71$10000
 NB. Do just one big matrix, but with a random size so that over many runs more sizes will be tested
@@ -85,7 +85,7 @@ assert. (1e_1 > >./ | , b-minv a) *. 1e_1>>./|,(id a)-a X b=:%.a=:0.01*_4000+(2 
 assert. (b-:minv a) *. 1e_5>>./|,(id a)-a X b=:%.a=:j./?2 8 8$1300
 end.
 test =: 3 : '(1e_1 > >./ | , b-minv y) *. 1e_1>>./|,(id y)-y X b=:%.a=:y'
-NB. assert. 13!:8@8^:-.@test@> (0.01 * _4000 + 100000 ?@$~ ,~)&.> 35 + i. QKTEST{64 32
+NB. assert. 13!:8@8^:-.@test@> (0.01 * _4000 + 100000 ?@$~ ,~)&.> 35 + i. (QKTEST+.-.IF64){64 32
 
 assert. (b-:minv a) *. (1=+/a*b) *. (+/a*+a)-:%+/b*+b =:%.a=:1=?36$2
 assert. (b-:minv a) *. (1=+/a*b) *. (+/a*+a)-:%+/b*+b =:%.a=:_10+?17$20
@@ -147,20 +147,20 @@ _13.9    f =i.9
 
 {{
 if. GITHUBCI*.(IFRASPI +. ('arm64'-:9!:56'cpu')*.'FreeBSD'-:UNAME) do. '' return. end.
-techo (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+(2 # (?4) + (4 _3 p. QKTEST) * 200+?300)?@$12200
+techo (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+(2 # (?4) + (4 _3 p. (QKTEST+.-.IF64)) * 200+?300)?@$12200
 techo e=. >./|,(id a)-a X c
 assert. 1e_8>e
-techo (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+(2 , 2 # (?4) + (4 _3 p. QKTEST) * 200+?300)?@$12200
+techo (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+(2 , 2 # (?4) + (4 _3 p. (QKTEST+.-.IF64)) * 200+?300)?@$12200
 techo e=. >./|,(id b)-b X c
 assert. 1.1e_8>e
 ''
 }}^:(9!:56 'cblas')''
 
 {{
-techo (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+(0 _150 + (?4) + (4 _3 p. QKTEST) * 200+?300)?@$12200
+techo (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+(0 _150 + (?4) + (4 _3 p. (QKTEST+.-.IF64)) * 200+?300)?@$12200
 techo e=. >./|,a - (a X c) X a
 assert. 1.2e_8>e
-techo (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+(2 , 0 _150 + (?4) + (4 _3 p. QKTEST) * 200+?300)?@$12200
+techo (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+(2 , 0 _150 + (?4) + (4 _3 p. (QKTEST+.-.IF64)) * 200+?300)?@$12200
 techo e=. >./|,b - (b X c) X b
 assert. 1.3e_8>e
 ''

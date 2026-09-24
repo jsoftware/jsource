@@ -87,9 +87,7 @@ lrtoar =: (((1 todiag *) +/ . * (* -.)) >/~@i.@#)  NB. y is compressed Doolittle
 (-: (0&{:: /:~ lrtoar@(1&{::))@(128!:10))@((QKTEST{1000x 100x) ?@$~ ,~)"0 i. 15
 
 t=: 3 : 0''
-if. (0=(9!:56'c_avx2')+.9!:56'emu_avx2') +. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
-  EMPTY return.
-end.
+if. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.(<9!:56'cpu')e.'arm';'arm64' do. '' return. end. NB. no real hardware fma
 for_i. (>: , 500&+) (i.15) do.
  a1=. 128!:10 r=. ((QKTEST{1000 100) ?@$~ ,~) i
  techo^:PRINTMSG b=. >./ | ,r - (0&{:: /:~ lrtoa@(1&{::)) a1  NB. floating point
@@ -128,9 +126,7 @@ EMPTY
 )
 
 (3 : 0)^:(IFWIN*:-.IF64) ''
-if. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.'arm64'-:(9!:56'cpu') do.
-  EMPTY return.
-end.
+if. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.(<9!:56'cpu')e.'arm';'arm64' do. '' return. end. NB. no real hardware fma
 techo^:PRINTMSG 9!:14''
 techo^:PRINTMSG '128!:10  cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''
 t QKTEST{(IF64{250 500), 50

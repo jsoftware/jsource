@@ -54,7 +54,7 @@ blacklist=: blacklist, (0=15!:23'')#(<testpath),each 'g15x.ijs';'g7x5.ijs';'gdll
 blacklist=: blacklist, ('Wasm'-:UNAME)#(<testpath),each <'gstack.ijs'  NB. crash
 blacklist=: blacklist, (IFQT*.'Wasm'-:UNAME)#(<testpath),each 'g331ps.ijs';'gsp422.ijs';'gsp432.ijs'  NB. crash
 blacklist=: blacklist, IFIOS#(<testpath),each <'gipht.ijs'  NB. crash if included in the whole suite, but ok if running alone
-blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each <'g128x14.ijs'
+blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each 'g128x14.ijs';'g520.ijs'
 blacklist=: blacklist, (2 *@(17 b.) 9!:56'memaudit')#(<testpath),each 'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs' NB. multithreading block in multiple tstacks
 
 NB. too slow

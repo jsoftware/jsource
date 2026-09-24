@@ -152,20 +152,20 @@ _13.9    f =i.9
 
 {{
 if. GITHUBCI*.(IFRASPI +. ('arm64'-:9!:56'cpu')*.'FreeBSD'-:UNAME) do. '' return. end.
-techo^:PRINTMSG (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+?((QKTEST+.-.IF64){::2000 2000;500 500)$12200
+techo^:PRINTMSG (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+(2 # (?4) + (4 _3 p. (QKTEST+.-.IF64)) * 200+?300)?@$12200
 techo^:PRINTMSG e=. >./|,(id a)-a X c
 assert. 1e_8>e
-techo^:PRINTMSG (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+?(2, ((QKTEST+.-.IF64){::2000 2000;500 500))$12200
+techo^:PRINTMSG (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+(2 , 2 # (?4) + (4 _3 p. (QKTEST+.-.IF64)) * 200+?300)?@$12200
 techo^:PRINTMSG e=. >./|,(id b)-b X c
 assert. 1.01e_8>e
 ''
 }}^:(9!:56 'cblas')''
 
 {{
-techo^:PRINTMSG (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+?((QKTEST+.-.IF64){::2000 1500;500 300)$12200
+techo^:PRINTMSG (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+(0 _150 + (?4) + (4 _3 p. (QKTEST+.-.IF64)) * 200+?300)?@$12200
 techo^:PRINTMSG e=. >./|,a - (a X c) X a
 assert. 1.02e_8>e
-techo^:PRINTMSG (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+?(2, ((QKTEST+.-.IF64){::2000 1500;500 300))$12200
+techo^:PRINTMSG (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+(2 , 0 _150 + (?4) + (4 _3 p. (QKTEST+.-.IF64)) * 200+?300)?@$12200
 techo^:PRINTMSG e=. >./|,b - (b X c) X b
 assert. 1.03e_8>e
 ''

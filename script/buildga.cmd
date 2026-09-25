@@ -63,6 +63,8 @@ mkdir bin\windows\j64arm
 @rem copy pthreads4w\arm64\pthreadVC3.dll %B%\pthreadVC3.dll
 copy mpir\windows\arm64\mpir.dll %B%
 @rem copy openmp\obj\windows\arm64\libomp.dll %B%
+copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\ARM64\bin\libomp.dll" %B%
+copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\ARM64\lib\libomp.lib" %B%
 copy "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\Llvm\ARM64\bin\libomp.dll" %B%
 copy "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\Llvm\ARM64\lib\libomp.lib" %B%
 copy pcre2\windows\arm64\jpcre2.dll %A%\tools\regex\jpcre2_arm64.dll

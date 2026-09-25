@@ -773,7 +773,7 @@ indexforonecell:;  // cellframelen, wframelen (always 0), and ind0 must be set
  PRISTCLRF(w)
  EPILOG(z);
 }
-static DF2(jtamendn2c){F12IP;R jtamendn2(jtfg,a,w,FAV(self)->fgh[0],self);}  // entry point from normal compound
+static DFI2(jtamendn2c){F12IP;R jtamendn2(jtfg,afg,wfg,FAV(self)->fgh[0],self);}  // entry point from normal compound, passes through
 
 // Execution of x u} y.  Call (x u y) to get the indices, convert to cell indexes, then
 // call merge2 to do the merge.  Pass inplaceability into merge2.
@@ -906,7 +906,7 @@ static DFI2(jtamnegate){
  R rank2exip(a,w,self,ar,wcr,ar,wcr,jtgav2);
 }
 
-// u} handling.  This is not inplaceable but the derived verb is.  Self can be 0 to indicate this is a recursive call from a subroutine of jtamend
+// u} handling.  Self can be 0 to indicate this is a recursive call from a subroutine of jtamend
 DF1(jtamend){F12IP;
  ARGCHK1(w);
  if(unlikely(AT(w)&VERB)) R fdef(0,CRBRACE,VERB,(AF)mergv1,(AF)amccv2,w,0L,0L,FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF, RMAX,RMAX,RMAX);  // verb} 

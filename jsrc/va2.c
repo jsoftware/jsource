@@ -1034,23 +1034,23 @@ takestats(if(agreefr)++stats[0x12];)
 
  // Analyze the rank and calculate cell shapes, counts, and sizes.
  // We detect agreement error before domain error
- A awlongcr,awlongfr; I atommsk=(awr+~0x80)&0x4040; // The arg with the longer-or-equal cell-rank, and longer-or-equal frame; bits in 0x4040 set for each arg that is atomic
+ A awlongcr,awlongfr; I atommsk=((awr+~0x80)&0x4040)<<RANKTX; // The arg with the longer-or-equal cell-rank, and longer-or-equal frame; bits in 0x404000 set for each arg that is atomic (shifted left so all atomic bits above rank bits)
  if(withprob(atommsk>=afwf,0.97)){ // fast setup if no outer frame (afwf=0, 95%) or either arg is atomic
 takestats(++stats[0x13]; if(afwf==0)++stats[0x1c];)
   if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
 takestats(++stats[0x14];)
    if(withprob(atommsk>=((awr^(awr>>RANKTX))&RMAX),0.8)){  // something atomic, or ranks equal
     // Fastest and most common setup: Ranks are equal or at least one arg is atomic
-takestats(++stats[0x15]; if(atommsk&0x4040)++stats[0x16]; if((awr&RMAX)==(awr>>RANKTX))++stats[0x17];)
+takestats(++stats[0x15]; if(atommsk)++stats[0x16]; if((awr&RMAX)==(awr>>RANKTX))++stats[0x17];)
     I isatom=SGNTO0(-atommsk);  // 1 if there is an atomic arg
-    awlongcr=atommsk&0x40?a:w;    // long shape is from a if w atom; w if a atom; either one if = (w here)
+    awlongcr=atommsk&0x4000?a:w;    // long shape is from a if w atom; w if a atom; either one if = (w here)
     zn=AN(awlongcr); fr=AR(awlongcr);  // len and rank of long shape.  frZRANK is fr, frFL and frFLC are both 0
 #ifdef PEXT
-    cv&=~PEXT(atommsk,0x4040);  // atoms are not inplaceable, anything else is.  Rare that both are atomic here (must not be BID).  remove (a atomic),(w atomic) from cv inplaceability
+    cv&=~PEXT(atommsk,0x404000);  // atoms are not inplaceable, anything else is.  Rare that both are atomic here (must not be BID).  remove (a atomic),(w atomic) from cv inplaceability
 #else
-    cv&=~(((uint32_t)atommsk*(uint32_t)(BIT(32-2-14)+BIT(32-3-6)))>>(32-3));   // 32-bit computation to discard upper bits
+    cv&=~(((uint32_t)atommsk*(uint32_t)(BIT(32-2-22)+BIT(32-3-14)))>>(32-3));   // 32-bit computation to discard upper bits.  Move bit 22 to bit 2, bit 14 to bit 3, shift down
 #endif
-    m=zn<<isatom; m^=isatom-=1; m+=atommsk>>=14;  // m is encoded length/repeata flag if atomic (n set to 1 in next line), or ~length if nonatomic (n implied 1)
+    m=zn<<isatom; m^=isatom-=1; m+=atommsk>>=22;  // m is encoded length/repeata flag if atomic (n set to 1 in next line), or ~length if nonatomic (n implied 1)
     aawwzknfxrz[5]=1;  // in case an arg is atomic, indicate only one inner loop 
    }else{
     // Second most common setup: No rank specified, arg ranks must be different and neither atomic.

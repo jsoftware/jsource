@@ -19,7 +19,7 @@
 // Speedy Singletons, moved here to be inlined
 
 #include <fenv.h>
-takestats(static int stats[0x30]={0};)
+takestats(static int stats[0x40]={0};)
 takestats(int statsoldcaseno=-1;)
 takestats(VF statsoldadocvfn[2];)
 
@@ -1003,6 +1003,14 @@ takestats(++stats[0x11];)
    forcetomemory(aawwzknfxrz);  // make sure we don't try to keep these values in registers
   }
   cv=adocv.cv; adocvfn=adocv.f;   // fetch the address of the function and the cv
+  if((I)jtfg&JTSPARSEARG){   // Handle sparse args
+   // Sparse.  Agreement first, copied from below
+   I agreefr=afwf==0?awr:afwf; agreefr=MIN((UI1)agreefr,(UI1)(agreefr>>RANKTX));    // for agreement, we test shorter noun-rank if no frame, shorter frame if there is frame
+   ASSERTAGREE(AS(a),AS(w),agreefr);  // outermost (or only) agreement check.  frame is 0 45% of the time, not worth a test for 10 inst
+   I awcr=awr-afwf;  // cell ranks
+   R vasp(a,w,va2ctoc[vandx/sizeof(VA)],adocvfn==(VF)err00?0:adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),afwf>>RANKTX,awcr>>RANKTX,(RANKT)afwf,(RANKT)awcr,MAX(afwf>>RANKTX,(RANKT)afwf),MAX(awcr>>RANKTX,(RANKT)awcr));  // handle sparse arrays separately.
+  }
+
   // Don't signal domain error on the types yet, because domain has lower priority than agreement
   // If we switch a sparse nonnumeric matrix to boolean, that may be a space problem; but we don't
   // support nonnumeric sparse now
@@ -1018,7 +1026,8 @@ takestats(if(agreefr)++stats[0x12];)
  // If op specifies forced input conversion AND if both arguments are non-sparse: convert them to the selected type.
  // Failed conversion are real errors, but they have priority below agreement errors.  If the conversion error is EVDOMAIN, we defer it by
  // clearing adocvfn to 0, which gives later domain error
- if(unlikely(isatype(cv))&&likely(!((I)jtfg&JTSPARSEARG))){  // input conversion required (but not for sparse) (rare), which will predict correctly.  cv is not settled
+ if(unlikely(isatype(cv))){  // input conversion required (but not for sparse) (rare), which will predict correctly.  cv is not settled
+// obsolete &&likely(!((I)jtfg&JTSPARSEARG)))
   // Convert inputs to common type if needed by the primitive.  Don't keep much in registers, because we have a bottleneck in the function call here
   I t=atype(cv);   // the common type
   // Conversion failure is tricky.  We report rank errors before shape, shape before type, and type before value.  Thus, we defer the error report till after shape analysis, by clearing
@@ -1028,7 +1037,15 @@ takestats(if(agreefr)++stats[0x12];)
   if(TYPESNE(AT(w),t)){A cz=cvt(t|(cv&XCVTXNUMORIDEMSK),w); if(likely(cz!=0)){w=cz; jtfg=(J)((I)jtfg|JTINPLACEW);}else{if(jt->jerr!=EVDOMAIN)R 0; RESETERR adocvfn=err00; jtfg=(J)((I)jtfg&~JTINPLACEW);}}
  }
 
- cv&=(I)jtfg|~(JTINPLACEA+JTINPLACEW);  // If function doesn't support inplacing, remove it from the argument.  cv has not settled yet
+ // Now that we know a/w for sure, calculate inplaceability.  This requires settlement of memory fetches, so we do it here long before we test it, so as to reduce the cost of a misbranch (which is considerable: 25% of
+ // operations in the tests are inplaceable).
+takestats(if(cv&JTINPLACEW)++stats[0x30]; if(cv&JTINPLACEA)++stats[0x31]; if(cv&JTINPLACEW&&cv&JTINPLACEA)++stats[0x32]; )
+takestats(if(AC(w)<0)++stats[0x33]; if(AC(a)<0)++stats[0x34]; if(AC(w)<0&&AC(a)<0)++stats[0x35]; )
+takestats(if(AC(w)<0&&cv&JTINPLACEW)++stats[0x36]; if(AC(a)<0&&cv&JTINPLACEA)++stats[0x37]; if(AC(w)<0&&cv&JTINPLACEW&&AC(a)<0&&cv&JTINPLACEA)++stats[0x38];)
+takestats(if(jt->zombieval!=0)++stats[0x39];)
+takestats(if(jt->zombieval==a)++stats[0x3a]; if(jt->zombieval==w)++stats[0x3b]; if(jt->zombieval==a&&jt->zombieval==w)++stats[0x3c];) 
+ I1 ipfromaw=2*(I1)(SGNTO0(AC(a))|(a==jt->zombieval))+(I1)(SGNTO0(AC(w))|(w==jt->zombieval));  // inplaceable, bit 1=a, bit 0=w.  98% of the inplacing comes from AC
+ cv&=(I)((I1)(intptr_t)jtfg&ipfromaw)|~(JTINPLACEA+JTINPLACEW);  // If function doesn't support inplacing, remove it from the argument.  cv has not settled yet
 
  // a and w have their final addresses.  No function calls till we allocate the result
 
@@ -1037,47 +1054,49 @@ takestats(if(agreefr)++stats[0x12];)
  A awlongcr,awlongfr; I atommsk=((awr+~0x80)&0x4040)<<RANKTX; // The arg with the longer-or-equal cell-rank, and longer-or-equal frame; bits in 0x404000 set for each arg that is atomic (shifted left so all atomic bits above rank bits)
  if(withprob(atommsk>=afwf,0.97)){ // fast setup if no outer frame (afwf=0, 95%) or either arg is atomic
 takestats(++stats[0x13]; if(afwf==0)++stats[0x1c];)
-  if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
+// obsolete   if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
 takestats(++stats[0x14];)
-   if(withprob(atommsk>=((awr^(awr>>RANKTX))&RMAX),0.8)){  // something atomic, or ranks equal
-    // Fastest and most common setup: Ranks are equal or at least one arg is atomic
+  if(withprob(atommsk>=((awr^(awr>>RANKTX))&RMAX),0.8)){  // something atomic, or ranks equal
+   // Fastest and most common setup: Ranks are equal or at least one arg is atomic
 takestats(++stats[0x15]; if(atommsk)++stats[0x16]; if((awr&RMAX)==(awr>>RANKTX))++stats[0x17];)
-    I isatom=SGNTO0(-atommsk);  // 1 if there is an atomic arg
-    awlongcr=atommsk&0x4000?a:w;    // long shape is from a if w atom; w if a atom; either one if = (w here)
-    zn=AN(awlongcr); fr=AR(awlongcr);  // len and rank of long shape.  frZRANK is fr, frFL and frFLC are both 0
+   I isatom=SGNTO0(-atommsk);  // 1 if there is an atomic arg
+   awlongcr=atommsk&0x4000?a:w;    // long shape is from a if w atom; w if a atom; either one if = (w here)
+   zn=AN(awlongcr); fr=AR(awlongcr);  // len and rank of long shape.  frZRANK is fr, frFL and frFLC are both 0
 #ifdef PEXT
-    cv&=~PEXT(atommsk,0x404000);  // atoms are not inplaceable, anything else is.  Rare that both are atomic here (must not be BID).  remove (a atomic),(w atomic) from cv inplaceability
+   cv&=~PEXT(atommsk,0x404000);  // atoms are not inplaceable, anything else is.  Rare that both are atomic here (must not be BID).  remove (a atomic),(w atomic) from cv inplaceability
 #else
-    cv&=~(((uint32_t)atommsk*(uint32_t)(BIT(32-2-22)+BIT(32-3-14)))>>(32-3));   // 32-bit computation to discard upper bits.  Move bit 22 to bit 2, bit 14 to bit 3, shift down
+   cv&=~(((uint32_t)atommsk*(uint32_t)(BIT(32-2-22)+BIT(32-3-14)))>>(32-3));   // 32-bit computation to discard upper bits.  Move bit 22 to bit 30, bit 14 to bit 29, shift down to 0-1
 #endif
-    m=zn<<isatom; m^=isatom-=1; m+=atommsk>>=22;  // m is encoded length/repeata flag if atomic (n set to 1 in next line), or ~length if nonatomic (n implied 1)
-    aawwzknfxrz[5]=1;  // in case an arg is atomic, indicate only one inner loop 
-   }else{
-    // Second most common setup: No rank specified, arg ranks must be different and neither atomic.
-    fr=awr>>RANKTX; I shortr=(RANKT)awr; I wl=fr-shortr;  // separate ar and wr; wl neg if w high rank
-    awlongcr=wl<0?w:a; awlongfr=wl<0?a:w; shortr=wl<0?fr:shortr; fr=wl<0?(RANKT)awr:fr;  // arg with high rank; other arg
-    zn=AN(awlongcr); m=AN(awlongfr);  // high-rank arg gives len of result, other gives short-arg len i. e. # repeats
+   m=zn<<isatom; m^=isatom-=1; m+=atommsk>>=22;  // m is encoded length/repeata flag if atomic (n set to 1 in next line), or ~length if nonatomic (n implied 1)
+   aawwzknfxrz[5]=1;  // in case an arg is atomic, indicate only one inner loop 
+  }else{
+   // Second most common setup: No rank specified, arg ranks must be different and neither atomic.
+   fr=awr>>RANKTX; I shortr=(RANKT)awr; I wl=fr-shortr;  // separate ar and wr; wl neg if w high rank
+   awlongcr=wl<0?w:a; awlongfr=wl<0?a:w; shortr=wl<0?fr:shortr; fr=wl<0?(RANKT)awr:fr;  // arg with high rank; other arg
+   zn=AN(awlongcr); m=AN(awlongfr);  // high-rank arg gives len of result, other gives short-arg len i. e. # repeats
 takestats(++stats[0x18]; if(wl<0)++stats[0x19];)
-    PRODRNK(n,fr-shortr,AS(awlongcr)+shortr);  // the unmatched part of shape is the cell; get */ shape = n, the length of the inner loop
+   PRODRNK(n,fr-shortr,AS(awlongcr)+shortr);  // the unmatched part of shape is the cell; get */ shape = n, the length of the inner loop
 takestats(if(n==1){++stats[0x1a]; stats[0x1b]+=m;})
-    cv&=~(SGNTO0(wl)+1);  // bit 0-1=routine/rank/arg/input inplaceable
-    aawwzknfxrz[5]=m;  // parm n to action rtn is #loops, needed only if there is more than 1, i. e. m positive
-    m=2*n+SGNTO0(wl);   // parm m if there are multiple inner loops (which there always are here, since ranks differ).  The value is 2 * (length of inner loop), with LSB set if x is the repeated value (i. e. w has long frame)
-    // frZRANK is fr, frFL and frFLC are both 0
+   cv&=~(SGNTO0(wl)+1);  // bit 0-1=routine/rank/arg/input inplaceable
+   aawwzknfxrz[5]=m;  // parm n to action rtn is #loops, needed only if there is more than 1, i. e. m positive
+   m=2*n+SGNTO0(wl);   // parm m if there are multiple inner loops (which there always are here, since ranks differ).  The value is 2 * (length of inner loop), with LSB set if x is the repeated value (i. e. w has long frame)
+   // frZRANK is fr, frFL and frFLC are both 0
 // not worth it     m=~m; m=n>3?n:m;  // migrating to 1 loop helps if n==1, but that case is so rare that it's not worth the test // if #inner-loops>1, leave m as (loop length)/repeat x; otherwise complement m to indicate single loop
-   }
+  }
+#if 0 // obsolete 
   }else{
    // Sparse setup
    I ar=awr>>RANKTX, wr=(RANKT)awr;
    R vasp(a,w,va2ctoc[vandx/sizeof(VA)],adocvfn==(VF)err00?0:adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),0,ar,0,wr,0,MAX(ar,wr));
   }
+#endif
  }else{I ak,wk;UI wcr;
   // Here, a rank was specified and there was no atomic argument.
    // Heavy register pressure here.
    // vbls needed: cv a w afwf awr
 takestats(++stats[0x20];)
   UI4 afwfarwr=(afwf<<(2*RANKTX))+awr; wcr=afwfarwr-afwf;   // afwfarwr=af/wf/anr/wnr, subtract 0/0/af/wf => af/wf/acr/wcr = wcr  afwfagreefr free
-  if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
+// obsolete   if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
 
    // wcr is afr/wfr/acr/wcr  afwfarwr is af/wf/anr/wnr
 #define LANE(v,l) SHMSK(v,v##l*RANKTX,v##l##MSK)
@@ -1113,101 +1132,101 @@ takestats(++stats[0x20];)
 #define frFLCMSK RANKTMSK
 #define frFL 3  // longer frame
 #define frFLMSK ~0
-   // vbls needed: a w wcr cv wcr afwfarwr [jt]
-   { I wcomp=wcr<<RANKTX; UI lflg=0+(UI)((US)wcr<(US)wcomp); awlongcr=(US)wcr<(US)wcomp?w:a; lflg=2*lflg+(UI)((UI4)wcomp<(UI4)wcr); cv+=lflg<<VIPWFNOTLONGX; }  //  WCRLONG if acr<wcr, then WFLONG if wf<af.  Actually, the = value is indeterminate.  Should gen ADC
-       // cv has settled from its initial load if it was in D1$, perhaps not if it missed
-   I wcrs=wcr>>RANKTX; UI4 shortr=cv&VIPWCRLONG?wcrs:wcr; fr=cv&VIPWCRLONG?wcr:wcrs;  // shortr=x/frame(short cell)/x/cellrank(short cell) fr=x/frame(long cell)/x/cellrank(long cell) wcr free
-   shortr=LANE(shortr,tCSC); shortr*=BIT(shortrCSC*RANKTX)+BIT(shortrCSURPOFST*RANKTX)-1;   //  cellrank(short cell);  cellrank(short cell)/cellrank(short cell)/0/-cellrank(short cell)  100000000+10000+ffffffffffffffff
-   shortr+=fr&=(RANKTMSK*(BIT(shortrtCSC*RANKTX)+BIT(frFLC*RANKTX)));  // shortr=cellrank(short cell)/frame(long cell)+cellrank(short cell)/0/cellrank(long cell)-cellrank(short cell)  fr=0/frame(long cell)/0/cellrank(long cell)
+  // vbls needed: a w wcr cv wcr afwfarwr [jt]
+  { I wcomp=wcr<<RANKTX; UI lflg=0+(UI)((US)wcr<(US)wcomp); awlongcr=(US)wcr<(US)wcomp?w:a; lflg=2*lflg+(UI)((UI4)wcomp<(UI4)wcr); cv+=lflg<<VIPWFNOTLONGX; }  //  WCRLONG if acr<wcr, then WFLONG if wf<af.  Actually, the = value is indeterminate.  Should gen ADC
+      // cv has settled from its initial load if it was in D1$, perhaps not if it missed
+  I wcrs=wcr>>RANKTX; UI4 shortr=cv&VIPWCRLONG?wcrs:wcr; fr=cv&VIPWCRLONG?wcr:wcrs;  // shortr=x/frame(short cell)/x/cellrank(short cell) fr=x/frame(long cell)/x/cellrank(long cell) wcr free
+  shortr=LANE(shortr,tCSC); shortr*=BIT(shortrCSC*RANKTX)+BIT(shortrCSURPOFST*RANKTX)-1;   //  cellrank(short cell);  cellrank(short cell)/cellrank(short cell)/0/-cellrank(short cell)  100000000+10000+ffffffffffffffff
+  shortr+=fr&=(RANKTMSK*(BIT(shortrtCSC*RANKTX)+BIT(frFLC*RANKTX)));  // shortr=cellrank(short cell)/frame(long cell)+cellrank(short cell)/0/cellrank(long cell)-cellrank(short cell)  fr=0/frame(long cell)/0/cellrank(long cell)
                                                                    //  length for agreement / offset to excess long rank, for calc n  /0/ length for calc n,(# intracell repeats) - final value
-   // vbls needed: a w wcr cv fr afwfarwr awlongcr shortr  [jt]
-   PRODRNK(n,LANE(shortr,CSURP),AS(awlongcr)+LANE(shortr,CSURPOFST));  // n is #atoms in excess frame of inner cells, length assigned first.  n is tied up for 8 cycles at the end of this, ecch
-   // vbls needed: a w wcr cv fr afwfarwr shortr n [jt]
-   // fr will be  (longer frame len)                      / (frame(long cell))              /  (shorter frame len)  /   (longer frame len+longer cellrank)
-   //            length of frame to copy, also to calc nf / (offset to store cellshape to)  / for #outer cells mf   / ranks that = this have no repeats, can inplace (also used to figure cellen for shape copy)
-   {I afwfr=(US)__builtin_rotateleft16((US)(afwfarwr>>(afwfarwrWF*RANKTX)),(unsigned int)(cv&VIPWFNOTLONG)); awlongfr=cv&VIPWFNOTLONG?a:w; // afr/wfr => sfr/lfr; remember long frame
-    fr+=afwfr*(BIT(0)+BIT(frFL*RANKTX));   // afr/wfr => sfr/lfr => lfr/0/sfr/lfr; add to fr to get lfr/f(lc)/sfr/lfr+f(lc)   final value of fr
-    // fr is settling.  It will be used to update cv, so we run 50 inst of PRODRNK
-    // vbls needed: a w wcr cv fr afwfarwr n nf mf  [jt]
-    {I nokip=0+((UI1)LANE(afwfarwr,AR)<(UI1)LANE(fr,ZRANK)); nokip=2*nokip+((UI1)LANE(afwfarwr,WR)<(UI1)LANE(fr,ZRANK)); cv&=~nokip;}  // for each arg, if arg rank=z rank, keep inplaceability afwfarwr free
-    // vbls needed: a w cv wcr afwfr awlongfr [jt]  ok to spill fr now
-    PRODRNK(ak,LANE(wcr,AC), AS(a)+LANE(wcr,AF)); PRODRNK(wk,LANE(wcr,WC),AS(w)+LANE(wcr,WF));   // left/right #atoms/cell  length is assigned first.  Takes 8 cycles to settle.  Could move down if needed
-      // note: the prod can never fail, because it gives the actual # cells of an existing noun
+  // vbls needed: a w wcr cv fr afwfarwr awlongcr shortr  [jt]
+  PRODRNK(n,LANE(shortr,CSURP),AS(awlongcr)+LANE(shortr,CSURPOFST));  // n is #atoms in excess frame of inner cells, length assigned first.  n is tied up for 8 cycles at the end of this, ecch
+  // vbls needed: a w wcr cv fr afwfarwr shortr n [jt]
+  // fr will be  (longer frame len)                      / (frame(long cell))              /  (shorter frame len)  /   (longer frame len+longer cellrank)
+  //            length of frame to copy, also to calc nf / (offset to store cellshape to)  / for #outer cells mf   / ranks that = this have no repeats, can inplace (also used to figure cellen for shape copy)
+  {I afwfr=(US)__builtin_rotateleft16((US)(afwfarwr>>(afwfarwrWF*RANKTX)),(unsigned int)(cv&VIPWFNOTLONG)); awlongfr=cv&VIPWFNOTLONG?a:w; // afr/wfr => sfr/lfr; remember long frame
+   fr+=afwfr*(BIT(0)+BIT(frFL*RANKTX));   // afr/wfr => sfr/lfr => lfr/0/sfr/lfr; add to fr to get lfr/f(lc)/sfr/lfr+f(lc)   final value of fr
+   // fr is settling.  It will be used to update cv, so we run 50 inst of PRODRNK
+   // vbls needed: a w wcr cv fr afwfarwr n nf mf  [jt]
+   {I nokip=0+((UI1)LANE(afwfarwr,AR)<(UI1)LANE(fr,ZRANK)); nokip=2*nokip+((UI1)LANE(afwfarwr,WR)<(UI1)LANE(fr,ZRANK)); cv&=~nokip;}  // for each arg, if arg rank=z rank, keep inplaceability afwfarwr free
+   // vbls needed: a w cv wcr afwfr awlongfr [jt]  ok to spill fr now
+   PRODRNK(ak,LANE(wcr,AC), AS(a)+LANE(wcr,AF)); PRODRNK(wk,LANE(wcr,WC),AS(w)+LANE(wcr,WF));   // left/right #atoms/cell  length is assigned first.  Takes 8 cycles to settle.  Could move down if needed
+     // note: the prod can never fail, because it gives the actual # cells of an existing noun
    // vbls needed: a w ak wk cv shortr afwfr awlongfr n [jt]
-    PRODRNK(nf,afwfr-(afwfr>>RANKTX),(afwfr>>RANKTX)+AS(awlongfr));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame  length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
+   PRODRNK(nf,afwfr-(afwfr>>RANKTX),(afwfr>>RANKTX)+AS(awlongfr));    // nf=#times shorter-frame cell must be repeated;  offset is (shorter frame len), i. e. loc of excess frame  length is (longer frame len)-(shorter frame len)  i. e. length of excess frame
    // vbls needed: a w ak wk cv shortr afwfr n nf  [jt]
-    PRODRNK(mf,afwfr>>RANKTX,AS(w));  //  mf=#cells in common frame [either arg ok]   f is (shorter frame len) we are waiting for nf->cv to settle  afwfr free
-   }
-   // vbls needed: a w ak wk cv shortr n nf mf [jt]
-   ASSERTAGREE(AS(a)+LANE(wcr,AF), AS(w)+LANE(wcr,WF), LANE(shortr,CSC))  // offset to each cellshape, and cellrank(short cell)  Delay till here to get nf/mf started shortr free
+   PRODRNK(mf,afwfr>>RANKTX,AS(w));  //  mf=#cells in common frame [either arg ok]   f is (shorter frame len) we are waiting for nf->cv to settle  afwfr free
+  }
+  // vbls needed: a w ak wk cv shortr n nf mf [jt]
+  ASSERTAGREE(AS(a)+LANE(wcr,AF), AS(w)+LANE(wcr,WF), LANE(shortr,CSC))  // offset to each cellshape, and cellrank(short cell)  Delay till here to get nf/mf started shortr free
 takestats(++stats[0x21];)
-   // vbls needed: a w ak wk cv n nf mf  [jt]
-   // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
-   // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
-   // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
+  // vbls needed: a w ak wk cv n nf mf  [jt]
+  // if the cell-shapes don't match, that's an agreement error UNLESS the frame contains 0; in that case it counts as
+  // 'error executing on the cell of fills' and produces a scalar 0 as the result for that cell, which we handle by changing the result-cell rank to 0
+  // Nonce: continue giving the error even when frame contains 0 - remove 1|| in the next line to conform to fill-cell rules
 // this shows the fix   if(ICMP(as+af,ws+wf,MIN(acr,wcr))){if(1||zn)ASSERT(0,EVLENGTH)else r = 0;}
-   // vbls needed: a w ak wk cv n nf mf [jt]
+  // vbls needed: a w ak wk cv n nf mf [jt]
     
-   // vbls needed: a w ak wk cv n mf nf [jt].  n has settled, and nf/mf are close to settling
-   // Now nf=outer repeated frame  mf=outer common frame  n=inner repeated frame  m=inner common frame
-   //    leading axes --------------------------------------------------------------> trailing axes
-   // loop migration: if the outer loop can be subsumed into the inner loop do that to make the faster inner loops more effective
-   // the cases we see are:
-   // 1: m=1 and n=1: move mf->m, nf->n, and complement n if x arg is repeated  example:  list *"0 _ atom  (25% of cases!)
-   // 2: n=1 and nf=1: multiply m by mf, leave n  example: (shape 4 5) *"1 (shape 4 5 or 1 4 5)   (5% of cases)
-   // 3: m=1 and nf=1: multiply m by mf, leave n  example: (shape 4 5) *"1 0 (shape 5)             (included in above)
-   // also: mf<=1&&nf<=1 or zn=0, much less likely
-   // testing for nf=1 is questionable.  It adds about 3 inst to the main line, but it saves a lot when it hits
-   // if looping required, calculate the strides for input & output.  Needed only if mf or nf>1, but not worth testing, since presumably one will, else why use rank?
-   // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping, but it takes a long time to settle (PROD-shift is around 10 clocks) and ties up ak/wk while settling,
-   // so we write out ak/wk fast to free the registers.  We write zk later if it is needed.
-   // 0-1 are set if operand is inplaceable according to prim & input inplaceability
-   // cv VIPWFNOTLONG set if wf<af, bit VIPWCRLONG set if wcr>acr
-   zn=cv&VIPWCRLONG?wk:ak;    // zn=#atoms in cell with larger rank
-   m=cv&VIPWCRLONG?ak:wk;  // m=#atoms in common inner cell, i. e. the smaller
-   // vbls needed: a w ak wk cv n mf nf m zn [jt].  n has settled, and nf/mf are close to settling
-   // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated
-   // vbls needed: a w ak wk cv wcr afwfarwr awlongcr [jt]
-   I neq1m=REPSGN(n-2), eq1ct=neq1m; eq1ct=eq1ct+((UI)1<(UI)m); eq1ct=eq1ct+((UI)1<(UI)nf);  // m=1 + n=1 + nf=1 > 1 => n=1 + (1 - m!=1) + (1 - nf!=1) > 1 => n=1 - nf!=1 > m!=1 - 1 => n=1 - nf!=1 >= m!=1: any 2 values = 1
-   // encode major-axis in LSB of n, and complement m if there in only 1 loop
-   if(withprob(eq1ct>0,0.7)){  // any 2 or 3 values <= 1
-    // All 4 loops (normal case since rank given).  nf is outer loop repeat count-1.  zend ([9]) is offset to result of last iteration.  We deferred as much as possible till here, hoping for migration
-    DPMULDE(nf,mf,mf);  // mf is total # iterations
-    I zendofst=(mf-1)*(aawwzknfxrz[4]=zn<<rtypebplg(cv));   // set byte offset to z location of last iteration, length of each major z cell
-    if(unlikely(zendofst<=0))goto migrate1;  // 0-1 outer loops needed, skip setup for it
+  // vbls needed: a w ak wk cv n mf nf [jt].  n has settled, and nf/mf are close to settling
+  // Now nf=outer repeated frame  mf=outer common frame  n=inner repeated frame  m=inner common frame
+  //    leading axes --------------------------------------------------------------> trailing axes
+  // loop migration: if the outer loop can be subsumed into the inner loop do that to make the faster inner loops more effective
+  // the cases we see are:
+  // 1: m=1 and n=1: move mf->m, nf->n, and complement n if x arg is repeated  example:  list *"0 _ atom  (25% of cases!)
+  // 2: n=1 and nf=1: multiply m by mf, leave n  example: (shape 4 5) *"1 (shape 4 5 or 1 4 5)   (5% of cases)
+  // 3: m=1 and nf=1: multiply m by mf, leave n  example: (shape 4 5) *"1 0 (shape 5)             (included in above)
+  // also: mf<=1&&nf<=1 or zn=0, much less likely
+  // testing for nf=1 is questionable.  It adds about 3 inst to the main line, but it saves a lot when it hits
+  // if looping required, calculate the strides for input & output.  Needed only if mf or nf>1, but not worth testing, since presumably one will, else why use rank?
+  // zk=result-cell size in bytes; ak,wk=left,right arg-cell size in bytes.  Not needed if not looping, but it takes a long time to settle (PROD-shift is around 10 clocks) and ties up ak/wk while settling,
+  // so we write out ak/wk fast to free the registers.  We write zk later if it is needed.
+  // 0-1 are set if operand is inplaceable according to prim & input inplaceability
+  // cv VIPWFNOTLONG set if wf<af, bit VIPWCRLONG set if wcr>acr
+  zn=cv&VIPWCRLONG?wk:ak;    // zn=#atoms in cell with larger rank
+  m=cv&VIPWCRLONG?ak:wk;  // m=#atoms in common inner cell, i. e. the smaller
+  // vbls needed: a w ak wk cv n mf nf m zn [jt].  n has settled, and nf/mf are close to settling
+  // m=#atoms in cell with shorter rank; n=#times shorter-rank cells must be repeated
+  // vbls needed: a w ak wk cv wcr afwfarwr awlongcr [jt]
+  I neq1m=REPSGN(n-2), eq1ct=neq1m; eq1ct=eq1ct+((UI)1<(UI)m); eq1ct=eq1ct+((UI)1<(UI)nf);  // m=1 + n=1 + nf=1 > 1 => n=1 + (1 - m!=1) + (1 - nf!=1) > 1 => n=1 - nf!=1 > m!=1 - 1 => n=1 - nf!=1 >= m!=1: any 2 values = 1
+  // encode major-axis in LSB of n, and complement m if there in only 1 loop
+  if(withprob(eq1ct>0,0.7)){  // any 2 or 3 values <= 1
+   // All 4 loops (normal case since rank given).  nf is outer loop repeat count-1.  zend ([9]) is offset to result of last iteration.  We deferred as much as possible till here, hoping for migration
+   DPMULDE(nf,mf,mf);  // mf is total # iterations
+   I zendofst=(mf-1)*(aawwzknfxrz[4]=zn<<rtypebplg(cv));   // set byte offset to z location of last iteration, length of each major z cell
+   if(unlikely(zendofst<=0))goto migrate1;  // 0-1 outer loops needed, skip setup for it
 takestats(++stats[0x22];)
-    aawwzknfxrz[9]=zendofst;
-    ak<<=bplg(AT(a)); aawwzknfxrz[0]=ak; wk<<=bplg(AT(w)); aawwzknfxrz[2]=wk;  // convert cell counts to bytes, set cell size
-    ak=(cv&VIPWFNOTLONG)?ak:0; aawwzknfxrz[1]=ak; wk=(cv&VIPWFNOTLONG)?0:wk; aawwzknfxrz[3]=wk;  // ak, wk free
-    cv|=VIPOLOOPREQD;  // indicate that the outer loops are needed
-    aawwzknfxrz[6]=--nf;   // set nf (#inner outer loops-1)
-    n=n+n+((UI)neq1m<(UI)(cv&VIPWCRLONG));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set   Should generate ADC
-   }else{
-    // migration is possible
-    m*=mf; n*=nf;   // propagate mf and nf down
-    DPMULDE(nf,mf,mf);  // mf is total # outer loops, to get z length
+   aawwzknfxrz[9]=zendofst;
+   ak<<=bplg(AT(a)); aawwzknfxrz[0]=ak; wk<<=bplg(AT(w)); aawwzknfxrz[2]=wk;  // convert cell counts to bytes, set cell size
+   ak=(cv&VIPWFNOTLONG)?ak:0; aawwzknfxrz[1]=ak; wk=(cv&VIPWFNOTLONG)?0:wk; aawwzknfxrz[3]=wk;  // ak, wk free
+   cv|=VIPOLOOPREQD;  // indicate that the outer loops are needed
+   aawwzknfxrz[6]=--nf;   // set nf (#inner outer loops-1)
+   n=n+n+((UI)neq1m<(UI)(cv&VIPWCRLONG));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set   Should generate ADC
+  }else{
+   // migration is possible
+   m*=mf; n*=nf;   // propagate mf and nf down
+   DPMULDE(nf,mf,mf);  // mf is total # outer loops, to get z length
 takestats(++stats[0x23];)
 migrate1: ;  // here if there was 0-1 outer cell, i. e. mf=nf=1 or zn=0.  Rare but worth testing for.
 takestats(++stats[0x24];)
-    cv|=VIPOFRAMEREQD;  // indicate that the outer frame is needed, even if outer loop is not
-    n=n+n+((UI)neq1m<(UI)(cv&VIPWCRLONG));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  Should generate ADC
-    n=n+((UI1)(cv&VIPWFNOTLONG)<(UI1)((UI)1<(UI)nf));  // (nf!=1) repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus no flag set yet
-   } 
-   DPMULDE(zn,mf,zn)  // zn is total # atoms in result
-   // m and n need a few cycles to settle
-   // convert (n=#inner loops/a is repeated)/(m=len of inner loop) to m(~(single-loop len), or (#inner loops)/(a is repeated))/aawwzknfxrz[5](garbage, or inner-loop len)
-   aawwzknfxrz[5]=m;  // parm n to action rtn will be orig m, i. e. the length of the inner or only loop.
-   m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
-   m=n>3?n:m;  // if #inner-loops>1, switch m
-
+   cv|=VIPOFRAMEREQD;  // indicate that the outer frame is needed, even if outer loop is not
+   n=n+n+((UI)neq1m<(UI)(cv&VIPWCRLONG));  // (n!=1) if n was not 1 before migration, it must be flagged if WCRLONG is set; possibly WFLONG tested too.  Should generate ADC
+   n=n+((UI1)(cv&VIPWFNOTLONG)<(UI1)((UI)1<(UI)nf));  // (nf!=1) repetition also comes if nf is not 1 and WFLONG.  In this case n must be 1 & thus no flag set yet
+  } 
+  DPMULDE(zn,mf,zn)  // zn is total # atoms in result
+  // m and n need a few cycles to settle
+  // convert (n=#inner loops/a is repeated)/(m=len of inner loop) to m(~(single-loop len), or (#inner loops)/(a is repeated))/aawwzknfxrz[5](garbage, or inner-loop len)
+  aawwzknfxrz[5]=m;  // parm n to action rtn will be orig m, i. e. the length of the inner or only loop.
+  m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
+  m=n>3?n:m;  // if #inner-loops>1, switch m
+#if 0  // obsolete 
   }else{  // sparse case
    I af=LANE(wcr,AF), wf=LANE(wcr,WF); UI acr=LANE(wcr,AC); wcr=LANE(wcr,WC);   // separate cr and f for sparse
    fr=acr<wcr?wcr:acr; I f=(af<wf)?wf:af;
    R vasp(a,w,va2ctoc[vandx/sizeof(VA)],adocvfn==(VF)err00?0:adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),af,acr,wf,wcr,f,fr);  // handle sparse arrays separately.
   }
+#endif
  }
 
- // Not sparse.
  // vbls needed: a w ak wk cv fr n m jt
  // We have analyzed the arguments.  Allocate the result, or use an argument in place.
 
@@ -1219,27 +1238,33 @@ takestats(++stats[0x24];)
  // If the argument has rank that large, and the arguments agree, the argument MUST have the same number of atoms as the result, because all shape is accounted for.
  // rank = rank of result (the rank of the result is the sum of (the longer frame-length) plus (the larger cell-rank))
  // Also, if the operation is one that may abort, we suppress inplacing it if the user can't handle early assignment.
- I ipw=ASGNINPLACENEG(SGNIF(cv,JTINPLACEWX),w), ipa=ASGNINPLACENEG(SGNIF(cv,JTINPLACEAX),a);  // is w/a inplaceable?  In test suite, inplaces 25% of the time
- if(withprob((ipw|ipa)<0,0.4)){  // see if either w or a is inplaceable
+// obsolete  I ipw=ASGNINPLACENEG(SGNIF(cv,JTINPLACEWX),w), ipa=ASGNINPLACENEG(SGNIF(cv,JTINPLACEAX),a);  // is w/a inplaceable?  In test suite, inplaces 25% of the time
+  // assignment-in-place makes up only about 2% of the inplaceables, but we deem it worth testing for because it can win big.  Also, the extra computation is overlapped with the main inlaceable test:
+  // both require a fetch from memory followed by a little testing.  The additional time is pretty small.  Of the 20-odd% of ops that are inplaceable, most could use a or w (we pick w).  Of the 1% that
+  // are assignable in place, 2/3 assign to a.  About 60% of operations have an argument with AC<0, but most are not inplaceable
+// obsolete  if(withprob((ipw|ipa)<0,0.4)){  // see if either w or a is inplaceable
+ if(withprob(cv&JTINPLACEW+JTINPLACEA,0.4)){  // see if either w or a is inplaceable
   if(unlikely(a==w))goto allocate;   // If a==w suppress inplacing, in case the operation must be retried (we could check which ones but they are just not likely to be used reflexively)
   FILLREG(adocvfn)   // load function addr into register early
   // we are reusing an argument (ipw is neg if it's w, which has priority); make sure the type is updated to the result type
-  z=ipw<0?w:a;  // z=inplaceable arg; in test suite, most inplaceables are inplaceable on both w and a, somewhat more on w
-  if(unlikely(cv&(VTYPECHGA>>SGNTO0(ipw)))){   // if result type is not the (possibly converted) argument type...
+// obsolete   z=ipw<0?w:a;  // z=inplaceable arg; in test suite, most inplaceables are inplaceable on both w and a, somewhat more on w
+  z=cv&JTINPLACEW?w:a;  // z=inplaceable arg; in test suite, most inplaceables are inplaceable on both w and a, somewhat more on w
+  if(unlikely(cv&(VTYPECHGA>>((cv&JTINPLACEW)>>JTINPLACEWX)))){   // if result type is not the (possibly converted) argument type...
    // the type of inplaceable z must (or might, if it was empty) change.  But if z is UNINCORPABLE, it might be virtual.  Realizing it is a losing move.  And, we don't change the type of an UNINCORPABLE so that the caller
    // that created it doesn't have to keep reinitializing the type.  So, we give up on inplacing it.  If both args are inplaceable, we try a (which might have the right type).  If neither works, we allocate
    if(AFLAG(z)&AFUNINCORPABLE){
-    if((ipa&SGNIF(AT(a),rbitno(cv)))>=0)goto allocate;  // if a is not inplaceable or requires a new type, go GA the result area
+// obsolete     if((ipa&SGNIF(AT(a),rbitno(cv)))>=0)goto allocate;  // if a is not inplaceable or requires a new type, go GA the result area
+    if(!(AT(a)&((cv&JTINPLACEA)<<(rbitno(cv)-JTINPLACEAX))))goto allocate;  // if a is not inplaceable or requires a new type, go GA the result area
        // we could use a even if it changes type, if it is not UNINCORPABLE.  But if w is UNINCORPABLE and a is inplaceable, it's surely because a is an unrepeated UNINCORPABLE cell in dyad u"n - not worth checking
     z=a;  // we can use a as is, do so
    }else AT(z)=rtype(cv);  // OK to change type of z to match the result, do so
   }
   // Here we are running inplace (25% of the time, in testcases).  Skip over the allocation and its overhead
-takestats(++stats[0x28];)
+takestats(++stats[0x3d];)
   if(withprob(!(cv&VIPOLOOPREQD),0.8))goto noallonoloop; else goto noalloloop;
  }else{
 allocate:;  // come here if no inplaceable block could have the type changed
-takestats(++stats[0x29];)
+takestats(++stats[0x3e];)
    // vbls needed: a w zn m cv fr [jt]
   // allocate the result area.  We avoid the subroutine call for the overhead, and to save regs and to avoid needing to calculate zt->bplg->bytes
   I bytes=ALLOBYTESVSZLG(zn,LANE(fr,ZRANK),rtypebplg(cv),0,0);   // never allo C4T
@@ -1290,7 +1315,7 @@ takestats(if(adocvfn==statsoldadocvfn[0])++stats[0x2f]; statsoldadocvfn[0]=adocv
     if(unlikely(lrc<0)){mulofloloc=~lrc; lrc=EWOVIP+EWOVIPMULII;}  // integer multiply overflow.  ~lrc is index of failing location; create global failure index.  Abort the computation to retry
    }
   }else{
-   // outer loop needed (except in rare case when it can be elided)
+   // outer loop needed (except in rare case when it was elided by loop migration)
    MCISH(AS(z),AS(awlongfr),fru.lanes[frFL]);  // finish copying outer shape   &long frame  len(long frame)     
 takestats(++stats[0x2c];)
    if(unlikely(!(cv&VIPOLOOPREQD)))goto noallonoloop;  // if we needed frame but no outer loop, go back to no-loop

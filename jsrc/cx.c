@@ -396,7 +396,9 @@ nextlinedebug:;
      // If the most recent stack entry before this entity started is a CALL, that is the name to use (it may have been extracted from an anonymous operator).
      // Otherwise, the call is truly anonymous and we use a name of ''
      NPGpysfmtdl|=128;  // indicate pm running so we flag calls to parser
-     pmrecord(jt->sitop->dclnk&&jt->sitop->dclnk->dctype==DCCALL&&jt->sitop->dclnk->dcnmlev==0?jt->curname:mtv,LOCNAME(jt->global),~ic,NPGpysfmtdl&64?VAL2:VAL1);
+// depends on trailing uninitialized bytes of mtv
+//     pmrecord(jt->sitop->dclnk&&jt->sitop->dclnk->dctype==DCCALL&&jt->sitop->dclnk->dcnmlev==0?jt->curname:mtv,LOCNAME(jt->global),~ic,NPGpysfmtdl&64?VAL2:VAL1);
+     pmrecord(jt->sitop->dclnk&&jt->sitop->dclnk->dctype==DCCALL&&jt->sitop->dclnk->dcnmlev==0?jt->curname:0,LOCNAME(jt->global),~ic,NPGpysfmtdl&64?VAL2:VAL1);
     }
 
     // If the executing verb was reloaded during debug, switch over to the modified definition

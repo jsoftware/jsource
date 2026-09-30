@@ -34,7 +34,7 @@ techo 'cblas  ',":c0=. 9!:56'cblas'
 techo 'cblasfile ',":9!:56'cblasfile'
 techo 'gemm threshold ', ": (9!:58)"0 i.3
 
-N=. IF64{(QKTEST+.-.IF64){::2000 4000;500 800
+N=. IF64{((*9!:56'debug')+.QKTEST+.-.IF64){::2000 4000;500 800
 'A B'=. 0?@$~2,,~N
 techo '$A= ',":$A
 

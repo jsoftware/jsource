@@ -9,8 +9,8 @@ thr=: (9!:58)"0 i.3
 techo 'never use blas'
 
 {{
-N=: ((QKTEST+.-.IF64){3 2) <. <: 1 { 8 T. ''  NB. max # worker threads, limited to 3
-for. i. N do.
+N=: (((*9!:56'debug')+.QKTEST+.-.IF64){3 2) <. <: 1 { 8 T. ''  NB. max # worker threads, limited to 3
+for. 0 do.
 
   X=: +/ . *
   XT=: X t.''
@@ -38,8 +38,8 @@ NB. Test small sizes, should break into blockedmmults
   end. 1 }} ''
 
   techo 'Test multithreading'
-  a=: ((QKTEST+.-.IF64){::1024 1024;128 128) ?@$ 0
-  b=: ((QKTEST+.-.IF64){::1024 1024;128 128) ?@$ 0
+  a=: (((*9!:56'debug')+.QKTEST+.-.IF64){::1024 1024;128 128) ?@$ 0
+  b=: (((*9!:56'debug')+.QKTEST+.-.IF64){::1024 1024;128 128) ?@$ 0
   c=: a +/@(*"1 _)t.'' b    NB.test against strawman approach
   d=: a {{ (<x X y) , (x XT y) , (<x X y) }}t.'' b NB. create user task while queue has internal tasks, and vice versa
   e=: a (XT , XT , XT , XT) b

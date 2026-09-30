@@ -7,7 +7,7 @@ NB. set NORESETSTABLE to 1 to prevent restoring symbol table between files
 
 NB. settings to change when compiling the JE in a debug mode
 NB. If FORCEVIRTUALINPUTS is set, space consumption changes.  Set IGNOREIFFVI to 1: in that case
-IGNOREIFFVI_z_ =: ]
+IGNOREIFFVI_z_=: ]`1:@.(*9!:56'forcevirtualinputs')
 
 3 : 0 ''
 testpath=: '/',~(t i:'/'){.t=. jpath;(4!:4<'ddall'){4!:3''

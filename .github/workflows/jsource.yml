@@ -19,6 +19,7 @@ env:
  NO_UNDEFINED: 1
  _MEMAUDIT: 0
  AUDITEXECRESULTS: 0
+ FORCEVIRTUALINPUTS: 0
  USE_PYXES: 1
  USE_EMU_AVX: 1
  RELEASE: ${{ true }}
@@ -89,6 +90,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script/buildga.sh linux x86_64 || exit 1
 
@@ -152,6 +154,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script/buildga.sh linux x86_64 || exit 1
 
@@ -194,6 +197,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script/buildga.sh linux i386 || exit 1
 
@@ -257,6 +261,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script/buildga.sh linux i386 || exit 1
 
@@ -295,6 +300,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script/buildga.sh darwin x86_64 || exit 1
 
@@ -355,6 +361,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script/buildga.sh darwin arm64 || exit 1
 
@@ -415,6 +422,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script/buildga.sh raspberry arm64 || exit 1
 
@@ -477,6 +485,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script/buildga.sh raspberry armv6l || exit 1
 
@@ -544,6 +553,7 @@ jobs:
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
+       export FORCEVIRTUALINPUTS=${{ env.FORCEVIRTUALINPUTS }}
        script/buildga.sh raspberry arm64 || exit 1
        script/testga.sh raspberry arm64 || exit 1
        cp jlibrary/bin/* j64 || true
@@ -614,6 +624,7 @@ jobs:
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
+       export FORCEVIRTUALINPUTS=${{ env.FORCEVIRTUALINPUTS }}
        script/buildga.sh raspberry armv6l || exit 1
        script/testga.sh raspberry armv6l || exit 1
        find j32 -type d -exec chmod a+rwx {} \;
@@ -693,6 +704,7 @@ jobs:
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
+       export FORCEVIRTUALINPUTS=${{ env.FORCEVIRTUALINPUTS }}
        script/buildga.sh openbsd x86_64 || exit 1
        script/testga.sh openbsd x86_64 || exit 1
        cp jlibrary/bin/* j64 || true
@@ -760,6 +772,7 @@ jobs:
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
+       export FORCEVIRTUALINPUTS=${{ env.FORCEVIRTUALINPUTS }}
        script/buildga.sh openbsd arm64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
@@ -829,6 +842,7 @@ jobs:
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
+       export FORCEVIRTUALINPUTS=${{ env.FORCEVIRTUALINPUTS }}
        script/buildga.sh freebsd x86_64 || exit 1
        script/testga.sh freebsd x86_64 || exit 1
        cp jlibrary/bin/* j64 || true
@@ -899,6 +913,7 @@ jobs:
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
+       export FORCEVIRTUALINPUTS=${{ env.FORCEVIRTUALINPUTS }}
        script/buildga.sh freebsd arm64 || exit 1
        script/testga.sh freebsd arm64 || exit 1
        cp jlibrary/bin/* j64 || true
@@ -951,6 +966,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script/buildga.sh android arm64 || exit 1
 
@@ -993,6 +1009,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script/buildga.sh wasm wasm32 || exit 1
       script/testga.sh wasm wasm32 || exit 1
@@ -1039,6 +1056,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script\buildga.cmd x64
 
@@ -1125,6 +1143,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script\buildga.cmd x86
 
@@ -1211,6 +1230,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script\buildga.cmd arm64
 
@@ -1278,6 +1298,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script\buildga.cmd arm64
 
@@ -1390,6 +1411,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
@@ -1462,6 +1484,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script/buildga.sh windows x86_64 || exit 1
 
@@ -1533,6 +1556,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script/buildga.sh windows i386 || exit 1
 
@@ -1604,6 +1628,7 @@ jobs:
       NO_UNDEFINED: ${{ env.NO_UNDEFINED }}
       _MEMAUDIT: ${{ env._MEMAUDIT }}
       AUDITEXECRESULTS: ${{ env.AUDITEXECRESULTS }}
+      FORCEVIRTUALINPUTS: ${{ env.FORCEVIRTUALINPUTS }}
      run: |
       script/buildga.sh windows arm64 || exit 1
 

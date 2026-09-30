@@ -369,6 +369,10 @@ if [ -n "$AUDITEXECRESULTS" ]; then
  common="$common -DAUDITEXECRESULTS=$AUDITEXECRESULTS"
 fi
 
+if [ -n "$FORCEVIRTUALINPUTS" ]; then
+ common="$common -DFORCEVIRTUALINPUTS=$FORCEVIRTUALINPUTS"
+fi
+
 if [ -n "$C_CRC32C" ]; then
  common="$common -DC_CRC32C=$C_CRC32C"
 fi

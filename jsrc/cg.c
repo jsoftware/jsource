@@ -188,6 +188,7 @@ static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
   ASSERTGOTO(TESTAGREE(AS(vres),AS(w),MIN(vr,wr)),EVLENGTH,errorwind)  // shapes must match
   if(ZZFLAGWORD&ZZFLAGISDYAD){ASSERTGOTO(TESTAGREE(AS(vres),AS(a),MIN(vr,ar)),EVLENGTH,errorwind)}  // if dyad, check both
   I ncells; PROD(ncells,AR(vres),AS(vres));  // number of result cells
+  if(unlikely(ncells==0)){A self0=qq(self,zeroionei(0)); R CALL21(ZZFLAGWORD&ZZFLAGISDYAD,FAV(self0)->valencefns[!!(ZZFLAGWORD&ZZFLAGISDYAD)],a,w,self0);}  // if no cells returned (must be empty arg), exec m@.v"0 for fill, return empty result
   I nar=AN(FAV(self)->fgh[2]);  // number of ARs in the gerund
   wr-=vr; wr=wr+vr?wr:IMIN;  // now wr is the rank of a cell of w (negative if repetition required in w), or IMIN if w was an atom
   ar-=vr; ar=ar+vr?ar:IMIN;  // same for a
@@ -196,7 +197,7 @@ static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
   // that is, if each cell-rank is positive, 0 or IMIN.  We also make sure there are enough results to make the processing worthwhile
   // Since the larger cell-rank must not be negative, we can look only at the smaller
   mr=MIN(ar,wr); // the smaller
-  if(((-mr|~mr)&SGNIFDENSE(AT(w))&(2*nar-ncells))<0&&likely(!jt->dissectrunning)){  // if mr is IMIN or nonneg, and there are enough results compared to # gerunds, reduce # verb executions.  Sparse doesn't do this.
+  if(1||((-mr|~mr)&SGNIFDENSE(AT(w))&(2*nar-ncells))<0&&likely(!jt->dissectrunning)){  // if mr is IMIN or nonneg, and there are enough results compared to # gerunds, reduce # verb executions.  Sparse doesn't do this.
    // Make sure the results are integer or boolean
    if(!ISDENSETYPE(AT(vres),(B01|INT)))RZ(vres=cvt(INT,vres));
    // grade the results, as a list

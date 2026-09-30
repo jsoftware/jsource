@@ -162,15 +162,16 @@ F2(jtevger){F12IP;A hs;I k;
 F2(jttie){F12IP;ARGCHK2(a,w); R jtapip((J)((I)jtfg&(~JTFLAGMSK+JTINPLACEA+JTINPLACEW)),VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}  // don't pass MODIFIER flag through
 
 
-// m@.v y.  Execute the verbs at high rank if the operands are large
+// m@.v y.  Execute the verbs at high rank
 // Bivalent entry point: called as (jt,w,self,self) or (jt,a,w,self)
 static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
-  ARGCHK2(a,w);
+ ARGCHK2(a,w);
  PROLOG(997);
  // see if we were called as monad or dyad.  If monad, fix up w and self
  ZZFLAGWORD=EPMONAD?ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS:ZZFLAGINITSTATE|ZZFLAGWILLBEOPENED|ZZFLAGCOUNTITEMS|ZZFLAGISDYAD;  // we collect the results on the cells, but we don't assemble into a result.  To signal this, we force BOXATOP and set WILLBEOPENED
  if(unlikely(a==w))jtfg=(J)((I)jtfg&~(JTINPLACEA+JTINPLACEW));  // Don't allow inplacing if a==w dyad
  w=EPMONAD?a:w;  // if monad, a==w
+ ASSERT(!ISSPARSE(AT(a)|AT(w)),EVNONCE)   // no support for sparse agenda
  I wr=AR(w); I ar=AR(a); I mr=MAX(wr,ar);    // ranks, and max rank
  // Execute v at infinite rank
  vres=FAV(self)->fgh[1];   // temp: verb to execute
@@ -228,11 +229,12 @@ static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
    // Create the size of a cell in atoms.  If the original argument was an atom (?r=IMAX), use 0 for the cellsize so that the cell is repeated
    I wck,ack; PROD(wck,virtr-1,AS(sortw)+1);  // number of atoms in a cell of w
    I ak,wk=bpnoun(AT(w)); wk&=REPSGN(~wr);  // size of atom of w, but 0 if w is an atom (so we don't advance)
+
    if(ZZFLAGWORD&ZZFLAGISDYAD){   // if we need to repeat for a
     if(ar>=0){
      RZ(a=jtredcatcell((J)((I)jt+PEXT0((I)jtfg,JTINPLACEAX-JTINPLACEWX,JTINPLACEW)),a,ar));  // move inplaceability of original a to w
      RZ(sorta=from(gradepm,a));
-    ZZFLAGWORD |= SGNTO0((-(AT(sorta)&TYPEVIPOK))&AC(sorta))<<ZZFLAGVIRTAINPLACEX;
+     ZZFLAGWORD |= SGNTO0((-(AT(sorta)&TYPEVIPOK))&AC(sorta))<<ZZFLAGVIRTAINPLACEX;
      ZZFLAGWORD|=ZZFLAGARRAYA;
     }else{
      sorta=a;
@@ -278,7 +280,7 @@ static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
     RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((I)jt+(JTINPLACEA*(ZZFLAGWORD>>ZZFLAGISDYADX)+JTINPLACEW)),
      virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace depending on valence
 
-#define ZZBODY  // assemble results
+#define ZZBODY  // create result array
 #define ZZASSUMEBOXATOP 1
 #include "result.h"
 

@@ -73,15 +73,15 @@ takestats(++stats[0x9];)
  // Inplacing is fairly common (30% of the non-comparisons), so we make sure there is only one branch to be predicted.
  z=__atomic_load_n(&jt->zombieval,__ATOMIC_RELAXED);  // fetch address of assignand, which we presumptively make the result
  awr^=af;  // for a and w in byte lanes, set non0 if incorrect rank (= noninplaceable)
- I awip=2*SGNTO0(ac&((aflag&AFUNINCORPABLE+AFRO)+(awr&0xff00)-1))  // a inplaceability: AC, not (unincorp/AFRO or awr<af)
-       +SGNTO0(wc&((wflag&AFUNINCORPABLE+AFRO)+(awr&0x00ff)-1));  // w inplaceability
- if(withprob(awip&=(I)jtfg,0.3)){z=awip&JTINPLACEW?w:a; zv=awip&JTINPLACEW?wv:av; goto haszv;}
+ I1 awip=2*(I1)SGNTO0(ac&((aflag&AFUNINCORPABLE+AFRO)+(awr&0xff00)-1))  // a inplaceability: AC, not (unincorp/AFRO or awr<af)
+       +(I1)SGNTO0(wc&((wflag&AFUNINCORPABLE+AFRO)+(awr&0x00ff)-1));  // w inplaceability
+ if(withprob(awip&=(I1)(intptr_t)jtfg,0.3)){z=awip&JTINPLACEW?w:a; zv=awip&JTINPLACEW?wv:av; goto haszv;}
 takestats(++stats[0xa];)
  // See if we can inplace an assignment (z=zombieval).  That is always a good idea, saving the assignment code, but in the test suite it's very rare so we check after other inplaceability.  Might be more common in user code.
- I asginplacemsk=(2*(a==z)+(w==z))&(I)jtfg;  // mask of reassigned inplaceable args
+ I1 asginplacemsk=(2*(I1)(a==z)+(I1)(w==z))&(I1)(intptr_t)jtfg;  // mask of reassigned inplaceable args
  if(withprob(asginplacemsk,0.05)){   // one of the args is being reassigned
 takestats(++stats[0xb];)
-  if(likely((af&=0xff)==AR(z))){zv=asginplacemsk&1?wv:av; goto haszv;}   // reassigned value must have the higher rank; zombieval must not be VIRT (or UNINCORP)
+  if(likely((I1)af==(I1)AR(z))){zv=asginplacemsk&1?wv:av; goto haszv;}   // reassigned value must have the higher rank; zombieval must not be VIRT (or UNINCORP)
  }
 takestats(++stats[0xc];)
  // fall through: no inplacing, allocate the result as FL, usually an atom.  If not atom, make the shape all 1s
@@ -97,7 +97,7 @@ nozv:;  // here when we have zv or don't need it
 #else
  adv=*(D*)av,wdv=*(D*)wv;
 #endif
-
+FILLREG(aiv) FILLREG(wiv) FILLREG(adv) FILLREG(wdv)  // instruct compiler to get values into registers
  // Huge switch statement to handle every case.  Lump all the booleans together at 0.  In the testcases this is a pipeline break 80% of the time
 takestats(stats[0xd]+=caseno==statsoldcaseno; statsoldcaseno=caseno;)  // predictable fns
  switch(caseno){
@@ -984,8 +984,8 @@ takestats(++stats[0x10];)
   cv=aadocv->cv; adocvfn=aadocv->f;   // fetch the address of the function and the cv
  }else{
 takestats(++stats[0x11];)
-  // An arg is not BID.  Get the control vector and routine
-  vandx&=~-BIT(15);  // clear the densbid0 bits.  In 32-bit there may be LSBs but that's OK
+  // An arg is not BID, or this is a retry.  Get the control vector and routine
+  vandx&=~-BIT(15);  // clear the densbid0 bits.  There may be extra LSBs or MSBs
   I at=AT(a), wt=AT(w);
   if(unlikely(ISSPARSE(at|wt)))jtfg=(J)((I)jtfg|JTSPARSEARG);  // remember if an arg is sparse.
   adocv=var(vandx/sizeof(VA),at&~SPARSE,wt&~SPARSE);  // recover VA2C* id from the va line [clang compiler error using (VA*)vandx-(VA*)0]
@@ -1017,7 +1017,7 @@ takestats(++stats[0x11];)
  }
 
  // vbls in use: a w afwf awr cv jt
- // cv is going to take ~6 cycles to settle, or more if it missed D1$.  We want to do as much as we can before needing to use it.  We can do the agreement test first, and then any input conversions
+ // cv is going to take ~6 cycles to settle, or more if it missed D1$.  We want to do as much as we can before needing to use it.  We can do the agreement test first, then any input conversions, then inplaceability checks
 
  I agreefr=afwf==0?awr:afwf; agreefr=MIN((UI1)agreefr,(UI1)(agreefr>>RANKTX));    // for agreement, we test shorter noun-rank if no frame, shorter frame if there is frame
 takestats(if(agreefr)++stats[0x12];)
@@ -1027,7 +1027,6 @@ takestats(if(agreefr)++stats[0x12];)
  // Failed conversion are real errors, but they have priority below agreement errors.  If the conversion error is EVDOMAIN, we defer it by
  // clearing adocvfn to 0, which gives later domain error
  if(unlikely(isatype(cv))){  // input conversion required (but not for sparse) (rare), which will predict correctly.  cv is not settled
-// obsolete &&likely(!((I)jtfg&JTSPARSEARG)))
   // Convert inputs to common type if needed by the primitive.  Don't keep much in registers, because we have a bottleneck in the function call here
   I t=atype(cv);   // the common type
   // Conversion failure is tricky.  We report rank errors before shape, shape before type, and type before value.  Thus, we defer the error report till after shape analysis, by clearing
@@ -1054,7 +1053,6 @@ takestats(if(jt->zombieval==a)++stats[0x3a]; if(jt->zombieval==w)++stats[0x3b]; 
  A awlongcr,awlongfr; I atommsk=((awr+~0x80)&0x4040)<<RANKTX; // The arg with the longer-or-equal cell-rank, and longer-or-equal frame; bits in 0x404000 set for each arg that is atomic (shifted left so all atomic bits above rank bits)
  if(withprob(atommsk>=afwf,0.97)){ // fast setup if no outer frame (afwf=0, 95%) or either arg is atomic
 takestats(++stats[0x13]; if(afwf==0)++stats[0x1c];)
-// obsolete   if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
 takestats(++stats[0x14];)
   if(withprob(atommsk>=((awr^(awr>>RANKTX))&RMAX),0.8)){  // something atomic, or ranks equal
    // Fastest and most common setup: Ranks are equal or at least one arg is atomic
@@ -1083,20 +1081,12 @@ takestats(if(n==1){++stats[0x1a]; stats[0x1b]+=m;})
    // frZRANK is fr, frFL and frFLC are both 0
 // not worth it     m=~m; m=n>3?n:m;  // migrating to 1 loop helps if n==1, but that case is so rare that it's not worth the test // if #inner-loops>1, leave m as (loop length)/repeat x; otherwise complement m to indicate single loop
   }
-#if 0 // obsolete 
-  }else{
-   // Sparse setup
-   I ar=awr>>RANKTX, wr=(RANKT)awr;
-   R vasp(a,w,va2ctoc[vandx/sizeof(VA)],adocvfn==(VF)err00?0:adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),0,ar,0,wr,0,MAX(ar,wr));
-  }
-#endif
  }else{I ak,wk;UI wcr;
   // Here, a rank was specified and there was no atomic argument.
    // Heavy register pressure here.
    // vbls needed: cv a w afwf awr
 takestats(++stats[0x20];)
   UI4 afwfarwr=(afwf<<(2*RANKTX))+awr; wcr=afwfarwr-afwf;   // afwfarwr=af/wf/anr/wnr, subtract 0/0/af/wf => af/wf/acr/wcr = wcr  afwfagreefr free
-// obsolete   if(likely(!((I)jtfg&JTSPARSEARG))){  // nonsparse
 
    // wcr is afr/wfr/acr/wcr  afwfarwr is af/wf/anr/wnr
 #define LANE(v,l) SHMSK(v,v##l*RANKTX,v##l##MSK)
@@ -1218,13 +1208,6 @@ takestats(++stats[0x24];)
   aawwzknfxrz[5]=m;  // parm n to action rtn will be orig m, i. e. the length of the inner or only loop.
   m=~m;  // parm m if there is only 1 loop - the length of the loop, complemented as a flag.  The aawwzknfxrz[5] value is unused in this case
   m=n>3?n:m;  // if #inner-loops>1, switch m
-#if 0  // obsolete 
-  }else{  // sparse case
-   I af=LANE(wcr,AF), wf=LANE(wcr,WF); UI acr=LANE(wcr,AC); wcr=LANE(wcr,WC);   // separate cr and f for sparse
-   fr=acr<wcr?wcr:acr; I f=(af<wf)?wf:af;
-   R vasp(a,w,va2ctoc[vandx/sizeof(VA)],adocvfn==(VF)err00?0:adocvfn,cv,isatype(cv)?atype(cv):0,rtype(cv),af,acr,wf,wcr,f,fr);  // handle sparse arrays separately.
-  }
-#endif
  }
 
  // vbls needed: a w ak wk cv fr n m jt
@@ -1238,22 +1221,18 @@ takestats(++stats[0x24];)
  // If the argument has rank that large, and the arguments agree, the argument MUST have the same number of atoms as the result, because all shape is accounted for.
  // rank = rank of result (the rank of the result is the sum of (the longer frame-length) plus (the larger cell-rank))
  // Also, if the operation is one that may abort, we suppress inplacing it if the user can't handle early assignment.
-// obsolete  I ipw=ASGNINPLACENEG(SGNIF(cv,JTINPLACEWX),w), ipa=ASGNINPLACENEG(SGNIF(cv,JTINPLACEAX),a);  // is w/a inplaceable?  In test suite, inplaces 25% of the time
   // assignment-in-place makes up only about 2% of the inplaceables, but we deem it worth testing for because it can win big.  Also, the extra computation is overlapped with the main inlaceable test:
   // both require a fetch from memory followed by a little testing.  The additional time is pretty small.  Of the 20-odd% of ops that are inplaceable, most could use a or w (we pick w).  Of the 1% that
   // are assignable in place, 2/3 assign to a.  About 60% of operations have an argument with AC<0, but most are not inplaceable
-// obsolete  if(withprob((ipw|ipa)<0,0.4)){  // see if either w or a is inplaceable
  if(withprob(cv&JTINPLACEW+JTINPLACEA,0.4)){  // see if either w or a is inplaceable
   if(unlikely(a==w))goto allocate;   // If a==w suppress inplacing, in case the operation must be retried (we could check which ones but they are just not likely to be used reflexively)
   FILLREG(adocvfn)   // load function addr into register early
   // we are reusing an argument (ipw is neg if it's w, which has priority); make sure the type is updated to the result type
-// obsolete   z=ipw<0?w:a;  // z=inplaceable arg; in test suite, most inplaceables are inplaceable on both w and a, somewhat more on w
   z=cv&JTINPLACEW?w:a;  // z=inplaceable arg; in test suite, most inplaceables are inplaceable on both w and a, somewhat more on w
   if(unlikely(cv&(VTYPECHGA>>((cv&JTINPLACEW)>>JTINPLACEWX)))){   // if result type is not the (possibly converted) argument type...
    // the type of inplaceable z must (or might, if it was empty) change.  But if z is UNINCORPABLE, it might be virtual.  Realizing it is a losing move.  And, we don't change the type of an UNINCORPABLE so that the caller
    // that created it doesn't have to keep reinitializing the type.  So, we give up on inplacing it.  If both args are inplaceable, we try a (which might have the right type).  If neither works, we allocate
    if(AFLAG(z)&AFUNINCORPABLE){
-// obsolete     if((ipa&SGNIF(AT(a),rbitno(cv)))>=0)goto allocate;  // if a is not inplaceable or requires a new type, go GA the result area
     if(!(AT(a)&((cv&JTINPLACEA)<<(rbitno(cv)-JTINPLACEAX))))goto allocate;  // if a is not inplaceable or requires a new type, go GA the result area
        // we could use a even if it changes type, if it is not UNINCORPABLE.  But if w is UNINCORPABLE and a is inplaceable, it's surely because a is an unrepeated UNINCORPABLE cell in dyad u"n - not worth checking
     z=a;  // we can use a as is, do so
@@ -1856,9 +1835,9 @@ DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 #if SY_64
 #define REFG at=AT(a); wt=AT(w); awr=AR(a); wr=AR(w); opcode=FAV(self)->lu2.lc; acr=(UI)jtfgfg>>56; wcr=((UI)jtfgfg>>48)&RMAX; JTFGFROMJTFGFG; JTFROMJTFG(J);
 A jtatomic2(J jtfgfg,A a,A w,A self){  // linkage for 64-bit machines, through jt
- ARGCHK1(a) I at=AT(a); I awr=AR(a);  // a/w/self are settled.  read from a before w
+ UI opcode=FAV(self)->lu2.lc; ARGCHK1(a) I at=AT(a); I awr=AR(a);  // a/w/self are settled.  read from a before w
  ARGCHK1(w) I wt=AT(w); I wr=AR(w);
- UI opcode=FAV(self)->lu2.lc; I acr=(UI)jtfgfg>>56; I wcr=((UI)jtfgfg>>48)&RMAX;  // extract complemented ranks from jtfgfg which is settling into ?cr
+ I acr=(UI)jtfgfg>>56; I wcr=((UI)jtfgfg>>48)&RMAX;  // extract complemented ranks from jtfgfg which is settling into ?cr
  J JTFGFROMJTFGFG; F12IP;
 #else
 #define REFG opcode=FAV(self)->lu2.lc; a=(A)((I)afg&~(ABDY-1)); w=(A)((I)wfg&~(ABDY-1)); at=AT(a); wt=AT(w); awr=AR(a); wr=AR(w); acr=(I)afg&RMAX; wcr=(I)wfg&RMAX; JTFROMJTFG(J);

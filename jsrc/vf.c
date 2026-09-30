@@ -93,7 +93,8 @@ static FI2(jtrotsp){A q,x,y,z;B bx,by;I af,*av,d,k,m,n,p,*qv,*s,*v,wf;P*wp,*zp;
 // set k=length that wraps (dk * shift), ks=offset to it in source, kd=offset to it in dest, js=source offset to part that doesn't wrap, kd=offset to it in dest
 // for left shift (ar positive) ks=0, js=dk*shift, kd=e-k, jd=0
 // for right shift              ks=e-k, js=0, kd=0, jd=dk*shift
-#define ROTF(r) {UI ar=ABSUI(r); if(unlikely(ar>(UI)n)){if(jt->fill)ar=n; else{r=r%n; ar=ABSUI(r);}} k=dk*ar; kd=e-k; ks=r<0?kd:0; jd=r<0?k:0; kd-=ks; js=k-jd;}   // UI in case ABS(IMIN)
+// r is signed shift amount, n is axis length
+#define ROTF(r) {UI ar=ABSUI(r); if(unlikely(ar>=(UI)n)){if(jt->fill)ar=n; else{r=r%n; ar=ABSUI(r);}} k=dk*ar; kd=e-k; ks=r<0?kd:0; jd=r<0?k:0; kd-=ks; js=k-jd;}   // UI in case ABS(IMIN)
 
 FI2(jtrotate){A z;C *u,*v;I af,d,k,m,n,p,*s,wf,wn;
  IARG2CR F12IP;
@@ -145,7 +146,7 @@ FI2(jtrotate){A z;C *u,*v;I af,d,k,m,n,p,*s,wf,wn;
   s+=wf;   // skip over w frame to get to the cell.  We will start 1 axis in
   for(i=0;i<p-1;++i){
    m*=n; n=*++s; PROD(d,wr-wf-i-2,s+1); e=(n*d)<<klg; dk=d<<klg;  // update cell sizes
-   ROTF(av[i+1])  // calculate offsets
+   ROTF(av[i+1])  // calculate offsets  scaf skip the rest of the loop if r==0&&(ar==0 or no fill) ?
    u=CAV(z);   // we saved where the previous output went; it is the input
    // z here is always inplaceable.  See if it has extra room.  Since we might have added front slack on the first axis, we have the option of backing up
    I backslack=(FHRHSIZE(AFHRH(z))-(AK(z)+(AN(z)<<klg)))&-SZI;  // slack space at end
@@ -153,7 +154,8 @@ FI2(jtrotate){A z;C *u,*v;I af,d,k,m,n,p,*s,wf,wn;
    backslack=(ks+js-backslack)&~(jt->fill?REPSGN(av[i+1]):0);  // backslack is neg if we can move AK right, EXCEPT when right-shift with fill
    frontslack=(e-(ks+js)-frontslack)&(jt->fill?REPSGN(av[i+1]):-1);  // frontslack is neg if we can move AK left, EXCEPT when left-shift with fill
    if((backslack|frontslack)<0){   // there is room for inplacing, front or back
-    if(((e-(ks+js))&REPSGN(backslack))>((ks+js)&REPSGN(frontslack))){  // choose the allowed direction that has the smaller wrapped area.  The unwrapped area will stay in place
+// obsolete     if(((e-(ks+js))&REPSGN(backslack))>((ks+js)&REPSGN(frontslack))){  // choose the allowed direction that has the smaller wrapped area.  The unwrapped area will stay in place; its length is e-k
+    if((backslack<0?e-(ks+js):-1)>(frontslack<0?ks+js:-1)){  // choose the allowed direction that has the smaller wrapped area.  The unwrapped area will stay in place; its length is e-k.  Don't pick a direction disabled in *slack
      // inplace, adding to AK.  Still copy back to front
      AK(z)+=ks+js; k=av[i+1]<0?ks:k;  // move AK right, which shifts the buffer left.  If k was calculated from <<, the wrap length is correct.  If from >>, take other side
      ks=0; kd=e; u+=(m-1)*e; e=-e;  // adjust offsets, copy back to front

@@ -174,7 +174,7 @@ static DF2(jtisf){F12IP;A am, mw; RZ(am=onm(a)); RZ(mw=CALL1(FAV(self)->valencef
 // assignment other than name =[.:], single or multiple
 // jt has flag set for final assignment (passed into symbis)
 // The return must be 0 for bad, otherwise good with bit 0=final assignment, bit 1 = local assignment (never set)
-static I NOINLINE jtis(J jtfg,A n,A v,A symtab){F12IP;
+static I NOINLINE jtis(J jtfg,A n,A v,A symtab){F12IP;PSTK* stack=jt->parserstackframe.parserstkend1;
  B ger=0;C *s;
  if(unlikely(AT(n)==BOX+BOXMULTIASSIGN)){   // test both bits, since BOXMULTIASSIGN has multiple uses
   // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
@@ -205,7 +205,7 @@ static I NOINLINE jtis(J jtfg,A n,A v,A symtab){F12IP;
    // The problem is that when the result is set to virtual, its backer does not appear in the NVR stack, and when the reassignment is
    // made the virtual block is dangling.  The workaround is to replace the block on the stack with the final value that was assigned:
    // not allowed in general because of (verb1 x verb2) name =: virtual - if verb2 assigns the name, the value going into verb1 will be freed before use
-//   stack[2].a=
+   stack[2].a=
 #endif
   jtsymbis(jtfg,n,v,symtab);
  }else{

@@ -205,7 +205,7 @@ static I NOINLINE jtis(J jtfg,A n,A v,A symtab){F12IP;
    // The problem is that when the result is set to virtual, its backer does not appear in the NVR stack, and when the reassignment is
    // made the virtual block is dangling.  The workaround is to replace the block on the stack with the final value that was assigned:
    // not allowed in general because of (verb1 x verb2) name =: virtual - if verb2 assigns the name, the value going into verb1 will be freed before use
-   stack[2].a=
+//   stack[2].a=
 #endif
   jtsymbis(jtfg,n,v,symtab);
  }else{
@@ -333,11 +333,11 @@ static A virtfolk(J jtip, A f, A g, A h){
  h = virtifnonip(jt,0,h);
  R jtfolk(jtip,f,g,h);
 }
-static A virthook(J jtip, A f, A g){
+static A virthook(J jtip, A f, A g, A z){
  J jt = (J)(intptr_t)((I)jtip&-4);  // estab legit jt
  f = virtifnonip(jt,0,f);
  g = virtifnonip(jt,0,g);
- R jthook(jtip,f,g);
+ R jthook(jtip,f,g,z);
 }
 
 // redefine the names for when they are used below

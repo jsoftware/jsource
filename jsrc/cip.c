@@ -220,6 +220,8 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
  R NANTEST==0;  // return with error (0) if any FP error
 }
 // cache-blocking code
+// PYXES applicable to AVX2 version only
+#if PYXES
 // ctx block passed in from the task code
 typedef struct {
  D*av,*wv,*zv;  // arg pointers into cachedmmultx, defined below
@@ -519,6 +521,8 @@ static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
  }  // end of loop for each 64-col slice of w
  R unlikely(NANTEST)?EVNAN:0;  // return job semantics, 0=OK
 }
+#endif
+
 // looping entry point for cached mmul
 // We split the input into products where the left arg has at most MAXAROWS rows.  This is to avoid overrunning L2 cache
 // Result is 0 if error, which must be NaN error
@@ -562,6 +566,7 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
 }
 
 #else
+// non-AVX2 version
 // cache-blocking code
 #define OPHEIGHT 2  // height of outer-product block
 #define OPWIDTH 4  // width of outer-product block

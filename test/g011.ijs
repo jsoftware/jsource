@@ -16,12 +16,12 @@ p =: 1e20*o.?3 4$100
 q =: <.p
 q    -: <.q
 ($q) -: $p
-echo <.,p
-echo <.{.,p
-echo p
-echo q
-echo (p>:q)
-echo q>:p-1
+techo^:PRINTMSG <.,p
+techo^:PRINTMSG <.{.,p
+techo^:PRINTMSG p
+techo^:PRINTMSG q
+techo^:PRINTMSG (p>:q)
+techo^:PRINTMSG q>:p-1
 (p>:q)*.q>:p-1
 
 _ __ -: <. _ __

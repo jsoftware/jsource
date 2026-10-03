@@ -115,7 +115,7 @@ ex03=:0!:3
 ex04=:0!:4
 
 etx1     =: ::(<:@(13!:11)@i.@0: >@{ 9!:8@i.@0:)  NB. error message from error number
-etx      =: 1 : '([ techo^:PRINTMSG) @: (u etx1)' NB. echo or error message from error number
+etx      =: 1 : '([ empty`techo@.PRINTMSG) @: (u etx1)' NB. echo or error message from error number
 ex       =: ". etx1
 fex      =: }. @ (i.&(10{a.) {. ]) @ (13!:12) @ i. @ 0: @ (0!:110)
 eftxs     =: ::((10{a.) -.~ (13!:12) @ i. @ 0:)   NB. only the terse part

@@ -152,21 +152,21 @@ _13.9    f =i.9
 
 {{
 if. GITHUBCI*.(IFRASPI +. ('arm64'-:9!:56'cpu')*.'FreeBSD'-:UNAME) do. '' return. end.
-techo^:PRINTMSG (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+(2 # (?4) + (4 _3 p. ((*9!:56'debug')+.QKTEST+.-.IF64)) * 200+?300)?@$12200
-techo^:PRINTMSG e=. >./|,(id a)-a X c
+empty`techo@.PRINTMSG (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+(2 # (?4) + (4 _3 p. ((*9!:56'debug')+.QKTEST+.-.IF64)) * 200+?300)?@$12200
+empty`techo@.PRINTMSG e=. >./|,(id a)-a X c
 assert. 1e_8>e
-techo^:PRINTMSG (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+(2 , 2 # (?4) + (4 _3 p. ((*9!:56'debug')+.QKTEST+.-.IF64)) * 200+?300)?@$12200
-techo^:PRINTMSG e=. >./|,(id b)-b X c
+empty`techo@.PRINTMSG (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+(2 , 2 # (?4) + (4 _3 p. ((*9!:56'debug')+.QKTEST+.-.IF64)) * 200+?300)?@$12200
+empty`techo@.PRINTMSG e=. >./|,(id b)-b X c
 assert. 1.01e_8>e
 ''
 }}^:(9!:56 'cblas')''
 
 {{
-techo^:PRINTMSG (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+(0 _150 + (?4) + (4 _3 p. ((*9!:56'debug')+.QKTEST+.-.IF64)) * 200+?300)?@$12200
-techo^:PRINTMSG e=. >./|,a - (a X c) X a
+empty`techo@.PRINTMSG (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+(0 _150 + (?4) + (4 _3 p. ((*9!:56'debug')+.QKTEST+.-.IF64)) * 200+?300)?@$12200
+empty`techo@.PRINTMSG e=. >./|,a - (a X c) X a
 assert. 1.02e_8>e
-techo^:PRINTMSG (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+(2 , 0 _150 + (?4) + (4 _3 p. ((*9!:56'debug')+.QKTEST+.-.IF64)) * 200+?300)?@$12200
-techo^:PRINTMSG e=. >./|,b - (b X c) X b
+empty`techo@.PRINTMSG (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+(2 , 0 _150 + (?4) + (4 _3 p. ((*9!:56'debug')+.QKTEST+.-.IF64)) * 200+?300)?@$12200
+empty`techo@.PRINTMSG e=. >./|,b - (b X c) X b
 assert. 1.03e_8>e
 ''
 }}''
@@ -197,8 +197,8 @@ assert. 1.03e_8>e
 'length error' -:        %. etx ?3 5$123
 'length error' -: 3 4 5  %. etx ?7 4$100
 
-techo^:PRINTMSG %. etx 2 2 $ 0 1 2 _
-techo^:PRINTMSG %. etx 2 2$0 1e_309 10 10
+empty`techo@.PRINTMSG %. etx 2 2 $ 0 1 2 _
+empty`techo@.PRINTMSG %. etx 2 2$0 1e_309 10 10
 
 9!:19 ct
 

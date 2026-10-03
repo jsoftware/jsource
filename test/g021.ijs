@@ -16,12 +16,12 @@ p =. 1e20*o.?3 4$100
 q =. >.p
 q -: >.q
 ($q) -: $p
-techo^:PRINTMSG <.,p
-techo^:PRINTMSG <.{.,p
-techo^:PRINTMSG p
-techo^:PRINTMSG q
-techo^:PRINTMSG (p<:q)
-techo^:PRINTMSG q<:1+p
+empty`techo@.PRINTMSG <.,p
+empty`techo@.PRINTMSG <.{.,p
+empty`techo@.PRINTMSG p
+empty`techo@.PRINTMSG q
+empty`techo@.PRINTMSG (p<:q)
+empty`techo@.PRINTMSG q<:1+p
 (p<:q)*.q<:1+p
 
 _ __ -: >. _ __

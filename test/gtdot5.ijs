@@ -201,7 +201,7 @@ EMPTY
 
 p1=: {{
 for_i. (1000 * {. 3 T. '') + i.1e7 do.
-ALL=: ALL, ,i [ techo^:PRINTMSG i
+ALL=: ALL, ,i [ empty`techo@.PRINTMSG i
 end.
 EMPTY
 }}

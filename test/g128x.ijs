@@ -90,7 +90,7 @@ t=: 3 : 0''
 if. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.(<9!:56'cpu')e.'arm';'arm64' do. '' return. end. NB. no real hardware fma
 for_i. (>: , 500&+) (i.15) do.
  a1=. 128!:10 r=. ((QKTEST{1000 100) ?@$~ ,~) i
- techo^:PRINTMSG b=. >./ | ,r - (0&{:: /:~ lrtoa@(1&{::)) a1  NB. floating point
+ empty`techo@.PRINTMSG b=. >./ | ,r - (0&{:: /:~ lrtoa@(1&{::)) a1  NB. floating point
  assert. 1e_4 > b
 end.
 EMPTY
@@ -107,19 +107,19 @@ NB. lapack
 t=: 3 : 0
 N=. y
 a=. (N,N) ?@$ 1000 1000
-techo^:PRINTMSG '$a ',":$a
+empty`techo@.PRINTMSG '$a ',":$a
 t1=. 6!:2'c1=. 128!:10 a'
-techo^:PRINTMSG 'double  ',(' GFlop ',~ 0j3": (N^3)%(t1)*1e9),((N>:(9!:56'fma'){10,500)*.9!:56'cblas')#' cblas'
+empty`techo@.PRINTMSG 'double  ',(' GFlop ',~ 0j3": (N^3)%(t1)*1e9),((N>:(9!:56'fma'){10,500)*.9!:56'cblas')#' cblas'
 if. IF64 +. 9!:56'cblas' do.
-  techo^:PRINTMSG b=. >./ | ,a - (0&{:: /:~ lrtoa@(1&{::)) c1
+  empty`techo@.PRINTMSG b=. >./ | ,a - (0&{:: /:~ lrtoa@(1&{::)) c1
   assert. 1e_4 >  b
 end.
 
 a=. a j. (N,N) ?@$ 1000 1000
 t1=. 6!:2'c1=. 128!:10 a'
-techo^:PRINTMSG 'complex ',(' GFlop ',~ 0j3": 4*(N^3)%(t1)*1e9),((9!:56'cblas')#' cblas')
+empty`techo@.PRINTMSG 'complex ',(' GFlop ',~ 0j3": 4*(N^3)%(t1)*1e9),((9!:56'cblas')#' cblas')
 if. 9!:56'cblas' do.
-  techo^:PRINTMSG b=. >./ | ,a - (0&{:: /:~ lrtoa@(1&{::)) c1
+  empty`techo@.PRINTMSG b=. >./ | ,a - (0&{:: /:~ lrtoa@(1&{::)) c1
   assert. 1e_4 >  b
 end.
 EMPTY
@@ -127,8 +127,8 @@ EMPTY
 
 (3 : 0)^:(IFWIN*:-.IF64) ''
 if. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.(<9!:56'cpu')e.'arm';'arm64' do. '' return. end. NB. no real hardware fma
-techo^:PRINTMSG 9!:14''
-techo^:PRINTMSG '128!:10  cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''
+empty`techo@.PRINTMSG 9!:14''
+empty`techo@.PRINTMSG '128!:10  cpu ',(9!:56'cpu'),' cores ',": {. 8 T. ''
 t QKTEST{(IF64{250 500), 50
 if. ((9!:56)'cblas') +. (9!:56)'fma' do. NB. otherwise too slow
   t QKTEST{(IF64{500 1000), 80

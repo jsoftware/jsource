@@ -30,9 +30,9 @@ __ -: ><__
 *./, 0=__ <~ _1e9+?2 3 4$2e9
 *./, 0=__ <~ o._1e9+?2 3 4$2e9
 
-techo^:PRINTMSG _ ; <. _
-techo^:PRINTMSG  __ ; <. __
-techo^:PRINTMSG  _ __ ; <._ __
+empty`techo@.PRINTMSG _ ; <. _
+empty`techo@.PRINTMSG  __ ; <. __
+empty`techo@.PRINTMSG  _ __ ; <._ __
  _ __ = <._ __
 _ __ -: <._ __
 _ __ __ __ -: _ _ __ __ <. _ __ _ __

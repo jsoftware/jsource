@@ -64,8 +64,8 @@ sinhb=: * '' H. 3r2@( 1r4&*)@*:
 cosb =:   '' H. 1r2@(_1r4&*)@*:
 coshb=:   '' H. 1r2@( 1r4&*)@*:
 
-techo^:PRINTMSG 0j18 ": +. (sin  , sinb ) _0.705999999999999961j1.834000000000000075
-techo^:PRINTMSG (sin (|@,@:-) sinb ) _0.705999999999999961j1.834000000000000075
+empty`techo@.PRINTMSG 0j18 ": +. (sin  , sinb ) _0.705999999999999961j1.834000000000000075
+empty`techo@.PRINTMSG (sin (|@,@:-) sinb ) _0.705999999999999961j1.834000000000000075
 (sin  (1.4e_15 > >./@:|@,@:-) sinb ) _0.705999999999999961j1.834000000000000075
 
 NB. 1e_15 failed in some platform/compiler

@@ -502,16 +502,15 @@ DFI1(jtcompsum){
 }
 
 // w is an array with 0 items, self is f, result is frame $ ,: identity-verb cell-shape $ atom-of-type
-static DFI1(jtred0){F12IP;A x,z;I f,*s;
- IARG1CR
+static DFI1(jtred0){A x,z;I f,*s;
+ IARG1CR F12IP;
  f=wr-wcr; s=AS(w);
  if(likely(!ISSPARSE(AT(w)))){GA(x,AT(w),0L,wcr,f+s);}else{GASPARSE(x,AT(w),1,wcr,f+s);}  // x exists only for type and shape
  R reitem(vec(INT,f,s),lamin1(dfv1(z,x,iden(self))));
 }    /* f/"r w identity case */
 
 // general reduce.  We inplace the results into the next iteration.  This routine cannot inplace its inputs.
-static DFI1(jtredg){F12IP;PROLOG(0020);A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; AD * RESTRICT a;I i,n;
- IARG1CR 
+static DFI1(jtredg){IARG1CR F12IP;PROLOG(0020);A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; AD * RESTRICT a;I i,n;
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  // loop over rank
  if(wcr<wr)R rank1ex(w,self,wcr,jtredg);

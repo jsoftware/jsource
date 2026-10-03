@@ -583,7 +583,7 @@ exitra:
 // Execution of x m}"r y.  Split on sparse/dense, passing on the dense to merge2, including inplaceability
 A jtamendn2(J jtfg,A afg,A wfg,AD * RESTRICT ind,A self){A e,z; I atd,wtd,t,t1;P*p;
   // ind=m, the indexes to be modified
- IARG2CR; ARGCHK1(ind); F12IP;PROLOG(0007);
+ IARG2CR ARGCHK1(ind); F12IP;PROLOG(0007);
  I at=AT(a), wt=AT(w), indt=AT(ind);
  I cellframelen,cellx,indframe;  // for single-cell amend: frame of cell; its index; number of surplus leading axes of 1s in selector
  if(unlikely(ISSPARSE(wt|indt)))R rank2exip(a,w,self,acr,wcr,acr,wcr,jtamendn2sp);

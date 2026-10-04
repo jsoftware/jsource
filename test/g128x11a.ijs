@@ -43,37 +43,37 @@ case2=. dltb2 f.
 end.
 
 fn=. y{::' rtrim';' ltrim';' lrtrim'
-empty`techo@.PRINTMSG 'short literal',fn
-empty`techo@.PRINTMSG (6!:2) 'PA=. case1&.> A'
-empty`techo@.PRINTMSG (6!:2) 'QA=. case2&.> A'
+techo^:PRINTMSG 'short literal',fn
+techo^:PRINTMSG (6!:2) 'PA=. case1&.> A'
+techo^:PRINTMSG (6!:2) 'QA=. case2&.> A'
 assert. (PA-:QA)
-empty`techo@.PRINTMSG 'long literal',fn
-empty`techo@.PRINTMSG (6!:2) 'PB=. case1&.> B'
-empty`techo@.PRINTMSG (6!:2) 'QB=. case2&.> B'
-empty`techo@.PRINTMSG (6!:2) 'PC=. case1&.> C'
-empty`techo@.PRINTMSG (6!:2) 'QC=. case2&.> C'
+techo^:PRINTMSG 'long literal',fn
+techo^:PRINTMSG (6!:2) 'PB=. case1&.> B'
+techo^:PRINTMSG (6!:2) 'QB=. case2&.> B'
+techo^:PRINTMSG (6!:2) 'PC=. case1&.> C'
+techo^:PRINTMSG (6!:2) 'QC=. case2&.> C'
 assert. (PB-:QB)
 assert. (PC-:QC)
-empty`techo@.PRINTMSG 'short literal2',fn
-empty`techo@.PRINTMSG (6!:2) 'PA1=. case1&.> A1'
-empty`techo@.PRINTMSG (6!:2) 'QA1=. case2&.> A1'
+techo^:PRINTMSG 'short literal2',fn
+techo^:PRINTMSG (6!:2) 'PA1=. case1&.> A1'
+techo^:PRINTMSG (6!:2) 'QA1=. case2&.> A1'
 assert. (PA1-:QA1)
-empty`techo@.PRINTMSG 'long literal2',fn
-empty`techo@.PRINTMSG (6!:2) 'PB1=. case1&.> B1'
-empty`techo@.PRINTMSG (6!:2) 'QB1=. case2&.> B1'
-empty`techo@.PRINTMSG (6!:2) 'PC1=. case1&.> C1'
-empty`techo@.PRINTMSG (6!:2) 'QC1=. case2&.> C1'
+techo^:PRINTMSG 'long literal2',fn
+techo^:PRINTMSG (6!:2) 'PB1=. case1&.> B1'
+techo^:PRINTMSG (6!:2) 'QB1=. case2&.> B1'
+techo^:PRINTMSG (6!:2) 'PC1=. case1&.> C1'
+techo^:PRINTMSG (6!:2) 'QC1=. case2&.> C1'
 assert. (PB1-:QB1)
 assert. (PC1-:QC1)
-empty`techo@.PRINTMSG 'short literal4',fn
-empty`techo@.PRINTMSG (6!:2) 'PA2=. case1&.> A2'
-empty`techo@.PRINTMSG (6!:2) 'QA2=. case2&.> A2'
+techo^:PRINTMSG 'short literal4',fn
+techo^:PRINTMSG (6!:2) 'PA2=. case1&.> A2'
+techo^:PRINTMSG (6!:2) 'QA2=. case2&.> A2'
 assert. (PA2-:QA2)
-empty`techo@.PRINTMSG 'long literal4',fn
-empty`techo@.PRINTMSG (6!:2) 'PB2=. case1&.> B2'
-empty`techo@.PRINTMSG (6!:2) 'QB2=. case2&.> B2'
-empty`techo@.PRINTMSG (6!:2) 'PC2=. case1&.> C2'
-empty`techo@.PRINTMSG (6!:2) 'QC2=. case2&.> C2'
+techo^:PRINTMSG 'long literal4',fn
+techo^:PRINTMSG (6!:2) 'PB2=. case1&.> B2'
+techo^:PRINTMSG (6!:2) 'QB2=. case2&.> B2'
+techo^:PRINTMSG (6!:2) 'PC2=. case1&.> C2'
+techo^:PRINTMSG (6!:2) 'QC2=. case2&.> C2'
 assert. (PB2-:QB2)
 assert. (PC2-:QC2)
 ''

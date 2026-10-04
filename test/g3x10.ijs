@@ -76,25 +76,25 @@ A=. 1#<(7, L0)$x
 B=. 1#<(3, 123*L0)$x
 C=. 1#<(3, 543*L0)$x
 
-empty`techo@.PRINTMSG 'short literal'
-empty`techo@.PRINTMSG 1&(6!:2) 'PA=.  tobase64_old"1&.> A'
-empty`techo@.PRINTMSG 5&(6!:2) 'QA=.  (3!:10)&.> A'
+techo^:PRINTMSG 'short literal'
+techo^:PRINTMSG 1&(6!:2) 'PA=.  tobase64_old"1&.> A'
+techo^:PRINTMSG 5&(6!:2) 'QA=.  (3!:10)&.> A'
 assert. (PA-:QA)
-empty`techo@.PRINTMSG 1&(6!:2) 'P=.  frombase64_old"1&.> PA'
-empty`techo@.PRINTMSG 5&(6!:2) 'Q=.  (3!:11)&.> QA'
+techo^:PRINTMSG 1&(6!:2) 'P=.  frombase64_old"1&.> PA'
+techo^:PRINTMSG 5&(6!:2) 'Q=.  (3!:11)&.> QA'
 assert. (P-:Q)
-empty`techo@.PRINTMSG 'long literal'
-empty`techo@.PRINTMSG 1&(6!:2) 'PB=.  tobase64_old"1&.> B'
-empty`techo@.PRINTMSG 5&(6!:2) 'QB=.  (3!:10)&.> B'
+techo^:PRINTMSG 'long literal'
+techo^:PRINTMSG 1&(6!:2) 'PB=.  tobase64_old"1&.> B'
+techo^:PRINTMSG 5&(6!:2) 'QB=.  (3!:10)&.> B'
 assert. (PB-:QB)
-empty`techo@.PRINTMSG 1&(6!:2) 'P=.  frombase64_old"1&.> PB'
-empty`techo@.PRINTMSG 5&(6!:2) 'Q=.  (3!:11)&.> QB'
+techo^:PRINTMSG 1&(6!:2) 'P=.  frombase64_old"1&.> PB'
+techo^:PRINTMSG 5&(6!:2) 'Q=.  (3!:11)&.> QB'
 assert. (P-:Q)
-empty`techo@.PRINTMSG 1&(6!:2) 'PC=.  tobase64_old"1&.> C'
-empty`techo@.PRINTMSG 5&(6!:2) 'QC=.  (3!:10)&.> C'
+techo^:PRINTMSG 1&(6!:2) 'PC=.  tobase64_old"1&.> C'
+techo^:PRINTMSG 5&(6!:2) 'QC=.  (3!:10)&.> C'
 assert. (PC-:QC)
-empty`techo@.PRINTMSG 1&(6!:2) 'P=.  frombase64_old"1&.> PC'
-empty`techo@.PRINTMSG 5&(6!:2) 'Q=.  (3!:11)&.> QC'
+techo^:PRINTMSG 1&(6!:2) 'P=.  frombase64_old"1&.> PC'
+techo^:PRINTMSG 5&(6!:2) 'Q=.  (3!:11)&.> QC'
 assert. (P-:Q)
 ''
 )

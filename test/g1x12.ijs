@@ -1,24 +1,24 @@
 prolog './g1x12.ijs'
 NB. 1!:12 ---------------------------------------------------------------
 
-read   =. 1!:1
-write  =. 1!:2
-iread  =. 1!:11
-iwrite =. 1!:12
-open   =. 1!:21
-erase  =. 1!:55
+read   =: 1!:1
+write  =: 1!:2
+iread  =: 1!:11
+iwrite =: 1!:12
+open   =: 1!:21
+erase  =: 1!:55
 
-f =. <jpath '~temp/foo1x12.x'
-x =. (?1000$#a.){a.
+f =: <jpath '~temp/foo1x12.x'
+x =: (?1000$#a.){a.
 x write f
 1000 = 1!:4 f
-h =. open f
+h =: open f
 1000 = 1!:4 h
 
 '' iwrite h,?#x
 x -: read h
 
-y =. 'Cogito, ergo sum.'
+y =: 'Cogito, ergo sum.'
 y iwrite h,100
 y -: iread h,100,#y
 
@@ -27,9 +27,9 @@ y -: iread h,100,#y
 
 erase h
   
-f =. <jpath '~temp/foo1x12.x'
+f =: <jpath '~temp/foo1x12.x'
 '0123456789' write f
-h =. open f
+h =: open f
 
 'domain error'      -: 'asdf' iwrite etx 'abc'
 'domain error'      -: 'asdf' iwrite etx 3.4 5  

@@ -84,17 +84,17 @@ fd =. 3 : 0
 (i.0 0) -: fd 0
 (i.0 0) -: fd 0 1 2
 
-fe =. 3 : '''result'' if. y do. end.'
+fe =: 3 : '''result'' if. y do. end.'
 'result' -: fe 0
 'result' -: fe 1
 'result' -: fe 1 0 2 0
 
-ff =. 3 : 'if. do. 1 2 3 end.'
+ff =: 3 : 'if. do. 1 2 3 end.'
 1 2 3 -: ff 0
 1 2 3 -: ff 4 5
 1 2 3 -: ff 'abc'
 
-fg =. 3 : 0
+fg =: 3 : 0
  if.     0=y do. 'zero'
  elseif. 1=y do. 'one'
  elseif. 2=y do. 'two'
@@ -108,7 +108,7 @@ fg =. 3 : 0
 'big'  -: fg 17.5
 'big'  -: fg 'abc'
 
-fg =. 3 : 0
+fg =: 3 : 0
 res =. 'a'
 if. y=0 [ res =. res,'b' do. res =. res , 'c'
 elseif. y=1 [ res =. res,'d' do. res =. res , 'e'
@@ -125,7 +125,7 @@ res
 'abdfhik' -: fg 3
 'abdfhjk' -: fg 4
 
-fg =. 3 : 0
+fg =: 3 : 0
 res =. 'a'
 if. y=0 [ res =. res,'b' do. res =. res , 'c'
 elseif. y=1 [ res =. res,'d' do. res =. res , 'e'
@@ -143,25 +143,25 @@ res
 'abdfhjk' -: fg 4
 
 
-fi =. 3 : 'if. y do. ''good'' return. end. ''bad'''
+fi =: 3 : 'if. y do. ''good'' return. end. ''bad'''
 
 'good' -: fi 1 2 3
 'good' -: fi 1
 'bad'  -: fi 0
 
-fj =. 3 : 'if. 23=y do. ''is 23'' else. ''not 23'' end.'
+fj =: 3 : 'if. 23=y do. ''is 23'' else. ''not 23'' end.'
 'is 23'  -: fj 23
 'not 23' -: fj 17
 
-fk =. 3 : 'if. (4-4)+23=y do. ''is 23'' else. ''not 23'' end.'
+fk =: 3 : 'if. (4-4)+23=y do. ''is 23'' else. ''not 23'' end.'
 'is 23'  -: fk 23
 'not 23' -: fk 17
 
-fl =. 3 : 'if. (4.5-4.5)+23=y do. ''is 23'' else. ''not 23'' end.'
+fl =: 3 : 'if. (4.5-4.5)+23=y do. ''is 23'' else. ''not 23'' end.'
 'is 23'  -: fl 23
 'not 23' -: fl 17
 
-fm =. 3 : 'if. (4j5-4j5)+23=y do. ''is 23'' else. ''not 23'' end.'
+fm =: 3 : 'if. (4j5-4j5)+23=y do. ''is 23'' else. ''not 23'' end.'
 'is 23'  -: fm 23
 'not 23' -: fm 17
 

@@ -1,29 +1,29 @@
 prolog './g1x.ijs'
 NB. 1!: -----------------------------------------------------------------
 
-read   =. 1!:1
-write  =. 1!:2
-append =. 1!:3
-size   =. 1!:4
-erase  =. 1!:55
+read   =: 1!:1
+write  =: 1!:2
+append =: 1!:3
+size   =: 1!:4
+erase  =: 1!:55
 
-mtm =. i. 0 0
+mtm =: i. 0 0
 
-t =. a.,":?~300
+t =: a.,":?~300
 mtm -: t write <'junkfoo'
-t =. read <'junkfoo'
+t =: read <'junkfoo'
 1    -: #$t
 2    -: type t
 (#t) -: size <'junkfoo'
 
 mtm -: (|.t) write <'oofknuj'
 (#t) =  size 'junkfoo';'oofknuj'
-x =. read <'oofknuj'
+x =: read <'oofknuj'
 x -: |.t
 
 mtm -: t append <'oofknuj'
 (2*#t) = size <'oofknuj'
-x =. read <'oofknuj'
+x =: read <'oofknuj'
 x -: (|.t),t
 
 erase 'junkfoo';'oofknuj'
@@ -31,25 +31,25 @@ erase 'junkfoo';'oofknuj'
 
 NB. 1!: terminal input/output -------------------------------------------
 
-in  =. 1!:1
-out =. 1!:2&2
+in  =: 1!:1
+out =: 1!:2&2
 
 NB. 0 0$out 'this line should appear in the output'
-t =. in 1
+t =: in 1
 1   1  1 1
 t -: '1   1  1 1'
-t =. in 1
+t =: in 1
 1
 t -: ,'1'
 
 
 NB. 1!: -----------------------------------------------------------------
 
-read   =. 1!:1
-write  =. 1!:2
-append =. 1!:3
-size   =. 1!:4
-erase  =. 1!:55
+read   =: 1!:1
+write  =: 1!:2
+append =: 1!:3
+size   =: 1!:4
+erase  =: 1!:55
 
 'file name error'   -:       read   etx <'J9k8L7m6' 
 'file name error'   -:       size   etx <'J9k8L7m6'

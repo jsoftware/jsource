@@ -5,12 +5,12 @@ load 'dict'
 
 d =: ('hash' ,&< 'valueshape' ; 0) conew 'jdict'
 '' put__d i. 1000
-techo 'hash ',": 100 (6!:2) 'has__d f."0 k' [ k =. 10 # i. 1000
+techo 'hash ',": 100 (6!:2) 'has__d f."0 k' [ k =: 10 # i. 1000
 destroy__d ''
 
 d =: ('tree' ,&< 'valueshape' ; 0) conew 'jdict'
 '' put__d i. 1000
-techo 'tree ',": 100 (6!:2) 'has__d f."0 k' [ k =. 10 # i. 1000
+techo 'tree ',": 100 (6!:2) 'has__d f."0 k' [ k =: 10 # i. 1000
 destroy__d ''
 
 cocurrent 'base'
@@ -693,7 +693,7 @@ benchmarkdijkstra =: {{
   6!:2 'g dijkstra 0'
 }}"0
 
-techo 'Dijkstra (1e5 vertices, 3e5 edges): ' , (": 3 benchmarkdijkstra 1e5) , 's'
+techo 'Dijkstra (1e5 vertices, 3e5 edges): ' , (": 3 benchmarkdijkstra (*9!:56'memaudit'){1e5 1e4) , 's'
 
 NB. x is the maximum height for jumping and falling.
 NB. y is table (rank 2) where each row represents a platform (y, x_left, x_right)
@@ -860,16 +860,16 @@ X -: Y
 
 NB. Named dict
 
-s0 =. 7!:0 ''
+s0 =: 7!:0 ''
 1: create_jdict_ 'hash';<_2 ]\ 'name';'_xxx_base_'
 put_xxx~ i. 1000
 1 3 5 -: get_xxx 1 3 5
 1: close_xxx''
-s1 =. 7!:0''
+s1 =: 7!:0''
 1024 > s1-s0
 
 NB. Symbols
-dict =. ('hash';<_2 ]\ 'keytype';32) conew 'jsymbol'
+dict =: ('hash';<_2 ]\ 'keytype';32) conew 'jsymbol'
 put__dict <'abc'
 put__dict ;: 'def ghi'
 0 = get__dict <'abc'

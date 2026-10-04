@@ -325,9 +325,9 @@ NB. Test type priority and conversion
 NB.  0   1   2   3   4   5   6    7  8  9  A  B  C  D  E   F     // priorities
 NB. B01 LIT C2T C4T INT BOX XNUM RAT FL I1 I2 I4 HP SP QP CMPX
 tpri =: 4 64 128 8 6 7 11 16   NB. the 3!:0 values in priority order
-args =. , tpri c.&.>/ 3 4 5  NB. all the different types
-vbs =. =`<`<.`<:`>`>.`>:`+`+.`*`*.`-`%`^`^.`!`(17 b.)`(32 b.)`(34 b.)   NB. o. cannot handle extended with multiple x
-f =. {{  NB. adverb.  u is list of dyad gerunds, x and y are values. Verify that the result of verb matches the conversion rules
+args =: , tpri c.&.>/ 3 4 5  NB. all the different types
+vbs =: =`<`<.`<:`>`>.`>:`+`+.`*`*.`-`%`^`^.`!`(17 b.)`(32 b.)`(34 b.)   NB. o. cannot handle extended with multiple x
+f =: {{  NB. adverb.  u is list of dyad gerunds, x and y are values. Verify that the result of verb matches the conversion rules
 xx =: x [ yy =: y
 mp =: x >.&.(tpri&i.)&(3!:0) y  NB. higher pri
 px =. mp c. x [ py =. mp c. y  NB. the expected conversion

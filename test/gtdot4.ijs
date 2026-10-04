@@ -17,7 +17,7 @@ NB. Create 1 thread in pool 1; then verify that jobs in pool 1 are faster than t
 0 -: 2 { 2 T. 0
 granularity=: 2e_13
 stime =: 6!:1''
-dly =. 0.2
+dly =: 0.2
 dly = > 6!:3 t. 0"0 ] 6 # dly
 ((5*dly)-granularity) < stime -~ 6!:1''
 stime =: 6!:1''

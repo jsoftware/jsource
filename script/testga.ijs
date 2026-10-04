@@ -23,7 +23,7 @@ os=: os, ((<ma) -.@e. (0;,'0')){::'';'ma' [ ma=. 2!:5'_MEMAUDIT'
 4!:55 <'ma'
 testres=: 'test',os,'.txt'
 
-PRINTMSG=: 1
+PRINTMSG=: 0
 ECHOFILENAME=: 1   NB. echo file name
 stdout LF ,~ 9!:14''
 echo '_DEBUG: ',": 2!:5'_DEBUG'

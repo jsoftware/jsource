@@ -804,11 +804,18 @@ y=: y, 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
 5 5 5 5 5 5 5 5 5 5 5 5 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -: (<<<I.1=y){y  NB. incorrectly gave a virtual
 
 {{for. i. y do.
-dels =. (#shp) ?@$~ ndels =. ? shp =. 1 >. ? 73  NB. deal the array and the comp indexes
+dels =. shp ?@$~ ndels =. ? shp =. 1 >. ? 73  NB. deal the array and the comp indexes
 assert. (2 ! shp) = (+/~.dels) + +/ (<<<dels) { i. shp
 end.
 1
 }} QKTEST{50000 10000  NB. Veridy that random deletions work
+
+{{for. i. y do.
+dels =. shp ?@$~ ndels =. ? shp =. 1 >. ? 4e4  NB. deal the array and the comp indexes
+assert. (2 ! shp) = (+/~.dels) + +/ (<<<dels) { i. shp
+end.
+1
+}} QKTEST{100 20  NB. Veridy that random deletions work
 
 NB. (<"1 x){y -----------------------------------------------------------
 

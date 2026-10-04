@@ -240,7 +240,7 @@ a =: r.?20$1000
 
 NB. ebi following can fail with certain arguments
 NB. it fails in 602 and 701 the same way it fails in 83
-NB.    z=.   0.99999999818263596j6.0288706691585265e_5
+NB.    z=:   0.99999999818263596j6.0288706691585265e_5
 NB.    9!:11[18
 NB.    _2 o. z
 NB.    -2 circle z

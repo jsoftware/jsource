@@ -1,4 +1,5 @@
 prolog './g320ip.ijs'
+
 NB. ,y ravel in place -----------------------------------------------
 
 (i. 1000) -: , i. 1000
@@ -520,14 +521,14 @@ a =: ([: ,&a 1 ,~ ]) a  NB. value in nvv must be protected
 ((>: i. 9) , 1 , (>: i. 9)) -: a
 
 a =: >: i. 1e6  NB. not AFRO
-3000 > 7!:2 'a =: 5&+ a'
+IGNOREIFFVI 3000 > 7!:2 'a =: 5&+ a'
 
 a =: 100 100 ?@$ 0
 22000 > 7!:2 'a =: 99 I.@:(<&0.001)@,@]} a'
 
 a =: 'ab'
 b =: 1e5 $ 'abdab'
-3000 > 7!:2 'b =: ([: ,&a ''z'' ,~ ]) b'
+IGNOREIFFVI 3000 > 7!:2 'b =: ([: ,&a ''z'' ,~ ]) b'
 ((1e5 $ 'abdab') , 'zab') -: b
 'ab' -: a
 a =: ([: ,&a 'z' ,~ ]) a
@@ -684,7 +685,7 @@ a =: i. 10000
 40000 < 7!:2 '3 : ''a =: 5 (5&+)@:+ a'' 0'  NB. Not safe with usecount 1
 40000 < 7!:2 '3 : ''a =: 5 ((15!:15 (5))&+)@:+ a'' 0'  NB. Safe with usecount _1
 9!:53 (1)
-12000 > 7!:2 '3 : ''a =: 5 ((15!:15 (5))&+)@:+ a'' 0'  NB. Safe with usecount _1
+IGNOREIFFVI 12000 > 7!:2 '3 : ''a =: 5 ((15!:15 (5))&+)@:+ a'' 0'  NB. Safe with usecount _1
 
 NB. u&.v
 IGNOREIFFVI 20000 > 7!:2 ',&''b''&.] 10000#''a'''
@@ -810,7 +811,7 @@ NB. sort on numeric lists
 (50000 + 7!:2 'a =: /:~ a') > (7!:2 '/:~ a') [ a =: 10000 ?@$ 0  NB. Not inplaced; block has usecount 2
 (50000 + 7!:2 'a =: /:~ a') < (7!:2 '/:~ a')
 (160 + 7!:2 'a =: /:~ a') > (7!:2 '/:~ a') [ a =: 38 ?@$ 20000  NB. Not inplaced; block has usecount 2
-(160 + 7!:2 'a =: /:~ a') < (7!:2 '/:~ a')
+(*9!:56'normahn') +. (160 + 7!:2 'a =: /:~ a') < (7!:2 '/:~ a')
 
 NB. The following failed when we didn't properly set the inplace flags for the selected verb
 NB. The sentence aborted without performing the assignment
@@ -930,10 +931,10 @@ a =:  i: 5000
 
 NB. Abandoned inputs become inplaceable in an explicit definition
 f1 =: 3 : 'y =. b 5} y'
-(dbq'') +. 140000 > 7!:2 'f1 131000 # a' [ a =: 'a' [ b =: 'b'   NB. debug doesn't inplace names
+IGNOREIFFVI (dbq'') +. 140000 > 7!:2 'f1 131000 # a' [ a =: 'a' [ b =: 'b'   NB. debug doesn't inplace names
 
 NB. They can be virtual too
-(dbq'') +. 140000 > 7!:2 'f1 }. 131000 # a' [ a =: 'a' [ b =: 'b'
+IGNOREIFFVI (dbq'') +. 140000 > 7!:2 'f1 }. 131000 # a' [ a =: 'a' [ b =: 'b'
 
 NB. They can be passed through but lose inplaceability at lower levels
 f2 =: 3 : 'f1 y'
@@ -941,24 +942,24 @@ f2 =: 3 : 'f1 y'
 
 NB. They are reset to inplace on exit
 f3 =: 3 : '5'
-(dbq'') +. 140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+IGNOREIFFVI (dbq'') +. 140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 f3 =: 3 : 0
 y =. b 5} y
 5
 )
-(dbq'') +. 140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+IGNOREIFFVI (dbq'') +. 140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 f3 =: 3 : 0
 y =. 10
 5
 )
-(dbq'') +. 140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+IGNOREIFFVI (dbq'') +. 140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 
 NB. Assignment to self leaves inplaceable
 f3 =: 3 : 0
 y =. y
 5
 )
-(dbq'') +. 140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+IGNOREIFFVI (dbq'') +. 140000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 
 NB. Assignment ending in ) is inplaceable
 f3 =: 3 : 0
@@ -970,15 +971,15 @@ y =. (y =. '2' 0} y) , '5'
 (y =. (y =. '3' 0} y) ,  '5')
 5
 )
-(dbq'') +. 140000 > 7!:2 '(f3 130000 # ''a'')'
+IGNOREIFFVI (dbq'') +. 140000 > 7!:2 '(f3 130000 # ''a'')'
 
 
 NB. Inplaceable result of explicit definition stays inplaceable after exit
 f3 =: 3 : '10000 # a'
-(dbq'') +. 210000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+IGNOREIFFVI (dbq'') +. 210000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 NB. Even if named
 f3 =: 3 : 'p =. 10000 # a'
-(dbq'') +. 210000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
+IGNOREIFFVI (dbq'') +. 210000 > 7!:2 '(f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a) [ (f3 131000 # a)'
 
 a =.  'this';'is'  NB. Old bug when tried to zap the backer for a virtual block
 (1;'this') -: ((}. 1: 1:);0&{) a_:
@@ -1246,7 +1247,7 @@ NB. User test, crashed when <@": inplaced an unabandoned input
 dbgsucceed2=: 1 : '[ 1:@(m ; ''SUCCEED'' ; coname@'''' , ''result'' ; <@":)'
 dbgarg2=: 2 : '] [ 1:@(n ; ''MONAD''"_ : (''DYAD''"_) ; m ; coname@'''' , (''y'' ; dbgshape ; <@":) : ((''x'' ; ''y'') ,@,. ,:&(dbgshape ; <@":)))'
 dbg2=: 2 : '(n dbgsucceed2)@u^:(1:`((u b. 0) dbgarg2 n)) ::0:'
-X=. (((= { (; |.))@(+ i.)) $L:0 <"0@('ABCD' $~ #~)) 2
+X=: (((= { (; |.))@(+ i.)) $L:0 <"0@('ABCD' $~ #~)) 2
 1: (3 : '(, dbg2 '','')"(#$y)&.>/y'^:(#@$)) X
 
 NB. Dyad 15!:15 ---------------------------------------------------

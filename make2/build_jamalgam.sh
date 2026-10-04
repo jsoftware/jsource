@@ -329,11 +329,11 @@ if [ $USE_PYXES -eq 1 ]; then
    common="$common -DPYXES=1"
    LDTHREAD=" -pthread "
    ;;
-  *)
   openbsd/*)
    common="$common -DPYXES=1"
    LDTHREAD=" -pthread "
    ;;
+  *)
    common="$common -DPYXES=1"
    LDTHREAD=" -pthread -lrt "
    ;;

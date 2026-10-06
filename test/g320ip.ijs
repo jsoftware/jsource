@@ -313,7 +313,32 @@ NB. Not public name
 aa =: i. 1e6
 assert. 2000 < 7!:2 '_5 {. aa , _1'
 aa =: i. 1e6
-999996 999997 999998 999999 _1 -: _5 {. aa , _1
+assert. 999996 999997 999998 999999 _1 -: _5 {. aa , _1
+1 }} ''
+
+NB. run once more after finished to catch error
+NB. Verify that virtual extension inplaces (only on private names)
+{{ a =. i. 1e6
+assert. 2000 > 7!:2 '_5 {. a , _1'
+a =. i. 1e6
+999996 999997 999998 999999 _1 -: _5 {. a , _1
+NB. float
+a =. 0.5 + i. 1e5
+assert. 2000 > 7!:2 '_5 {. a , _1'
+a =. 0.5 + i. 1e5
+99996.5 99997.5 99998.5 99999.5 _1 -: _5 {. a , _1
+NB. Not boxed
+a =. <"0 i. 1e5
+assert. 2000 < 7!:2 '_5 {. a , a:'
+a =. <"0 i. 1e5
+NB. Not extended
+a =. i. 100000x
+assert. 2000 < 7!:2 '_5 {. a , _1'
+NB. Not public name
+aa =: i. 1e6
+assert. 2000 < 7!:2 '_5 {. aa , _1'
+aa =: i. 1e6
+assert. 999996 999997 999998 999999 _1 -: _5 {. aa , _1
 1 }} ''
 
 NB. Verify forms for indexing

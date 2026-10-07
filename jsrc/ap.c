@@ -395,14 +395,14 @@ PREFIXPFX(bw1111pfxI, UI,UI, BW1111, bw1111II,R EVOK;)
 
 // This old prefix support is needed for sparse matrices
 
-static DFI1(jtprefix){F12IP;A fs=FAV(self)->fgh[0];
- IARG1R
+static DFI1(jtprefix){A fs=FAV(self)->fgh[0];
+ IARG1R F12IP;
  if(unlikely(wcr<wr)){R rank1ex(w,self,wr,jtprefix);}
  R eachl(apv(SETIC(w,wr),1L,1L),w,atop(fs,ds(CTAKE)));
 }    /* f\"r w for general f */
 
-static DFI1(jtgprefix){F12IP;A h,*hv,z,*zv;I m,n,r;
- IARG1R
+static DFI1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
+ IARG1R F12IP;
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  if(unlikely(wcr<wr)){R rank1ex(w,self,wr,jtgprefix);}
  SETIC(w,n); 
@@ -671,7 +671,7 @@ static DF2(jtinfixprefix2){F12IP;PROLOG(00202);A fs;I cger[128/SZI];
 
 // prefix, vectors to common processor.  Handles IRS.  Supports inplacing
 static DFI1(jtinfixprefix1){
- IARG1R; F12IP;
+ IARG1R F12IP;
  if(wcr<wr){R jtrank1ex(jtfg,w,self,wcr,jtinfixprefix1);}
  R jtinfixprefix2(jtfg,mark,w,self);
 }

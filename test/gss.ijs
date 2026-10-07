@@ -314,7 +314,7 @@ vv0 =: vv0 + 6
 xx ~: yy =: 15!:14<'vv0'  NB. verify inplace
 
 NB. ranked and atomic ss, with restart and without
-f =. {{ ^"m -: {{ x ^ y }}"m }}
+f =: {{ ^"m -: {{ x ^ y }}"m }}
 (1 1 1$0.5) (0 f) (1 1 1 1$0.5) 
 (1 1 1$0.5) (_ f) (1 1 1 1$0.5) 
 (1 1 1$0.5) (0 1 f) (1 1 1 1$0.5) 

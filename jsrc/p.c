@@ -174,7 +174,7 @@ static DF2(jtisf){F12IP;A am, mw; RZ(am=onm(a)); RZ(mw=CALL1(FAV(self)->valencef
 // assignment other than name =[.:], single or multiple
 // jt has flag set for final assignment (passed into symbis)
 // The return must be 0 for bad, otherwise good with bit 0=final assignment, bit 1 = local assignment (never set)
-static I NOINLINE jtis(J jtfg,A n,A v,A symtab){F12IP;
+static I NOINLINE jtis(J jtfg,A n,A v,A symtab){F12IP;PSTK* stack=jt->parserstackframe.parserstkend1;
  B ger=0;C *s;
  if(unlikely(AT(n)==BOX+BOXMULTIASSIGN)){   // test both bits, since BOXMULTIASSIGN has multiple uses
   // string assignment, where the NAME blocks have already been computed.  Use them.  The fast case is where we are assigning a boxed list
@@ -333,11 +333,11 @@ static A virtfolk(J jtip, A f, A g, A h){
  h = virtifnonip(jt,0,h);
  R jtfolk(jtip,f,g,h);
 }
-static A virthook(J jtip, A f, A g){
+static A virthook(J jtip, A f, A g, A z){
  J jt = (J)(intptr_t)((I)jtip&-4);  // estab legit jt
  f = virtifnonip(jt,0,f);
  g = virtifnonip(jt,0,g);
- R jthook(jtip,f,g);
+ R jthook(jtip,f,g,z);
 }
 
 // redefine the names for when they are used below

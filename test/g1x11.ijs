@@ -1,46 +1,46 @@
 prolog './g1x11.ijs'
 NB. 1!:11 ---------------------------------------------------------------
 
-write =. 1!:2
-iread =. 1!:11
-open  =. 1!:21
-close =. 1!:22
-erase =. 1!:55
+write =: 1!:2
+iread =: 1!:11
+open  =: 1!:21
+close =: 1!:22
+erase =: 1!:55
 
-intv  =. [ {~ ([: ({. + i.@{:) ]) 
+intv  =: [ {~ ([: ({. + i.@{:) ]) 
 
-f =. <jpath '~temp/foo1x11.x'
-t =. a.{~?1000$#a.
+f =: <jpath '~temp/foo1x11.x'
+t =: a.{~?1000$#a.
 t write f
 1000 = 1!:4 f
-(t intv i) -: iread f,<i=.?100 900
-h =. open f
+(t intv i) -: iread f,<i=:?100 900
+h =: open f
 1000 = 1!:4 h
-(t intv i) -: iread f,<i=.?100 900
+(t intv i) -: iread f,<i=:?100 900
 1000 = 1!:4 h
-(t intv i) -: iread h, i=.?200 800
+(t intv i) -: iread h, i=:?200 800
 1000 = 1!:4 h
-(t intv i) -: iread h; i=.?300 700
+(t intv i) -: iread h; i=:?300 700
 1000 = 1!:4 h
-(t intv i) -: iread h, i=.(?1000),0
+(t intv i) -: iread h, i=:(?1000),0
 1000 = 1!:4 h
-(t intv i) -: iread h, i=.(1000),0  NB. 0 bytes at EOF OK
+(t intv i) -: iread h, i=:(1000),0  NB. 0 bytes at EOF OK
 1000 = 1!:4 h
 
-(i}.t) -: iread h, i=.?1000
-(i}.t) -: iread h; i=.?1000
-(i}.t) -: iread f,<i=.?1000
+(i}.t) -: iread h, i=:?1000
+(i}.t) -: iread h; i=:?1000
+(i}.t) -: iread f,<i=:?1000
 
-(i{.t) -: iread h, i=.->:?1000
-(i{.t) -: iread h; i=.->:?1000
-(i{.t) -: iread f,<i=.->:?1000
+(i{.t) -: iread h, i=:->:?1000
+(i{.t) -: iread h; i=:->:?1000
+(i{.t) -: iread f,<i=:->:?1000
 
 erase h
 
 
-f =. <jpath '~temp/foo1x11.x'
+f =: <jpath '~temp/foo1x11.x'
 '0123456789' write f
-h =. open f
+h =: open f
 
 'domain error'      -: iread etx 'abc'
 'domain error'      -: iread etx 3.4 5  
@@ -80,7 +80,7 @@ h =. open f
 'index error'       -: iread etx f,<_11
 'index error'       -: iread etx f,<_1 2
 
-f =. (3=9!:12 ''){'no/such/dir/or/file';':no:such:dir:or:file'
+f =: (3=9!:12 ''){'no/such/dir/or/file';':no:such:dir:or:file'
 'file name error'   -: iread etx f,<1 2
 'file name error'   -: iread etx 'noQsuch';0
 

@@ -311,9 +311,17 @@ if [ $USE_PYXES -eq 1 ]; then
     LDTHREAD=" ../pthreads4w/x64/pthreadVC3.lib "
    fi
    ;;
-  *)
+  darwin/*)
    common="$common -DPYXES=1"
    LDTHREAD=" -pthread "
+   ;;
+  openbsd/*)
+   common="$common -DPYXES=1"
+   LDTHREAD=" -pthread "
+   ;;
+  *)
+   common="$common -DPYXES=1"
+   LDTHREAD=" -pthread -lrt "
    ;;
  esac
 else

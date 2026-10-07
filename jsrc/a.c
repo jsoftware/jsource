@@ -7,12 +7,12 @@
 
 // These routines support IRS iff the underlying verb does, so all we have to do is switch the ranks if any and vector on to the function
 // create inplace bits as copy of W, or swap A & W
-static DFI1(swap1){IARG1;F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; jtfg=MOVEIPWW(jtfg);
+static DFI1(swap1){IARG1 F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; jtfg=MOVEIPWW(jtfg);
  // a~ carried the IRS flag from a and thus we might have ranks set.  If so, use them, and no need to check agreement again.  For ease, we just use whatever is set
  A2LINKIF(FAV(fs)->flag&VFUSEDOK2,jtfg,wfg,wfg)
  R f2(jtfg,wfg,wfg,fs);   // duplicate arg, keep rank if any
 }
-static DFI2(swap2){IARG2;F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; jtfg=MOVEIPWA(jtfg);
+static DFI2(swap2){IARG2 F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; jtfg=MOVEIPWA(jtfg);
  A2LINKIF(FAV(fs)->flag&VFUSEDOK2,jtfg,wfg,afg)
  R f2(jtfg,wfg,afg,fs);   // swap arg order, keep ranks if any
 }

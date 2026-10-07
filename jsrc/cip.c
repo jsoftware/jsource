@@ -220,6 +220,8 @@ I blockedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I pnom,I pstored,I flgs){
  R NANTEST==0;  // return with error (0) if any FP error
 }
 // cache-blocking code
+// PYXES applicable to AVX2 version only
+#if PYXES
 // ctx block passed in from the task code
 typedef struct {
  D*av,*wv,*zv;  // arg pointers into cachedmmultx, defined below
@@ -519,6 +521,8 @@ static NOINLINE C cachedmmultx(J jt,void *ctx,UI4 ti){ CACHEMMSTATE *pd=ctx;
  }  // end of loop for each 64-col slice of w
  R unlikely(NANTEST)?EVNAN:0;  // return job semantics, 0=OK
 }
+#endif
+
 // looping entry point for cached mmul
 // We split the input into products where the left arg has at most MAXAROWS rows.  This is to avoid overrunning L2 cache
 // Result is 0 if error, which must be NaN error
@@ -562,6 +566,7 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){
 }
 
 #else
+// non-AVX2 version
 // cache-blocking code
 #define OPHEIGHT 2  // height of outer-product block
 #define OPWIDTH 4  // width of outer-product block
@@ -792,13 +797,14 @@ oflo2:
     // Result does not fit in INT.  Do the computation as float, with float result
     if(m)RZ(jtsumattymesprods(jt,INT,voidAV(w),voidAV(a),p,1,1,1,m,voidAV(z)));  // use +/@:*"1 .  Exchange w and a because a is the repeated arg in jtsumattymesprods.  If error, clear z (should not happen here)
    }else{
-     // full matrix products
-     IL probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
-     if((UI)probsize < (UI)FLOAT16TOFLOAT(JT(jt,igemm_thres))){RZ(a=ccvt(FL,a,0)); RZ(w=ccvt(FL,w,0)); cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);}  // Do our matrix multiply - converting   TUNE
-     else {
-      // for large problem, use BLAS
-      mvc(m*n*sizeof(D),DAV(z),MEMSET00LEN,MEMSET00);
-      igemm_nn(m,n,p,1,(I*)DAV(a),p,1,(I*)DAV(w),n,1,0,DAV(z),n,1);
+    // full matrix products
+    IL probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
+    if(!hascblas || (UI)probsize < (UI)FLOAT16TOFLOAT(JT(jt,igemm_thres))){
+     RZ(a=ccvt(FL,a,0)); RZ(w=ccvt(FL,w,0)); cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);  // Do our matrix multiply - converting   TUNE
+    } else {
+     // for large problem, use BLAS
+     mvc(m*n*sizeof(D),DAV(z),MEMSET00LEN,MEMSET00);
+     igemm_nn(m,n,p,1,(I*)DAV(a),p,1,(I*)DAV(w),n,1,0,DAV(z),n,1);
     }
     // If the result has a value that has been truncated, we should keep it as a float.  Unfortunately, there is no way to be sure that some
     // overflow has not occurred.  So we guess.  If the result is much less than the dynamic range of a float integer, convert the result
@@ -843,108 +849,100 @@ oflo2:
     smallprob=0;  // Don't compute it again
    }else{
 #if 0   // for TUNEing
-// %.: 100 .0008, 200 0.005, 500 0.62, 1000 0.4, 10000 285
-// Results 10/2019
-// m n
-// 2 2  blocked always; smallprob beats cached up to 100000
-// 3 3  blocked always; smallprob beats cached up to 10000
-// 4 4  blocked always; smallprob beats cached up to 200
-// 8 8  blocked always; smallprob beats cached below 20
-// 16 16 blocked always; cached competitive for 5000 and above
-// 24 24 blocked always; cached competitive
-// 28 28 blocked always; cached competitive
-// 32 32 blocked up to 1000, then cached
-// 64 64 blocked up to 52, then cached
-// 128 128 cached
-// 256 256 cached
-// 512 512 cached
-// 768 768 cached
-// 1024 1024 BLAS because cached takes a beating - fix this
-// others cached
-//
-// p n
-// 2 2  blocked always; smallprob beats cached up to 100000
-// 3 3  blocked always; smallprob beats cached up to 100000
-// 4 4  blocked always; smallprob beats cached up to 100000
-// 8 8  blocked; otherwise cached
-// 16 16  blocked; otherwise cached
-// 24 24  blocked; otherwise BLAS
-// 32 32  blocked; otherwise BLAS
-// 64 64  cached till m=500; then blocked till 10000; then BLAS
-// 132 132  cached till m=2000; then BLAS
-// 256 256  cached till m=2000; then BLAS
-// 520 520  cached till m=2000; then BL7AS
-// 1032 1032  cached till m=5000; then BLAS
-// 2056 2056  cached till m=5000; then BLAS
-//
-/*
-NB. y is m,p,n, result is 1 timing value
-time1 =: 3 : 0"1
-rpts =. 10000 <. 5 >. <. 1e9% * / y
-l =. (2 {. y) ?@$ 0
-r =. (_2 {. y) ?@$ 0
-rpts 6!:2 'l +/ . * r'
-)
-*/
-#if 0  // large n, possibly short m p
-/*
-NB. x is m, y is p, we run timings with a range of n for each algorithm
-NB. result is 4 rows, 1 for each algo
-timemp =: 4 : 0
-lens =. (1e10 % x*y) (> # ]) 12 20 52 100 200 500 1000 2000 5000 10000 20000 50000 100000 200000 500000 1000000
-time1 (x,y)&,"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
-)
-*/
-    // if low 2 bits of n are 00, use small; if 01, use cached; if 10, use BLAS; if 11 use blocked
-    smallprob=0;
-    if((n&3)==3){blockedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);}
-    else if(n&2){
-     mvc(m*n*sizeof(D),DAV(z),MEMSET00LEN,MEMSET00);
-     dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
-    }else if(n&1){cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);
-    }else smallprob=1;
-#else  // large m, possibly short p n
-/*
-NB. x is m, y is p, we run timings with a range of n for each algorithm
-NB. result is 4 rows, 1 for each algo
-timemp =: 4 : 0
-lens =. (1e10 % x*y) (> # ]) 12 20 52 100 200 500 1000 2000 5000 10000 20000 50000 100000 200000 500000 1000000
-time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
-)
-*/
-    // if low 2 bits of m are 00, use small; if 01, use cached; if 10, use BLAS; if 11 use blocked
-    smallprob=0;
-    if((m&3)==3){blockedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);}
-    else if(m&2){
-     mvc(m*n*sizeof(D),DAV(z),MEMSET00LEN,MEMSET00);
-     dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
-    }else if(m&1){cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);
-    }else smallprob=1;
-#endif
+//    // %.: 100 .0008, 200 0.005, 500 0.62, 1000 0.4, 10000 285
+//    // Results 10/2019
+//    // m n
+//    // 2 2  blocked always; smallprob beats cached up to 100000
+//    // 3 3  blocked always; smallprob beats cached up to 10000
+//    // 4 4  blocked always; smallprob beats cached up to 200
+//    // 8 8  blocked always; smallprob beats cached below 20
+//    // 16 16 blocked always; cached competitive for 5000 and above
+//    // 24 24 blocked always; cached competitive
+//    // 28 28 blocked always; cached competitive
+//    // 32 32 blocked up to 1000, then cached
+//    // 64 64 blocked up to 52, then cached
+//    // 128 128 cached
+//    // 256 256 cached
+//    // 512 512 cached
+//    // 768 768 cached
+//    // 1024 1024 BLAS because cached takes a beating - fix this
+//    // others cached
+//    //
+//    // p n
+//    // 2 2  blocked always; smallprob beats cached up to 100000
+//    // 3 3  blocked always; smallprob beats cached up to 100000
+//    // 4 4  blocked always; smallprob beats cached up to 100000
+//    // 8 8  blocked; otherwise cached
+//    // 16 16  blocked; otherwise cached
+//    // 24 24  blocked; otherwise BLAS
+//    // 32 32  blocked; otherwise BLAS
+//    // 64 64  cached till m=500; then blocked till 10000; then BLAS
+//    // 132 132  cached till m=2000; then BLAS
+//    // 256 256  cached till m=2000; then BLAS
+//    // 520 520  cached till m=2000; then BL7AS
+//    // 1032 1032  cached till m=5000; then BLAS
+//    // 2056 2056  cached till m=5000; then BLAS
+//    //
+//    /*
+//    NB. y is m,p,n, result is 1 timing value
+//    time1 =: 3 : 0"1
+//    rpts =. 10000 <. 5 >. <. 1e9% * / y
+//    l =. (2 {. y) ?@$ 0
+//    r =. (_2 {. y) ?@$ 0
+//    rpts 6!:2 'l +/ . * r'
+//    )
+//    */
+//    #if 0  // large n, possibly short m p
+//    /*
+//    NB. x is m, y is p, we run timings with a range of n for each algorithm
+//    NB. result is 4 rows, 1 for each algo
+//    timemp =: 4 : 0
+//    lens =. (1e10 % x*y) (> # ]) 12 20 52 100 200 500 1000 2000 5000 10000 20000 50000 100000 200000 500000 1000000
+//    time1 (x,y)&,"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
+//    )
+//    */
+//        // if low 2 bits of n are 00, use small; if 01, use cached; if 10, use BLAS; if 11 use blocked
+//        smallprob=0;
+//        if((n&3)==3){blockedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);}
+//        else if(n&2){
+//         mvc(m*n*sizeof(D),DAV(z),MEMSET00LEN,MEMSET00);
+//         dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
+//        }else if(n&1){cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);
+//        }else smallprob=1;
+//    #else  // large m, possibly short p n
+//    /*
+//    NB. x is m, y is p, we run timings with a range of n for each algorithm
+//    NB. result is 4 rows, 1 for each algo
+//    timemp =: 4 : 0
+//    lens =. (1e10 % x*y) (> # ]) 12 20 52 100 200 500 1000 2000 5000 10000 20000 50000 100000 200000 500000 1000000
+//    time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
+//    )
+//    */
+//        // if low 2 bits of m are 00, use small; if 01, use cached; if 10, use BLAS; if 11 use blocked
+//        smallprob=0;
+//        if((m&3)==3){blockedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);}
+//        else if(m&2){
+//         mvc(m*n*sizeof(D),DAV(z),MEMSET00LEN,MEMSET00);
+//         dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
+//        }else if(m&1){cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);
+//        }else smallprob=1;
+//    #endif
 #else
    // not single column.  Choose the algorithm to use
+    IL probsize = (m-1)*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation.  If m==1 we are doing dot-products; no gain from fancy code then
 #if C_AVX2 || EMU_AVX2
-    smallprob=0;  // never use Dic method; but used to detect pick up NaN errors
+    smallprob = !hascblas;  // never use Dic method; but used to detect pick up NaN errors
+#else
+    smallprob = (m<=4||probsize<1000LL);
+#endif
     D *av=DAV(a), *wv=DAV(w), *zv=DAV(z);  //  pointers to sections
     I flgs=SHMSK(AFLAG(a),AFUPPERTRIX-FLGAUTRIX,FLGAUTRI)|SHMSK(AFLAG(w),AFUPPERTRIX-FLGWUTRIX,FLGWUTRI);  // flags from a or w
-    if((UI)(m*n*(IL)p)>=(UI)FLOAT16TOFLOAT(JT(jt,dgemm_thres))){   // test for BLAS.  For AVX2 this should not be taken; for other architectures tuning is required
-     mvc(m*n*sizeof(D),DAV(z),MEMSET00LEN,MEMSET00);
-     dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
-    } else {
+    if(smallprob || (UI)probsize<(UI)FLOAT16TOFLOAT(JT(jt,dgemm_thres))){   // test for BLAS.  For AVX2 this should not be taken; for other architectures tuning is required
      smallprob=1^cachedmmult(jt,av,wv,zv,m,n,p,flgs);  // run the cached mult; if NaN error, remember that fact
+    } else {
+     mvc(m*n*sizeof(D),DAV(z),MEMSET00LEN,MEMSET00);
+     dgemm_nn(m,n,p,1.0,av,p,1,wv,n,1,0.0,zv,n,1);
     }
-#else
-    IL probsize = (m-1)*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation.  If m==1 we are doing dot-products; no gain from fancy code then
-    if(!(smallprob = (m<=4||probsize<1000LL))){  // if small problem, avoid the startup overhead of the matrix version  TUNE
-     if((UI)probsize < (UI)FLOAT16TOFLOAT(JT(jt,dgemm_thres)))
-      cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,SHMSK(AFLAG(a),AFUPPERTRIX-FLGAUTRIX,FLGAUTRI)|SHMSK(AFLAG(w),AFUPPERTRIX-FLGWUTRIX,FLGWUTRI));  // Do our one-core matrix multiply - real   TUNE this is 160x160 times 160x160.  Tell routine if uppertri
-     else{
-      // If the problem is really big, use BLAS
-      mvc(m*n*sizeof(D),DAV(z),MEMSET00LEN,MEMSET00);
-      dgemm_nn(m,n,p,1.0,DAV(a),p,1,DAV(w),n,1,0.0,DAV(z),n,1);
-     }
-    }
-#endif
 #endif
    }
    // If there was a floating-point error, retry it the old way in case it was _ * 0
@@ -965,8 +963,9 @@ time1 ,&(x,y)"0 ((256 1e20 1e20 65536 > x*y) # 0 1 2 3) +/ lens
    IL probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
    I smallprob=probsize<1000;  // set if we do the old-fashioned way, possibly after error
    if(!smallprob){  // use old-fashioned way if small.  16b3.4 comes though here
-    if((UI)probsize<(UI)FLOAT16TOFLOAT(JT(jt,zgemm_thres))){smallprob=1^cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n*2,p*2,SHMSK(AFLAG(a),AFUPPERTRIX-FLGAUTRIX,FLGAUTRI)|SHMSK(AFLAG(w),AFUPPERTRIX-FLGWUTRIX,FLGWUTRI)|FLGCMP);}  // Do the fast matrix multiply - complex.  Change widths to widths in D atoms, not complex atoms  TUNE  this is 130x130 times 130x130
-    else {
+    if(!hascblas || (UI)probsize<(UI)FLOAT16TOFLOAT(JT(jt,zgemm_thres))){
+     smallprob=1^cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n*2,p*2,SHMSK(AFLAG(a),AFUPPERTRIX-FLGAUTRIX,FLGAUTRI)|SHMSK(AFLAG(w),AFUPPERTRIX-FLGWUTRIX,FLGWUTRI)|FLGCMP);  // Do the fast matrix multiply - complex.  Change widths to widths in D atoms, not complex atoms  TUNE  this is 130x130 times 130x130
+    } else {
       // Large problem - start up BLAS
       mvc(2*m*n*sizeof(D),DAV(z),MEMSET00LEN,MEMSET00);
       zgemm_nn(m,n,p,(dcomplex*)&zone,(dcomplex*)DAV(a),p,1,(dcomplex*)DAV(w),n,1,(dcomplex*)&zzero,(dcomplex*)DAV(z),n,1);

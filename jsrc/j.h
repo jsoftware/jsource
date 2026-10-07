@@ -935,7 +935,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // Tuning options for cip.c
 #define DCACHED_THRES  (64*64*64)    // when m*n*p less than this in a single thread use blocked; when higher, use cached
-#if ((C_AVX2 || EMU_AVX2) && !PYXES)
+#if ((C_AVX2 || EMU_AVX2) && PYXES)
 // cachedmmult accuracy issue
 #define DCACHED_THRESn  (10*10*10)    // when m*n*p less than this, don't even look for multithreads; use blocked
 #else

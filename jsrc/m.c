@@ -968,7 +968,7 @@ A jtra(AD* RESTRICT wd,I t,A sv){I n=AN(wd);
    np0=*++wv;  // fetch next box address.  This fetch settles while the ra() is running
    PREFETCH((C*)np0);   // prefetch the next box while ra() is running
 #if AUDITEXECRESULTS
-if(QCWORD(np)&&AC(QCWORD(np))<0)SEGFAULT;  // contents are never inplaceable
+   if(QCWORD(np)&&AC(QCWORD(np))<0)SEGFAULT;  // contents are never inplaceable
 #endif
    if((np=QCWORD(np))!=0){racontents(np);}  // increment the box, possibly turning it to recursive.  Low bits of box addr may be enqueue flags.
      // a pyx is always recursive; we can increment the pyx's usecount here but we will never go to the contents
@@ -1237,6 +1237,7 @@ static I lfsr=(I)0xfeeefeee00000000LL;  // holds varying memory pattern
 __attribute__((noinline)) A jttgz(J jt,A *tp, A z){RZ(tp=tg(tp)); jt->tnextpushp=tp; R z;}
 
 __attribute__((noinline)) A jtgafallopool(J jt){
+ I blockx=(I)jt&QCMASK; jt=(J)((I)jt&~QCMASK);
  A u,chn; US hrh;
 #if ALIGNPOOLTOCACHE   // with smaller headers, always align pool allo to cache bdy
  // align the buffer list on a cache-line boundary
@@ -1247,7 +1248,6 @@ __attribute__((noinline)) A jtgafallopool(J jt){
  // allocate without alignment
  ASSERT(av=MALLOC(PSIZE+TAILPAD),EVWSFULL);
 #endif
- I blockx=(I)jt&QCMASK; jt=(J)((I)jt&~QCMASK);
  jt->malloctotal+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;  // add to total JE mem allocated
  I nt=jt->malloctotalremote+jt->malloctotal;  // get net total allocated from this thread & not freed
  jt->mfreegenallo+=PSIZE+TAILPAD+ALIGNPOOLTOCACHE*CACHELINESIZE;   // add to total from OS

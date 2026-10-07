@@ -25,7 +25,8 @@
 #define VRNONE          ((I)3<<VRCX) // do not convert result  for now this is only in the atomic dyads - other leave the field at 00
 #define VRERR           ((I)0<<VRCX) // result-conversion removed by error (including EVNOCONV)
 #define VRMSK           ((I)3<<VRCX) // mask for result-conversion spec
-// 11-14 free
+#define VIPAEQWOK         BIT(11)  // routine can run inplace even if a and w are the same block.  Errors must be impossible
+// 12-14 free
 #define VICX            16           // bit position for input conversion flags.  0000 for no conversion, or 15-bitx of type
 #define VBB             ((I)(15-B01X)<<VICX)
 #define VII             ((I)(15-INTX)<<VICX)

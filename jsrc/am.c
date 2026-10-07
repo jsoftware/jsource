@@ -897,7 +897,7 @@ static A jtgadv(J jt,A w){A hs;I n;
  R fdef(0,CRBRACE,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
 }
 
-// Execution of x -@(|:){`[`]}"r y
+// Execution of x -@{`[`]}"r y
 static DFI2(jtamnegate){
  IARG2CR F12IP;
  // if y is CMPX/FL/QP, execute markd x} y which means negate

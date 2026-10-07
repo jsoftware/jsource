@@ -75,7 +75,10 @@ takestats(++stats[0x9];)
  awr^=af;  // for a and w in byte lanes, set non0 if incorrect rank (= noninplaceable)
  I1 awip=2*(I1)SGNTO0(ac&((aflag&AFUNINCORPABLE+AFRO)+(awr&0xff00)-1))  // a inplaceability: AC, not (unincorp/AFRO or awr<af)
        +(I1)SGNTO0(wc&((wflag&AFUNINCORPABLE+AFRO)+(awr&0x00ff)-1));  // w inplaceability
- if(withprob(awip&=(I1)(intptr_t)jtfg,0.3)){z=awip&JTINPLACEW?w:a; zv=awip&JTINPLACEW?wv:av; goto haszv;}
+ if(withprob(awip&=(I1)(intptr_t)jtfg,0.3)){   // if there is an inplaceable arg
+  if(unlikely(a==w)&&awip!=3)goto noinplaceeq;   // identical args are inplaceable only if both args have inplaceable context
+  z=awip&JTINPLACEW?w:a; zv=awip&JTINPLACEW?wv:av; goto haszv;  // pick an inplaceable arg to fill
+ }
 takestats(++stats[0xa];)
  // See if we can inplace an assignment (z=zombieval).  That is always a good idea, saving the assignment code, but in the test suite it's very rare so we check after other inplaceability.  Might be more common in user code.
  I1 asginplacemsk=(2*(I1)(a==z)+(I1)(w==z))&(I1)(intptr_t)jtfg;  // mask of reassigned inplaceable args
@@ -85,6 +88,7 @@ takestats(++stats[0xb];)
  }
 takestats(++stats[0xc];)
  // fall through: no inplacing, allocate the result as FL, usually an atom.  If not atom, make the shape all 1s
+noinplaceeq: ;  // come here if a=w and a and w not inplaceable
  if(likely((af&=0x7f)==0)){GAT0(z,FL,1,0); zv=voidAV0(z);}else{GATV1(z,FL,1,af); zv=voidAVn(af,z);}  // af persists over call, then freed
 haszv:;  // here when we are operating inplace on z/zv
 nozv:;  // here when we have zv or don't need it
@@ -799,7 +803,7 @@ VA va[]={
 /* 2d -  */ [VA2CMINUS]={
  {{(VF)minusBB,VRNONE+VI    }, {(VF)minusBI,VRNONE+VI+VIPOKW}, {(VF)minusBD,VRNONE+VD+VIPOKW}, 
   {(VF)minusIB,VRNONE+VI+VIPOKA}, {(VF)minusII,VRNONE+VI+VIP}, {(VF)minusID,VRNONE+VD+VIPID},
-  {(VF)minusDB,VRNONE+VD+VIPOKA    }, {(VF)minusDI,VRNONE+VD+VIPDI}, {(VF)minusDD,VRNONE+VD+VIP+VCANHALT}, 
+  {(VF)minusDB,VRNONE+VD+VIPOKA    }, {(VF)minusDI,VRNONE+VD+VIPDI}, {(VF)minusDD,VRNONE+VD+VIP+VIPAEQWOK+VCANHALT}, 
   {(VF)minusXX,VRNONE+VX+VXEX}, {(VF)minusQQ,VRNONE+VQ+VQQ}, {(VF)minusI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)minusI4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)minusEE,VRNONE+VIP+VEE+VE+VCANHALT}, {(VF)minusZZ,VRNONE+VZ+VZZ+VIP}}, 
   &rpsminus},
 
@@ -855,21 +859,21 @@ VA va[]={
 /* 82 <. */ [VA2CMIN]={
  {{(VF)andBB,VRNONE+VB+VIP}, {(VF)minBI,VRNONE+VI+VIPOKW}, {(VF)minBD,VRNONE+VD+VIPOKW},
   {(VF)minIB,VRNONE+VI+VIPOKA}, {(VF)minII,VRNONE+VI+VIP}, {(VF)minID,VRNONE+VD+VIPID},
-  {(VF)minDB,VRNONE+VD+VIPOKA}, {(VF)minDI,VRNONE+VD+VIPDI}, {(VF)minDD,VRNONE+VD+VIP}, 
+  {(VF)minDB,VRNONE+VD+VIPOKA}, {(VF)minDI,VRNONE+VD+VIPDI}, {(VF)minDD,VRNONE+VD+VIP+VIPAEQWOK}, 
   {(VF)minXX,VRNONE+VX+VXEX}, {(VF)minQQ,VRNONE+VQ+VQQ}, {(VF)minI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)minI4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)minEE,VRNONE+VEE+VE+VIP}, {(VF)minDD,VRNONE+VD+VDD+VIP}}, 
   &rpsmin},
 
 /* 84 >. */ [VA2CMAX]={
  {{(VF)orBB,VRNONE+VB+VIP}, {(VF)maxBI,VRNONE+VI+VIPOKW}, {(VF)maxBD,VRNONE+VD+VIPOKW},
   {(VF)maxIB,VRNONE+VI+VIPOKA}, {(VF)maxII,VRNONE+VI+VIP}, {(VF)maxID,VRNONE+VD+VIPID},
-  {(VF)maxDB,VRNONE+VD+VIPOKA}, {(VF)maxDI,VRNONE+VD+VIPDI}, {(VF)maxDD,VRNONE+VD+VIP}, 
+  {(VF)maxDB,VRNONE+VD+VIPOKA}, {(VF)maxDI,VRNONE+VD+VIPDI}, {(VF)maxDD,VRNONE+VD+VIP+VIPAEQWOK}, 
   {(VF)maxXX,VRNONE+VX+VXEX}, {(VF)maxQQ,VRNONE+VQ+VQQ}, {(VF)maxI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)maxI4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)maxEE,VRNONE+VEE+VE+VIP}, {(VF)maxDD,VRNONE+VD+VDD+VIP}}, 
   &rpsmax},
 
 /* 2b +  */ [VA2CPLUS]={
  {{(VF)plusBB,VRNONE+VI    }, {(VF)plusBI,VRNONE+VI+VIPOKW}, {(VF)plusBD,VRNONE+VD+VIPOKW}, 
   {(VF)plusIB,VRNONE+VI+VIPOKA}, {(VF)plusII,VRNONE+VI+VIP}, {(VF)plusID,VRNONE+VD+VIPID}, 
-  {(VF)plusDB,VRNONE+VD+VIPOKA}, {(VF)plusDI,VRNONE+VD+VIPDI}, {(VF)plusDD,VRNONE+VD+VIP+VCANHALT}, 
+  {(VF)plusDB,VRNONE+VD+VIPOKA}, {(VF)plusDI,VRNONE+VD+VIPDI}, {(VF)plusDD,VRNONE+VD+VIP+VIPAEQWOK+VCANHALT}, 
   {(VF)plusXX,VRNONE+VX+VXEX}, {(VF)plusQQ,VRNONE+VQ+VQQ}, {(VF)plusI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)plusI4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)plusEE,VRNONE+VEE+VE+VIP+VCANHALT}, {(VF)plusZZ,VRNONE+VZ+VZZ+VIP}}, 
   &rpsplus},
 
@@ -880,7 +884,7 @@ VA va[]={
 #endif
  {{(VF)andBB,VRNONE+VB+VIP}, {(VF)tymesBI,VRNONE+VI+VIPOKW}, {(VF)tymesBD,VRNONE+VD+VIPOKW},
   {(VF)tymesIB,VRNONE+VI+VIPOKA}, {(VF)tymesII,VRNONE+VI+VIP}, {(VF)tymesID,VRNONE+VD+VIPID},
-  {(VF)tymesDB,VRNONE+VD+VIPOKA}, {(VF)tymesDI,VRNONE+VD+VIPDI}, {(VF)tymesDD,VRNONE+VD+VIP}, 
+  {(VF)tymesDB,VRNONE+VD+VIPOKA}, {(VF)tymesDI,VRNONE+VD+VIPDI}, {(VF)tymesDD,VRNONE+VD+VIP+VIPAEQWOK}, 
   {(VF)tymesXX,VRNONE+VX+VXEX}, {(VF)tymesQQ,VRNONE+VQ+VQQ}, {(VF)tymesI2I2,VRNONE+VI2I2+VI2+VIP}, {(VF)tymesI4I4,VRNONE+VI4I4+VI4+VIP}, {(VF)tymesEE,VRNONE+VEE+VE+VIP}, {(VF)tymesZZ,VRNONE+VZ+VZZ+VIP}}, 
   &rpstymes},
 
@@ -1225,7 +1229,8 @@ takestats(++stats[0x24];)
   // both require a fetch from memory followed by a little testing.  The additional time is pretty small.  Of the 20-odd% of ops that are inplaceable, most could use a or w (we pick w).  Of the 1% that
   // are assignable in place, 2/3 assign to a.  About 60% of operations have an argument with AC<0, but most are not inplaceable
  if(withprob(cv&JTINPLACEW+JTINPLACEA,0.4)){  // see if either w or a is inplaceable
-  if(unlikely(a==w))goto allocate;   // If a==w suppress inplacing, in case the operation must be retried (we could check which ones but they are just not likely to be used reflexively)
+  if(unlikely(a==w))
+   if(!(unlikely((cv&JTINPLACEW+JTINPLACEA+VIPAEQWOK)==JTINPLACEW+JTINPLACEA+VIPAEQWOK)))goto allocate;   // If a==w suppress inplacing, unless op cannot be retried and both args are inplaceable
   FILLREG(adocvfn)   // load function addr into register early
   // we are reusing an argument (ipw is neg if it's w, which has priority); make sure the type is updated to the result type
   z=cv&JTINPLACEW?w:a;  // z=inplaceable arg; in test suite, most inplaceables are inplaceable on both w and a, somewhat more on w
@@ -1931,7 +1936,7 @@ F1(jtnot){F12IP;ARGCHK1(w); SETCONPTR(1) R AT(w)&B01?eq(num(0),w):jtatomic2(jtfg
 F1(jtdecrem){F12IP;ARGCHK1(w); SETCONPTR(1) IPSHIFTWA; R jtatomic2(jtfg,w,conptr,(A)&dsCMINUS_DEC);}
 F1(jtincrem){F12IP;ARGCHK1(w); SETCONPTR(1) R jtatomic2(jtfg,conptr,w,(A)&dsCPLUS_INC);}  // leave inplaceable in w only
 F1(jtduble ){F12IP;ARGCHK1(w); SETCONPTR(2) R jtatomic2(jtfg,conptr,w,(A)&dsCSTAR_DUBL);}  // leave inplaceable in w only
-F1(jtsquare){F12IP;ARGCHK1(w); R jtatomic2(jt,w,w,(A)&dsCSTAR_SQUARE);}   // Never inplace (would be OK if can't overflow)
+F1(jtsquare){F12IP;ARGCHK1(w); R jtatomic2((J)((I)jtfg|JTINPLACEA),w,w,(A)&dsCSTAR_SQUARE);}   // Inplace OK since can't overflow
 // recip moved to va1
 F1(jthalve ){F12IP;ARGCHK1(w); if(!(AT(w)&XNUM+RAT))R jtatomic2(jtfg,onehalf,w,(A)&dsCSTAR_HALVE); IPSHIFTWA; R jtatomic2(jtfg,w,num(2),(A)&dsCDIV_HALVE);}
 // pix moved to va1

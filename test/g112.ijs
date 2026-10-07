@@ -9,6 +9,12 @@ test r. ?3 4 5$100
 test i.0 3 4
 test i.3 0
 
+(15!:19@*: = 15!:19@[) memu 8.  NB. inplaces over inplaceable arg
+(15!:19@*: ~: 15!:19@[) 8.  NB. not over permanent
+(15!:19@+:@] ~: 15!:19@[)~  8
+((15!:19@+:@] = 15!:19@[)~ memu)  8  NB. inplaces over inplaceable arg
+((15!:19@+:@] ~: 15!:19@])~ memu)  8
+
 'domain error' -: *: etx 'abc'
 'domain error' -: *: etx u:'abc'
 'domain error' -: *: etx 10&u:'abc'

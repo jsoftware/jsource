@@ -307,7 +307,8 @@ B jtspfree(J jt){I i;A p;
     A *survivetail=(A*)&jt->mempool[i];  // running pointer to last block in chain of blocks that are NOT dropped off.  Chain is rooted in jt->mempool[i], i. e. it replaces the previous chain there
     for(p=jt->mempool[i];p;p=AFCHAIN(p)){   // for each free block
      if(!FHRHISALLOFREE(p,offsetmask)) {  // if the whole allocation containing this block is NOT deleted...
-      *survivetail=p;survivetail=(A*)p;  // ...add it as tail of survival chain
+      *survivetail=p;                // ...add it as tail of survival chain
+      survivetail=(A*)&(AFCHAIN(p));
      }
     }
     *survivetail=0;  // terminate the chain of surviving buffers.  We leave the [].pool entry pointing to the free list

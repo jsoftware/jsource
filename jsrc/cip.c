@@ -799,7 +799,7 @@ oflo2:
    }else{
     // full matrix products
     IL probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
-    if(!hascblas || (UI)probsize < (UI)FLOAT16TOFLOAT(JT(jt,igemm_thres))){
+    if(0>(I)FLOAT16TOFLOAT(JT(jt,igemm_thres)) || (I)probsize<(I)FLOAT16TOFLOAT(JT(jt,igemm_thres))){
      RZ(a=ccvt(FL,a,0)); RZ(w=ccvt(FL,w,0)); cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n,p,0);  // Do our matrix multiply - converting   TUNE
     } else {
      // for large problem, use BLAS
@@ -931,13 +931,13 @@ oflo2:
    // not single column.  Choose the algorithm to use
     IL probsize = (m-1)*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation.  If m==1 we are doing dot-products; no gain from fancy code then
 #if C_AVX2 || EMU_AVX2
-    smallprob = !hascblas;  // never use Dic method; but used to detect pick up NaN errors
+    smallprob = (m<=4||probsize<1000LL);  // never use Dic method; but used to detect pick up NaN errors
 #else
     smallprob = (m<=4||probsize<1000LL);
 #endif
     D *av=DAV(a), *wv=DAV(w), *zv=DAV(z);  //  pointers to sections
     I flgs=SHMSK(AFLAG(a),AFUPPERTRIX-FLGAUTRIX,FLGAUTRI)|SHMSK(AFLAG(w),AFUPPERTRIX-FLGWUTRIX,FLGWUTRI);  // flags from a or w
-    if(smallprob || (UI)probsize<(UI)FLOAT16TOFLOAT(JT(jt,dgemm_thres))){   // test for BLAS.  For AVX2 this should not be taken; for other architectures tuning is required
+    if(smallprob || 0>(I)FLOAT16TOFLOAT(JT(jt,dgemm_thres)) || (I)probsize<(I)FLOAT16TOFLOAT(JT(jt,dgemm_thres))){   // test for BLAS.  For AVX2 this should not be taken; for other architectures tuning is required
      smallprob=1^cachedmmult(jt,av,wv,zv,m,n,p,flgs);  // run the cached mult; if NaN error, remember that fact
     } else {
      mvc(m*n*sizeof(D),DAV(z),MEMSET00LEN,MEMSET00);
@@ -963,7 +963,7 @@ oflo2:
    IL probsize = m*n*(IL)p;  // This is proportional to the number of multiply-adds.  We use it to select the implementation
    I smallprob=probsize<1000;  // set if we do the old-fashioned way, possibly after error
    if(!smallprob){  // use old-fashioned way if small.  16b3.4 comes though here
-    if(!hascblas || (UI)probsize<(UI)FLOAT16TOFLOAT(JT(jt,zgemm_thres))){
+    if(0>(I)FLOAT16TOFLOAT(JT(jt,zgemm_thres)) || (I)probsize<(I)FLOAT16TOFLOAT(JT(jt,zgemm_thres))){
      smallprob=1^cachedmmult(jt,DAV(a),DAV(w),DAV(z),m,n*2,p*2,SHMSK(AFLAG(a),AFUPPERTRIX-FLGAUTRIX,FLGAUTRI)|SHMSK(AFLAG(w),AFUPPERTRIX-FLGWUTRIX,FLGWUTRI)|FLGCMP);  // Do the fast matrix multiply - complex.  Change widths to widths in D atoms, not complex atoms  TUNE  this is 130x130 times 130x130
     } else {
       // Large problem - start up BLAS

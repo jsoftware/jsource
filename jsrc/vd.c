@@ -202,7 +202,7 @@ DF1(jtqr){F12IP;A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  ASSERT(!n||c>d*FUZZ,EVDOMAIN);
 RETF(z);
 }
- 
+
 // Computes the signed determinant from LU factors for integer correction.
 // Returns 0.0 if the determinant magnitude exceeds 1e20 or is non-finite.
 static D detfromlu(A w,int *ipiv){D d=1.0;
@@ -309,13 +309,6 @@ F1(jtminv){F12IP;D detv; R jtminvdet(jt,w,&detv);}
 static A jtgesv(J jtfg,A a,A w){F12IP;A z,zs;
  int n,nrhs,info,*ipiv;
  I t=((AT(w)|AT(a))&CMPX)?CMPX:FL, at=AT(a), wt=AT(w);
- if (!hascblas
-  || !ISDENSETYPE(at,B01+INT2+INT4+INT+FL+CMPX) || !ISDENSETYPE(wt,B01+INT2+INT4+INT+FL+CMPX)
-  || AR(w)!=2 || AS(w)[0]!=AS(w)[1] // w must be square matrix
-  || AN(w)==0 || AN(a)==0 // a, w must be non-empty
-  || (AR(a)>0 && AS(a)[0]!=AS(w)[0])) // leading axes of a and w must have the same length, unless a is an atom
-  R 1;
- // From this point, failures must propagate.
  // Promote w to common floating/complex type. LAPACK overwrites both w and z. If w has the correct type and can be overwritten, avoid copying it.
  if(wt!=t || (AC(w)&SGNIF(jtfg,JTINPLACEW))>=0 || unlikely(a==w)) RZ(w=cvt(t,w));
  n=(int)AS(w)[0];
@@ -394,17 +387,23 @@ static F2(jtmdivsp){F12IP;A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
 }    /* currently only handles tridiagonal sparse w */
 
 // a %. w  for all types
-DF2(jtmdiv){F12IP;PROLOG(0069);A z;I t;
+DF2(jtmdiv){F12IP;PROLOG(0069);A z;I at=AT(a), wt=AT(w);
  F2RANK(RMAX,2,jtmdiv,self);
- if(ISSPARSE(AT(a)))RZ(a=denseit(a));
- t=AT(w);
- if(ISSPARSE(t))R mdivsp(a,w);
- RZ(z=jtgesv(jtfg,a,w));
- if(z!=(A)1){EPILOG(z)};
+ if(ISSPARSE(at))RZ(a=denseit(a));
+ if(ISSPARSE(wt))R mdivsp(a,w);
+ // Try LAPACK
+ if (hascblas
+  && at&(B01+INT2+INT4+INT+FL+CMPX) && wt&(B01+INT2+INT4+INT+FL+CMPX)
+  && AN(w)!=0 && AN(a)!=0 // a, w must be non-empty
+  && AR(w)==2 && AS(w)[0]==AS(w)[1] // w must be square matrix
+  && (AR(a)==0 || AS(a)[0]==AS(w)[0])){ // leading axes of a and w must have the same length, unless a is an atom
+  z=jtgesv(jtfg,a,w);
+  EPILOG(z);
+ }
  D detv; // place to build determinant of inverse
  z=jtminvdet(jt,w,&detv);  // take generalized inverse of w, setting up for icor if needed
  z=pdt(2>AR(w)?reshape(shape(w),z):z,a);  // w^-1 mp a
- if(AT(a)&B01+INT)z=icor(z,detv);  // integer correct if a is not float (& correction is possible)
+ if(at&B01+INT2+INT4+INT)z=icor(z,detv);  // integer correct if a is not float (& correction is possible)
  EPILOG(z);
 }
 

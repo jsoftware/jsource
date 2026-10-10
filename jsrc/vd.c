@@ -328,14 +328,15 @@ static F2(jtmdivsp){F12IP;A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
  R a;
 }    /* currently only handles tridiagonal sparse w */
 
-// Solve w*z=a using LAPACK where w is non-empty dense square matrix.
-// Returns 0 with *handled=0 if the it is not applicable.
+// Solve w(+/ .*)z-:a using LAPACK for dense non-empty a and w where w is square matrix.
+// Returns 0 with *handled=0 if it is not applicable.
 // Once *handled=1 is set, a zero return indicates an error.
 static A jtgesv(J jt,A a,A w,B *handled){A z,zs;
  int n,nrhs,info,*ipiv;
  I t=((AT(w)|AT(a))&CMPX)?CMPX:FL, at=AT(a), wt=AT(w);
+ *handled=0;
  if(!hascblas)R 0;
- if (!ISDENSETYPE(AT(a),B01+INT2+INT4+INT+FL+CMPX) || !ISDENSETYPE(AT(w),B01+INT2+INT4+INT+FL+CMPX)
+ if (!ISDENSETYPE(at,B01+INT2+INT4+INT+FL+CMPX) || !ISDENSETYPE(wt,B01+INT2+INT4+INT+FL+CMPX)
   || AR(w)!=2 || AS(w)[0]!=AS(w)[1] || AS(w)[0]>INT_MAX // w must be square matrix
   || AN(w)==0 || AN(a)==0 // a, w must be non-empty
   || (AR(a)>0 && (AS(a)[0]!=AS(w)[0] || AN(a)/AS(a)[0]>INT_MAX))) // leading axes of a and w must have the same length, unless a is an atom
@@ -368,8 +369,7 @@ static A jtgesv(J jt,A a,A w,B *handled){A z,zs;
  nrhs=(int)AS(z)[0];
  ipiv=MALLOC(n*sizeof(int));
  ASSERT(ipiv,EVWSFULL);
- NAN0;
- // Solve.
+ // Solve
  C trans='T';
  if(t==FL){
   jdgetrf_(&n, &n, DAV(w), &n, ipiv, &info);
@@ -386,7 +386,7 @@ static A jtgesv(J jt,A a,A w,B *handled){A z,zs;
   D detw=1.0;
   DQ(n,{
    detw*=DAV(w)[i+i*n]; // The diagonal of U contains the factors used to compute det(w)
-   if (!(fabs(detw)<=1e20)){detw=0.0;break;} // Disable correction if the det(w) is too large or NaN
+   if (!(fabs(detw)<=1e20)){detw=0.0;break;} // Disable correction if det(w) is too large or NaN
   });
   if(detw!=0.0){
    // Each pivot different from i+1 indicates a row interchange; an odd number of interchanges changes the determinant's sign
@@ -395,7 +395,6 @@ static A jtgesv(J jt,A a,A w,B *handled){A z,zs;
   }
  }
  FREE(ipiv);
- NAN1;
  ASSERT(!info,EVDOMAIN);
  RZ(z=cant1(z)); // Transpose z
  if(AR(a)){RZ(zs=shape(a)); RZ(z=reshape(zs,z));} // If a is non-atomic, reshape z to match its shape
@@ -409,7 +408,7 @@ DF2(jtmdiv){F12IP;PROLOG(0069);A z;I t;
  t=AT(w);
  if(ISSPARSE(t))R mdivsp(a,w);
  
- B handled=0;
+ B handled;
  z=jtgesv(jt,a,w,&handled);
  if(handled){EPILOG(z)};
  

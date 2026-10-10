@@ -765,11 +765,17 @@ typedef struct
 } dcomplex;
 #endif
 
-extern void dgetrf_(int *m, int *n, double *A, int *lda, int *ipvt, int *info);
-CBLASEXTERN void (*jdgetrf_)(int *m, int *n, double *A, int *lda, int *ipvt, int *info);
+extern void dgetrf_(int *m, int *n, double *A, int *lda, int *ipiv, int *info);
+CBLASEXTERN void (*jdgetrf_)(int *m, int *n, double *A, int *lda, int *ipiv, int *info);
 
-extern void zgetrf_(int *m, int *n, dcomplex *A, int *lda, int *ipvt, int *info);
-CBLASEXTERN void (*jzgetrf_)(int *m, int *n, dcomplex *A, int *lda, int *ipvt, int *info);
+extern void zgetrf_(int *m, int *n, dcomplex *A, int *lda, int *ipiv, int *info);
+CBLASEXTERN void (*jzgetrf_)(int *m, int *n, dcomplex *A, int *lda, int *ipiv, int *info);
+
+extern void dgetrs_(char *trans, int *n, int *nrhs, double *A, int *lda, int *ipiv, double *B, int *ldb, int *info);
+CBLASEXTERN void (*jdgetrs_)(char *trans, int *n, int *nrhs, double *A, int *lda, int *ipiv, double *B, int *ldb, int *info);
+
+extern void zgetrs_(char *trans, int *n, int *nrhs, dcomplex *A, int *lda, int *ipiv, dcomplex *B, int *ldb, int *info);
+CBLASEXTERN void (*jzgetrs_)(char *trans, int *n, int *nrhs, dcomplex *A, int *lda, int *ipiv, dcomplex *B, int *ldb, int *info);
 
 extern void dgetri_(int *m, double *A, int *lda, int *ipiv, double *work, int *lwork, int *info);
 CBLASEXTERN void (*jdgetri_)(int *m, double *A, int *lda, int *ipiv, double *work, int *lwork, int *info);

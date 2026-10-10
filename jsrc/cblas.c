@@ -268,6 +268,8 @@ void cblasinit(C*libpath) {
 //   jcblasfn1(cblas_xerbla)
    jcblasfn1(dgetrf_)
    jcblasfn1(zgetrf_)
+   jcblasfn1(dgetrs_)
+   jcblasfn1(zgetrs_)
    jcblasfn1(dgetri_)
    jcblasfn1(zgetri_)
    jcblasfn1(dgesdd_)

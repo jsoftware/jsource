@@ -5,7 +5,7 @@ NB. **************************************** matrix product ********************
 delth''  NB. make sure we start with an empty system
 
 thr=: (9!:58)"0 i.3
-(_1 1000{~(((9!:56'c_avx2')+.(9!:56'emu_avx2'))*.(9!:56'pyxes'))<IF64) (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
+_1 (9!:58)"0 i.3       NB.  +/ .*  never use blas
 techo 'never use blas'
 
 {{

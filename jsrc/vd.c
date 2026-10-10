@@ -105,6 +105,7 @@ static F1(jtltqip){F12IP;PROLOG(0067);A l0,l1,y,z;
  I rw=AS(w)[0]; I cl=AS(w)[1];  // # rows, # columns
   // handle case of 2 rows
  if(rw<=2) {
+// this condition must be the same as that in cip.c
 #if C_AVX2 || EMU_AVX2
   if(rw==2 && AT(w)&FL){
    // We calculate the 2-row case rather than recurring to handle the rows individually, because we can keep the multipliers busy
@@ -147,6 +148,7 @@ static F1(jtltqip){F12IP;PROLOG(0067);A l0,l1,y,z;
  RZ(l0=jtltqip(jt,q0));  // form q0 in place, return l0
  fauxblock(virtwq1); A q1; fauxvirtual(q1,virtwq1,w,2,ACUC1|ACINPLACE); AK(q1)+=(m*cl)<<bplg(AT(w)); AS(q1)[0]=rw-m; AS(q1)[1]=cl; AN(q1)=(rw-m)*cl;
  // calculate w1 - (w1 q0*) q0
+// this condition must be the same as that in cip.c
 #if C_AVX2 || EMU_AVX2
  if(AT(w)&FL && (m<50 || m*m*cl<(64*64*64))){
   // floating-point w that isn't larger than L2 cache.  (1) use inner-products to calculate w1 q0* (2) use blockedmmult to calculate final product
@@ -200,246 +202,6 @@ DF1(jtqr){F12IP;A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  ASSERT(!n||c>d*FUZZ,EVDOMAIN);
 RETF(z);
 }
-
-// documentation of LAPACK functions used
-/*
-dgetrf()
-subroutine dgetrf	(	integer	m,
-integer	n,
-double precision, dimension( lda, * )	a,
-integer	lda,
-integer, dimension( * )	ipiv,
-integer	info )
-
-Purpose:
-!>
-!> DGETRF computes an LU factorization of a general M-by-N matrix A
-!> using partial pivoting with row interchanges.
-!>
-!> The factorization has the form
-!>    A = P * L * U
-!> where P is a permutation matrix, L is lower triangular with unit
-!> diagonal elements (lower trapezoidal if m > n), and U is upper
-!> triangular (upper trapezoidal if m < n).
-!>
-!> This is the right-looking Level 3 BLAS version of the algorithm.
-!>
-Parameters
-[in]	M
-!>          M is INTEGER
-!>          The number of rows of the matrix A.  M >= 0.
-!>
-[in]	N
-!>          N is INTEGER
-!>          The number of columns of the matrix A.  N >= 0.
-!>
-[in,out]	A
-!>          A is DOUBLE PRECISION array, dimension (LDA,N)
-!>          On entry, the M-by-N matrix to be factored.
-!>          On exit, the factors L and U from the factorization
-!>          A = P*L*U; the unit diagonal elements of L are not stored.
-!>
-[in]	LDA
-!>          LDA is INTEGER
-!>          The leading dimension of the array A.  LDA >= max(1,M).
-!>
-[out]	IPIV
-!>          IPIV is INTEGER array, dimension (min(M,N))
-!>          The pivot indices; for 1 <= i <= min(M,N), row i of the
-!>          matrix was interchanged with row IPIV(i).
-!>
-[out]	INFO
-!>          INFO is INTEGER
-!>          = 0:  successful exit
-!>          < 0:  if INFO = -i, the i-th argument had an illegal value
-!>          > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
-!>                has been completed, but the factor U is exactly
-!>                singular, and division by zero will occur if it is used
-!>                to solve a system of equations.
-!>
-*/
-
-/*
-zgetrf()
-subroutine zgetrf	(	integer	m,
-integer	n,
-complex*16, dimension( lda, * )	a,
-integer	lda,
-integer, dimension( * )	ipiv,
-integer	info )
-
-Purpose:
-!>
-!> ZGETRF computes an LU factorization of a general M-by-N matrix A
-!> using partial pivoting with row interchanges.
-!>
-!> The factorization has the form
-!>    A = P * L * U
-!> where P is a permutation matrix, L is lower triangular with unit
-!> diagonal elements (lower trapezoidal if m > n), and U is upper
-!> triangular (upper trapezoidal if m < n).
-!>
-!> This is the right-looking Level 3 BLAS version of the algorithm.
-!>
-Parameters
-[in]	M
-!>          M is INTEGER
-!>          The number of rows of the matrix A.  M >= 0.
-!>
-[in]	N
-!>          N is INTEGER
-!>          The number of columns of the matrix A.  N >= 0.
-!>
-[in,out]	A
-!>          A is COMPLEX*16 array, dimension (LDA,N)
-!>          On entry, the M-by-N matrix to be factored.
-!>          On exit, the factors L and U from the factorization
-!>          A = P*L*U; the unit diagonal elements of L are not stored.
-!>
-[in]	LDA
-!>          LDA is INTEGER
-!>          The leading dimension of the array A.  LDA >= max(1,M).
-!>
-[out]	IPIV
-!>          IPIV is INTEGER array, dimension (min(M,N))
-!>          The pivot indices; for 1 <= i <= min(M,N), row i of the
-!>          matrix was interchanged with row IPIV(i).
-!>
-[out]	INFO
-!>          INFO is INTEGER
-!>          = 0:  successful exit
-!>          < 0:  if INFO = -i, the i-th argument had an illegal value
-!>          > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
-!>                has been completed, but the factor U is exactly
-!>                singular, and division by zero will occur if it is used
-!>                to solve a system of equations.
-!>
-*/
-
-/*
-dgetri()
-subroutine dgetri	(	integer	n,
-double precision, dimension( lda, * )	a,
-integer	lda,
-integer, dimension( * )	ipiv,
-double precision, dimension( * )	work,
-integer	lwork,
-integer	info )
-
-Purpose:
-!>
-!> DGETRI computes the inverse of a matrix using the LU factorization
-!> computed by DGETRF.
-!>
-!> This method inverts U and then computes inv(A) by solving the system
-!> inv(A)*L = inv(U) for inv(A).
-!>
-Parameters
-[in]	N
-!>          N is INTEGER
-!>          The order of the matrix A.  N >= 0.
-!>
-[in,out]	A
-!>          A is DOUBLE PRECISION array, dimension (LDA,N)
-!>          On entry, the factors L and U from the factorization
-!>          A = P*L*U as computed by DGETRF.
-!>          On exit, if INFO = 0, the inverse of the original matrix A.
-!>
-[in]	LDA
-!>          LDA is INTEGER
-!>          The leading dimension of the array A.  LDA >= max(1,N).
-!>
-[in]	IPIV
-!>          IPIV is INTEGER array, dimension (N)
-!>          The pivot indices from DGETRF; for 1<=i<=N, row i of the
-!>          matrix was interchanged with row IPIV(i).
-!>
-[out]	WORK
-!>          WORK is DOUBLE PRECISION array, dimension (MAX(1,LWORK))
-!>          On exit, if INFO=0, then WORK(1) returns the optimal LWORK.
-!>
-[in]	LWORK
-!>          LWORK is INTEGER
-!>          The dimension of the array WORK.  LWORK >= max(1,N).
-!>          For optimal performance LWORK >= N*NB, where NB is
-!>          the optimal blocksize returned by ILAENV.
-!>
-!>          If LWORK = -1, then a workspace query is assumed; the routine
-!>          only calculates the optimal size of the WORK array, returns
-!>          this value as the first entry of the WORK array, and no error
-!>          message related to LWORK is issued by XERBLA.
-!>
-[out]	INFO
-!>          INFO is INTEGER
-!>          = 0:  successful exit
-!>          < 0:  if INFO = -i, the i-th argument had an illegal value
-!>          > 0:  if INFO = i, U(i,i) is exactly zero; the matrix is
-!>                singular and its inverse could not be computed.
-!>
-*/
-
-/*
-zgetri()
-subroutine zgetri	(	integer	n,
-complex*16, dimension( lda, * )	a,
-integer	lda,
-integer, dimension( * )	ipiv,
-complex*16, dimension( * )	work,
-integer	lwork,
-integer	info )
-
-Purpose:
-!>
-!> ZGETRI computes the inverse of a matrix using the LU factorization
-!> computed by ZGETRF.
-!>
-!> This method inverts U and then computes inv(A) by solving the system
-!> inv(A)*L = inv(U) for inv(A).
-!>
-Parameters
-[in]	N
-!>          N is INTEGER
-!>          The order of the matrix A.  N >= 0.
-!>
-[in,out]	A
-!>          A is COMPLEX*16 array, dimension (LDA,N)
-!>          On entry, the factors L and U from the factorization
-!>          A = P*L*U as computed by ZGETRF.
-!>          On exit, if INFO = 0, the inverse of the original matrix A.
-!>
-[in]	LDA
-!>          LDA is INTEGER
-!>          The leading dimension of the array A.  LDA >= max(1,N).
-!>
-[in]	IPIV
-!>          IPIV is INTEGER array, dimension (N)
-!>          The pivot indices from ZGETRF; for 1<=i<=N, row i of the
-!>          matrix was interchanged with row IPIV(i).
-!>
-[out]	WORK
-!>          WORK is COMPLEX*16 array, dimension (MAX(1,LWORK))
-!>          On exit, if INFO=0, then WORK(1) returns the optimal LWORK.
-!>
-[in]	LWORK
-!>          LWORK is INTEGER
-!>          The dimension of the array WORK.  LWORK >= max(1,N).
-!>          For optimal performance LWORK >= N*NB, where NB is
-!>          the optimal blocksize returned by ILAENV.
-!>
-!>          If LWORK = -1, then a workspace query is assumed; the routine
-!>          only calculates the optimal size of the WORK array, returns
-!>          this value as the first entry of the WORK array, and no error
-!>          message related to LWORK is issued by XERBLA.
-!>
-[out]	INFO
-!>          INFO is INTEGER
-!>          = 0:  successful exit
-!>          < 0:  if INFO = -i, the i-th argument had an illegal value
-!>          > 0:  if INFO = i, U(i,i) is exactly zero; the matrix is
-!>                singular and its inverse could not be computed.
-!>
-*/
-
 
 // return inverse of w, calculated by lq applied to adjoint
 // result has rank 2
@@ -566,6 +328,78 @@ static F2(jtmdivsp){F12IP;A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
  R a;
 }    /* currently only handles tridiagonal sparse w */
 
+// Solve w(+/ .*)z-:a using LAPACK for dense non-empty a and w where w is square matrix.
+// Returns 0 with *handled=0 if it is not applicable.
+// Once *handled=1 is set, a zero return indicates an error.
+static A jtgesv(J jt,A a,A w,B *handled){A z,zs;
+ int n,nrhs,info,*ipiv;
+ I t=((AT(w)|AT(a))&CMPX)?CMPX:FL, at=AT(a), wt=AT(w);
+ *handled=0;
+ if(!hascblas)R 0;
+ if (!ISDENSETYPE(at,B01+INT2+INT4+INT+FL+CMPX) || !ISDENSETYPE(wt,B01+INT2+INT4+INT+FL+CMPX)
+  || AR(w)!=2 || AS(w)[0]!=AS(w)[1] || AS(w)[0]>INT_MAX // w must be square matrix
+  || AN(w)==0 || AN(a)==0 // a, w must be non-empty
+  || (AR(a)>0 && (AS(a)[0]!=AS(w)[0] || AN(a)/AS(a)[0]>INT_MAX))) // leading axes of a and w must have the same length, unless a is an atom
+  R 0;
+ *handled=1; // From this point, failures must propagate.
+ // Copy and promote w to common floating/complex type. LAPACK overwrites both w and z.
+ RZ(w=cvt(t,w));
+ n=(int)AS(w)[0];
+ switch(AR(a)){ // Handle a of any rank.
+  case 0:
+   if(at&t) z=a; else RZ(z=cvt(t,a));
+   if(t==FL){
+    D v=DAV(z)[0];
+    GATV(z,FL,n,2,((I[]){1,n})); DQ(n,DAV(z)[i]=v;);
+   }else{
+    Z v=ZAV(z)[0];
+    GATV(z,CMPX,n,2,((I[]){1,n})); DQ(n,ZAV(z)[i]=v;);
+   }
+   break;
+  case 1:
+   GATV(zs,INT,2,1,((I[]){2})); IAV(zs)[0]=1; IAV(zs)[1]=AS(a)[0];
+   RZ(z=cvt(t,a)); RZ(z=reshape(zs,z));
+   break;
+  default:
+   GATV(zs,INT,2,1,((I[]){2})); IAV(zs)[0]=AS(a)[0]; IAV(zs)[1]=AN(a)/AS(a)[0];
+   if(at&t) z=a; else RZ(z=cvt(t,a));
+   RZ(z=reshape(zs,z)); RZ(z=cant1(z));
+ }
+ // Set up remaining LAPACK parameters.
+ nrhs=(int)AS(z)[0];
+ ipiv=MALLOC(n*sizeof(int));
+ ASSERT(ipiv,EVWSFULL);
+ // Solve
+ C trans='T';
+ if(t==FL){
+  jdgetrf_(&n, &n, DAV(w), &n, ipiv, &info);
+  ASSERT(info==0,EVDOMAIN);
+  jdgetrs_(&trans,&n,&nrhs,DAV(w),&n,ipiv,DAV(z),&n,&info);
+ } else {
+  jzgetrf_(&n,&n,(dcomplex*)ZAV(w),&n,ipiv,&info);
+  ASSERT(info==0,EVDOMAIN);
+  jzgetrs_(&trans,&n,&nrhs,(dcomplex*)ZAV(w),&n,ipiv,(dcomplex*)ZAV(z),&n,&info);
+ }
+ ASSERT(info==0,EVDOMAIN);
+ // Compute the determinant of w from its LU factors for integer correction (LAPACK overwrites w with its LU factorization)
+ if(at&(B01+INT2+INT4+INT) && wt&(B01+INT2+INT4+INT)){
+  D detw=1.0;
+  DQ(n,{
+   detw*=DAV(w)[i+i*n]; // The diagonal of U contains the factors used to compute det(w)
+   if (!(fabs(detw)<=1e20)){detw=0.0;break;} // Disable correction if det(w) is too large or NaN
+  });
+  if(detw!=0.0){
+   // Each pivot different from i+1 indicates a row interchange; an odd number of interchanges changes the determinant's sign
+   I swaps=0; DO(n, if(ipiv[i]!=i+1)++swaps;); if(swaps&1)detw=-detw;
+   z=icor(z,detw); // Correct floating-point rounding errors in the solution
+  }
+ }
+ FREE(ipiv);
+ ASSERT(!info,EVDOMAIN);
+ RZ(z=cant1(z)); // Transpose z
+ if(AR(a)){RZ(zs=shape(a)); RZ(z=reshape(zs,z));} // If a is non-atomic, reshape z to match its shape
+ R z;
+}
 
 // a %. w  for all types
 DF2(jtmdiv){F12IP;PROLOG(0069);A z;I t;
@@ -573,6 +407,11 @@ DF2(jtmdiv){F12IP;PROLOG(0069);A z;I t;
  if(ISSPARSE(AT(a)))RZ(a=denseit(a));
  t=AT(w);
  if(ISSPARSE(t))R mdivsp(a,w);
+ 
+ B handled;
+ z=jtgesv(jt,a,w,&handled);
+ if(handled){EPILOG(z)};
+ 
  D detv; // place to build determinant of inverse
  z=jtminvdet(jt,w,&detv);  // take generalized inverse of w, setting up for icor if needed
  z=pdt(2>AR(w)?reshape(shape(w),z):z,a);  // w^-1 mp a

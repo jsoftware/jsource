@@ -764,8 +764,8 @@ NOINLINE A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be
 // mark w incorporated, reassigning if necessary.  Return the address of the block.  Used when w is an rvalue
 A jtincorp(J jt, A w) {ARGCHK1(w); INCORP(w); R w;}
 
-// incorp+ra.  Return 0 if error.  w must not be 0
-A jtincorpra(J jt, A w) {INCORPNC(w); ra(w); R w;}
+// incorp+ra.  Return 0 if error.
+A jtincorpra(J jt, A w) {ARGCHK1(w); INCORPNC(w); ra(w); R w;}
 
 // allocate a virtual block, given the backing block
 // offset is offset in atoms from start of w; r is rank

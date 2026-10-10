@@ -395,10 +395,11 @@ static DF1(jtiota1rev){F12IP;I j; SETIC(w,j); R apv(j,j,-1L);}
 F1(jtbsdot){F12IP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag&~(VNOLOCCHG+VNONAME+VNOSELF);C id;V*v;  // init flag is IRS1
  ARGCHK1(w);
  A z; fdefallo(z)
- if(NOUN&AT(w)){
+ if(NOUN&AT(w)){  // noun (gerund) case
   A fixw; RZ(fixw=fxeachv(1L,w));
   fdeffill(z,0,CBSDOT,VERB, jtgsuffix,jtgoutfix, w,0L,fixw, VGERL|flag|gflg(fixw), RMAX,0L,RMAX); RETF(z);
  }
+ // falling through, u  is a verb
  v=FAV(w);  // verb info for w
  switch(v->id){
  default: break;

@@ -73,7 +73,7 @@ F1(jtimmea){F12JT;A t,z,z1;
 static A jtcex(J jt,A w,AF f,A self){A z; RE(w); z=f(jt,w,self); if(jt->jerr!=EVSTACK)RESETERR; R z;}
      // conditional execute - return 0 if error, but EVSTACK is fatal
 
-// convert the gerund (i. e.  AR) in w into a verb
+// convert the gerund (i. e.  AR) in w into a CAVN.  If already a verb, use it as is
 F1(jtexg){F12IP;A*v,*wv,x,y,z;I n;
  ARGCHK1(w);
  STACKCHKOFL

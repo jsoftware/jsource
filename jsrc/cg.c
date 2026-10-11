@@ -98,14 +98,17 @@ static A jtcreategerunditerator(J jt, A z, A w, A r){  // z is result area, w is
 }
 
 // w is a gerund whose max rank is r.  Result is a boxed array of VERBs, one for each gerund, if they are well formed
+// If the gerund is alrady a verb, leave it as is, otherwise convert from AR
 A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w); 
  ASSERT(r>=AR(w),EVRANK);  // max rank allowed
  ASSERT(n!=0,EVLENGTH);  // gerund must not be empty
  ASSERT(BOX&AT(w),EVDOMAIN);   // must be boxed
+ // scaf  have flag indicating 'all contents are verbs', created by `
  I zr=AR(w); GATV(z,BOX,n,AR(w),AS(w)); zv=AAVn(zr,z);  // allocate one box per gerund
- DO(n, RZ(zv[i]=x=incorp(fx(C(wv[i])))); ASSERT(VERB&AT(x),EVDOMAIN););   // create verb, verify it is a verb  No incorporation since it's not a noun
+// obsolete  DO(n, RZ(zv[i]=x=incorp(fx(C(wv[i])))); ASSERT(VERB&AT(x),EVDOMAIN););   // create verb, verify it is a verb  No incorporation since it's not a noun
+ DO(n, RZ(zv[i]=x=incorp(fx(CPYX(wv[i])))); ASSERT(VERB&AT(x),EVDOMAIN););   // create verb, verify it is a verb  No incorporation since it's not a noun
  R z;
 }
 
@@ -115,9 +118,10 @@ PRIM jtfxself[2]={
 {{1,0,0,0,0,0,0},{{.valencefns={jtfx,0},.fgh={0,0,0},.localuse=0,.flag=0,.flag2=0,.lrr=0,.mr=0,.id=0,.lu2.lc=0}}}
 };
 
-// run jtfx on each box in w, turning AR into an A block
+// run jtfx on each box in w, turning AR into an A block.  This is used for creating representations of a gerund, where we force the AR to A form (if it isn't already) before converting that to the rep
 // self is a parm passed through to jtfx, coming from jtfxself above.  if AK(self) is nonzero, we return nouns as is
 // Result claims to be an array of boxes, but each box holds an A with possibly a function type
+// scaf this should be merged into fxeachv since only verbs can come out at the top level
 DF1(jtfxeach){F12IP;RETF(every(w,self));}
 
 static DF1(jtcon1){F12IP;A h,*hv,*x,z;V*sv;

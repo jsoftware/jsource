@@ -1077,9 +1077,10 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define BOTHASUS(x,y) (((US)(C)(x)<<8)+(US)(C)(y))
 #define BOTHEQ8(x,y,X,Y) ( BOTHASUS(x,y) == BOTHASUS(X,Y) )
 #define BOTHEQUS(x,y,us) ( BOTHASUS(x,y) == us )
-#if PYXES
-#define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely((AT(res)&PYX)!=0)){if(unlikely((res=jtpyxval(jt,res))==0))err;} res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
+#define CCOMMON(x,pref,err) ({A res=(x); pref if(unlikely((AT(res)&PYX+VERB)!=0)){if(unlikely((res=jtpyxgerval(jt,res))==0))err;} res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
      // since most uses of contents check the type first, it would be good to have the type loaded at any finish.  But the compiler doesn't do that.
+#if PYXES
+#define CCOMMONPYX(x,pref,err) ({A res=(x); pref if(unlikely((AT(res)&PYX)!=0)){if(unlikely((res=jtpyxgerval(jt,res))==0))err;} res; })   // extract & resolve contents; execute err if error in resolution  x may have side effects
 #define READLOCK(lock) {S prev; if(unlikely(((prev=__atomic_fetch_add(&lock,1,__ATOMIC_ACQ_REL))&(S)-WLOCKBIT)!=0))readlock(&lock,prev);}
 #define READUNLOCK(lock) __atomic_fetch_sub(&lock,1,__ATOMIC_ACQ_REL);  // decrement the read bits
 #if WLOCKBIT==0x8000
@@ -1089,13 +1090,15 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #endif
 #define WRITEUNLOCK(lock) __atomic_fetch_and(&lock,WLOCKBIT-1, __ATOMIC_ACQ_REL);  // clear all the write bits
 #else
-#define CCOMMON(x,pref,err) (x)
+// obsolete #define CCOMMON(x,pref,err) (x)
+#define CCOMMONPYX(x,pref,err) (x)
 #define READLOCK(lock) ;
 #define WRITELOCK(lock) ;
 #define READUNLOCK(lock) ;
 #define WRITEUNLOCK(lock) ;
 #endif
 #define C(x) CCOMMON(x,,R 0)  // normal case: return on error
+#define CPYX(x) CCOMMONPYX(x,,R 0)  // wait for a pyx, but do not convert a gerund (leave it as verb)
 #define CERR(x) CCOMMON(x,,R jt->jerr)  // return error code on error
 #define CNOERR(x) CCOMMON(x,,)  // value has been resolved before & there cannot be an error
 #define CNULL(x) CCOMMON(x,if(likely(res!=0)),R 0)  // if x is 0, keep it 0; return 0 if resolves to error
@@ -1218,6 +1221,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define JTFGFROMJTFGFG jtfg=(J)(intptr_t)((I)jtfgfg&(BIT(48)-1))   // jt if flagged first in the low bits, and then in the top 16 bits.  This peels off the top flags, leaving jtfg with the bottom flags
 #define F12IP JJ JTFROMJTFG(JJ)
 #define F12JT JJ JTFROMJTFG(JJ)  // for documentation, when flags are not IP flags
+#define DF12IP JJ JTFROMJTFG(JJ) ; if(self&&!(AT(self)&VERB)SEGFAULT  //scaf!
+#define DF12JT JJ JTFROMJTFG(JJ) ; if(self&&!(AT(self)&VERB)SEGFAULT  // for documentation, when flags are not IP flags
 #define FPREFIP(T)         T jtfg=jt; JTFROMJTFG(T)  // turn off all flag bits in jt, leave them in jtfg
 #define F1PREFJT        FPREFIP(J)  // for doc purposes, use when the JT flags are not for inplacing
 #define F2PREFJT        FPREFIP(J)

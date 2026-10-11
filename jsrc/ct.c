@@ -205,6 +205,52 @@ enum{  // pyx state is low byte of seqstate.  High 3 bytes are the wakeup sequen
  PYXEMPTY=0, // the pyx is not filled in, and no one is waiting
  PYXWAIT=3,  // at least 1 thread is waiting, and the pyx is not filled in.  We can OR WAIT into pyx state to move to WAIT state
  PYXFULL=1}; // the pyx is filled in
+
+// w is an A holding a pyx or gerund value.  If gerund, convert to AR and return that value.  If pyx, return its value when it has been resolved, or 0 if error, with error code set.
+// EVTIME if timeout
+A jtpyxgerval(J jt,A pyx){UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
+ if(unlikely(AT(pyx)&VERB))R aro(pyx);  // gerund - convert to AR & return converted noun value
+#if PYXES
+ if(PYXFULL==(state=lda((C*)&blok->seqstate)))goto done; // if pyx already full, return result
+ {C dummy=PYXEMPTY;casa(state!=PYXEMPTY?&dummy:(C*)&blok->seqstate,&dummy,PYXWAIT);}  // if pyx is EMPTY, move it to WAIT.  Avoid excess contention on hot pyxes
+ UI ns=({D mwt=blok->pyxmaxwt;mwt==inf?IMAX:(I)(mwt*1e9);}); // figure out how long to wait
+ struct jtimespec end=jtmtil(ns); // get the time when we have to give up on this pyx
+ I err;
+ while(1){ // repeat till state goes to FULL
+  // The wait may time out because of a pending system action (BREAK or system lock).  If so, we accept it now...
+  UI4 state=lda(&blok->seqstate); C breakb;  // get store sequence # before we check for system event
+  if(PYXFULL==((C)state))break; // if pyx was filled, exit and return its value
+  // if someone is starting a system lock, we must go accept it.  To avoid reads from other cores, we look at our taskstate, where the lock requester
+  // tell us that a lock is running.  In normal use we will be the owner of this cacheline already.  It is not vital to get this right the first time, because the
+  // lock code will wake us 
+  if(lda(&jt->taskstate)&TASKSTATELOCKACTIVE){
+   if(unlikely(JT(jt,systemlock)>2)){err=EVDEADLOCK; goto fail;}  // if in suspension, the pyx cannot be filled if we block, since the thread is paused
+   jtsystemlockaccept(jt,LOCKALL);  // process systemlock and keep waiting.
+  }
+  // the user may be requesting a BREAK interrupt for deadlock or other slow execution
+  if(unlikely(lda(&JT(jt,adbreak)[0])>1)){err=EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
+  if(uncommon(UIMAX==(ns=jtmdif(end)))){ //update time-until-timeout.  If the time has expired...
+   if(unlikely(inf==blok->pyxmaxwt))ns=IMAX;  // if time wrapped around, reset to infinite
+   else{err=EVTIME;goto fail;}} // otherwise, timeout, fail the pyx and exit
+  sta(&jt->futexwt,&blok->seqstate); // make sure systemlock knows how to wake us up.  It will clear this field after the wakeup, so we get only one wakeup per systemlock
+  I wr=jfutex_waitn(&blok->seqstate,state|PYXWAIT,MIN(ns,1000000000));if(unlikely(wr>0)){err=EVFACE;goto fail;} // wait on futex.  If new event# or state has moved off of WAIT, don't wait
+   // because ATTN doesn't wake tasks, we have to check for JBREAK every so often
+ }
+ // We have the value; but if someone has started a system lock, they may erroneously try to wake up our futex, which is no longer needed.  We clear the futex pointer,
+ // and then wait until system lock is over
+ CLRFUTEXWT;   // clear the futex wait till no one is using it
+done:  // pyx has been filled in.  jt->futexwt must be 0
+ if(likely(blok->errcode==0))R blok->pyxvalue; // valid value, use it
+ ASSERTPYX(blok->errcode,blok->pyxvalue); // error: signal the error in the reader, noting that it was externally generated
+fail:
+ CLRFUTEXWT;ASSERT(0,err);
+#else
+ ASSERTSYS(0,"pyxgerval")  // not gerund, but pyx not supported
+#endif
+}
+
+
+
 #if PYXES
 
 // Install a value/errcode into a (recursive) pyx, and broadcast to anyone waiting on it.
@@ -238,42 +284,6 @@ static A jtcreatepyx(J jt, I thread,D timeout){A pyx;
  R pyx;
 }
 
-// w is an A holding a pyx value.  Return its value when it has been resolved, or 0 if error, with error code set.
-// EVTIME if timeout
-A jtpyxval(J jt,A pyx){UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
- if(PYXFULL==(state=lda((C*)&blok->seqstate)))goto done; // if pyx already full, return result
- {C dummy=PYXEMPTY;casa(state!=PYXEMPTY?&dummy:(C*)&blok->seqstate,&dummy,PYXWAIT);}  // if pyx is EMPTY, move it to WAIT.  Avoid excess contention on hot pyxes
- UI ns=({D mwt=blok->pyxmaxwt;mwt==inf?IMAX:(I)(mwt*1e9);}); // figure out how long to wait
- struct jtimespec end=jtmtil(ns); // get the time when we have to give up on this pyx
- I err;
- while(1){ // repeat till state goes to FULL
-  // The wait may time out because of a pending system action (BREAK or system lock).  If so, we accept it now...
-  UI4 state=lda(&blok->seqstate); C breakb;  // get store sequence # before we check for system event
-  if(PYXFULL==((C)state))break; // if pyx was filled, exit and return its value
-  // if someone is starting a system lock, we must go accept it.  To avoid reads from other cores, we look at our taskstate, where the lock requester
-  // tell us that a lock is running.  In normal use we will be the owner of this cacheline already.  It is not vital to get this right the first time, because the
-  // lock code will wake us 
-  if(lda(&jt->taskstate)&TASKSTATELOCKACTIVE){
-   if(unlikely(JT(jt,systemlock)>2)){err=EVDEADLOCK; goto fail;}  // if in suspension, the pyx cannot be filled if we block, since the thread is paused
-   jtsystemlockaccept(jt,LOCKALL);  // process systemlock and keep waiting.
-  }
-  // the user may be requesting a BREAK interrupt for deadlock or other slow execution
-  if(unlikely(lda(&JT(jt,adbreak)[0])>1)){err=EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
-  if(uncommon(UIMAX==(ns=jtmdif(end)))){ //update time-until-timeout.  If the time has expired...
-   if(unlikely(inf==blok->pyxmaxwt))ns=IMAX;  // if time wrapped around, reset to infinite
-   else{err=EVTIME;goto fail;}} // otherwise, timeout, fail the pyx and exit
-  sta(&jt->futexwt,&blok->seqstate); // make sure systemlock knows how to wake us up.  It will clear this field after the wakeup, so we get only one wakeup per systemlock
-  I wr=jfutex_waitn(&blok->seqstate,state|PYXWAIT,MIN(ns,1000000000));if(unlikely(wr>0)){err=EVFACE;goto fail;} // wait on futex.  If new event# or state has moved off of WAIT, don't wait
-   // because ATTN doesn't wake tasks, we have to check for JBREAK every so often
- }
- // We have the value; but if someone has started a system lock, they may erroneously try to wake up our futex, which is no longer needed.  We clear the futex pointer,
- // and then wait until system lock is over
- CLRFUTEXWT;   // clear the futex wait till no one is using it
-done:  // pyx has been filled in.  jt->futexwt must be 0
- if(likely(blok->errcode==0))R blok->pyxvalue; // valid value, use it
- ASSERTPYX(blok->errcode,blok->pyxvalue); // error: signal the error in the reader, noting that it was externally generated
-fail:
- CLRFUTEXWT;ASSERT(0,err);}
 // w is an A holding a pyx value.  Return its value when it has been resolved, otherwise 0
 // EVTIME if timeout
 A jtpyxvalid(J jt,A pyx){R ((PYXBLOK*)AAV0(pyx))->pyxvalue;}

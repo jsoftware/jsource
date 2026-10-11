@@ -789,7 +789,7 @@ extern A        jtfolk(J,A,A,A);  /* "fork" name conflict under UNIX         */
 extern void     jtforeigninit(J);
 extern A        jtfrombsn(J,A,A,I);
 extern A        jtfrombu(J,A,A,I);
-extern A        jtpyxval(J,A);
+extern A        jtpyxgerval(J,A);
 extern A        jtpyxvalid(J,A);
 extern C        jtjobrun(J,unsigned char(*)(J,void*,UI4),void*,UI4,I);
 extern A        jtsusp(J,C);

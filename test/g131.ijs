@@ -194,11 +194,11 @@ assert. 1.03e_8>e
 'domain error' -: (u:'abcd') %. etx ?4 4$100
 'domain error' -: (10&u:'abcd') %. etx ?4 4$100
 
-'length error' -:        %. etx ?3 5$123
+1e_10 > >./ , | (=i.3) - (] +/ .* %.) ?3 5$123
 'length error' -: 3 4 5  %. etx ?7 4$100
 
-echo %. etx 2 2 $ 0 1 2 _
-echo %. etx 2 2$0 1e_309 10 10
+'domain error' -: %. etx 2 2 $ 0 1 2 _
+'domain error' -: %. etx 2 2$0 1e_309 10 10
 
 9!:19 ct
 

@@ -1,34 +1,6 @@
 prolog './g131cb.ijs'
 NB. %. ------------------------------------------------------------------
 
-{{
-a =. x c. 4 4 $ 17 3 2 1  4 19 5 2  2 6 23 3  1 2 4 29
-b =. y c. 1 2 3 4
-b -: a +/ .* b %. a
-}}"0/~ 4 8 11 16 64 128
-
-{{
-a =. y c. 4 4 $ 17 3 2 1  4 19 5 2  2 6 23 3  1 2 4 29
-b =. 1j1 2j_1 3j2 4j_2
-assert. b = a +/ .* b %. a
-b =. 5j1
-assert. *./ b = a +/ .* b %. a
-EMPTY
-}}"0 ] 4 8 11 16 64 128
-
-{{
-a =. ((2 # y) ?@$ 0) + y * = i. y
-r =. y * y ?@$ 0
-assert. r -:!.1e_11 (a +/ .* r) %. a
-r =. y * ? 0
-assert. *./ r =!.1e_11 (a +/ .* r) %. a
-r =. y * (y , 2 2 4) ?@$ 0
-assert. r -:!.1e_11 (a +/ .* r) %. a
-EMPTY
-}}"0 ] 9 42 107
-
-'domain error' -: 1 10 %. etx 2 2 $ 1 1 10 10
-
 thr=: (9!:58)"0 i.3
 0 (9!:58)"0 i.3       NB.  +/ .*  always use blas
 
@@ -218,11 +190,11 @@ assert. 1.3e_8>e
 'domain error' -: (u:'abcd') %. etx ?4 4$100
 'domain error' -: (10&u:'abcd') %. etx ?4 4$100
 
-'length error' -:        %. etx ?3 5$123
+1e_10 > >./ , | (=i.3) - (] +/ .* %.) ?3 5$123
 'length error' -: 3 4 5  %. etx ?7 4$100
 
-echo %. etx 2 2 $ 0 1 2 _
-echo %. etx 2 2$0 1e_309 10 10
+'domain error' -: %. etx 2 2 $ 0 1 2 _
+'domain error' -: %. etx 2 2$0 1e_309 10 10
 
 9!:19 ct
 

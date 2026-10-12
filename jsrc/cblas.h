@@ -783,11 +783,35 @@ CBLASEXTERN void (*jdgetri_)(int *m, double *A, int *lda, int *ipiv, double *wor
 extern void zgetri_(int *m, dcomplex *A, int *lda, int *ipiv, dcomplex *work, int *lwork, int *info);
 CBLASEXTERN void (*jzgetri_)(int *m, dcomplex *A, int *lda, int *ipiv, dcomplex *work, int *lwork, int *info);
 
-extern void dgesdd_(char *jobz, int	*m, int	*n, double *a, int	*lda, double *s, double *u, int	*ldu, double *vt, int	*ldvt, double *work, int	*lwork, int *iwork, int	*info);
-CBLASEXTERN void (*jdgesdd_)(char *jobz, int	*m, int	*n, double *a, int	*lda, double *s, double *u, int	*ldu, double *vt, int	*ldvt, double *work, int	*lwork, int *iwork, int	*info);
+extern void dgels_(char *trans, int *m, int *n, int *nrhs, double *A, int *lda, double *B, int *ldb, double *work, int *lwork, int *info);
+CBLASEXTERN void (*jdgels_)(char *trans, int *m, int *n, int *nrhs, double *A, int *lda, double *B, int *ldb, double *work, int *lwork, int *info);
 
-extern void zgesdd_(char *jobz, int	*m, int	*n, dcomplex *a, int	*lda, double *s, dcomplex *u, int	*ldu, dcomplex *vt, int	*ldvt, dcomplex *work, int	*lwork, double	*rwork, int *iwork, int	*info);
-CBLASEXTERN void (*jzgesdd_)(char *jobz, int	*m, int	*n, dcomplex *a, int	*lda, double *s, dcomplex *u, int	*ldu, dcomplex *vt, int	*ldvt, dcomplex *work, int	*lwork, double	*rwork, int *iwork, int	*info);
+extern void zgels_(char *trans, int *m, int *n, int *nrhs, dcomplex *A, int *lda, dcomplex *B, int *ldb, dcomplex *work, int *lwork, int *info);
+CBLASEXTERN void (*jzgels_)(char *trans, int *m, int *n, int *nrhs, dcomplex *A, int *lda, dcomplex *B, int *ldb, dcomplex *work, int *lwork, int *info);
+
+extern void dgecon_(char *norm, int *n, double *A, int *lda, double *anorm, double *rcond, double *work, int *iwork, int *info);
+CBLASEXTERN void (*jdgecon_)(char *norm, int *n, double *A, int *lda, double *anorm, double *rcond, double *work, int *iwork, int *info);
+
+extern void zgecon_(char *norm, int *n, dcomplex *A, int *lda, double *anorm, double *rcond, dcomplex *work, double *rwork, int *info);
+CBLASEXTERN void (*jzgecon_)(char *norm, int *n, dcomplex *A, int *lda, double *anorm, double *rcond, dcomplex *work, double *rwork, int *info);
+
+extern void dgeqrf_(int *m, int *n, double *A, int *lda, double *tau, double *work, int *lwork, int *info);
+CBLASEXTERN void (*jdgeqrf_)(int *m, int *n, double *A, int *lda, double *tau, double *work, int *lwork, int *info);
+
+extern void zgeqrf_(int *m, int *n, dcomplex *A, int *lda, dcomplex *tau, dcomplex *work, int *lwork, int *info);
+CBLASEXTERN void (*jzgeqrf_)(int *m, int *n, dcomplex *A, int *lda, dcomplex *tau, dcomplex *work, int *lwork, int *info);
+
+extern void dorgqr_(int *m, int *n, int *k, double *A, int *lda, double *tau, double *work, int *lwork, int *info);
+CBLASEXTERN void (*jdorgqr_)(int *m, int *n, int *k, double *A, int *lda, double *tau, double *work, int *lwork, int *info);
+
+extern void zungqr_(int *m, int *n, int *k, dcomplex *A, int *lda, dcomplex *tau, dcomplex *work, int *lwork, int *info);
+CBLASEXTERN void (*jzungqr_)(int *m, int *n, int *k, dcomplex *A, int *lda, dcomplex *tau, dcomplex *work, int *lwork, int *info);
+
+extern void dtrcon_(char *norm, char *uplo, char *diag, int *n, double *A, int *lda, double *rcond, double *work, int *iwork, int *info);
+CBLASEXTERN void (*jdtrcon_)(char *norm, char *uplo, char *diag, int *n, double *A, int *lda, double *rcond, double *work, int *iwork, int *info);
+
+extern void ztrcon_(char *norm, char *uplo, char *diag, int *n, dcomplex *A, int *lda, double *rcond, dcomplex *work, double *rwork, int *info);
+CBLASEXTERN void (*jztrcon_)(char *norm, char *uplo, char *diag, int *n, dcomplex *A, int *lda, double *rcond, dcomplex *work, double *rwork, int *info);
 
 #undef CBLASEXTERN
 

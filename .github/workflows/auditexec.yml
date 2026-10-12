@@ -23,6 +23,7 @@ env:
  USE_PYXES: 1
  USE_EMU_AVX: 1
  RELEASE: ${{ false }}
+ WEBHOOK: ${{ false }}
 
 jobs:
 
@@ -1733,7 +1734,7 @@ jobs:
    - jewin-msys2-arm64
   steps:
    - name: update server
-     if: ${{ env.RELEASE == 'true' }}
+     if: ${{ env.WEBHOOK == 'true' }}
      uses: distributhor/workflow-webhook@v2
      env:
       webhook_url: ${{ secrets.WEBHOOK_URL }}

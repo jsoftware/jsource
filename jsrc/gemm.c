@@ -936,7 +936,7 @@ dgemm_nn(I              m,
          I              rs_C,
          I              cs_C)
 {
- if(hascblas&&libcblas)
+ if(hascblas)
   jcblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, (m), (n), (k), (alpha), (A), (rs_A), (B), (rs_B), (beta), (C), (rs_C));
  else
   dgemm_nnblis((m), (n), (k), (alpha), (A), (rs_A), (cs_A), (B), (rs_B), (cs_B), (beta), (C), (rs_C), (cs_C));
@@ -958,7 +958,7 @@ zgemm_nn(I              m,
          I              rs_C,
          I              cs_C)
 {
- if(hascblas&&libcblas)
+ if(hascblas)
   jcblas_zgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, (m), (n), (k), (alpha), (A), (rs_A), (B), (rs_B), (beta), (C), (rs_C));
  else
   zgemm_nnblis((m), (n), (k), (alpha), (A), (rs_A), (cs_A), (B), (rs_B), (cs_B), (beta), (C), (rs_C), (cs_C));

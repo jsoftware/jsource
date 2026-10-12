@@ -389,8 +389,8 @@ big =: {{
 illcond =: {{
  for_k. 1e4 1e8 1e11 do.
   W=. k mk 30 30 [ xt=. 'FL' rnd 30 2
-  x=. (W X xt) %. W
-  assert. (1e3 * k * eps) > (nrm x - xt) % nrm xt
+  r=. (W X xt) %. W
+  assert. (1e3 * k * eps) > (nrm r - xt) % nrm xt
   W=. k mk 90 30
   P=. %. W
   assert. 1e3 > (nrm (=i.30) - P X W) % eps * k

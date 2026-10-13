@@ -426,6 +426,7 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #define UIMAX           -1ul
 #define strtoI          strtol
 #endif
+#define I8MAX           9223372036854775807LL
 #define FLIMAX          (-(D)IMIN)     // smallest FL value that cannot be converted to I
 
 #define NEGATIVE0       (UIL)0x8000000000000000LL   // IEEE -0 (double precision)

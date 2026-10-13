@@ -317,7 +317,7 @@ F1(jtdl){F12IP;D m,n,*v;UINT ms,s;
  RZ(w=ccvt(FL,w,0));
  n=0; v=DAV(w); DQ(AN(w), m=*v++; ASSERT(0<=m,EVDOMAIN); n+=m;);
 #if PYXES
- C sr=jtjsleep(jt,(UI)jfloor(n*1e9));ASSERT(!sr,sr);
+ C sr=jtjsleep(jt,(UI8)jfloor(n*1e9));ASSERT(!sr,sr);
 #else
  s=(I)jfloor(n); ms=(I)jround(1000*(n-s));
 #if SYS & SYS_MACINTOSH

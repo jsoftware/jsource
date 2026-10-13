@@ -6,6 +6,8 @@
 #define _GNU_SOURCE
 #include "j.h"
 
+#define NANOS 1000000000uLL
+
 #if PYXES && (defined(__aarch64__) || defined(__arm__)) && !EMU_AVX2
 INLINE void _mm_pause(void)
 {
@@ -243,7 +245,7 @@ static A jtcreatepyx(J jt, I thread,D timeout){A pyx;
 A jtpyxval(J jt,A pyx){UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
  if(PYXFULL==(state=lda((C*)&blok->seqstate)))goto done; // if pyx already full, return result
  {C dummy=PYXEMPTY;casa(state!=PYXEMPTY?&dummy:(C*)&blok->seqstate,&dummy,PYXWAIT);}  // if pyx is EMPTY, move it to WAIT.  Avoid excess contention on hot pyxes
- UI ns=({D mwt=blok->pyxmaxwt;mwt==inf?IMAX:(I)(mwt*1e9);}); // figure out how long to wait
+ UI8 ns=({D mwt=blok->pyxmaxwt;mwt==inf?I8MAX:(I8)(mwt*1e9);}); // figure out how long to wait
  struct jtimespec end=jtmtil(ns); // get the time when we have to give up on this pyx
  I err;
  while(1){ // repeat till state goes to FULL
@@ -259,11 +261,11 @@ A jtpyxval(J jt,A pyx){UI4 state;PYXBLOK *blok=(PYXBLOK*)AAV0(pyx);
   }
   // the user may be requesting a BREAK interrupt for deadlock or other slow execution
   if(unlikely(lda(&JT(jt,adbreak)[0])>1)){err=EVBREAK;goto fail;} // JBREAK: give up on the pyx and exit
-  if(uncommon(UIMAX==(ns=jtmdif(end)))){ //update time-until-timeout.  If the time has expired...
+  if(uncommon(-1LL==(I8)(ns=jtmdif(end)))){ //update time-until-timeout.  If the time has expired...
    if(unlikely(inf==blok->pyxmaxwt))ns=IMAX;  // if time wrapped around, reset to infinite
    else{err=EVTIME;goto fail;}} // otherwise, timeout, fail the pyx and exit
   sta(&jt->futexwt,&blok->seqstate); // make sure systemlock knows how to wake us up.  It will clear this field after the wakeup, so we get only one wakeup per systemlock
-  I wr=jfutex_waitn(&blok->seqstate,state|PYXWAIT,MIN(ns,1000000000));if(unlikely(wr>0)){err=EVFACE;goto fail;} // wait on futex.  If new event# or state has moved off of WAIT, don't wait
+  I wr=jfutex_waitn(&blok->seqstate,state|PYXWAIT,MIN(ns,NANOS));if(unlikely(wr>0)){err=EVFACE;goto fail;} // wait on futex.  If new event# or state has moved off of WAIT, don't wait
    // because ATTN doesn't wake tasks, we have to check for JBREAK every so often
  }
  // We have the value; but if someone has started a system lock, they may erroneously try to wake up our futex, which is no longer needed.  We clear the futex pointer,
@@ -432,7 +434,7 @@ nexttasklocked: ;  // come here if already holding the lock, and job is set.  nd
    if(likely(job==0)){
     // Still no job.  As far as tasks are concerned, we are now waiting.  But don't do an OS wait till we have lingered
     ++jobq->waiters;  // indicate we are waiting, while under lock.  Central needs to know there is an idle thread to prevent the master from taking a task.  We are in a non-OS wait state here
-    UI4 warmendns=jobq->keepwarmns;   // user's keepwarm delay
+    UI8 warmendns=jobq->keepwarmns;   // user's keepwarm delay
     do{   // loop till we get something to process
      if(warmendns!=0){struct jtimespec endtime=jtmftil(warmendns);  // time when our keepwarm expires
       // the user wants us to linger before performing a wait.  We will spin here in the hope that a job arrives
@@ -959,7 +961,7 @@ ASSERT(0,EVNONCE)
   D dpoolno=DAV(w)[0]; I poolno=(I)dpoolno; ASSERT((D)poolno==dpoolno,EVDOMAIN) ASSERT(BETWEENO(poolno,0,MAXTHREADPOOLS),EVLIMIT)  // extract threadpool# and audit it
   JOBQ *jobq=&(*JT(jt,jobqueues))[poolno];
   D oldval=jobq->keepwarmns*1e-9;
-  D kwtime=DAV(w)[1]; ASSERT(kwtime>=0,EVDOMAIN); if(unlikely(kwtime>MAXLINGER))kwtime=MAXLINGER; I kwtimens=(I)(kwtime*1000000000);  // limit time and convert to ns
+  D kwtime=DAV(w)[1]; ASSERT(kwtime>=0,EVDOMAIN); if(unlikely(kwtime>MAXLINGER))kwtime=MAXLINGER; I kwtimens=(I)(kwtime*NANOS);  // limit time and convert to ns
   jobq->keepwarmns=kwtimens;  // store new value
   z=scf(oldval);  // return old value
 #else
@@ -1124,7 +1126,7 @@ ASSERT(0,EVNONCE)
    lockfail=lockrc==-1;  // -1 is a soft failure
   }else{
    ASSERT(timeout<=9e9,EVLIMIT); // 9e9 is approx 63 bits of ns.  This leaves ~300y; should be ok
-   I lockrc=jtpthread_mutex_timedlock(jt,(jtpthread_mutex_t*)IAV0(mutex),1e9*timeout,1+THREADID(jt));
+   I lockrc=jtpthread_mutex_timedlock(jt,(jtpthread_mutex_t*)IAV0(mutex),NANOS*timeout,1+THREADID(jt));
    ASSERT(lockrc<=0,lockrc);  // positive is a hard failure
    lockfail=lockrc==-1;  // -1 is a soft failure
   }

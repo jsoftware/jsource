@@ -269,7 +269,8 @@ static A jtqrlapack(J jt,A w){PROLOG(0067);A q,r,tau,sg,wk,z;
  EPILOG(z);
 }
 
-// qr decomposition of w, returns q;r
+// qr (?) decomposition of w, returns q;r
+DF1(jtqr){DF12IP;A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  F1RANK(2,jtqr,self);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  ASSERT(AT(w)&B01+INT2+INT4+INT+FL+CMPX+QP,EVDOMAIN);

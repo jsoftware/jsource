@@ -62,7 +62,7 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A z;
  ARGCHK1(w);
  // If we are only interested in replacing locatives, and there aren't any, exit fast
  if(NOUN&AT(w)){R w;}  // return noun value; only way a name gets here is by ".@noun which turns into ".@(name+noun) for execution.  Also in debug, but that's discarded
- if(FAV(w)->flag&VNONAME)R w;  // if value already fixed (or m : n which gets VNONAME+VNOSELF set), keep it.  This prunes all branches with no names, since VNONAME+VNOSELF is propagated from the bottom up during tree creation
+ if(FAV(w)->flag&VNONAME)R w;  // if value already fixed (or m : n which gets VNONAME+VNOSELF set), keep it.  This prunes all branches with no names, since VNONAME+VNOSELF is propagated from the bottom up during tree creation   scaf should check for unchanged args & suppress rebuild
  // continuing, there is a name in the branch and we have to plod through the tree to find it
  fauxblock(fauxself); A aa; fauxINT(aa,fauxself,3,0); AN(aa)=1; IAV0(aa)[1]=IAV(a)[1]; IAV0(aa)[2]=IAV(a)[2];  // place to build recursion parm - copy the recursion namelist and length
  A f=FAV(w)->fgh[0]; A g=FAV(w)->fgh[1]; A h=FAV(w)->fgh[2]; I id=FAV(w)->id;   // fetch fgh of compound, and the type
@@ -99,17 +99,20 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A z;
   if(h==0){h=g; g=f; f=ds(CCAP);}  // reconstitute capped fork, which has h=0
   f=REFIXA(na,f); R255(f) g=REFIXA(ID(f)==CCAP?1:2,g); R255(g) h=REFIXA(na,h); R255(h) R folk(f,g,h);  // f first in case it's [:
  case CATDOT:
-  // we fix each gerund; for each component that changed, we calculate the AR of the corresponding f
-  IAV0(aa)[0]=(aif|na); A h1; RZ(h1=every2(aa,h,(A)&arofixaself)); A *h1v=AAV(h1), *hv=AAV(h); // fix each component of gerund h, point to boxes
-  g=REFIXA(na,g); R255(g); RZ(f=ca(f)); A *fv=AAV(f);  // fix g, and make a nonrecursive copy of f where we will record changes to h
+  // we fix each verb-gerund; for each component that changed
+  IAV0(aa)[0]=(aif|na);
+// obsolete  A f1; RZ(f1=every2(aa,f,(A)&arofixaself)); A *f1v=AAV(f1); // fix each component of gerund h, point to boxes
+  g=REFIXA(na,g); R255(g); RZ(f=ca(f)); A *fv=AAV(f);  // fix g, and make a nonrecursive copy of f where we will record changes to it
   I flag=VNOLOCCHG+VNONAME+VNOSELF&FAV(g)->flag;  // we will collect combined NOLOCCHG/VNONAME+VNOSELF over g/h
-  DO(AN(h), flag&=FAV(h1v[i])->flag; if(h1v[i]!=hv[i]){A t;RZ(t=aro(h1v[i])) INCORPNV(t) fv[i]=t;})  // update AR in f of any changed component.
-  fdef(0,CATDOT,VERB, FAV(w)->valencefns[0],FAV(w)->valencefns[1], h1,g,h1, flag+VGERL, RMAX, RMAX, RMAX);   // create new verb, setting flags, and using verbified gerund
+// obsolete   DO(AN(h), flag&=FAV(f1v[i])->flag; if(f1v[i]!=fv[i]){A t;RZ(t=aro(f1v[i])) INCORPNV(t) fv[i]=t;})  // update AR in f of any changed component.
+  DO(AN(f), flag&=FAV(fv[i])->flag; A t=REFIXA(na,fv[i]); R255(t); if(t!=fv[i]){INCORPNV(t) fv[i]=t;})  // update AR in f of any changed component.
+  RZ(f=fxeachv(1,f))  // agenda must be verbified - it will already be, unless there was a pun
+  R fdef(0,CATDOT,VERB, FAV(w)->valencefns[0],FAV(w)->valencefns[1], f,g,f, flag+VGERL, RMAX, RMAX, RMAX);   // create new verb, setting flags, and using verbified gerund
  case CGRCO:
   // we fix each gerund, and then convert it to AR and back.  This is needless potentially expensive conversions.  We should
-  // fix each gerund, but AR only the ones that changed so that we keep f matching h; and use the fixed ones without un-AR scaf
+  // fix each gerund, but AR only the ones that changed so that we keep f matching h; and use the fixed ones without un-AR scaf   scaf change this to fix the verbs not the ARs
   IAV0(aa)[0]=(aif|na);
-  RZ(f=every(every2(aa,h,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
+  RZ(f=every(every2(aa,f,(A)&arofixaself),(A)&arofixaself)); // full A block required for call
   g=REFIXA(na,g); R255(g);
   R df2(z,f,g,wf);
  case CIBEAM: R w;  // m, n carried in localuse

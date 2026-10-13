@@ -2,14 +2,14 @@
 // see mt.c
 
 #if PYXES
-struct jtimespec jtmtil(UI ns); //returns a time ns ns in the future
-I jtmdif(struct jtimespec when); //returns the time in ns between now and when.  If when is not in the future, the result will be -1
-struct jtimespec jtmftil(UI ns); //'fast' (& potentially inaccurate) version of the above (on unix, uses CLOCK_MONOTONIC_RAW rather than CLOCK_MONOTONIC, TODO use QueryPerformanceCounter/QueryPerformanceFrequency on windows)
-I jtmfdif(struct jtimespec when); //ditto
+struct jtimespec jtmtil(UI8 ns); //returns a time ns ns in the future
+I8 jtmdif(struct jtimespec when); //returns the time in ns between now and when.  If when is not in the future, the result will be -1
+struct jtimespec jtmftil(UI8 ns); //'fast' (& potentially inaccurate) version of the above (on unix, uses CLOCK_MONOTONIC_RAW rather than CLOCK_MONOTONIC, TODO use QueryPerformanceCounter/QueryPerformanceFrequency on windows)
+I8 jtmfdif(struct jtimespec when); //ditto
 //both of these are implemented in terms of mtclk and use its clock
 
 __attribute__((cold)) C jfutex_wait(UI4 *p,UI4 v); //atomically, compare v to *p and go to sleep if they are equal.  Return error code
-__attribute__((cold)) I jfutex_waitn(UI4 *p,UI4 v,UI ns); //ditto, but wake up after at most ns ns.  Result -1 means timeout definitely exceeded; other result is an error code
+__attribute__((cold)) I jfutex_waitn(UI4 *p,UI4 v,UI8 ns); //ditto, but wake up after at most ns ns.  Result -1 means timeout definitely exceeded; other result is an error code
 __attribute__((cold)) void jfutex_wake1(UI4 *p); //wake 1 thread waiting on p
 __attribute__((cold)) void jfutex_waken(UI4 *p,UI4 n); //wake at least n threads waiting on p (eqv. to waken except on linux, so beware of contention or use with care elsewhere)
 __attribute__((cold)) void jfutex_wakea(UI4 *p); //wake all threads waiting on p
@@ -24,11 +24,11 @@ typedef struct {
 //'self' is a task id (stored in 'owner').  Currently just 1+THREADID(jt), but in the future it should be associated with the task in question (perhaps the pyx pointer).  Must be non-zero (hence the 1+)
 void jtpthread_mutex_init(jtpthread_mutex_t*,B recursive);
 C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self);
-I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t*,UI ns,I self); //absolute timers suck; correct the interface.  -1=failure; 0=success; positive=error
+I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t*,UI8 ns,I self); //absolute timers suck; correct the interface.  -1=failure; 0=success; positive=error
 I jtpthread_mutex_trylock(jtpthread_mutex_t*,I self); //0=success -1=failure positive=error
 C jtpthread_mutex_unlock(jtpthread_mutex_t*,I self); //0 or error code
 
-C jtjsleep(J jt,UI ns); //returns error
+C jtjsleep(J jt,UI8 ns); //returns error
 
 #if defined(__linux__)
 #include <linux/futex.h>

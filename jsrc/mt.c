@@ -23,25 +23,27 @@
 
 #include"j.h"
 
+#define NANOS 1000000000uLL
+
 // timing shenanigans
-struct jtimespec jtmtil(UI ns){ //returns the time ns ns in the future
+struct jtimespec jtmtil(UI8 ns){ //returns the time ns ns in the future
  struct jtimespec r=jmtclk();
- r.tv_sec+=ns/1000000000uLL;r.tv_nsec+=ns%1000000000uLL;
- if(r.tv_nsec>=1000000000LL){r.tv_sec++;r.tv_nsec-=1000000000LL;}
+ r.tv_sec+=ns/NANOS;r.tv_nsec+=ns%NANOS;
+ if(r.tv_nsec>=(long long)NANOS){r.tv_sec++;r.tv_nsec-=NANOS;}
  R r;}
-I jtmdif(struct jtimespec w){ //returns the time in ns between the current time and w, or -1 if it is not in the future
+I8 jtmdif(struct jtimespec w){ //returns the time in ns between the current time and w, or -1 if it is not in the future
  struct jtimespec t=jmtclk();
- if(t.tv_sec>w.tv_sec||t.tv_sec==w.tv_sec&&t.tv_nsec>=w.tv_nsec)R -1;
- R (w.tv_sec-t.tv_sec)*1000000000ull+w.tv_nsec-t.tv_nsec;}
-struct jtimespec jtmftil(UI ns){
+ if(t.tv_sec>w.tv_sec||t.tv_sec==w.tv_sec&&t.tv_nsec>=w.tv_nsec)R -1LL;
+ R (w.tv_sec-t.tv_sec)*NANOS+w.tv_nsec-t.tv_nsec;}
+struct jtimespec jtmftil(UI8 ns){
  struct jtimespec r=jmtfclk();
- r.tv_sec+=ns/1000000000uLL;r.tv_nsec+=ns%1000000000uLL;
- if(r.tv_nsec>=1000000000LL){r.tv_sec++;r.tv_nsec-=1000000000LL;}
+ r.tv_sec+=ns/NANOS;r.tv_nsec+=ns%NANOS;
+ if(r.tv_nsec>=(long long)NANOS){r.tv_sec++;r.tv_nsec-=NANOS;}
  R r;}
-I jtmfdif(struct jtimespec w){ //returns the time in ns between the current time and w, or -1 if it is not in the future
+I8 jtmfdif(struct jtimespec w){ //returns the time in ns between the current time and w, or -1 if it is not in the future
  struct jtimespec t=jmtfclk();
- if(t.tv_sec>w.tv_sec||t.tv_sec==w.tv_sec&&t.tv_nsec>=w.tv_nsec)R -1;
- R (w.tv_sec-t.tv_sec)*1000000000ull+w.tv_nsec-t.tv_nsec;}
+ if(t.tv_sec>w.tv_sec||t.tv_sec==w.tv_sec&&t.tv_nsec>=w.tv_nsec)R -1LL;
+ R (w.tv_sec-t.tv_sec)*NANOS+w.tv_nsec-t.tv_nsec;}
 
 #if PYXES
 // implement jfutex_wait _waitn _wake1 _wakea; synchronisation primitives
@@ -56,7 +58,7 @@ C jfutex_wait(UI4 *p,UI4 v){
 #if defined(__arm64__)||defined(__aarch64__)
 // wait2 takes an ns timeout, but it's only available from macos 11 onward; coincidentally, arm macs only support macos 11+
 // so we can count on having this
-I jfutex_waitn(UI4 *p,UI4 v,UI ns){
+I jfutex_waitn(UI4 *p,UI4 v,UI8 ns){
  I r=__ulock_wait2(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,v,ns,0);
  if(r>=0)R 0;
  if(r==-ETIMEDOUT)R -1;
@@ -67,7 +69,7 @@ I jfutex_waitn(UI4 *p,UI4 v,UI ns){
 #else
 // but for the x86 case, we keep compatibility with older macos.  Revisit in the future
 // deal with >32 bits; 2^32us is just a little over an hour; just too close for comfort
-I jfutex_waitn(UI4 *p,UI4 v,UI ns){I r;
+I jfutex_waitn(UI4 *p,UI4 v,UI8 ns){I r;
  UI us=ns/1000;
  while(us>0xfffffff){
   r=__ulock_wait(UL_COMPARE_AND_WAIT|ULF_NO_ERRNO,p,v,0xffffffff);
@@ -95,8 +97,8 @@ C jfutex_wait(UI4 *p,UI4 v){
  if(r>=0)R 0;
  if(errno==EAGAIN||errno==EINTR)R 0;
  R EVFACE;}
-I jfutex_waitn(UI4 *p,UI4 v,UI ns){
- struct timespec ts={.tv_sec=ns/1000000000, .tv_nsec=ns%1000000000}; //ts is relative (except for the cases in which it's absolute, but this is not one such)
+I jfutex_waitn(UI4 *p,UI4 v,UI8 ns){
+ struct timespec ts={.tv_sec=ns/NANOS, .tv_nsec=ns%NANOS}; //ts is relative (except for the cases in which it's absolute, but this is not one such)
  int r=syscall(SYS_futex,p,FUTEX_WAIT_PRIVATE,v,&ts);
  if(r>=0)R 0;
  if(errno==ETIMEDOUT)R -1;
@@ -113,8 +115,8 @@ C jfutex_wait(UI4 *p,UI4 v){
  if (r==0)R 0;
  if (errno==EINTR)R 0;
  R EVFACE;}
-I jfutex_waitn(UI4 *p,UI4 v,UI ns){
- struct timespec ts={.tv_sec=ns/1000000000, .tv_nsec=ns%1000000000};
+I jfutex_waitn(UI4 *p,UI4 v,UI8 ns){
+ struct timespec ts={.tv_sec=ns/NANOS, .tv_nsec=ns%NANOS};
  int r=_umtx_op(p,UMTX_OP_WAIT_UINT_PRIVATE,v,(void*)sizeof(struct timespec),&ts);
  if (r==0)R 0;
  if (errno==ETIMEDOUT)R -1;
@@ -130,8 +132,8 @@ C jfutex_wait(UI4 *p,UI4 v){
  if(r>=0)R 0;
  if(errno==EAGAIN||errno==EINTR||errno==ECANCELED)R 0;
  R EVFACE;}
-I jfutex_waitn(UI4 *p,UI4 v,UI ns){
- struct timespec ts={.tv_sec=ns/1000000000, .tv_nsec=ns%1000000000};
+I jfutex_waitn(UI4 *p,UI4 v,UI8 ns){
+ struct timespec ts={.tv_sec=ns/NANOS, .tv_nsec=ns%NANOS};
  int r=futex(p,FUTEX_WAIT_PRIVATE,v,&ts,0);
  if(r>=0)R 0;
  if(errno==ETIMEDOUT)R -1;
@@ -179,7 +181,7 @@ C jtpthread_mutex_lock(J jt,jtpthread_mutex_t *m,I self){ //lock m; self is thre
    // Now wait for a change.  The futex_wait is atomic, and will wait only if the state is WAIT.  In that case,
    // the holder is guaranteed to perform a wake after freeing the lock.  If the state is not WAIT, something has happened already and we inspect it forthwith
 #if __linux__
-   I i=jfutex_waitn(&m->v,waitval|WAIT,(UI)-1);
+   I i=jfutex_waitn(&m->v,waitval|WAIT,(UI8)-1);
    //kernel bug? futex wait doesn't get interrupted by signals on linux if timeout is null
 #else
    I i=jfutex_wait(&m->v,waitval|WAIT);  // if we are out of WAIT state, or the serial number changed since we check for system lock, don't wait at all
@@ -194,7 +196,7 @@ fail:CLRFUTEXWT; R r;}  // error return, with our internal errorcode
 
 
 // return positive error code, 0 if got lock, -1 if lock timed out
-I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){ //lock m, with a timeout of ns ns.  Largely the same as lock
+I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI8 ns,I self){ //lock m, with a timeout of ns ns.  Largely the same as lock
  I r;  // internal return code in case of error
  if(unlikely(!casa((US*)&m->v,&(US){FREE},LOCK))){    //fast and common path: attempt to install LOCK in place of FREE; if so, we have acquired the lock
   struct jtimespec tgt=jtmtil(ns);
@@ -208,7 +210,7 @@ I jtpthread_mutex_timedlock(J jt,jtpthread_mutex_t *m,UI ns,I self){ //lock m, w
    if(unlikely(i>0)){r=EVFACE; goto fail;} //handle error (unaligned unmapped interrupted...)
    if(i==-1){r=-1;goto fail;} //if the kernel says we timed out, trust it rather than doing another syscall to check the time
 retime:
-   if(UIMAX==(ns=jtmdif(tgt))){r=-1;goto fail;} //update delta, abort if timed out
+   if(-1LL==(I8)(ns=jtmdif(tgt))){r=-1;goto fail;} //update delta, abort if timed out
   }
   CLRFUTEXWT;  // remove wakeup to this thread
  }
@@ -230,7 +232,7 @@ C jtpthread_mutex_unlock(jtpthread_mutex_t *m,I self){ //release m
 
 // misc: sleep
 // attempt to sleep for ns ns, with proper handling of systemlock and jbreak.  Returns error code
-C jtjsleep(J jt,UI ns){
+C jtjsleep(J jt,UI8 ns){
  C r=0,breakb;
  struct jtimespec tgt=jtmtil(ns);  // target time for end of wait
  UI4 ftx=0;
@@ -239,12 +241,12 @@ C jtjsleep(J jt,UI ns){
   UI4 waitval=lda(&ftx);
   if(unlikely(BETWEENC(lda(&JT(jt,systemlock)),1,2))){jtsystemlockaccept(jt,LOCKALL);goto retime;} //systemlock can take a long time
   if(unlikely(lda(&JT(jt,adbreak)[0])>1)){r=EVBREAK;break;}   // ignore ATTN, but exit on BREAK
-  I i=jfutex_waitn(&ftx,waitval|1,MIN(ns,1000000000));  // the 1 is PYXWAIT defined in ct.c - we wait for the state to move off WAIT state
+  I i=jfutex_waitn(&ftx,waitval|1,MIN(ns,NANOS));  // the 1 is PYXWAIT defined in ct.c - we wait for the state to move off WAIT state
    // ATTN doesn't wake us, so we have to sleep at most 1s at a time
   if(unlikely(i>0)){r=EVFACE;break;}
   if(i==-1){r=0;break;} //timed out
 retime:
-  if(UIMAX==(ns=jtmdif(tgt))){r=0;break;}}  // recalculate time-to-target
+  if(-1LL==(I8)(ns=jtmdif(tgt))){r=0;break;}}  // recalculate time-to-target
  CLRFUTEXWT;
  R r;}
 #endif //PYXES

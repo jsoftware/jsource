@@ -5,6 +5,27 @@
 
 #include "j.h"
 
+#define jcblas_dtrsm(...) EXTERNCALL((jcblas_dtrsm)(__VA_ARGS__))
+#define jcblas_ztrsm(...) EXTERNCALL((jcblas_ztrsm)(__VA_ARGS__))
+
+#define jdgecon_(...) EXTERNCALL((jdgecon_)(__VA_ARGS__))
+#define jdgels_(...) EXTERNCALL((jdgels_)(__VA_ARGS__))
+#define jdgeqrf_(...) EXTERNCALL((jdgeqrf_)(__VA_ARGS__))
+#define jdgetrf_(...) EXTERNCALL((jdgetrf_)(__VA_ARGS__))
+#define jdgetri_(...) EXTERNCALL((jdgetri_)(__VA_ARGS__))
+#define jdgetrs_(...) EXTERNCALL((jdgetrs_)(__VA_ARGS__))
+#define jdorgqr_(...) EXTERNCALL((jdorgqr_)(__VA_ARGS__))
+#define jdtrcon_(...) EXTERNCALL((jdtrcon_)(__VA_ARGS__))
+
+#define jzgecon_(...) EXTERNCALL((jzgecon_)(__VA_ARGS__))
+#define jzgels_(...) EXTERNCALL((jzgels_)(__VA_ARGS__))
+#define jzgeqrf_(...) EXTERNCALL((jzgeqrf_)(__VA_ARGS__))
+#define jzgetrf_(...) EXTERNCALL((jzgetrf_)(__VA_ARGS__))
+#define jzgetri_(...) EXTERNCALL((jzgetri_)(__VA_ARGS__))
+#define jzgetrs_(...) EXTERNCALL((jzgetrs_)(__VA_ARGS__))
+#define jztrcon_(...) EXTERNCALL((jztrcon_)(__VA_ARGS__))
+#define jzungqr_(...) EXTERNCALL((jzungqr_)(__VA_ARGS__))
+
 static F1(jtnorm){F12IP;R sqroot(pdt(w,conjug(w)));}
 
 // take inverse of upper-triangular w.  We ASSUME w is inplaceable
@@ -35,7 +56,7 @@ static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
  RZ(ai=jtrinvip(jt,take(v2(m,m),w),m,ncomp))  // take inverse of w00  kludge could use faux block to avoid take overhead esp for 2x2 FL results
  RZ(di=jtrinvip(jt,drop(v2(m,m),w),n-m,ncomp))  // take inverse of w11
  RZ(bx=negateW(pdt(ai,pdt(take(v2(m,m-n),w),di))));  // -w00^_1 mp w01 mp w11^_1
- if(ISSPARSE(AT(w))){z=over(stitch(ai,bx),take(v2(n-m,-n),di));  // should copy this over w, inplace
+ if(ISSPARSE(AT(w)) || AT(w)&RAT+XNUM){z=over(stitch(ai,bx),take(v2(n-m,-n),di));  // should copy this over w, inplace
  }else{
   // copy in the pieces, line by line, writing over the input area
   I leftlen = m<<bplg(AT(w)); I rightlen=(n-m)<<bplg(AT(w));
@@ -61,7 +82,7 @@ DF1(jtrinv){DF12IP;
  ASSERT(AR(w)==2,EVRANK);  // rank at least 2
  ASSERT(AS(w)[0]==AS(w)[1],EVLENGTH);  // error if not square
  if(!AN(w))R w;  // if empty, return empty
- RZ(w=cvt(ISDENSETYPE(AT(w),B01+INT)?FL:AT(w),w));  // always copy, but convert sparse B01/INT to FL
+ RZ(w=cvt(ISDENSETYPE(AT(w),B01+INT2+INT4+INT)?FL:AT(w),w));  // always copy, convert dense boolean/integer to FL
  R jtrinvip(jt,w,AS(w)[0],ISDENSETYPE(AT(w),FL)?2:0);  // take the inverse.  Since it runs in place, clone w.  For float, reduce overhead at bottom of recursion
 }
 
@@ -125,6 +146,7 @@ static F1(jtltqip){F12IP;PROLOG(0067);A l0,l1,y,z;
    // 0           sqrt(P11 - (P01^2)/P00)
    GAT0(y,FL,4,2); AS(y)[0]=AS(y)[1]=2; D *yv=DAV2(y);
    D P00=ipa[0]; D P01=ipa[1]; D P11=ipa[3]; D R00=sqrt(P00); D det=P00*P11 - P01*P01;
+   ASSERT(det>0,EVDOMAIN);
    ipa[0]=(1/R00); ipa[1]=0; ipa[2]=-P01*(1/R00)*(1/sqrt(det)); ipa[3]=R00*(1/sqrt(det));  // as above
    yv[0]=R00; yv[1]=P01*(1/R00); yv[2]=0; yv[3]=sqrt(det)*(1/R00);  // as above
    ASSERT(1==cachedmmult(jt,ipa,w0v,w0v,2,cl,2,0),EVNAN); // w1 - (w1 q0*) q0, in place
@@ -189,83 +211,102 @@ static F1(jtltqip){F12IP;PROLOG(0067);A l0,l1,y,z;
  EPILOG(z);
 }
 
-// qr (?) decomposition of w, returns q;r
-DF1(jtqr){DF12IP;A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
+// 128!:0 for a dense FL/CMPX matrix w (m>=n>=1) by Householder QR: xGEQRF, then xORGQR/xUNGQR to form Q.
+// Each column of Q and row of R is rescaled by a unit factor so the diagonal of R is real and >=0,
+// Returns q;r like jtqrr.
+static A jtqrlapack(J jt,A w){PROLOG(0067);A q,r,tau,sg,wk,z;
+ I t=AT(w)&CMPX?CMPX:FL, im=AS(w)[0], in=AS(w)[1]; int m=(int)im, n=(int)in, info=0, lwork=-1;
+ if(AT(w)!=t)RZ(w=cvt(t,w));
+ RZ(q=cant1(w));
+ GA10(tau,t,in); GA10(sg,t,in); GA00(r,t,in*in,2); AS(r)[0]=AS(r)[1]=in;
+ if(t==FL){D wsz,wsz2; D *qv=DAV(q), *rv=DAV(r), *sv=DAV(sg);
+  jdgeqrf_(&m,&n,qv,&m,DAV(tau),&wsz,&lwork,&info); jdorgqr_(&m,&n,&n,qv,&m,DAV(tau),&wsz2,&lwork,&info); // workspace queries
+  lwork=(int)MAX(wsz,wsz2); GATV0(wk,FL,lwork,1); // allocate workspace
+  jdgeqrf_(&m,&n,qv,&m,DAV(tau),DAV(wk),&lwork,&info); // Householder QR
+  ASSERT(!info,EVDOMAIN);
+  // Fixing R's diagonal to be positive
+  for(I i=0;i<in;++i){ // for each row i of R
+   D s=qv[i+i*im]<0?-1.0:1.0; // s is sign of the diagonal element R(i,i)
+   sv[i]=s; // remember it, to fix Q's column i later
+   for(I j=0;j<in;++j) rv[i*in+j]=j<i?0.0:s*qv[i+j*im]; // for each column j of that row  below the diagonal: 0, on/above: R(i,j) times the sign
+  }
+  jdorgqr_(&m,&n,&n,qv,&m,DAV(tau),DAV(wk),&lwork,&info); // form Q explicitly
+  ASSERT(!info,EVDOMAIN);
+  // match sign on each column of Q
+  for(I j=0;j<in;++j)
+   if(sv[j]<0){
+    D *c=qv+j*im;
+    for(I i=0;i<im;++i)c[i]=-c[i];
+   }
+ }else{dcomplex wsz,wsz2; Z *qv=ZAV(q), *rv=ZAV(r), *sv=ZAV(sg);
+  jzgeqrf_(&m,&n,(dcomplex*)qv,&m,(dcomplex*)ZAV(tau),&wsz,&lwork,&info); jzungqr_(&m,&n,&n,(dcomplex*)qv,&m,(dcomplex*)ZAV(tau),&wsz2,&lwork,&info); // workspace queries
+  lwork=(int)MAX(wsz.real,wsz2.real); GATV0(wk,CMPX,lwork,1); // allocate workspace
+  jzgeqrf_(&m,&n,(dcomplex*)qv,&m,(dcomplex*)ZAV(tau),(dcomplex*)ZAV(wk),&lwork,&info); // Householder QR
+  ASSERT(!info,EVDOMAIN);
+  for(I i=0;i<in;++i){ // for each row i of R
+   Z d=qv[i+i*im]; // d is R(i,i)
+   D a=zmag(d); // a = |d|, its magnitude
+   Z s=a>0?(Z){d.re/a,d.im/a}:(Z){1.0,0.0}; sv[i]=s; // s = d/|d|, the phase of d; 1 if d is 0
+   for(I j=0;j<in;++j){ // for each column j of row i
+    Z e=qv[i+j*im];
+    rv[i*in+j]=j<i?zeroZ:j==i?(Z){a,0.0}:(Z){s.re*e.re+s.im*e.im, s.re*e.im-s.im*e.re}; // below the diagonal: 0, above: conj(s)*e, diagonal: |d| set exactly (conj(s)*d could round to a tiny imaginary part)
+   }
+  }
+  jzungqr_(&m,&n,&n,(dcomplex*)qv,&m,(dcomplex*)ZAV(tau),(dcomplex*)ZAV(wk),&lwork,&info); // form Q explicitly
+  ASSERT(!info,EVDOMAIN);
+  // multiply each column j of Q by the phase s that was divided out of row j of R, so that R's diagonal is real and positive.
+  for(I j=0;j<in;++j){
+   Z s=sv[j];
+   Z *c=qv+j*im;
+   for(I i=0;i<im;++i){
+    Z e=c[i];
+    c[i]=(Z){e.re*s.re-e.im*s.im, e.re*s.im+e.im*s.re};
+   }
+  }
+ }
+ RZ(q=cant1(q));
+ z=jlink(q,r);
+ EPILOG(z);
+}
+
+// qr decomposition of w, returns q;r
  F1RANK(2,jtqr,self);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
- ASSERT(AT(w)&B01+INT+FL+CMPX+QP,EVDOMAIN);
+ ASSERT(AT(w)&B01+INT2+INT4+INT+FL+CMPX+QP,EVDOMAIN);
  wr=AR(w); s=AS(w);
  ASSERT(2>wr||s[0]>=s[1],EVLENGTH);
- RZ(z=qrr(w)); r=C(AAV(z)[1]); n=AS(r)[0]; n1=1+n;
+ if(hascblas && wr==2 && AN(w) && AT(w)&(B01+INT2+INT4+INT+FL+CMPX) && s[0]*s[1]<=INT_MAX
+  && (AT(w)&CMPX ? jzgeqrf_&&jzungqr_ : jdgeqrf_&&jdorgqr_)){
+  RZ(z=jtqrlapack(jt,w));
+ } else{
+  if(AT(w)&INT2+INT4)RZ(w=cvt(FL,w));
+  RZ(z=qrr(w));
+ }
+ r=C(AAV(z)[1]); n=AS(r)[0]; n1=1+n;
  if(FL&AT(r)){D*v=DAV(r);  DQ(n, x= ABS(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  else        {Z*v=ZAV(r);  DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  ASSERT(!n||c>d*FUZZ,EVDOMAIN);
 RETF(z);
 }
 
-// return inverse of w, calculated by lq applied to adjoint
-// result has rank 2
-static A jtlq(J jt,A w,D *det){A l;D c=inf,d=0,x;I n1,n,*s,wr;
- F1RANK(2,jtqr,DUMMYSELF);
- ASSERT(!ISSPARSE(AT(w)),EVNONCE);
- ASSERT(AT(w)&B01+INT+FL+CMPX+QP,EVDOMAIN);
- wr=AR(w); s=AS(w);
- ASSERT(2>wr||s[0]>=s[1],EVLENGTH);
- if(ISDENSETYPE(AT(w),B01+INT))RZ(w=cvt(FL,w));  // convert boolean/integer to real
- if(wr==1)w=table(w);  // convert column vector to column matrix
-#if defined(_WIN64)||!defined(_WIN32)    // 32-bit windows openblas issue
-// calling lapack LUP factoriztion to compute inverse of square matrix
- if(hascblas&&(wr==2)&&(s[0]==s[1])&&(AT(w)&FL)&&(s[0]>1)){
- int info; int m1=s[0]; int *ipiv;
- D worksize; D *work; int nn=-1;
- NAN0;
- ipiv=MALLOC(m1*sizeof(int));
- w=cant1(w);
- jdgetrf_(&m1,&m1,DAV(w),&m1,ipiv,&info);
- if(info){FREE(ipiv); ASSERT(!info,EVDOMAIN);}
- jdgetri_(&m1,DAV(w),&m1,ipiv,&worksize,&nn,&info);
- if(info){FREE(ipiv); ASSERT(!info,EVDOMAIN);}
- nn=worksize; work=MALLOC(nn*sizeof(D));
- jdgetri_(&m1,DAV(w),&m1,ipiv,work,&nn,&info);
- if(info){FREE(ipiv); FREE(work); ASSERT(!info,EVDOMAIN);}
- FREE(ipiv); FREE(work);
- NAN1;
- *det=0.0;
- RETF(cant1(w));
- }else if(hascblas&&(wr==2)&&(s[0]==s[1])&&(AT(w)&CMPX)&&(s[0]>1)){
-#if !(defined(_WIN32)&&defined(__aarch64__))    // windows arm64 openblas issue
- int info; int m1=s[0]; int *ipiv;
- dcomplex worksize; dcomplex *work; int nn=-1;
- NAN0;
- ipiv=MALLOC(m1*sizeof(int));
- w=cant1(w);
- jzgetrf_(&m1,&m1,(dcomplex*)ZAV(w),&m1,ipiv,&info);
- if(info){FREE(ipiv); ASSERT(!info,EVDOMAIN);}
- jzgetri_(&m1,(dcomplex*)ZAV(w),&m1,ipiv,&worksize,&nn,&info);
- if(info){FREE(ipiv); ASSERT(!info,EVDOMAIN);}
- nn=*(D*)&worksize; work=MALLOC(nn*sizeof(dcomplex));
- jzgetri_(&m1,(dcomplex*)ZAV(w),&m1,ipiv,work,&nn,&info);
- if(info){FREE(ipiv); FREE(work); ASSERT(!info,EVDOMAIN);}
- FREE(ipiv); FREE(work);
- NAN1;
- *det=0.0;
- RETF(cant1(w));
-#endif
- }
-#endif
- w=conjug(cant1(w));  // create w*, where the result will be built inplace
- RZ(l=jtltqip(jt,w)); n=AS(l)[0]; n1=1+n;
- // build determinant for integer correction, if that is enabled (i. e. nonzero)
- if(FL&AT(l)){D*v=DAV(l); D determ=*det; DQ(n, x= ABS(*v); if(determ!=0){determ*=x; if(determ>1e20)determ=0.0;} if(x<c)c=x; if(x>d)d=x; v+=n1;); *det=determ;}
- else        {Z*v=ZAV(l);  DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
- ASSERT(!n||c>d*FUZZ,EVDOMAIN);
- RETF(pdt(jtrinvip(jt,l,n,AT(w)&FL?2:0),w));  // engage fast reciprocal for float matrices
+// Computes determinant from LU factors (or of a triangular w, with ipiv=0) for integer correction.
+// Returns 0.0 if the determinant magnitude exceeds 1e20 or is NaN.
+static D ludet(A w,int *ipiv){D d=1.0;
+ I n=AR(w)==2?AS(w)[0]:0, swaps=0;
+ DQ(n,{
+  d*=DAV(w)[i+i*n];
+  if(!(fabs(d)<=1e20)) return 0.0;
+ });
+ // Each row interchange flips the determinant's sign.
+ if(ipiv)DQ(n, if(ipiv[i]!=i+1)++swaps;);
+ if(swaps&1)d=-d;
+ return d;
 }
 
-// Boolean/integer correction.  If the inversand was B01 or INT, we can eliminate some rounding error by forcing the
+// Boolean/integer correction. We can eliminate some rounding error by forcing the
 // determinant to integer and then each value to an integer multiple of the determinant.
 // The determinant was calculated when we inverted the matrix
-static A jticor(J jt,A  w,D d){D *v;
+static A jticor(J jt,A w,D d){D *v;
  ARGCHK1(w);
  if(d==0.0)R w;  // if not enabled or not applicable, return input unchanged
  d=jround(ABS(d));  // force determinant to integer
@@ -274,13 +315,175 @@ static A jticor(J jt,A  w,D d){D *v;
  R w;
 }
 
-static A jtminvdet(J jt,A w,D *det){PROLOG(0068);A q,y,z;I m,n,*s,t,wr;
+// anorm = ||w||, the largest absolute row sum of w (the 1-norm of the transpose LAPACK sees)
+// It must be computed before xGETRF overwrites w, because condition = ||w||*||w^-1|| needs it to reject nearly singular w
+// (xGECON estimates ||w^-1||, or jtlq measures the computed inverse).
+static D luanorm(A w,I n){D r=0;
+ for(I i=0;i<n;++i){D s=0;
+  if(AT(w)&FL){
+   D* v=DAV(w)+i*n;
+   for(I j=0;j<n;++j)s+=ABS(v[j]);
+  }else{
+   Z* v=ZAV(w)+i*n;
+   for(I j=0;j<n;++j)s+=zmag(v[j]);
+  }
+  if(s!=s)R s; // NaN
+  if(s>r)r=s;
+ }
+ R r;
+}
+
+// jtlucondok, jttrcondok, jttriok return 1 = OK, 0 = numerically singular (or inf/NaN), -1 = allocation failed.
+
+// Used by jtgesv, which never forms the inverse (jtlq computes the exact condition number from the inverse instead).
+// After xGETRF has factored square w, decide whether w is invertible using xGECON.
+// If xGECON is not available, only exact singularity is detected.
+static I jtlucondok(J jt,A w,int n,D anorm){int info=0; D rcond=0; C norm='1'; A wk; D *wv;
+ if(!(anorm<inf))R 0;  // inf or NaN in w
+ if(AT(w)&FL){
+  if(!jdgecon_)R 1;
+  GATV0E(wk,FL,5*(I)n,1,R -1); wv=DAV(wk); // allocate workspace: work 4n D, iwork n int
+  jdgecon_(&norm,&n,DAV(w),&n,&anorm,&rcond,wv,(int*)(wv+4*(I)n),&info);
+ }else{
+  if(!jzgecon_)R 1;
+  GATV0E(wk,FL,6*(I)n,1,R -1); wv=DAV(wk); // allocate workspace: work 2n Z, rwork 2n D
+  jzgecon_(&norm,&n,(dcomplex*)ZAV(w),&n,&anorm,&rcond,(dcomplex*)wv,wv+4*(I)n,&info);
+ }
+ R info==0 && rcond>FUZZ; // false if rcond is NaN
+}
+
+// Singularity test for least squares, minimum norm, pseudo-inverse.
+// Those paths factor w = Q*R (or L*Q) with Q orthonormal, so w and its factor R have the same
+// condition number. xTRCON estimates rcond ~ 1/(||R||*||R^-1||);
+// t     FL or CMPX
+// uplo  'U' if the factor is upper triangular (R of a QR), 'L' if lower (L of an LQ)
+// fac   pointer to the triangle: the R (or L); lda is the column stride of that storage
+static I jttrcondok(J jt,I t,C uplo,int n,void *fac,int lda){int info=0; D rcond=0; C norm='1', diag='N'; A wk; D *wv;
+ if(t&FL){
+  GATV0E(wk,FL,4*(I)n,1,R -1); wv=DAV(wk); // allocate workspace: work 3n D, iwork n int
+  jdtrcon_(&norm,&uplo,&diag,&n,(D*)fac,&lda,&rcond,wv,(int*)(wv+3*(I)n),&info);
+ }else{
+  GATV0E(wk,FL,5*(I)n,1,R -1); wv=DAV(wk); // allocate workspace: work 2n Z, rwork n D
+  jztrcon_(&norm,&uplo,&diag,&n,(dcomplex*)fac,&lda,&rcond,(dcomplex*)wv,wv+4*(I)n,&info);
+ }
+ R info==0 && rcond>FUZZ; // false if rcond is NaN
+}
+
+// Rank test on the nxn triangular factor of a QR/LQ (arguments as for jttrcondok).
+// xTRCON if the library has it, otherwise the Roger's ratio of the smallest to the largest |diagonal element|.
+static I jttriok(J jt,I t,C uplo,int n,void *fac,int lda){D c=inf,d=0,x; I ld1=(I)lda+1;
+ if(t&FL?jdtrcon_!=0:jztrcon_!=0)R jttrcondok(jt,t,uplo,n,fac,lda);
+ if(t&FL){D*v=fac; DQ(n, x= ABS(*v); if(x<c)c=x; if(x>d)d=x; v+=ld1;);}
+ else    {Z*v=fac; DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=ld1;);}
+ R c>d*FUZZ; // false if a diagonal element is NaN
+}
+
+// return inverse of w
+// If jtfg allows w to be inplaced, the LAPACK path for square w overwrites it and returns it as the result.
+static A jtlq(J jtfg,A w,D *det){F12IP;A l;D c=inf,d=0,x;I n1,n,*ws,wr;
+ ASSERT(!ISSPARSE(AT(w)),EVNONCE);
+ ASSERT(AT(w)&B01+INT2+INT4+INT+FL+CMPX+QP,EVDOMAIN);
+ wr=AR(w); ws=AS(w);
+ ASSERT(2>wr||ws[0]>=ws[1],EVLENGTH); // square or tall only: jtminvdet turns wide w into its tall conjugate transpose first
+ // calling LAPACK to compute LU factorization and then inverse of square matrix
+ if(hascblas && AT(w)&(B01+INT2+INT4+INT+FL+CMPX)
+  && wr==2 && ws[0]==ws[1] && ws[0]>1 && ws[0]*ws[0]<=INT_MAX
+  && (AT(w)&CMPX ? jzgetrf_&&jzgetri_ : jdgetrf_&&jdgetri_)){
+  // Work on w itself only if it is already FL/CMPX and the caller lets us inplace it; otherwise copy.
+  if(!(AT(w)&FL+CMPX) || (AC(w)&SGNIF(jtfg,JTINPLACEWX))>=0) RZ(w=cvt(AT(w)&CMPX?CMPX:FL,w));
+  int info, ni=(int)AS(w)[0], lwork=-1; A ipa,wk; GATV0(ipa,INT4,ni,1); int *ipiv=I4AV1(ipa);
+  D anorm=luanorm(w,ni); // needed for the condition test below; take it before xGETRF overwrites w
+  if(AT(w)&FL) jdgetrf_(&ni,&ni,DAV(w),&ni,ipiv,&info);
+  else jzgetrf_(&ni,&ni,(dcomplex*)ZAV(w),&ni,ipiv,&info);
+  ASSERT(!info,EVDOMAIN); // exactly singular
+  if(AT(w)&FL){D worksize;
+   if(*det!=0.0){*det=ludet(w,ipiv);} // boolean/integer w: save determinant for integer correction of the result
+   jdgetri_(&ni,DAV(w),&ni,ipiv,&worksize,&lwork,&info); // workspace query
+   ASSERT(!info,EVDOMAIN);
+   lwork=(int)worksize; GATV0(wk,FL,lwork,1);
+   jdgetri_(&ni,DAV(w),&ni,ipiv,DAV(wk),&lwork,&info); // matrix inversion
+  }else{dcomplex worksize;
+   jzgetri_(&ni,(dcomplex*)ZAV(w),&ni,ipiv,&worksize,&lwork,&info); // workspace query
+   ASSERT(!info,EVDOMAIN);
+   lwork=(int)worksize.real; GATV0(wk,CMPX,lwork,1);
+   jzgetri_(&ni,(dcomplex*)ZAV(w),&ni,ipiv,(dcomplex*)ZAV(wk),&lwork,&info); // matrix inversion
+  }
+  ASSERT(!info, EVDOMAIN);
+  // w is now the inverse, so the reciprocal condition number is exactly 1/(|w|*|w^_1|) in the 1-norm.
+  ASSERT(anorm*luanorm(w,ni)<1.0/FUZZ,EVDOMAIN);
+  RETF(w);
+ }
+ // Tall matrix: pseudo-inverse from Householder QR
+ if(hascblas && AT(w)&(B01+INT2+INT4+INT+FL+CMPX) && wr==2 && ws[0]>ws[1] && ws[0]*ws[1]<=INT_MAX
+  && (AT(w)&CMPX ? jzgeqrf_&&jzungqr_&&jcblas_ztrsm : jdgeqrf_&&jdorgqr_&&jcblas_dtrsm)){
+  I t=AT(w)&CMPX?CMPX:FL, im=ws[0], in=ws[1]; int m=(int)im, n=(int)in, info=0, lwork, lw2; A q,r,tau,wk; I ok;
+  if(AT(w)!=t)RZ(w=cvt(t,w));
+  RZ(q=cant1(w));
+  GA10(tau,t,in); GA00(r,t,in*in,2); AS(r)[0]=AS(r)[1]=in;
+  // 1. QR of w.  2. copy R out (4. overwrites it).  3. rank test on R.  4. form Q in place.  5. solve q R^T = conj(Q).
+  if(t==FL){D wsz; D *qv=DAV(q), *rv=DAV(r);
+   lwork=-1;
+   jdgeqrf_(&m,&n,qv,&m,DAV(tau),&wsz,&lwork,&info);
+   lw2=(int)wsz; lwork=-1;
+   jdorgqr_(&m,&n,&n,qv,&m,DAV(tau),&wsz,&lwork,&info);
+   lwork=MAX(lw2,(int)wsz); // one workspace big enough for both
+   GATV0(wk,FL,lwork,1);
+   jdgeqrf_(&m,&n,qv,&m,DAV(tau),DAV(wk),&lwork,&info); // 1.
+   ASSERT(!info,EVDOMAIN);
+   for(I j=0;j<in;++j) // 2.
+    for(I i=0;i<in;++i)
+     rv[i+j*in]=i<=j?qv[i+j*im]:0.0;
+   ok=jttriok(jt,t,'U',n,rv,n); // 3.
+   if(ok<0) R 0; // allocation failed
+   ASSERT(ok,EVDOMAIN);
+   jdorgqr_(&m,&n,&n,qv,&m,DAV(tau),DAV(wk),&lwork,&info); // 4.
+   ASSERT(!info,EVDOMAIN);
+   jcblas_dtrsm(CblasColMajor,CblasRight,CblasUpper,CblasTrans,CblasNonUnit,m,n,1.0,rv,n,qv,m); // 5.
+  }else{dcomplex wsz; Z *qv=ZAV(q), *rv=ZAV(r); Z one={1.0,0.0};
+   lwork=-1;
+   jzgeqrf_(&m,&n,(dcomplex*)qv,&m,(dcomplex*)ZAV(tau),&wsz,&lwork,&info);
+   lw2=(int)wsz.real; lwork=-1;
+   jzungqr_(&m,&n,&n,(dcomplex*)qv,&m,(dcomplex*)ZAV(tau),&wsz,&lwork,&info);
+   lwork=MAX(lw2,(int)wsz.real);
+   GATV0(wk,CMPX,lwork,1);
+   jzgeqrf_(&m,&n,(dcomplex*)qv,&m,(dcomplex*)ZAV(tau),(dcomplex*)ZAV(wk),&lwork,&info); // 1.
+   ASSERT(!info,EVDOMAIN);
+   for(I j=0;j<in;++j) // 2.
+    for(I i=0;i<in;++i)
+     rv[i+j*in]=i<=j?qv[i+j*im]:zeroZ;
+   ok=jttriok(jt,t,'U',n,rv,n); // 3.
+   if(ok<0) R 0;
+   ASSERT(ok,EVDOMAIN);
+   jzungqr_(&m,&n,&n,(dcomplex*)qv,&m,(dcomplex*)ZAV(tau),(dcomplex*)ZAV(wk),&lwork,&info); // 4.
+   ASSERT(!info,EVDOMAIN);
+   DQ(im*in, qv[i].im=-qv[i].im;); // conj(Q)
+   jcblas_ztrsm(CblasColMajor,CblasRight,CblasUpper,CblasTrans,CblasNonUnit,m,n,&one,rv,n,qv,m); // 5.
+  }
+  RETF(q);
+ }
+ // when LAPACK is not applicable.
+ if(AT(w)&(B01+INT2+INT4+INT))RZ(w=cvt(FL,w));
+ if(wr==1)RZ(w=table(w)); // convert column vector to column matrix
+ RZ(w=conjug(cant1(w))); // create w*, where the result will be built inplace
+ RZ(l=jtltqip(jt,w)); n=AS(l)[0]; n1=1+n;
+ // build determinant for integer correction, if that is enabled (i. e. nonzero)
+ if(FL&AT(l)){D*v=DAV(l); D determ=*det; DQ(n, x= ABS(*v); if(determ!=0){determ*=x; if(determ>1e20)determ=0.0;} if(x<c)c=x; if(x>d)d=x; v+=n1;); *det=determ;}
+ else        {Z*v=ZAV(l);  DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
+ ASSERT(!n||c>d*FUZZ,EVDOMAIN);
+ RETF(pdt(jtrinvip(jt,l,n,AT(w)&FL?2:0),w));  // engage fast reciprocal for float matrices
+}
+
+static A jtminvdet(J jtfg,A w,D *det){F12IP;PROLOG(0068);A q,y,z;I m,n,*s,t,wr;
  F1RANK(2,jtminv,DUMMYSELF);
  t=AT(w); wr=AR(w); s=AS(w); m=wr?s[0]:1; n=1<wr?s[1]:1;
  if(!wr){*det=0.0; R recip(w);}
- if(!AN(w)){ASSERT(1==wr||m>=n,EVLENGTH); *det=0.0; R cant1(w);}
+ if(!AN(w)){*det=0.0; R cant1(w);}  // empty: the pseudo-inverse is the empty transpose, also for wide w
+ if(wr==2 && m<n){  // For a wide w (m<n), %. w takes the pseudo-inverse of its transpose, which is tall, and transposes the result back.
+  RZ(z=jtminvdet(jt,cant1(w),det));
+  RZ(z=cant1(z));
+  EPILOG(z);
+ }
  if(AN(w)&&t&RAT+XNUM){
-  ASSERT(m>=n,EVLENGTH);
   if(t&XNUM)RZ(w=cvt(RAT,w));
   if(1<wr&&m==n)y=w; else{q=cant1(w); y=pdt(q,w);}
   z=drop(v2(0L,n),gausselm(stitch(y,reshape(v2(n,n),take(sc(1+n),xco1(scf(1.0)))))));
@@ -288,14 +491,156 @@ static A jtminvdet(J jt,A w,D *det){PROLOG(0068);A q,y,z;I m,n,*s,t,wr;
   *det=0.0;  // disable integer correction, in case a % w with a integer
  }else{
   // not RAT/XNUM.  Calculate inverse as R^-1 Q^-1 after taking QR decomp & using Q^-1=Q*
-  *det=(t&B01+INT&&2==wr&&m==n)?1.0:0.0;  // if taking inverse of square int, allow setting up for correction afterward
-  z=jtlq(jt,w,det);
-  z=icor(z,*det);  // if integer correction called for, do it
+  *det=(t&B01+INT2+INT4+INT&&2==wr&&m==n)?1.0:0.0; // if taking inverse of square int, allow setting up for correction afterward
+  RZ(z=jtlq(jtfg,w,det));
+  RZ(z=icor(z,*det)); // if integer correction called for, do it
   z=2==wr?z:reshape(shape(w),z);
  }
  EPILOG(z);
 }
-F1(jtminv){F12IP;D detv; R jtminvdet(jt,w,&detv);}
+
+F1(jtminv){F12IP;D detv; R jtminvdet(jtfg,w,&detv);}  // pass jtfg so an inplaceable w can be overwritten by LAPACK
+
+// Is the nxn FL/CMPX w triangular? Returns the uplo LAPACK must be given (it sees the transpose of our row-major w):
+// 'L' if w is upper triangular, 'U' if it is lower triangular, 0 if neither. A diagonal w counts as upper.
+// Each scan stops at the first nonzero, so a general matrix costs O(1).
+static C trikind(A w,I n){B up=1, lo=1;
+ if(AT(w)&FL){D *v=DAV(w);
+  for(I i=1;i<n&&up;++i)
+   for(I j=0;j<i;++j)
+    if(v[i*n+j]!=0){ // below the diagonal
+     up=0;break;
+    }
+  for(I i=0;i<n-1&&lo;++i)
+   for(I j=i+1;j<n;++j)
+    if(v[i*n+j]!=0){ // above the diagonal
+     lo=0;break;
+    }
+ }else{Z *v=ZAV(w);
+  for(I i=1;i<n&&up;++i)
+   for(I j=0;j<i;++j)
+    if(v[i*n+j].re!=0||v[i*n+j].im!=0){
+     up=0;break;
+    }
+  for(I i=0;i<n-1&&lo;++i)
+   for(I j=i+1;j<n;++j)
+    if(v[i*n+j].re!=0||v[i*n+j].im!=0){
+     lo=0;break;
+    }
+ }
+ R up?'L':(lo?'U':0); // LAPACK sees the transpose: our upper is its lower, our lower is its upper
+}
+// Solve (w+/ .*z)-:a using LAPACK for dense non-empty a and w where w is square matrix.  a is not an atom (jtmdiv extends an atom to a vector).
+static A jtgesv(J jtfg,A a,A w){F12IP;A z;
+ int n=(int)AS(w)[0],nrhs,info,*ipiv=0; C trans='T', diag='N', uplo=0; A ipa; I ok;
+ I at=AT(a), wt=AT(w), t=((at|wt)&CMPX)?CMPX:FL;
+ // Check inplaceability.
+ I ipw=AC(w)&SGNIF(jtfg,JTINPLACEWX);
+ if(a==w)ipw&=SGNIF(jtfg,JTINPLACEAX);
+ if(wt!=t) RZ(w=cvt(t,w)); // Promote w to the common FL/CMPX type
+ if(t==FL?jcblas_dtrsm&&jdtrcon_:jcblas_ztrsm&&jztrcon_) uplo=trikind(w,n); // Triangular w?
+ if(!uplo && wt==t && ipw>=0) RZ(w=cvt(t,w)); // If not triangular and can't inplace then copy.
+ // z is a fresh array LAPACK may overwrite, even when a==w.
+ if(AR(a)<=1){
+  RZ(z=reshape(v2(1,n),cvt(t,a)));
+ }else{
+  if(at!=t)RZ(a=cvt(t,a));
+  RZ(z=cant1(reshape(v2(n,AN(a)/n),a)));
+ }
+ nrhs=(int)AS(z)[0];
+ if(uplo){ // Triangular
+  ok=jttrcondok(jt,t,uplo,n,voidAV(w),n);
+  if(ok<0)R 0;
+  ASSERT(ok,EVDOMAIN);
+  I ul=uplo=='L'?CblasLower:CblasUpper; // column-major
+  if(t==FL){
+   jcblas_dtrsm(CblasColMajor,CblasLeft,ul,CblasTrans,CblasNonUnit,n,nrhs,1.0,DAV(w),n,DAV(z),n);
+  }else {Z one={1.0,0.0};
+   jcblas_ztrsm(CblasColMajor,CblasLeft,ul,CblasTrans,CblasNonUnit,n,nrhs,&one,ZAV(w),n,ZAV(z),n);
+  }
+ }else{ // General
+  GATV0(ipa,INT4,n,1); ipiv=I4AV1(ipa);
+  // Factor, check conditioning, solve
+  D anorm=luanorm(w,n); // take the norm before xGETRF overwrites w
+  if(t==FL)jdgetrf_(&n,&n,DAV(w),&n,ipiv,&info); else jzgetrf_(&n,&n,(dcomplex*)ZAV(w),&n,ipiv,&info);
+  ASSERT(!info,EVDOMAIN); // exactly singular
+  ok=jtlucondok(jt,w,n,anorm);
+  if(ok<0) R 0; // allocation failure
+  ASSERT(ok,EVDOMAIN); // numerically singular
+  if(t==FL) jdgetrs_(&trans,&n,&nrhs,DAV(w),&n,ipiv,DAV(z),&n,&info);
+  else      jzgetrs_(&trans,&n,&nrhs,(dcomplex*)ZAV(w),&n,ipiv,(dcomplex*)ZAV(z),&n,&info);
+  ASSERT(!info,EVDOMAIN);
+ }
+ if(at&(B01+INT2+INT4+INT) && wt&(B01+INT2+INT4+INT)) RZ(z=icor(z,ludet(w,ipiv)));
+ RZ(z=cant1(z)); // transpose z
+ RZ(z=reshape(shape(a),z)); // result has the shape of a: (}.$w),}.$a with #w = #a
+ R z;
+}
+
+// Solve (w+/ .*z)-:a for non-square w using LAPACK.
+//  - overdetermined (tall w or w vector): the least-squares solution
+//  - underdetermined (wide w): the minimum-norm solution
+// w is matrix mxn or vector (treated as mx1 matrix)
+// (#a) = #w  (a is not an atom)
+// Result has shape (}.$w),}.$a
+// Domain error if w is rank-deficient (matrix rank of w < min(m,n) where (m,n) is shape of w).
+static A jtgels(J jtfg,A a,A w){F12IP;A b,z,zs;
+ int m,n,nrhs,ldb,lwork=-1,info; A wk;
+ I t=((AT(a)|AT(w))&CMPX)?CMPX:FL; C trans=t==FL?'T':'C';
+ I ar=AR(a), wr=AR(w), im=AS(w)[0], in=wr==2?AS(w)[1]:1, inrhs=AN(a)/im, ildb=MAX(im,in);
+ m=(int)im; n=(int)in; nrhs=(int)inrhs; ldb=(int)ildb;
+ I ipw=AC(w)&SGNIF(jtfg,JTINPLACEWX);
+ if(a==w)ipw&=SGNIF(jtfg,JTINPLACEAX);
+ if(AT(w)!=t || ipw>=0) RZ(w=cvt(t,w)); // Try inplace w.
+ // Create b that holds a on input and the solution on output: LAPACK's column-major ldb x nrhs (nrhs rows of length ldb=max(m,n)).
+ // Row j = column j of a (m entries) on input, column j of the solution (first n entries) on output
+ // ldb>m only when w is wide, the extra entries are output space.
+ if(ar==1 && ldb==m){ // a is vector, w is tall (or square)
+  RZ(b=reshape(v2(1,im),cvt(t,a)));
+ }else{ // a has several right-hand sides or w is wide so the columns need padding.
+  if(AT(a)!=t) RZ(a=cvt(t,a));
+  // b is array of nrhs rows of length ldb=max(m,n): row j holds column j of a (zero-padded) on input and column j of the solution on output.
+  GA00(b,t,inrhs*ildb,2); AS(b)[0]=inrhs; AS(b)[1]=ildb;
+  if(t==FL){D *bv=DAV(b), *av=DAV(a);
+   for(I j=0;j<inrhs;++j){D *r=bv+j*ildb;
+    for(I i=0;i<im;++i)r[i]=av[i*inrhs+j]; // transpose
+    for(I i=im;i<ildb;++i)r[i]=0.0; // padding
+   }
+  }else{Z *bv=ZAV(b), *av=ZAV(a);
+   for(I j=0;j<inrhs;++j){Z *r=bv+j*ildb;
+    for(I i=0;i<im;++i)r[i]=av[i*inrhs+j]; // transpose
+    for(I i=im;i<ildb;++i)r[i]=zeroZ; // padding
+   }
+  }
+ }
+ // LAPACK is column-major, our mxn w is seen as its nxm transpose, so we solve with trans='T'.
+ // zgels accepts 'C' not 'T', so for CMPX we first conjugate w. LAPACK then sees conj(w)^T = w^H.
+ if(t==CMPX){Z*v=ZAV(w); DQ(AN(w), v->im=-v->im; ++v;);}
+ if(t==FL){D wsz;
+  jdgels_(&trans,&n,&m,&nrhs,DAV(w),&n,DAV(b),&ldb,&wsz,&lwork,&info); // workspace query
+  ASSERT(!info,EVDOMAIN);
+  lwork=(int)wsz; GATV0(wk,FL,lwork,1);
+  jdgels_(&trans,&n,&m,&nrhs,DAV(w),&n,DAV(b),&ldb,DAV(wk),&lwork,&info); // solve
+ }else{dcomplex wsz;
+  jzgels_(&trans,&n,&m,&nrhs,(dcomplex*)ZAV(w),&n,(dcomplex*)ZAV(b),&ldb,&wsz,&lwork,&info); // workspace query
+  ASSERT(!info,EVDOMAIN);
+  lwork=(int)wsz.real; GATV0(wk,CMPX,lwork,1);
+  jzgels_(&trans,&n,&m,&nrhs,(dcomplex*)ZAV(w),&n,(dcomplex*)ZAV(b),&ldb,(dcomplex*)ZAV(wk),&lwork,&info); // solve
+ }
+ ASSERT(!info,EVDOMAIN);
+ // Rank test on the triangular factor left in w. Its condition number is that of w.
+ int kd=MIN(m,n); C uplo=n<m?'L':'U';
+ I ok=jttriok(jt,t,uplo,kd,voidAV(w),n);
+ if(ok<0)R 0;
+ ASSERT(ok,EVDOMAIN);
+ RZ(z=take(v2(inrhs,in),b)); // (inrhs,in) {. b
+ if(inrhs>1)RZ(z=cant1(z)); // Transpose back to n x nrhs (not needed for one column).
+ // reshape to (}.$w),}.$a
+ GATV0(zs,INT,(wr==2)+ar-1,1); I *zsv=IAV1(zs);
+ if(wr==2)*zsv++=in; // }.$w
+ DO(ar-1, zsv[i]=AS(a)[i+1];) // }.$a
+ R reshape(zs,z);
+}
 
 static B jttridiag(J jt,I n,A a,A x){D*av,d,p,*xv;I i,j,n1=n-1;
  av=DAV(a); xv=DAV(x); d=xv[0];
@@ -328,94 +673,33 @@ static F2(jtmdivsp){F12IP;A a1,x,y;I at,d,m,n,t,*v,xt;P*wp;
  R a;
 }    /* currently only handles tridiagonal sparse w */
 
-// Solve w(+/ .*)z-:a using LAPACK for dense non-empty a and w where w is square matrix.
-// Returns 0 with *handled=0 if it is not applicable.
-// Once *handled=1 is set, a zero return indicates an error.
-static A jtgesv(J jt,A a,A w,B *handled){A z,zs;
- int n,nrhs,info,*ipiv;
- I t=((AT(w)|AT(a))&CMPX)?CMPX:FL, at=AT(a), wt=AT(w);
- *handled=0;
- if(!hascblas)R 0;
- if (!ISDENSETYPE(at,B01+INT2+INT4+INT+FL+CMPX) || !ISDENSETYPE(wt,B01+INT2+INT4+INT+FL+CMPX)
-  || AR(w)!=2 || AS(w)[0]!=AS(w)[1] || AS(w)[0]>INT_MAX // w must be square matrix
-  || AN(w)==0 || AN(a)==0 // a, w must be non-empty
-  || (AR(a)>0 && (AS(a)[0]!=AS(w)[0] || AN(a)/AS(a)[0]>INT_MAX))) // leading axes of a and w must have the same length, unless a is an atom
-  R 0;
- *handled=1; // From this point, failures must propagate.
- // Copy and promote w to common floating/complex type. LAPACK overwrites both w and z.
- RZ(w=cvt(t,w));
- n=(int)AS(w)[0];
- switch(AR(a)){ // Handle a of any rank.
-  case 0:
-   if(at&t) z=a; else RZ(z=cvt(t,a));
-   if(t==FL){
-    D v=DAV(z)[0];
-    GATV(z,FL,n,2,((I[]){1,n})); DQ(n,DAV(z)[i]=v;);
-   }else{
-    Z v=ZAV(z)[0];
-    GATV(z,CMPX,n,2,((I[]){1,n})); DQ(n,ZAV(z)[i]=v;);
-   }
-   break;
-  case 1:
-   GATV(zs,INT,2,1,((I[]){2})); IAV(zs)[0]=1; IAV(zs)[1]=AS(a)[0];
-   RZ(z=cvt(t,a)); RZ(z=reshape(zs,z));
-   break;
-  default:
-   GATV(zs,INT,2,1,((I[]){2})); IAV(zs)[0]=AS(a)[0]; IAV(zs)[1]=AN(a)/AS(a)[0];
-   if(at&t) z=a; else RZ(z=cvt(t,a));
-   RZ(z=reshape(zs,z)); RZ(z=cant1(z));
- }
- // Set up remaining LAPACK parameters.
- nrhs=(int)AS(z)[0];
- ipiv=MALLOC(n*sizeof(int));
- ASSERT(ipiv,EVWSFULL);
- // Solve
- C trans='T';
- if(t==FL){
-  jdgetrf_(&n, &n, DAV(w), &n, ipiv, &info);
-  ASSERT(info==0,EVDOMAIN);
-  jdgetrs_(&trans,&n,&nrhs,DAV(w),&n,ipiv,DAV(z),&n,&info);
- } else {
-  jzgetrf_(&n,&n,(dcomplex*)ZAV(w),&n,ipiv,&info);
-  ASSERT(info==0,EVDOMAIN);
-  jzgetrs_(&trans,&n,&nrhs,(dcomplex*)ZAV(w),&n,ipiv,(dcomplex*)ZAV(z),&n,&info);
- }
- ASSERT(info==0,EVDOMAIN);
- // Compute the determinant of w from its LU factors for integer correction (LAPACK overwrites w with its LU factorization)
- if(at&(B01+INT2+INT4+INT) && wt&(B01+INT2+INT4+INT)){
-  D detw=1.0;
-  DQ(n,{
-   detw*=DAV(w)[i+i*n]; // The diagonal of U contains the factors used to compute det(w)
-   if (!(fabs(detw)<=1e20)){detw=0.0;break;} // Disable correction if det(w) is too large or NaN
-  });
-  if(detw!=0.0){
-   // Each pivot different from i+1 indicates a row interchange; an odd number of interchanges changes the determinant's sign
-   I swaps=0; DO(n, if(ipiv[i]!=i+1)++swaps;); if(swaps&1)detw=-detw;
-   z=icor(z,detw); // Correct floating-point rounding errors in the solution
+// a %. w  for all types
+DF2(jtmdiv){F12IP;PROLOG(0069);A z;I at=AT(a), wt=AT(w);
+ F2RANK(RMAX,2,jtmdiv,self);
+ if(ISSPARSE(at))RZ(a=denseit(a));
+ if(ISSPARSE(wt))R mdivsp(a,w);
+ // An atom a is extended to a vector of length #w, on every path, so the result's shape is always ((}.$w),}.$a) -: }.$w
+ if(!AR(a)&&AR(w))RZ(a=reshape(sc(AS(w)[0]),a));
+ // Try LAPACK
+ I wm=AR(w)?AS(w)[0]:1, wn=AR(w)==2?AS(w)[1]:1, wmx=MAX(wm,wn); // rows, cols of w
+ if(hascblas
+  && at&(B01+INT2+INT4+INT+FL+CMPX) && wt&(B01+INT2+INT4+INT+FL+CMPX)
+  && AN(w)>1 && AN(a)>0 // a, w must be non-empty and w must have at least two elements, so in particular w mustn't be an atom.
+  && AR(a) && AS(a)[0]==wm // leading axes of a and w must have the same length
+  && wm*wn<=INT_MAX && wmx*(AN(a)/wm)<=INT_MAX){ // LAPACK indexes with int: w and the right-hand-side workspace must fit.
+  if(AR(w)==2 && AS(w)[0]==AS(w)[1] && (((at|wt)&CMPX) ? jzgetrf_&&jzgetrs_ : jdgetrf_&&jdgetrs_)){ // square w: solve systems of linear equations
+   z=jtgesv(jtfg,a,w);
+   EPILOG(z);
+  }else if(((at|wt)&CMPX)?(jzgels_!=0):(jdgels_!=0)){ // non-square (or vector) w: least squares if tall, minimum norm if wide.
+   z=jtgels(jtfg,a,w);
+   EPILOG(z);
   }
  }
- FREE(ipiv);
- ASSERT(!info,EVDOMAIN);
- RZ(z=cant1(z)); // Transpose z
- if(AR(a)){RZ(zs=shape(a)); RZ(z=reshape(zs,z));} // If a is non-atomic, reshape z to match its shape
- R z;
-}
-
-// a %. w  for all types
-DF2(jtmdiv){DF12IP;PROLOG(0069);A z;I t;
- F2RANK(RMAX,2,jtmdiv,self);
- if(ISSPARSE(AT(a)))RZ(a=denseit(a));
- t=AT(w);
- if(ISSPARSE(t))R mdivsp(a,w);
- 
- B handled;
- z=jtgesv(jt,a,w,&handled);
- if(handled){EPILOG(z)};
- 
  D detv; // place to build determinant of inverse
- z=jtminvdet(jt,w,&detv);  // take generalized inverse of w, setting up for icor if needed
- z=pdt(2>AR(w)?reshape(shape(w),z):z,a);  // w^-1 mp a
- if(AT(a)&B01+INT)z=icor(z,detv);  // integer correct if a is not float (& correction is possible)
+ if(at&(INT2+INT4))RZ(a=cvt(FL,a)); // we later use +/ .* which cannot mix INT2/INT4 with FL.
+ RZ(z=jtminvdet(jt,w,&detv));
+ RZ(z=pdt(2>AR(w)?reshape(shape(w),z):z,a)); // w^-1 mp a
+ if(at&B01+INT2+INT4+INT) RZ(z=icor(z,detv)); // integer correct if a is not float (& correction is possible)
  EPILOG(z);
 }
 

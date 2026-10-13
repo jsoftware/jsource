@@ -1210,7 +1210,7 @@ DF2(jtiso8601toe){DF12IP;A z;I prec;I local;
   ASSERT(AT(aprec)&LIT,EVDOMAIN); ASSERT(AN(aprec)==1,EVLENGTH); ASSERT(AR(aprec)<=1,EVRANK);  // a must be a 1-character list or atom
   // convert precision character to precision to use (_1 for date, 0-9)
   if(CAV(aprec)[0]=='d')prec=-1; else {prec=CAV(aprec)[0]-'0'; ASSERT((UI)prec<(UI)10,EVDOMAIN); ASSERT(SHMSK(0x209,prec,1),EVNONCE);}  // 0 3 9 allowed
-  local=rei0(alocal); ASSERT(BETWEENO(local,-24*3600,24*3600),EVDOMAIN) local=local*1000000000;   // fetch timezone offset if any
+  local=rei0(alocal); ASSERT(BETWEENO(local,-24*3600,24*3600),EVDOMAIN) local=local*NANOS;   // fetch timezone offset if any
  }else{
   w=a; prec=9; local=0; // monad: switch argument, set defaults
  }
@@ -1300,9 +1300,9 @@ static A efstring(J jt,A w,I prec){
    tk=timegm(&tm);
 #endif
    if(!afterday){
-    tt=1000000000LL*(-946684800LL+(((I)tk)/86400)*86400);
+    tt=NANOS*(-946684800LL+(((I)tk)/86400)*86400);
    }else{
-    tt=1000000000LL*(-946684800LL+(I)tk);
+    tt=NANOS*(-946684800LL+(I)tk);
     if(prec){
      double fraction;
      char *endptr;

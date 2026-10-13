@@ -350,7 +350,7 @@ inplace =: {{
  assert. W -: > 1 { (%. ; ]) W+0
  assert. W -: > 1 { ((] %. ]) ; ]) W+0
  assert. W -: > 1 { (%.@] ; ]) W+0
- assert. 1e3 > (nrm W - W X (] %. ]) W+0) % eps * (nrm W) * nrm (] %. ]) W+0
+ assert. (tol'') > (nrm W - W X (] %. ]) W+0) % eps * (nrm W) * nrm (] %. ]) W+0
  assert. (2 2$1) -: (%. :: ]) 0 + 2 2$1
  assert. (2 2$1) -: 1 2 (%. :: ]) 0 + 2 2$1
  Vc =. 'CMPX' rnd 30 60

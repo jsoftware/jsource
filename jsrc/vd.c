@@ -312,7 +312,9 @@ static A jticor(J jt,A w,D d){D *v;
  if(d==0.0)R w;  // if not enabled or not applicable, return input unchanged
  d=jround(ABS(d));  // force determinant to integer
  D recipd=1/d;
- v=DAV(w); DO(AN(w), v[i]=jround(d*v[i])*recipd;);  // force each value to multiple of recip of determinant, then divide
+ v=DAV(w);
+ DQ(AN(w), D p=d*v[i]; if(ABS(p-jround(p))>0.25)R w;); // not close to multiples of 1/d: correction would be a guess
+ DQ(AN(w), v[i]=jround(d*v[i])*recipd;);  // force each value to multiple of recip of determinant, then divide
  R w;
 }
 
@@ -586,13 +588,18 @@ static A jtgesv(J jtfg,A a,A w){F12IP;A z;
 // Result has shape (}.$w),}.$a
 // Domain error if w is rank-deficient (matrix rank of w < min(m,n) where (m,n) is shape of w).
 static A jtgels(J jtfg,A a,A w){F12IP;A b,z,zs;
- int m,n,nrhs,ldb,lwork=-1,info; A wk;
+ int m,n,r,c,nrhs,lda,ldb,lwork=-1,info; A wk;
  I t=((AT(a)|AT(w))&CMPX)?CMPX:FL; C trans=t==FL?'T':'C';
  I ar=AR(a), wr=AR(w), im=AS(w)[0], in=wr==2?AS(w)[1]:1, inrhs=AN(a)/im, ildb=MAX(im,in);
- m=(int)im; n=(int)in; nrhs=(int)inrhs; ldb=(int)ildb;
+ c=m=(int)im; lda=r=n=(int)in; nrhs=(int)inrhs; ldb=(int)ildb;
+ B tall=m>n;
  I ipw=AC(w)&SGNIF(jtfg,JTINPLACEWX);
  if(a==w)ipw&=SGNIF(jtfg,JTINPLACEAX);
- if(AT(w)!=t || ipw>=0) RZ(w=cvt(t,w)); // Try inplace w.
+ if(tall && n>1){ // when tall, always copy
+  RZ(w=cant1(AT(w)!=t?cvt(t,w):w));
+ }else if(AT(w)!=t || ipw>=0){ // when wide, copy only if we can't inplace.
+  RZ(w=cvt(t,w));
+ }
  // Create b that holds a on input and the solution on output: LAPACK's column-major ldb x nrhs (nrhs rows of length ldb=max(m,n)).
  // Row j = column j of a (m entries) on input, column j of the solution (first n entries) on output
  // ldb>m only when w is wide, the extra entries are output space.
@@ -603,35 +610,38 @@ static A jtgels(J jtfg,A a,A w){F12IP;A b,z,zs;
   // b is array of nrhs rows of length ldb=max(m,n): row j holds column j of a (zero-padded) on input and column j of the solution on output.
   GA00(b,t,inrhs*ildb,2); AS(b)[0]=inrhs; AS(b)[1]=ildb;
   if(t==FL){D *bv=DAV(b), *av=DAV(a);
-   for(I j=0;j<inrhs;++j){D *r=bv+j*ildb;
-    for(I i=0;i<im;++i)r[i]=av[i*inrhs+j]; // transpose
-    for(I i=im;i<ildb;++i)r[i]=0.0; // padding
+   for(I j=0;j<inrhs;++j){D *rhs=bv+j*ildb;
+    for(I i=0;i<im;++i)rhs[i]=av[i*inrhs+j]; // transpose
+    for(I i=im;i<ildb;++i)rhs[i]=0.0; // padding
    }
   }else{Z *bv=ZAV(b), *av=ZAV(a);
-   for(I j=0;j<inrhs;++j){Z *r=bv+j*ildb;
-    for(I i=0;i<im;++i)r[i]=av[i*inrhs+j]; // transpose
-    for(I i=im;i<ildb;++i)r[i]=zeroZ; // padding
+   for(I j=0;j<inrhs;++j){Z *rhs=bv+j*ildb;
+    for(I i=0;i<im;++i)rhs[i]=av[i*inrhs+j]; // transpose
+    for(I i=im;i<ildb;++i)rhs[i]=zeroZ; // padding
    }
   }
  }
- // LAPACK is column-major, our mxn w is seen as its nxm transpose, so we solve with trans='T'.
- // zgels accepts 'C' not 'T', so for CMPX we first conjugate w. LAPACK then sees conj(w)^T = w^H.
- if(t==CMPX){Z*v=ZAV(w); DQ(AN(w), v->im=-v->im; ++v;);}
+ // LAPACK's view of w: rxc with leading dimension lda.
+ // Tall: LAPACK sees w itself, trans='N'.
+ // Wide: LAPACK sees the nxm transpose of our row-major w, so solve with trans='T'.
+ if(tall){trans='N'; r=m; c=n; lda=m;}
+ else if(t==CMPX){Z*v=ZAV(w);
+  DQ(AN(w), v->im=-v->im; ++v;); // zgels accepts 'C' not 'T', so for CMPX we first conjugate w. LAPACK then sees conj(w)^T = w^H.
+ }
  if(t==FL){D wsz;
-  jdgels_(&trans,&n,&m,&nrhs,DAV(w),&n,DAV(b),&ldb,&wsz,&lwork,&info); // workspace query
+  jdgels_(&trans,&r,&c,&nrhs,DAV(w),&lda,DAV(b),&ldb,&wsz,&lwork,&info); // workspace query
   ASSERT(!info,EVDOMAIN);
   lwork=(int)wsz; GATV0(wk,FL,lwork,1);
-  jdgels_(&trans,&n,&m,&nrhs,DAV(w),&n,DAV(b),&ldb,DAV(wk),&lwork,&info); // solve
+  jdgels_(&trans,&r,&c,&nrhs,DAV(w),&lda,DAV(b),&ldb,DAV(wk),&lwork,&info); // solve
  }else{dcomplex wsz;
-  jzgels_(&trans,&n,&m,&nrhs,(dcomplex*)ZAV(w),&n,(dcomplex*)ZAV(b),&ldb,&wsz,&lwork,&info); // workspace query
+  jzgels_(&trans,&r,&c,&nrhs,(dcomplex*)ZAV(w),&lda,(dcomplex*)ZAV(b),&ldb,&wsz,&lwork,&info); // workspace query
   ASSERT(!info,EVDOMAIN);
   lwork=(int)wsz.real; GATV0(wk,CMPX,lwork,1);
-  jzgels_(&trans,&n,&m,&nrhs,(dcomplex*)ZAV(w),&n,(dcomplex*)ZAV(b),&ldb,(dcomplex*)ZAV(wk),&lwork,&info); // solve
+  jzgels_(&trans,&r,&c,&nrhs,(dcomplex*)ZAV(w),&lda,(dcomplex*)ZAV(b),&ldb,(dcomplex*)ZAV(wk),&lwork,&info); // solve
  }
  ASSERT(!info,EVDOMAIN);
  // Rank test on the triangular factor left in w. Its condition number is that of w.
- int kd=MIN(m,n); C uplo=n<m?'L':'U';
- I ok=jttriok(jt,t,uplo,kd,voidAV(w),n);
+ I ok=tall?jttriok(jt,t,'U',n,voidAV(w),m):jttriok(jt,t,'U',m,voidAV(w),n);
  if(ok<0)R 0;
  ASSERT(ok,EVDOMAIN);
  RZ(z=take(v2(inrhs,in),b)); // (inrhs,in) {. b

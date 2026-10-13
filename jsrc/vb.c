@@ -341,7 +341,7 @@ default:
 #define IFB1  \
  {if(zu==zv){I m=zu-AV(z); RZ(z=ext(0,z)); zv=m+AV(z); zu=AN(z)+AV(z);} *zv++=k;}
 
-DF2(jtifbebar){F12IP;A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
+DF2(jtifbebar){DF12IP;A y,z;C*av,*wv;I c,d,i,k=0,m,n,p,*yv,*zu,*zv;
  ARGCHK2(a,w);
  RE(d=ebarprep(a,w,&a,&w,&c));
  av=CAV(a); m=AN(a);

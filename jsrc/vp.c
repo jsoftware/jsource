@@ -13,7 +13,7 @@ static I jtord(J jt,A w){I j,n,*v,z;
  R z;
 }  // the order of the permutation w: max element of w (could be negative)
 
-DF1(jtpinv){F12IP;I m=-1,n,*v;  // empty perm will set m=0
+DF1(jtpinv){DF12IP;I m=-1,n,*v;  // empty perm will set m=0
  F1RANK(1,jtpinv,self);
  RZ(w=vi(w));
  n=AN(w); v=AV(w);
@@ -114,10 +114,10 @@ static A jtdfc(J jt,I n,A w){PROLOG(0082);A b,q,*wv,z;B*bv;I c,j,qn,*qv,*x;
 }    /* direct from cycle */
 
 // C. y
-DF1(jtcdot1){F12IP;F1RANK(1,jtcdot1,self); R BOX&AT(w)?dfc(ord(raze(w)),w):cfd(w);}
+DF1(jtcdot1){DF12IP;F1RANK(1,jtcdot1,self); R BOX&AT(w)?dfc(ord(raze(w)),w):cfd(w);}
 
 // x C. y
-DF2(jtccapdot2){F12IP;A p;I k;
+DF2(jtccapdot2){DF12IP;A p;I k;
  F2RANK(1,RMAX,jtccapdot2,self);
  SETIC(w,k);
  RZ(p=BOX&AT(a)?dfc(k,a):pfill(k,a));
@@ -159,7 +159,7 @@ static F1(jtrfd){F12IP;A z;I j,k,m,n,r,*s,*x;
  R z;
 }    /* reduced from direct */
 
-DF1(jtadot1){F12IP;A y;I n;
+DF1(jtadot1){DF12IP;A y;I n;
  F1RANK(1,jtadot1,self);
  RZ(y=BOX&AT(w)?cdot1(w):pfill(ord(w),w));
  SETIC(y,n);

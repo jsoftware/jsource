@@ -104,7 +104,7 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A z;
   g=REFIXA(na,g); R255(g); RZ(f=ca(f)); A *fv=AAV(f);  // fix g, and make a nonrecursive copy of f where we will record changes to h
   I flag=VNOLOCCHG+VNONAME+VNOSELF&FAV(g)->flag;  // we will collect combined NOLOCCHG/VNONAME+VNOSELF over g/h
   DO(AN(h), flag&=FAV(h1v[i])->flag; if(h1v[i]!=hv[i]){A t;RZ(t=aro(h1v[i])) INCORPNV(t) fv[i]=t;})  // update AR in f of any changed component.
-  fdef(0,CATDOT,VERB, FAV(w)->valencefns[0],FAV(w)->valencefns[1], f,g,h1, flag+VGERL, RMAX, RMAX, RMAX);   // create new verb, setting flags
+  fdef(0,CATDOT,VERB, FAV(w)->valencefns[0],FAV(w)->valencefns[1], h1,g,h1, flag+VGERL, RMAX, RMAX, RMAX);   // create new verb, setting flags, and using verbified gerund
  case CGRCO:
   // we fix each gerund, and then convert it to AR and back.  This is needless potentially expensive conversions.  We should
   // fix each gerund, but AR only the ones that changed so that we keep f matching h; and use the fixed ones without un-AR scaf
@@ -202,7 +202,7 @@ cycfound:;  // cycle found, running from cyci to cycn; now back it down to find 
 // called internally with w holding internal flags, and self=0
 // w=string list of keywords (or boxed list), 'recur', 'public', or 'all'.  'public' means non-locatives
 // if self=0 (internal call), bits 0-1 of w are passed through to the flags into fixa, and 'recur all' is implied
-DF2(jtfix){F12IP;PROLOG(0005);A z;
+DF2(jtfix){DF12IP;PROLOG(0005);A z;
  ARGCHK1(a);
  if(unlikely(LIT&AT(a))){ASSERT(1>=AR(a),EVRANK); RZ(a=nfs(AN(a),CAV(a),0));}   // convert string to name, to allow us to fix modifiers.  Only verbs/noun can get in through the parser, but internally we also vet adv/conj
  ASSERT(AT(a)&NAME+VERB+ADV+CONJ,EVDOMAIN);   // other nouns are errors

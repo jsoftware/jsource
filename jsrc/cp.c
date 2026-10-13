@@ -59,7 +59,7 @@ static F2(jttclosure){F12IP;
 }
 
 // [a] u^:atom w and [a] u^:<(atom or '') w, bivalent.
-static DF2(jtpowatom12){F12IP;
+static DF2(jtpowatom12){DF12IP;
  {A na=EPMONAD?0:a; w=EPMONAD?a:w; a=na;}  // w arg will be power result; a=0 if monad
  I poweratom=FAV(self)->localuse.lu1.poweratom;  // multiple/neg/power field
 #define POWERAMULT (I)1   // set if power was boxed
@@ -134,7 +134,7 @@ _Static_assert(POWERADOWHILE==JTDOWHILE,"bit field mismatch");
 }
 
 // {&x^:a: w   or  a {~^:a: w, bivalent.  Each supports 1 valence; we revert for the other, or in not integer args
-static DF2(jtindexseqlim12){F12IP;
+static DF2(jtindexseqlim12){DF12IP;
  ARGCHK2(a,w);
  A origa=a, origw=w;  // in case we revert
  if(unlikely(EPMONAD)){if(FAV(FAV(self)->fgh[0])->id!=CAMP)goto revert; w=a; a=FAV(FAV(self)->fgh[0])->fgh[1];  // monad, verify {&x^:a:, use the x
@@ -145,7 +145,7 @@ revert:;
 }
 
 // general u^:n w where n is any integer array or finite atom.  If atom, it will be negative.  Bivalent
-static DF2(jtply12){F12IP;A fs=FAV(self)->fgh[0]; PROLOG(0040);A zz=0;
+static DF2(jtply12){DF12IP;A fs=FAV(self)->fgh[0]; PROLOG(0040);A zz=0;
 #define ZZWILLBEOPENEDNEVER 1  // can't honor willbeopened because the results are recycled as inputs
 #define ZZPOPNEVER 1  // can't pop the inputs - 
 #define ZZDECL
@@ -232,18 +232,18 @@ static DF2(jtply12){F12IP;A fs=FAV(self)->fgh[0]; PROLOG(0040);A zz=0;
 }
 
 // action routines for u^:_1: general case.  look up the inverse
-static DF1(jtinv1){F12IP;A fs=FAV(self)->fgh[0];  A z; ARGCHK1(w);A i; RZ(i=inv(fs)); WITHEFORMATDEFERRED(z=(FAV(i)->valencefns[0])(jtfg,w,i,i);) RETF(z);}
+static DF1(jtinv1){DF12IP;A fs=FAV(self)->fgh[0];  A z; ARGCHK1(w);A i; RZ(i=inv(fs)); WITHEFORMATDEFERRED(z=(FAV(i)->valencefns[0])(jtfg,w,i,i);) RETF(z);}
   // we defer eformat till the caller so that the user doesn't see the description of the inverse, which might be unrecognizable
 // for the dyad, look up the inverse of x&u
-static DF2(jtinv2){F12IP; A fs=FAV(self)->fgh[0];  A z; ARGCHK2(a,w); A i; RZ(i=invamp(a,fs,0)); STACKCHKOFL WITHEFORMATDEFERRED(z=(FAV(i)->valencefns[0])(jtfg,w,i,i);) RETF(z); }  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
+static DF2(jtinv2){DF12IP; A fs=FAV(self)->fgh[0];  A z; ARGCHK2(a,w); A i; RZ(i=invamp(a,fs,0)); STACKCHKOFL WITHEFORMATDEFERRED(z=(FAV(i)->valencefns[0])(jtfg,w,i,i);) RETF(z); }  // the CHKOFL is to avoid tail recursion, which prevents a recursion loop from being broken
 // if u has no names, meaning we can take the inverse early for the monadic case:
-DF1(jtinvh1){F12IP;A hs=FAV(self)->fgh[2]; A z; ARGCHK1(w); z=(FAV(hs)->valencefns[0])(jtfg,w,hs); RETF(z);}  // monadic inverse was already looked up in h
-static DF1(jtinverr){F12IP; ASSERT(0,EVDOMAIN);}  // uninvertible monad: come here if inverse invoked as a monad (x&u^:_1 might be OK as a dyad) 
+DF1(jtinvh1){DF12IP;A hs=FAV(self)->fgh[2]; A z; ARGCHK1(w); z=(FAV(hs)->valencefns[0])(jtfg,w,hs); RETF(z);}  // monadic inverse was already looked up in h
+static DF1(jtinverr){DF12IP; ASSERT(0,EVDOMAIN);}  // uninvertible monad: come here if inverse invoked as a monad (x&u^:_1 might be OK as a dyad) 
 
 
 // [x] u^:v y, fast when result of v is 0 or 1 (=if statement).  jtflagging is that required by u.  JTDOWHILE can be set to indicate that this is called from ^:_. in which case we return (A)1 if v returned 0
 // if result of v is not 0/1, we reexecute [x] u^:n y  where n is ([x] v y)
-static DF2(jtpowv12cell){F12IP;A z;PROLOG(0110);
+static DF2(jtpowv12cell){DF12IP;A z;PROLOG(0110);
  w=EPMONAD?0:w;  // w is 0 for monad
  A u,uc; I u0; A gs=FAV(self)->fgh[1]; A fs=FAV(self)->fgh[0]; AF uf=FAV(fs)->valencefns[!!w]; // fetch uself, which we always need, and uf, which we will need in the fast path
  RZ(u=CALL12(w,FAV(gs)->valencefns[!!w],a,w,gs));  // execute v, not inplace
@@ -259,7 +259,7 @@ static DF2(jtpowv12cell){F12IP;A z;PROLOG(0110);
 // execution of [x] u^:gerund y as (x v0 y) u^:(x v1 y) (x v2 y)   or  u^:(v1 y) (v2 y)
 // if v1 evaluates to 0, avoid evaluating v0
 // Apply the gerunds to xy, then  apply u^:n
-static DF2(jtgcr12){F12IP;PROLOG(0);
+static DF2(jtgcr12){DF12IP;PROLOG(0);
  w=EPMONAD?0:w;  // throughout this bivalent routine a is w/a w is 0/w  (monad/dyad) w!=0 is the dyad flag
  if(unlikely(a==w))jtfg=(J)((I)jtfg&~(JTINPLACEA+JTINPLACEW));  // cannot inplace a/w if they are equal
  I origjtfg=(I)jtfg;  // remember initial inplacing status of args - after equality check
@@ -299,7 +299,7 @@ static F2(jtgconj){F12JT;A hs;
  ARGCHK2(a,w);
  ASSERT((AN(w)&-2)==2,EVLENGTH);  // length is 2 or 3
  RZ(hs=fxeachv(1,w));  // convert gerund to array of A blocks, each verified to be a verb.
- R fdef(0,CPOWOP,VERB, jtgcr12,jtgcr12, a,w,hs, gflg(hs)+VGERR, RMAX,RMAX,RMAX);  //  calc common flags across all components
+ R fdef(0,CPOWOP,VERB, jtgcr12,jtgcr12, a,hs,hs, gflg(hs)+VGERR, RMAX,RMAX,RMAX);  //  calc common flags across all components   use verbified gerund
 }
 
 
@@ -311,7 +311,7 @@ static F2(jtgconj){F12JT;A hs;
 // kibosh on it by setting self (otherwise unused, and set to nonzero in the initial invocation
 // from parse) to 0 in all calls resulting from execution of gerund v.  Then we fail any gerund
 // if self is 0.
-DF2(jtpowop){F12IP;B b;V*v;
+DF2(jtpowop){DF12IP;B b;V*v;
  ARGCHK2(a,w);
  ASSERT(AT(a)&VERB,EVDOMAIN);  // u must be a verb
  // handle the very important case of scalar   int/boolean   n of 0/1

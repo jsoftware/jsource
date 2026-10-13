@@ -6,16 +6,16 @@
 #include "j.h"
 
 // obv1 and obv2 merely pass the call to f.  Pass inplaceability through
-static DF2(obv12cell){F12IP;w=EPDYAD?w:0; A fs=FAV(self)->fgh[0]; AF f12=FAV(fs)->valencefns[!!w];A z;PROLOG(0103); z=CALL12IP(w,f12,a,w,fs); EPILOG(z);}
-static DF1(obv1){F12IP; PREF1IP(obv12cell); R obv12cell(jtfg,w,self,self);}  // Pass inplaceability through
-static DF2(obv2){F12IP; PREF2IP(obv12cell); R obv12cell(jtfg,a,w,self);}  // Pass inplaceability through
+static DF2(obv12cell){DF12IP;w=EPDYAD?w:0; A fs=FAV(self)->fgh[0]; AF f12=FAV(fs)->valencefns[!!w];A z;PROLOG(0103); z=CALL12IP(w,f12,a,w,fs); EPILOG(z);}
+static DF1(obv1){DF12IP; PREF1IP(obv12cell); R obv12cell(jtfg,w,self,self);}  // Pass inplaceability through
+static DF2(obv2){DF12IP; PREF2IP(obv12cell); R obv12cell(jtfg,a,w,self);}  // Pass inplaceability through
 
 
 // Set NOLOCCHG from a&w; set INPLACE from a
 F2(jtobverse){F12IP;ASSERTVV(a,w); R fdef(0L,COBVERSE,VERB,obv1,obv2,a,w ,0L,((FAV(a)->flag&FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF)),mr(a),lr(a),rr(a));}
 
 // Adverse.  Run f, and if that fails (and not with THROW/EXIT), run g (or use its value if it's a noun).  Bivalent  a,w,self or w,self,self
-static DF2(ad12){F12IP;A z; A childself=FAV(self)->fgh[0]; 
+static DF2(ad12){DF12IP;A z; A childself=FAV(self)->fgh[0]; 
  ARGCHK2(a,w); A *old=jt->tnextpushp;
  I dyad=EPDYAD; w=EPDYAD?w:childself;  // Set w for bivalent call 
  WITHDEBUGOFF(z=CALL2(FAV(childself)->valencefns[dyad],a,w,childself);)

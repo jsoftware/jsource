@@ -532,4 +532,4 @@ DFI2(jtmatch){A z;I m,n,mn;
  RETF(z);
 }    /* a -:"r w */
 
-DF2(jtnotmatch){F12IP;R jtmatch((J)((I)jt+JTNOTMATCH),a,w,0);}   /* a -.@-:"r w */
+DF2(jtnotmatch){DF12IP;R jtmatch((J)((I)jt+JTNOTMATCH),a,w,0);}   /* a -.@-:"r w */

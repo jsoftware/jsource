@@ -44,9 +44,9 @@ static F1(jtinvfork){F12IP;A f,fi,g,gi,h,k;B b,c;V*v;
  R fong(fi,gi);  // if f const, h^:_1 @: const&g^:_1   if h const, f^:_1 @: g&const^:_1
 }
 
-static DF1(jtexpandf){F12IP;A f; ARGCHK2(w,self); f=FAV(self)->fgh[0]; R expand(FAV(f)->fgh[0],w);}
+static DF1(jtexpandf){DF12IP;A f; ARGCHK2(w,self); f=FAV(self)->fgh[0]; R expand(FAV(f)->fgh[0],w);}
 
-static DF1(jtexpandg){F12IP;A f,g,z;V*v;
+static DF1(jtexpandg){DF12IP;A f,g,z;V*v;
  ARGCHK2(w,self);
  f=FAV(self)->fgh[0]; v=FAV(f); g=v->fgh[1];
  jt->fill=FAV(g)->fgh[1]; z=expand(v->fgh[0],w); jt->fill=0;   // elements of FAV cannot be virtual
@@ -167,7 +167,7 @@ xco:
   R fdef(0,CPOWOP,VERB, jtexpandf,jtvalenceerr, fampg?fampg:amp(f,g),num(-1),0L, VNONAME+VNOSELF, RMAX,0L,0L);
   break;
  case CPOWOP:  // ^:
-  if(VGERL&u->flag){ff=AAV(u->fgh[2])[1]; R amp(nf?x:ff,nf?ff:x);}
+  if(VGERL&u->flag){SEGFAULT; ff=AAV(u->fgh[2])[1]; R amp(nf?x:ff,nf?ff:x);}   // scaf VGERL never set?
   if(u->valencefns[0]==jtinvh1)R invamp(nf?f:u->fgh[2],nf?u->fgh[2]:g,0);  // m&(#.^:_1) : try new inverse after moving to old
   break;
  case CCOMMA:  // ,
@@ -237,7 +237,7 @@ xco:
 }
 
 // inverse of I., with domain extended to allow unsorted w
-static DF1(jticapdotinv){F12IP;
+static DF1(jticapdotinv){DF12IP;
  ARGCHK1(w); F1RANK(1,jticapdotinv,self);  // we handle only rank 1 here
  // the rest applies only to lists
  if(unlikely(!(AT(w)&INT)))RZ(w=cvt(INT,w));  // integers needed
@@ -300,8 +300,8 @@ xco:
  case CFIT:     if(CXCO==IDD(f))goto xco; //_1 x:!.n y is the same as _1 x: y, and n was already verified to be valid, so treat this the same as plain x:
   // otherwise fall through to...
  case CPOWOP:   
-  if(vf&&ng){p=rei0(g); R -1==p?f:1==p?invrecur(f):powop(0>p?f:invrecur(f),sc(ABS(p)),0);}
-  if(VGERL&v->flag)R AAV(v->fgh[2])[1];
+  if(vf&&ng){p=rei0(g); R -1==p?f:1==p?invrecur(f):powop(0>p?f:invrecur(f),sc(ABS(p)),0);}  // u^:n; inverse is (uinv)[^:_n if n is not -1]
+  if(VGERL&v->flag){SEGFAULT; R AAV(v->fgh[2])[1];}   // scaf VGERL never set? this  returns the verb to calculate n.  Why?
   break;
  case CTILDE:
   if(nf)R invrecur(symbrd(f));  // name~ - resolve name & try again

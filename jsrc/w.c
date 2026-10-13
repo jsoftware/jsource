@@ -102,7 +102,7 @@ A jtunwordil(J jt, A wil, A w, I opts){A z;
 }
 
 // ;: y
-DF1(jtwords){F12IP;A t,*x,z;C*s;I k,n,*y;
+DF1(jtwords){DF12IP;A t,*x,z;C*s;I k,n,*y;
  F1RANK(1,jtwords,self);
  PROLOG(000);
  RZ(w=vs(w));  // convert w to LIT if it's not already
@@ -396,5 +396,5 @@ static A jtfsm0(J jt,A a,A w,C chka){PROLOG(0100);A*av,m,s,x,w0=w;B b;I c,f,*ijr
 F2(jtfsm){F12IP;R fsm0(a,w,1);}
      /* x;:y */
 
-DF1(jtfsmfx){F12IP;ARGCHK2(w,self); R fsm0(FAV(self)->fgh[0],w,0);}
+DF1(jtfsmfx){DF12IP;ARGCHK2(w,self); R fsm0(FAV(self)->fgh[0],w,0);}
      /* x&;: y */

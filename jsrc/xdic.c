@@ -84,7 +84,7 @@ static UI4 jtcrcy(J jt,A y){
 }
 
 // 16!:0 monad create 32-bit hash of y.  For float types, +-0 must have the same hash
-DF2(jthashy){F12IP; ARGCHK2(a,w) RETF(sc(jtcrcy(jt,w)));}
+DF2(jthashy){DF12IP; ARGCHK2(a,w) RETF(sc(jtcrcy(jt,w)));}
 
 // everything about the dictionary.  This struct overlays the entire block.  AM of the first
 // cacheline is the lock for the dic.  The data starts at AS[1], the second cacheline.  The block
@@ -219,7 +219,7 @@ switch (i) {
 //     if #hashslots is omitted, the map is a red/black tree
 // result is DIC to use, ready for get/put, with hash/keys/vals/empty allocated, and 0 valid kvs
 // If value shape is 0, there are no values.  If type is also 0, the dict is for symbols (i. e. delete not allowed, value is key slot#)
-static DF1(jtcreatedic1){F12IP;A box,box1;  // temp for box contents
+static DF1(jtcreatedic1){DF12IP;A box,box1;  // temp for box contents
  ARGCHK1(w);
  A a=FAV(self)->fgh[0];  // extract u from the verb
  A z; GAT0(z,BOX,24,1) AK(z)=offsetof(struct ADic,bloc.hash); AN(z)=AS(z)[0]=7;  // allocate nonrecursive box, long enough to make the total allo big enough in 32- and 64-bit.  Then restrict to the boxes in case of error
@@ -676,7 +676,7 @@ exitkeyvals:;  DICLKRDRELKV(dic,lv) R 0;
 }
 
 //   get/has.   Bivalent. w is keys, [a] is default value, 0 if monad.  Called from parse/unquote as a,w,self or w,self,self.  dic was u to self
-static DF2(jtdicget){F12IP;A z;
+static DF2(jtdicget){DF12IP;A z;
  ARGCHK2(a,w)
  A adyad=w!=self?a:0; w=w!=self?w:a;  // if dyad, keep a,w, otherwise 0,w
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
@@ -908,7 +908,7 @@ errexit: R 0;   // return with error
 }
 
 //  put.  a is values, w is keys   dic was u to self
-static DF2(jtdicput){F12IP;A z;
+static DF2(jtdicput){DF12IP;A z;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
  ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
@@ -1092,7 +1092,7 @@ errexit:; R 0;
 
 
 //  del.   w is keys   u was dic to self
-static DF1(jtdicdel){F12IP;A z;
+static DF1(jtdicdel){DF12IP;A z;
  ARGCHK1(w)
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
  ASSERT(dic->bloc.vtype!=0,EVUNTIMELY)   // if symbols, don't allow deletes
@@ -1210,7 +1210,7 @@ static I auditnode(J jt,DIC *dic,UI nodex,UI excludednode, I doprint){A z;
 
 // 16!:_7 Bivalent. Print and audit the tree in w. a is options: 1 (default)=printf.  Called ONLY by a,w,self or w,self,self
 // Result is 1 if OK, 0 if error
-DF2(jtdisprbdic){F12IP;
+DF2(jtdisprbdic){DF12IP;
  ARGCHK1(w)
  ASSERTSYS(((DIC*)w)->bloc.flags&DICFRB,"not a tree dic")
  A na=w==self?zeroionei(1):a; w=w==self?a:w; I opts=reb0(na);   // get print options
@@ -1284,7 +1284,7 @@ exitkeyvals:;  DICLKRDRELKV(dic,lv) R 0;
 }
 
 //   get.   Bivalent. w is keys, [a] is default value, 0 if monad.  Called from parse/unquote as a,w,self or w,self,self.  dic was u to self
-static DF2(jtdicgeto){F12IP;A z;
+static DF2(jtdicgeto){DF12IP;A z;
  ARGCHK2(a,w)
  A adyad=w!=self?a:0; w=w!=self?w:a;  // if dyad, keep a,w, otherwise 0,w
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
@@ -1444,7 +1444,7 @@ exiterr: R -1;
 // Forms: a=(flags,count) w=list of 2 keys   flags are k v eq1 eq0
 //          a=(flags,count) w=1 key    flags are k v x eq  count is # keys, -1 for all default 1
 //          a=(flags,count)  w= ''  flags are k v x dir  count is # items wanted, dir is 0 for head, 1 for tail (default +1)
-static DF2(jtdicmgeto){F12IP;   // length of head/tail, specified by user
+static DF2(jtdicmgeto){DF12IP;   // length of head/tail, specified by user
  ARGCHK2(a,w)
  PROLOG(000);
 
@@ -1670,7 +1670,7 @@ errexit: R 0;
 }
 
 //  put.  a is values, w is keys   dic was u to self
-static DF2(jtdicputo){F12IP;
+static DF2(jtdicputo){DF12IP;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
  ASSERT(dic->bloc.vtype!=0,EVUNTIMELY)   // if symbols, don't allow red/black trees
@@ -1844,7 +1844,7 @@ errexit: R 0;
 }
 
 //  del.   w is keys   u was dic to self
-static DF1(jtdicdelo){F12IP;
+static DF1(jtdicdelo){DF12IP;
  ARGCHK1(w)
  DIC *dic=(DIC*)FAV(self)->fgh[0]; I kt=dic->bloc.ktype; I kr=AN(dic->bloc.kshape), *ks=IAV1(dic->bloc.kshape);  // point to dic block, key type, shape of 1 key.  Must not look at hash etc yet
  ASSERT(dic->bloc.vtype!=0,EVUNTIMELY)   // if symbols, don't allow red/black trees
@@ -1878,7 +1878,7 @@ static DF1(jtdicdelo){F12IP;
 
 // u 16!:_2  get: u=dic
 // We create a verb to handle (get y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
-DF1(jtdicgetc){F12IP;
+DF1(jtdicgetc){DF12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
  ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
@@ -1889,7 +1889,7 @@ DF1(jtdicgetc){F12IP;
 
 // u 16!:_12  has: u=dic
 // We create a verb to handle (has y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
-DF1(jtdichasc){F12IP;
+DF1(jtdichasc){DF12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
  ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
@@ -1900,7 +1900,7 @@ DF1(jtdichasc){F12IP;
 
 // u 16!:_3  put: u=dic
 // We create a verb to handle (x put y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
-DF1(jtdicputc){F12IP;
+DF1(jtdicputc){DF12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
  ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
@@ -1909,7 +1909,7 @@ DF1(jtdicputc){F12IP;
 
 // u 16!:_4  del: u=dic
 // We create a verb to handle (del y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
-DF1(jtdicdelc){F12IP;
+DF1(jtdicdelc){DF12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
  ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
@@ -1918,7 +1918,7 @@ DF1(jtdicdelc){F12IP;
 
 // u 16!:_6  mget: u=dic
 // We create a verb to handle (del y).  It is up to the user (or a name) to run it in the correct locale.  We raise the locale to keep it valid while this verb is about.
-DF1(jtdicmgetc){F12IP;
+DF1(jtdicmgetc){DF12IP;
  // We must not anticipate any values about the Dic because they may change during a resize and will not be visible to threads that have not taken a lock on the Dic
  ARGCHK1(w)
  ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
@@ -1930,7 +1930,7 @@ DF1(jtdicmgetc){F12IP;
 //  and restore the AN fields for eventual free.  If empties have already been deleted, error
 // If x=2, clear the database: free all INDIRECT kvs, reset the free chain to hold all keys, clear stats.  This leaves the database usable but empty
 // No locks; if you need a write lock, take it before calling.
-DF2(jtdicempties){F12IP;
+DF2(jtdicempties){DF12IP;
  ARGCHK2(a,w)
  ASSERT(AT(w)&NOUN,EVDOMAIN)  // must be a dic.  Perhaps we should demand credentials
  DIC *dic=(DIC*)w;
@@ -1976,7 +1976,7 @@ DF2(jtdicempties){F12IP;
 }
 
 // x 16!:_8 dic   return dic info. x=0: cardinality[,occupancy] 1=virtual block for keys 2=virtual block for vals
-DF2(jtdicstats){F12IP;A z;I r;
+DF2(jtdicstats){DF12IP;A z;I r;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)w;
  ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation
@@ -1993,7 +1993,7 @@ DF2(jtdicstats){F12IP;A z;I r;
 // x 16!:_9 dic   lock/unlock the dictionary
 // x is (0 to lock, 1 to unlock),(0 for read lock, 1 for write lock).  Locks are for keys & values simultaneously.
 // Result is ''.  We return when the requested lock status has been achieved.  If the user takes a lock they MUST release it
-DF2(jtdiclock){F12IP;
+DF2(jtdiclock){DF12IP;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)w;
  if(likely(!(dic->bloc.flags&DICFSINGLETHREADED))){  // if singlethreaded, take no locks
@@ -2023,7 +2023,7 @@ static I initrb(I min,I max,I currdepth,I minreddepth,C *hashtbl,I nodeb){
 
 // (keys;values) 16!:_10 dic   Install sorted keys/values into red/black tree en bloc
 // No locks.
-DF2(jtdicload){F12IP;
+DF2(jtdicload){DF12IP;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)w;  // address of dic, which must be empty
  ASSERT(dic->bloc.emptyn+1!=0,EVUNTIMELY)  // If dictionary is zombie, don't allow any operation

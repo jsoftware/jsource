@@ -617,29 +617,29 @@ A jtirs2(J jtfg,A a,A w,A fs,I l,I r,AF f2){F12IP;A z;I ar,wr;
 // end of sparse-only
 
 
-static DF1(cons1a){F12IP;RETF(FAV(self)->fgh[0])}  // scaf bivalent
-static DF2(cons2a){F12IP;RETF(FAV(self)->fgh[0])}
+static DF1(cons1a){DF12IP;RETF(FAV(self)->fgh[0])}  // scaf bivalent
+static DF2(cons2a){DF12IP;RETF(FAV(self)->fgh[0])}
 
 // Constant verbs do not inplace because we loop over cells.  We could speed this up if it were worthwhile.
-static DF1(cons1){F12IP;
+static DF1(cons1){DF12IP;
  ARGCHK1(w);
  I mr=efr(AR(w),(I)FAV(self)->localuse.lu1.srank[0]);
  RETF(rank1ex(w,self,mr,cons1a))
 }
-static DF2(cons2){F12IP;
+static DF2(cons2){DF12IP;
  ARGCHK2(a,w);
  I lr2=efr(AR(a),(I)FAV(self)->localuse.lu1.srank[1]), rr2=efr(AR(w),(I)FAV(self)->localuse.lu1.srank[2]);
  RETF(rank2ex(a,w,self,lr2,rr2,lr2,rr2,cons2a))
 }
 
 // cyclic-gerund verbs for m"n create an iterator from the gerund and pass that into rank processing, looping over cells
-static DF1(cycr1){F12IP;V*sv=FAV(self); I cger[128/SZI];
+static DF1(cycr1){DF12IP;V*sv=FAV(self); I cger[128/SZI];
  ARGCHK1(w);
  RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund
  I mr=efr(AR(w),(I)sv->localuse.lu1.srank[0]);
  RETF(rank1ex(w,self,mr,FAV(self)->valencefns[0]))  // callback is to the cyclic-execution function
 }
-static DF2(cycr2){F12IP;V*sv=FAV(self); I cger[128/SZI];
+static DF2(cycr2){DF12IP;V*sv=FAV(self); I cger[128/SZI];
  ARGCHK2(a,w);
  RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund
  I lr2=efr(AR(a),(I)sv->localuse.lu1.srank[1]), rr2=efr(AR(w),(I)sv->localuse.lu1.srank[2]);
@@ -649,23 +649,23 @@ static DF2(cycr2){F12IP;V*sv=FAV(self); I cger[128/SZI];
 // fast path for atomic2 verbs.  We don't check agreement and we don't clamp the rank to the arg rank
 #if SY_64
 // 64-bit linkage, through upper jt
-static DF2(rank2atomic){F12IP; RETF(ATOMIC2(jtfg,a,FAV(self)->localuse.lu1.srank[1],w,FAV(self)->localuse.lu1.srank[2],self)) }  // self is used only for lc byte and ranks
-static DF2(rank2atomicneg){F12IP;ARGCHK2(a,w); I elr=efr(AR(a),FAV(self)->localuse.lu1.srank[1]), err=efr(AR(w),FAV(self)->localuse.lu1.srank[2]); RETF(ATOMIC2(jtfg,a,elr,w,err,self)) }  // self is used only for lc byte and ranks
+static DF2(rank2atomic){DF12IP; RETF(ATOMIC2(jtfg,a,FAV(self)->localuse.lu1.srank[1],w,FAV(self)->localuse.lu1.srank[2],self)) }  // self is used only for lc byte and ranks
+static DF2(rank2atomicneg){DF12IP;ARGCHK2(a,w); I elr=efr(AR(a),FAV(self)->localuse.lu1.srank[1]), err=efr(AR(w),FAV(self)->localuse.lu1.srank[2]); RETF(ATOMIC2(jtfg,a,elr,w,err,self)) }  // self is used only for lc byte and ranks
 #else
 // 32-bit linkage, through lower a/w
-static DF2(rank2atomic){F12IP; RETF(IRS2(jtatomic2,jtfg,a,FAV(self)->localuse.lu1.srank[1],w,FAV(self)->localuse.lu1.srank[2],self)) }  // self is used only for lc byte and ranks
-static DF2(rank2atomicneg){F12IP;ARGCHK2(a,w); I elr=efr(AR(a),FAV(self)->localuse.lu1.srank[1]), err=efr(AR(w),FAV(self)->localuse.lu1.srank[2]); RETF(IRS2(jtatomic2,jtfg,a,elr,w,err,self)) }  // self is used only for lc byte and ranks
+static DF2(rank2atomic){DF12IP; RETF(IRS2(jtatomic2,jtfg,a,FAV(self)->localuse.lu1.srank[1],w,FAV(self)->localuse.lu1.srank[2],self)) }  // self is used only for lc byte and ranks
+static DF2(rank2atomicneg){DF12IP;ARGCHK2(a,w); I elr=efr(AR(a),FAV(self)->localuse.lu1.srank[1]), err=efr(AR(w),FAV(self)->localuse.lu1.srank[2]); RETF(IRS2(jtatomic2,jtfg,a,elr,w,err,self)) }  // self is used only for lc byte and ranks
 #endif
 
 // Handle u"n y where u supports irs.  Since the verb may support inplacing even with rank (,"n for example), pass inplaceability through.
-static DF1(rank1i){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];ARGCHK1(w);
+static DF1(rank1i){DF12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];ARGCHK1(w);
  FILLREG(f1)  // get routine address ready for misbranch
  I m=FAV(self)->localuse.lu1.srank[0]; I r=AR(w); m+=REPSGN(m)&r; m=m<0?0:m; m=m>=r?RMAX:m;   // handle negative rank
  RETF(IRS1(f1,jtfg,w,m,fs))   // call with embedded rank parm
 }
 
 // dyadic forms also check agreement wrt the given ranks.  pass inplaceability through.
-static DF2(rank2i){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; ARGCHK1(w);
+static DF2(rank2i){DF12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; ARGCHK1(w);
  FILLREG(f2)  // get routine address
  I ar=FAV(self)->localuse.lu1.srank[1]; I r=AR(a); ar+=REPSGN(ar)&r; ar=ar<0?0:ar; ar=ar>=r?RMAX:ar; I af=r-ar;   // left rank and frame, possibly negative
  I wr=FAV(self)->localuse.lu1.srank[2];   r=AR(w); wr+=REPSGN(wr)&r; wr=wr<0?0:wr; wr=wr>=r?RMAX:wr; I wf=r-wr;   // right rank and frame
@@ -677,7 +677,7 @@ static DF2(rank2i){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; A
 #define LEMIN0(a,b,c) ((b-a)|(c-a)) // sign is 0 if a<=MIN(b,c): a<=b and a<=c
 // u"n y when u does not support irs. We loop over cells
 // Pass inplaceability through
-static DF1(rank1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];
+static DF1(rank1){DF12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];
  ARGCHK1(w);
  // rank is considered presumptively nugatory if the rank of u<=n or rank of arg <=n, i. e. if n>=MIN(ranku,rankarg)
  // This gives error in the case
@@ -697,13 +697,13 @@ static DF1(rank1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];
 }
 
 // Version for rank 0.  Call rank1ex0, pointing to the u"r
-static DF1(jtrank10atom){F12IP; A fs=FAV(self)->fgh[0]; RETF(CALL1IP(FAV(fs)->valencefns[0],w,fs))}  // rank is immaterial, since these are ATOMIC1
-static DF1(jtrank10){F12IP;RETF(jtrank1ex0(jtfg,w,self,jtrank10atom))}  // pass inplaceability through.
+static DF1(jtrank10atom){DF12IP; A fs=FAV(self)->fgh[0]; RETF(CALL1IP(FAV(fs)->valencefns[0],w,fs))}  // rank is immaterial, since these are ATOMIC1
+static DF1(jtrank10){DF12IP;RETF(jtrank1ex0(jtfg,w,self,jtrank10atom))}  // pass inplaceability through.
 
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
 // We don't do this now because fill between the loops might change the result
 
-static DF2(rank2){F12IP;A fs=FAV(self)->fgh[0]; 
+static DF2(rank2){DF12IP;A fs=FAV(self)->fgh[0]; 
  ARGCHK2(a,w);
  I l=FAV(self)->localuse.lu1.srank[1], r=FAV(self)->localuse.lu1.srank[2], ul=FAV(fs)->lrr>>RANKTX, ur=FAV(fs)->lrr&RANKTMSK;   // ranks (possibly neg) of self and u
  if(unlikely(FAV(fs)->id==CQQ)){ul=FAV(fs)->localuse.lu1.srank[1]; ur=FAV(fs)->localuse.lu1.srank[2];}   // if u is u"r, get its possibly neg r
@@ -725,9 +725,9 @@ static DF2(rank2){F12IP;A fs=FAV(self)->fgh[0];
 }
 
 // Version for rank 0.  Call rank2ex0, pointing to the u"r
-static DF2(jtrank20atom){F12IP; A fs=FAV(self)->fgh[0]; RETF((FAV(fs)->valencefns[1])(jtfg,a,w,fs))}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop.  pass inplaceability through.
+static DF2(jtrank20atom){DF12IP; A fs=FAV(self)->fgh[0]; RETF((FAV(fs)->valencefns[1])(jtfg,a,w,fs))}  // will be used only for no-frame executions.  Otherwise will be replaced by the flags loop.  pass inplaceability through.
 
-static DF2(jtrank20){F12IP;RETF(jtrank2ex0(jtfg,a,w,self,jtrank20atom))}  // pass inplaceability through.
+static DF2(jtrank20){DF12IP;RETF(jtrank2ex0(jtfg,a,w,self,jtrank20atom))}  // pass inplaceability through.
 
 
 // a"w; result is a verb
@@ -752,7 +752,7 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   hv[0]=v[2==n]; hv[0]=hv[0]>RMAX?RMAX:hv[0]; hv[0]=hv[0]<-RMAX?-RMAX:hv[0]; r[0]=DR(hv[0]);
   hv[1]=v[3==n]; hv[1]=hv[1]>RMAX?RMAX:hv[1]; hv[1]=hv[1]<-RMAX?-RMAX:hv[1]; r[1]=DR(hv[1]);
   hv[2]=v[n-1];  hv[2]=hv[2]>RMAX?RMAX:hv[2]; hv[2]=hv[2]<-RMAX?-RMAX:hv[2]; r[2]=DR(hv[2]);
-  vf=VNONAME+VNOSELF;  // n oun is always VNONAME+VNOSELF
+  vf=VNONAME+VNOSELF;  // noun is always VNONAME+VNOSELF
  }
  // r is the actual verb ranks, i. e. _ if given ranks are negative.  h may be negative
 
@@ -761,8 +761,9 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   // gerund requires: some rank not RMAX; boxed m; rank of m=1; and then the gerund must be well formed
   if(((hv[0]^RMAX)|(hv[1]^RMAX)|(hv[2]^RMAX)) && !((AR(a)^1) | (AT(a)&(NOUN&~BOX))) && (ger=({A x; WITHJTJERROFF(x=fxeachv(1LL,a);) x;})) ){
    f1=cycr1; f2=cycr2;  // process this with the cyclic-gerund routines
-   vf=gflg(ger)&~VNOLOCCHG;   // the cyclic processor does not inplace or IRS
+   vf=(gflg(ger)&~VNOLOCCHG)|VGERL;   // the cyclic processor does not inplace or IRS.  Mark as gerund for display
    r[0]=r[1]=r[2]=RMAX;  // actual rank of gerund"n is _; the gerund is applied at rank n
+   a=ger;  // replace a with its verbified version, which is equivalent
   }else{   // gerund failed (quietly), use the noun value itself
    f1=cons1; f2=cons2;    // use the constant routines for nouns
    ACIPNO(a);   // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be assigned to a name, which will protects values inside it.

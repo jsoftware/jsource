@@ -444,7 +444,7 @@ static A jtifxi(J jt,I m,A w){A z;I d,j,k,n,p,*x;
 }
 
 // Entry point for infix.  a is x, w is y, fs points to u
-static DF2(jtinfix){F12IP;PROLOG(0018);A fs=FAV(self)->fgh[0]; A x,z;I m; 
+static DF2(jtinfix){DF12IP;PROLOG(0018);A fs=FAV(self)->fgh[0]; A x,z;I m; 
  F2RANK(0,RMAX,jtinfix,self); // Handle looping over rank.  This returns here for each cell (including this test)
  // The rest of this verb handles a single cell
  m=rei0(a); // get infix length as an integer, -imax to imax
@@ -466,23 +466,23 @@ static DF2(jtinfix){F12IP;PROLOG(0018);A fs=FAV(self)->fgh[0]; A x,z;I m;
  EPILOG(z);
 }
 
-static DF1(jtinfix2){F12IP;PROLOG(0019);
+static DF1(jtinfix2){DF12IP;PROLOG(0019);
  A f=FAV(FAV(self)->fgh[0])->fgh[0];  // f=u in u/\ y
   I rk=AR(w)-1; A l,r,z; RZ(l=curtail(w)) RZ(r=behead(w)) rk=FAV(f)->flag&VISATOMIC2?RMAX:rk; z=IRSorATOMIC2(FAV(f)->flag&VFUSEDOK2,FAV(f)->valencefns[1],jt,l,rk,r,rk,f); // (}: u"_1 }.) y (}: u }. if atomic u).  Might be ATOMIC2 but not FUSED
  EPILOG(z);
 }    /* 2 f/\w, where f supports IRS */
 
-static DF2(jtginfix){F12IP;A h,*hv,x,z,*zv;I d,m,n;
+static DF2(jtginfix){DF12IP;A h,*hv,x,z,*zv;I d,m,n;
  m=rei0(vib(a)); 
  RZ(x=ifxi(m,w));
  h=FAV(self)->fgh[2]; hv=AAV(h); d=AN(h);
  if(SETIC(x,n)){
   GATV0(z,BOX,n,1); zv=AAV1(z);
-  DO(n, RZ(zv[i]=df1(h,seg(from(sc(i),x),w),C(hv[i%d]))););
+  DO(n, RZ(zv[i]=df1(h,seg(from(sc(i),x),w),hv[i%d])););   //   pyx cannot return a verb.
   R jtopenforassembly(jt,z);
  }else{A s;
   RZ(s=AR(w)?shape(w):ca(iv0)); AV(s)[0]=ABSOFLO(m,IMAX);
-  RZ(dfv1(x,jtfiller(jt,AT(w),AR(s),AS(s)),C(*hv)));
+  RZ(dfv1(x,jtfiller(jt,AT(w),AR(s),AS(s)),*hv));   //   pyx cannot return a verb.
   R reshape(over(zeroionei(0),shape(x)),x);
 }}
 
@@ -493,7 +493,7 @@ static DF2(jtginfix){F12IP;A h,*hv,x,z,*zv;I d,m,n;
 #define STATESLASH2 BIT(STATESLASH2X)
 
 // prefix and infix: prefix if a is mark
-static DF2(jtinfixprefix2){F12IP;PROLOG(00202);A fs;I cger[128/SZI];
+static DF2(jtinfixprefix2){DF12IP;PROLOG(00202);A fs;I cger[128/SZI];
    I wt;
   ARGCHK1(w);
  F2RANKIP(0,RMAX,jtinfixprefix2,self);  // handle rank loop if needed
@@ -699,7 +699,7 @@ static DFI1(jtpscan){A z;I f,n,t,wn,*ws,wt;
  if(unlikely((255&~EVNOCONV)&rc)){jsignal(rc); R (rc>=EWOV)?IRS1(jtpscan,jt,w,wcr,self):0;} else R unlikely(((adocv.cv+VRD)&VRI))&&likely(rc!=EVNOCONV)?cvz(adocv.cv,z):z;   // retry if needed; convert if needed & not suppressed
 }    /* f/\"r w atomic f main control */
 
-static DF2(jtinfixd){F12IP;A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc; 
+static DF2(jtinfixd){DF12IP;A z;C*x,*y;I c=0,d,k,m,n,p,q,r,*s,wr,*ws,wt,zc; 
  F2RANKW(0,RMAX,jtinfixd,self);
  wr=AR(w); ws=AS(w); wt=AT(w); SETIC(w,n);   // n=#items of w
  m=rei0(a); if(m==IMAX){m=n+1;} p=ABSOFLO(m,IMAX);  // m=x arg, p=abs(m)
@@ -772,7 +772,7 @@ static A jtmovsumavg(J jt,I m,A w,A fs,B avg){A z;
  RESETERR R jtinfixprefix2(jt,sc(m),w,fs);  // fail over to generic code
 }
 
-static DF2(jtmovavg){F12IP;I m,j;
+static DF2(jtmovavg){DF12IP;I m,j;
  F2RANK(0,RMAX,jtmovavg,self);
  m=rei0(a);SETIC(w,j);
  if(0<m&&m<=j&&AT(w)&B01+FL+INT)R movsumavg(m,w,self,1);   // j may be 0
@@ -898,7 +898,7 @@ static A jtmovbwneeq(J jt,I m,A w,A fs,B eq){A y,z;I c,p,*s,*u,*v,x,*yv,*zv;
  RETF(z);
 }    /* m 22 b./\w (0=eq) or m 25 b./\ (1=eq); integer w; 0<m */
 
-static DF2(jtmovfslash){F12IP;A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
+static DF2(jtmovfslash){DF12IP;A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt;
  F2RANK(0,RMAX,jtmovfslash,self);
  SETIC(w,p); wt=AT(w);   // p=#items of w
  m0=rei0(a); m=REPSGN(m0); m=(m^m0)-m; m^=REPSGN(m);  // m0=infx x,  m=abs(m0), handling IMIN
@@ -935,7 +935,7 @@ static DF2(jtmovfslash){F12IP;A x,z;B b;C id,*wv,*zv;I d,m,m0,p,t,wk,wt,zi,zk,zt
  if(255&rc){jsignal(rc); if(rc>=EWOV){RESETERR; R movfslash(a,ccvt(FL,w,0),self);}R0;}else R z;
 }    /* a f/\w */
 
-static DF1(jtiota1){F12IP;I j; R apv(SETIC(w,j),1L,1L);}
+static DF1(jtiota1){DF12IP;I j; R apv(SETIC(w,j),1L,1L);}
 
 F1(jtbslash){F12IP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(CBSLASH))->flag&~(VNOLOCCHG+VNONAME+VNOSELF);
 ;
@@ -943,7 +943,7 @@ F1(jtbslash){F12IP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(
  A z; fdefallo(z)
  if(NOUN&AT(w)){
   A fixw; RZ(fixw=fxeachv(1L,w));  // convert gerunds to verbs
-  fdeffill(z,0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, w,0L,fixw, VGERL|flag|gflg(fixw), RMAX,0L,RMAX); RETF(z);   // install common flags
+  fdeffill(z,0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, fixw,0L,fixw, VGERL|flag|gflg(fixw), RMAX,0L,RMAX); RETF(z);   // install common flags, use verbified gerund
  }
  // falling through, w is verb
  v=FAV(w);  // v is the u in u\ y

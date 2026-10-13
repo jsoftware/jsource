@@ -666,7 +666,7 @@ exit:;
  R z;
 }
 
-DF2(jtrollk){F12IP;A g,z;V*sv;
+DF2(jtrollk){DF12IP;A g,z;V*sv;
  ARGCHK3(a,w,self);
  sv=FAV(self); g=sv->fgh[2]?sv->fgh[2]:sv->fgh[1];   // 2d verb, # or $
  if(AT(w)&XNUM+RAT||!(!AR(w)&&1>=AR(a)&&((g==ds(CDOLLAR))|(1==AN(a)))))R jtupon2cell(jt,a,w,self);  // revert if XNUM/RAT or nonatomic w or AR(a)>1 or (?@# with a not a singleton)
@@ -811,7 +811,7 @@ F1(jtroll){F12IP;A z;B b=0;I m,wt;
  RETF(z&&!(FL&AT(z))&&wt&XNUM+RAT?xco1(z):z);
 }
 
-DF2(jtdeal){F12IP;A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;UI sq;SETNEXT
+DF2(jtdeal){DF12IP;A z;I at,j,k,m,n,wt,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;UI sq;SETNEXT
  ARGCHK2(a,w);
  at=AT(a); wt=AT(w);
  ASSERT(!ISSPARSE(at|wt),EVDOMAIN);
@@ -910,7 +910,7 @@ static F2(jtrollksubdot){F12IP;A z;I an,*av,k,m1,n,p,q,r,sh;UI m,mk,s,t,*u,x=jt-
 
 #undef rollk
 #define rollk(a,w,self) jtrollkdot(jt,(a),(w),(self))
-DF2(jtrollkdot){F12IP;A g,z;V*sv;
+DF2(jtrollkdot){DF12IP;A g,z;V*sv;
  ARGCHK3(a,w,self);
  sv=FAV(self); g=sv->fgh[2]?sv->fgh[2]:sv->fgh[1];
  if(AT(w)&XNUM+RAT||!(!AR(w)&&1>=AR(a)&&(g==ds(CDOLLAR)||1==AN(a))))R roll(dfv2(z,a,w,g));
@@ -1044,7 +1044,7 @@ static F1(jtrolldot){F12IP;A z;B b=0;I m,wt;
 
 #undef deal
 #define deal(a,w) jtdealdot(jt,(a),(w),ds(CQRYDOT))
-static DF2(jtdealdot){F12IP;A h,y,z;I at,d,*hv,i,i1,j,k,m,n,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
+static DF2(jtdealdot){DF12IP;A h,y,z;I at,d,*hv,i,i1,j,k,m,n,q,*v,wt,*yv,*zv;UI c,s,t,x=jt->rngdata->rngparms[jt->rngdata->rng].rngM;SETNEXT
  ARGCHK2(a,w);
  at=AT(a); wt=AT(w);
  ASSERT(!ISSPARSE(at|wt),EVDOMAIN);
@@ -1081,8 +1081,8 @@ static DF2(jtdealdot){F12IP;A h,y,z;I at,d,*hv,i,i1,j,k,m,n,q,*v,wt,*yv,*zv;UI c
 #define FXSOD       {jt->rngdata->rngparms[GBI].rngV=v; jt->rngdata->rngparms[GBI].rngI=jt->rngdata->rngi=i; I e=jt->jerr; jt->jerr=0; rngselects(sc(j)); jt->jerr=e;}  // rngselects doesn't function if there is error
 
 F1(jtrollx  ){F12IP;FXSDECL; ARGCHK1(w);                 FXSDO; z=roll(w);         FXSOD; R z;}       
-DF2(jtdealx  ){F12IP;FXSDECL; F2RANK(0,0,jtdealx,self); FXSDO; z=deal(a,w);       FXSOD; R z;}        
-DF2(jtrollkx){F12IP;FXSDECL; ARGCHK3(a,w,self);        FXSDO; z=rollk(a,w,self); FXSOD; R z;}      
+DF2(jtdealx  ){DF12IP;FXSDECL; F2RANK(0,0,jtdealx,self); FXSDO; z=deal(a,w);       FXSOD; R z;}        
+DF2(jtrollkx){DF12IP;FXSDECL; ARGCHK3(a,w,self);        FXSDO; z=rollk(a,w,self); FXSOD; R z;}      
 
 
 /*

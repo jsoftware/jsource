@@ -32,7 +32,7 @@ static F1(jtexec1cell){F12IP;A z;PROLOG(000);
  z=z&&!(AT(z)&NOUN)?mtv:z;  // if non-noun result, return empty $0
  EPILOG(z)
 }
-DF1(jtexec1){F12IP;A z;
+DF1(jtexec1){DF12IP;A z;
  ARGCHK1(w);
  if(AT(w)&NAME){z=nameref(w,jt->locsyms);  // the case ".@'name' which is the fastest way to refer to a deferred name
  }else{
@@ -91,7 +91,7 @@ F1(jtexg){F12IP;A*v,*wv,x,y,z;I n;
 I jtjset(J jt,C*name,A x){R symbisdel(nfs((I)strlen(name),name,0),x,jt->global);}
 
 // 128!:2
-DF2(jtapplystr){F12IP;PROLOG(0054);A fs,z;
+DF2(jtapplystr){DF12IP;PROLOG(0054);A fs,z;
  F2RANK(1,RMAX,jtapplystr,self);
  RZ(fs=PARSERVALUE(parseforexec(tokens(vs(a),1+!!EXPLICITRUNNING))));
  ASSERT(VERB&AT(fs),EVSYNTAX);

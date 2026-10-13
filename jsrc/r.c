@@ -29,8 +29,10 @@ static F1(jtdrr){F12IP;PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m
  if(!m)R spella(w);  // if no components, it must be a primitive, out it
  m+=!b&&!xop||hs&&xop;   // if operator, add component for v if conjunction; if not operator, add component UNLESS w is an invisible bident: for w itself or for h
  if(evoke(w))R drr(sfne(w));  // turn nameref into string or verb; then take rep, which is the result
- if(fs)RZ(df=fl&VGERL?every(fxeach(fs,(A)&jtfxself[0]),(A)&drrself):drr(fs));  // recursively take rep of 1st component
- if(gs)RZ(dg=fl&VGERR?every(fxeach(gs,(A)&jtfxself[0]),(A)&drrself):drr(gs));  // ... and second
+// obsolete  if(fs)RZ(df=fl&VGERL?every(fxeach(fs,(A)&jtfxself[0]),(A)&drrself):drr(fs));  // recursively take rep of 1st component
+// obsolete  if(gs)RZ(dg=fl&VGERR?every(fxeach(gs,(A)&jtfxself[0]),(A)&drrself):drr(gs));  // ... and second
+ if(fs)RZ(df=fl&VGERL?fxeach(fs,(A)&drrself):drr(fs));  // recursively take rep of 1st component
+ if(gs)RZ(dg=fl&VGERR?fxeach(gs,(A)&drrself):drr(gs));  // ... and second
  if(ex)RZ(dg=unparsem(num(0),w));  // get rep of body of explicit definition, if any
  GATV0(z,BOX,m,1); x=AAV1(z);
  RZ(x[0]=incorp(df));  // always out f first
@@ -74,7 +76,7 @@ F1(jtaro){F12IP;A fs,gs,hs,s,*u,*x,y,z;B ex,xop;C id;I*hv,m;V*v;
 F1(jtarep){F12IP;R box(aro(w));}
 
 // Create A for a string - name~, a primitive, or the boxed string
-static DF1(jtfxchar){F12IP;A y;C c,d,id,*s;I m,n;
+static DF1(jtfxchar){DF12IP;A y;C c,d,id,*s;I m,n;
  n=AN(w);
  ASSERT(1>=AR(w),EVRANK);  // string must be an atom or list
  ASSERT(n!=0,EVLENGTH);
@@ -90,9 +92,9 @@ static DF1(jtfxchar){F12IP;A y;C c,d,id,*s;I m,n;
 
 // Convert an AR/gerund to an A block.  w is the contents of an AR/gerund.  If it originally came from a verb it can't be a pyx, but it may contain pyxes
 // self is normally 0; if nonzero, we return a noun type ('0';<value) as is rather than returning value, and leave adv/conj ARs looking like nouns
-DF1(jtfx){F12IP;A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
+DF1(jtfx){DF12IP;A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  ARGCHK1(w);
- if(AT(w)&VERB)R w;  // if gerund (boxed VERB), treat it as a verb - return it as is
+ if(AT(w)&VERB+ADV+CONJ)R w;  // if gerund (boxed VERB), treat it as a verb - return it as is.  Also if other AR that has been converted to CAV
  // if string, handle that special case (name/primitive)
  if(LIT&AT(w))R fxchar(w,self);
  STACKCHKOFL
@@ -120,21 +122,21 @@ DF1(jtfx){F12IP;A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  case CADVF:  // yv must have been set
   // invisible bident/trident except for N/V V V fork
   ASSERT(2==(n&-2),EVLENGTH);  // len must be 2 for hook, 2 or 3 for ADVF
-  A h3=(n==3)?fx(C(yv[2])):0;  // if 3d parm not given, use 0
-  R hook(fx(C(yv[0])),fx(C(yv[1])),h3);
+  A h3=(n==3)?fx(CPYX(yv[2])):0;  // if 3d parm not given, use 0
+  R hook(fx(CPYX(yv[0])),fx(CPYX(yv[1])),h3);
  case CFORK:
   ASSERT(3==n,EVLENGTH);   // yv must have been set
-  RZ(f=fx(C(yv[0]))); ASSERT(AT(f)&VERB+NOUN,EVSYNTAX);
-  RZ(g=fx(C(yv[1]))); ASSERT(AT(g)&VERB,     EVSYNTAX);
-  RZ(h=fx(C(yv[2]))); ASSERT(AT(h)&VERB,     EVSYNTAX);
+  RZ(f=fx(CPYX(yv[0]))); ASSERT(AT(f)&VERB+NOUN,EVSYNTAX);
+  RZ(g=fx(CPYX(yv[1]))); ASSERT(AT(g)&VERB,     EVSYNTAX);
+  RZ(h=fx(CPYX(yv[2]))); ASSERT(AT(h)&VERB,     EVSYNTAX);
   R folk(f,g,h);
  default:
   if(id)fs=ds(id);
   ASSERT(fs&&RHS&AT(fs),EVDOMAIN);
   if(!n)R fs;
   ASSERT(1==n&&ADV&AT(fs)||2==n&&CONJ&AT(fs),EVLENGTH);  // after this test, yv is known set
-  if(0<n){RZ(p=fx(C(yv[0]))); ASSERT(AT(p)&NOUN+VERB,EVDOMAIN);}
-  if(1<n){RZ(q=fx(C(yv[1]))); ASSERT(AT(q)&NOUN+VERB,EVDOMAIN);}
+  if(0<n){RZ(p=fx(CPYX(yv[0]))); ASSERT(AT(p)&NOUN+VERB,EVDOMAIN);}
+  if(1<n){RZ(q=fx(CPYX(yv[1]))); ASSERT(AT(q)&NOUN+VERB,EVDOMAIN);}
   R 1==n ? df1(g,p,fs) : df2(g,p,q,fs);
  }
 }
@@ -361,11 +363,11 @@ static F2(jtxrep){F12IP;A h,*hv,*v,x,z,*zv;CW*u;I i,j,n,q[3],*s;V*wv;
 }    /* explicit representation -- h parameter for : definitions */
 
 
-DF1(jtarx){F12IP;F1RANK(0,  jtarx,self); R arep(  symbrdlocknovalerr(nfb(w)));}  // 5!:1
-DF1(jtdrx){F12IP;F1RANK(0,  jtdrx,self); R drep(  symbrdlocknovalerr(nfb(w)));}  // 5!:2
-DF1(jttrx){F12IP;F1RANK(0,  jttrx,self); R trep(  symbrdlocknovalerr(nfb(w)));}  // 5!:4
-DF1(jtlrx1){F12IP;F1RANK(0,  jtlrx1,self); R lrep(  symbrdlocknovalerr(nfb(w)));}  // 5!:5 monad
-DF2(jtlrx2){F12IP;ASSERT(AR(w)==0,EVRANK) I mask=0; if(AN(a)==0)mask=JTPRFORSCREEN;else{mask=rei0(a); ASSERT(BETWEENC(mask,1,3),EVDOMAIN) mask=(~mask<<JTEXPVALENCEOFFX)&JTEXPVALENCEOFF;}  R jtlrep((J)((I)jt+mask),  symbrdlocknovalerr(nfb(w)));}  // 5!:5 dyad, valence mask in jt; in x empty, print as if for screen
-DF1(jtprx){F12IP;F1RANK(0,  jtprx,self); R prep(  symbrdlocknovalerr(nfb(w)));}  // 5!:6
+DF1(jtarx){DF12IP;F1RANK(0,  jtarx,self); R arep(  symbrdlocknovalerr(nfb(w)));}  // 5!:1
+DF1(jtdrx){DF12IP;F1RANK(0,  jtdrx,self); R drep(  symbrdlocknovalerr(nfb(w)));}  // 5!:2
+DF1(jttrx){DF12IP;F1RANK(0,  jttrx,self); R trep(  symbrdlocknovalerr(nfb(w)));}  // 5!:4
+DF1(jtlrx1){DF12IP;F1RANK(0,  jtlrx1,self); R lrep(  symbrdlocknovalerr(nfb(w)));}  // 5!:5 monad
+DF2(jtlrx2){DF12IP;ASSERT(AR(w)==0,EVRANK) I mask=0; if(AN(a)==0)mask=JTPRFORSCREEN;else{mask=rei0(a); ASSERT(BETWEENC(mask,1,3),EVDOMAIN) mask=(~mask<<JTEXPVALENCEOFFX)&JTEXPVALENCEOFF;}  R jtlrep((J)((I)jt+mask),  symbrdlocknovalerr(nfb(w)));}  // 5!:5 dyad, valence mask in jt; in x empty, print as if for screen
+DF1(jtprx){DF12IP;F1RANK(0,  jtprx,self); R prep(  symbrdlocknovalerr(nfb(w)));}  // 5!:6
 
-DF2(jtxrx){F12IP;F2RANK(0,0,jtxrx,self); R xrep(a,symbrdlock(nfb(w)));}  // 5!:7
+DF2(jtxrx){DF12IP;F2RANK(0,0,jtxrx,self); R xrep(a,symbrdlock(nfb(w)));}  // 5!:7

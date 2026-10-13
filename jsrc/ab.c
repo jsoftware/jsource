@@ -153,7 +153,7 @@ static AHDRR(bw0101insC,UC,UC){I k=d*(n-1);                  x+=k; DQ(m, DQ(d, *
        AHDRR(bw1010insI,UI,UI){I k=d*(n-1);UI t=     (n&1)-1 ; x+=k; DQ(m, DQ(d, *z++=t^*x++;); x+=k;);R EVOK;}
 static AHDRR(bw1010insC,UC,UC){I k=d*(n-1);UC t=(UC)((n&1)-1); x+=k; DQ(m, DQ(d, *z++=t^*x++;); x+=k;);R EVOK;}
 
-DF1(jtbitwise1){F12IP;R CALL2IP(FAV(self)->valencefns[1],zeroionei(0),w,self);}
+DF1(jtbitwise1){DF12IP;R CALL2IP(FAV(self)->valencefns[1],zeroionei(0),w,self);}
 
 
 static AHDR2FN* bwC[16]={(AHDR2FN*)bw0000CC,(AHDR2FN*)bw0001CC,(AHDR2FN*)bw0010CC,(AHDR2FN*)bw0011CC, (AHDR2FN*)bw0100CC,(AHDR2FN*)bw0101CC,(AHDR2FN*)bw0110CC,(AHDR2FN*)bw0111CC,
@@ -164,7 +164,7 @@ static AHDR2FN* bwC[16]={(AHDR2FN*)bw0000CC,(AHDR2FN*)bw0001CC,(AHDR2FN*)bw0010C
 /* m e. 16+i.16      */
 // no IRS
 DF2(jtunderh2);
-DF2(jtbitwisechar){F12IP;A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A p,z;I b;I j,m,n,zn;AHDR2FN* ado;
+DF2(jtbitwisechar){DF12IP;A fs=FAV(self)->fgh[0]; A gs=FAV(self)->fgh[1]; A p,z;I b;I j,m,n,zn;AHDR2FN* ado;
  ARGCHK2(a,w);
  A x=a, y=w; I an=AN(a), wn=AN(w), ar=AR(a), wr=AR(w);
  if((-an&-wn&-(AT(a)&AT(w)&LIT))>=0)R jtunderh2(jt,a,w,self);  // empty or not LIT, revert
@@ -192,7 +192,7 @@ static AHDRRFN* bwinsI[16]={(AHDRRFN*)bw0000insI,(AHDRRFN*)bw0001insI,(AHDRRFN*)
 // where  m e. 16+i.16
 
 DF1(jtunderh1);
-DF1(jtbitwiseinsertchar){F12IP;A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;AHDRRFN* ado;
+DF1(jtbitwiseinsertchar){DF12IP;A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;AHDRRFN* ado;
  ARGCHK2(w,self);
  wr=AR(w); wn=AN(w); SETIC(w,n); z=FAV(self)->fgh[0]; fs=FAV(z)->fgh[0];  // z=(m b./), fs=m
  if((-(wn)&(SZI-n)&SGNIF(AT(w),LITX))>=0)R jtunderh1(jt,w,self);  // revert if not wn!=0 & n>SZI & LIT
@@ -224,4 +224,4 @@ DF1(jtbitwiseinsertchar){F12IP;A fs,z;I d,j,n,r,wn,wr,zatoms;UC*u,*v,*wv,x,*zv;A
 }
 
 // 1&(17 b.) w, i. e. test even/odd.   Run through atomic2, except when w is an atom; then return canned 0/1
-DF1(jtisodd){F12IP; if((AR(w)|(AT(w)&~(INT+B01)))==0)R zeroionei(BIV0(w)&1); R jtatomic2(jtfg,zeroionei(1),w,FAV(self)->fgh[1]);}
+DF1(jtisodd){DF12IP; if((AR(w)|(AT(w)&~(INT+B01)))==0)R zeroionei(BIV0(w)&1); R jtatomic2(jtfg,zeroionei(1),w,FAV(self)->fgh[1]);}

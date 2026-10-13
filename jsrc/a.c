@@ -7,12 +7,12 @@
 
 // These routines support IRS iff the underlying verb does, so all we have to do is switch the ranks if any and vector on to the function
 // create inplace bits as copy of W, or swap A & W
-static DFI1(swap1){IARG1 F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; jtfg=MOVEIPWW(jtfg);
+static DFI1(swap1){IARG1 DF12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; jtfg=MOVEIPWW(jtfg);
  // a~ carried the IRS flag from a and thus we might have ranks set.  If so, use them, and no need to check agreement again.  For ease, we just use whatever is set
  A2LINKIF(FAV(fs)->flag&VFUSEDOK2,jtfg,wfg,wfg)
  R f2(jtfg,wfg,wfg,fs);   // duplicate arg, keep rank if any
 }
-static DFI2(swap2){IARG2 F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; jtfg=MOVEIPWA(jtfg);
+static DFI2(swap2){IARG2 DF12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; jtfg=MOVEIPWA(jtfg);
  A2LINKIF(FAV(fs)->flag&VFUSEDOK2,jtfg,wfg,afg)
  R f2(jtfg,wfg,afg,fs);   // swap arg order, keep ranks if any
 }
@@ -45,12 +45,12 @@ static const B booltab[64]={
  1,0,0,0, 1,0,0,1, 1,0,1,0, 1,0,1,1,  1,1,0,0, 1,1,0,1, 1,1,1,0, 1,1,1,1,
 };
 
-static DF2(jtbdot2){F12IP;R from(plusA(duble(cvt(B01,a)),cvt(B01,w)),FAV(self)->fgh[2]);}  // dyad b. (2*a + w) { h
+static DF2(jtbdot2){DF12IP;R from(plusA(duble(cvt(B01,a)),cvt(B01,w)),FAV(self)->fgh[2]);}  // dyad b. (2*a + w) { h
 
-static DF1(jtbdot1){F12IP;R bdot2(num(0),w,self);}
+static DF1(jtbdot1){DF12IP;R bdot2(num(0),w,self);}
 
 // (a b.) w
-static DF1(jtbasis1){F12IP;A fs=FAV(self)->fgh[0]; A z;D*x;I j;V*v;
+static DF1(jtbasis1){DF12IP;A fs=FAV(self)->fgh[0]; A z;D*x;I j;V*v;
  F1RANK(0,jtbasis1,self);
  RZ(w=vi(w));  // force to INT type
  switch(AV(w)[0]){   // switch on arg
@@ -160,7 +160,7 @@ static I jtint0(J jt,A w){A x;
  R w&&INT+B01&AT(w)?BIV0(w):IMIN;
 }
 
-static DF2(jtmemo12){F12IP;A fs=FAV(self)->fgh[0];A z;I x,y;   // w is 0 for monad
+static DF2(jtmemo12){DF12IP;A fs=FAV(self)->fgh[0];A z;I x,y;   // w is 0 for monad
  ARGCHK2(a,w); w=EPDYAD?w:0; AF f12=FAV(fs)->valencefns[!!w];
  x=int0(a); y=w&&x!=IMIN?int0(w):x;  // get arg value, IMIN if not memoable; for monad let y=x
  if(MIN(x,y)==IMIN)R CALL12(w,f12,a,w,fs);  // IMIN is unmemoable, run fn

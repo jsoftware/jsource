@@ -228,7 +228,7 @@ static I debugnewi(I i, DC thisframe, A self){
 #define IFNOTOB(likelihood) if(likelihood(ic>OBCW))  // true if i has not gone off the end of the defn)
 // Processing of explicit definitions, line by line.  Bivalent, called as y vb vb or x y vb.  If JTXDEFMODIFIER is set,
 // it's a modifier, called as u adv adv or u v conj
-DF2(jtxdefn){F12IP;
+DF2(jtxdefn){DF12IP;
  V *sv=FAV(self); I sflg=sv->flag;   // pointer to definition, and flags therefrom
   PROLOG(0048);
 
@@ -734,7 +734,7 @@ bodyend: ;  // we branch to here to exit with z set to result
 }
 
 // execution of u : v, selecting the version of self & function to use based on valence.  Bivalent, called only from parse/unquote with w,self,self or a,w,self
-static DF2(xv12){F12IP;I dyad=self!=w; self=FAV(self)->fgh[dyad]; w=dyad?w:self; RETF((FAV(self)->valencefns[dyad])(jt,a,w,self))}
+static DF2(xv12){DF12IP;I dyad=self!=w; self=FAV(self)->fgh[dyad]; w=dyad?w:self; RETF((FAV(self)->valencefns[dyad])(jt,a,w,self))}
 
 // Nilad.  The caller has just executed an entity to produce an operator.  If we are debugging/pm'ing, AND the operator comes from a named entity, we need to extract the
 // name so we can debug/time it.  We do this by looking at the debug stack: if we are executing a CALL, we get the name from there.  If we are
@@ -746,7 +746,7 @@ static F1(jtxopcall){F12IP;R jt->uflags.trace&&jt->sitop&&DCCALL==jt->sitop->dct
 // If we have to add a name for debugging purposes, do so
 // Flag the resulting operator with VXOP, and remove VNONAME+VNOSELF for it so that the compound can be fixed
 // self->flag always has VXOPR+VNONAME+VNOSELF
-DF2(jtxop2){F12IP;A ff,x;
+DF2(jtxop2){DF12IP;A ff,x;
  ARGCHK2(a,w);
  A aw=a; self=AT(w)&(ADV|CONJ)?w:self; aw=AT(w)&(ADV|CONJ)?aw:w; w=AT(w)&(ADV|CONJ)?0:w; // we are called as u adv or u v conj
  I flags=(FAV(self)->flag|VXOP)&~(VNONAME+VNOSELF); flags|=FAV((AT(aw)&NOUN?ds(CDUMMY):aw))->flag&FAV((AT(a)&NOUN?ds(CDUMMY):a))->flag&VNONAME+VNOSELF;  // set VXOP and perhaps VNONAME+VNOSELF
@@ -827,7 +827,7 @@ static F1(jtlineit){F12IP;
 }
 
 // w is a rank-1 string.  We scan it for {{ }} and return the boxed result.  self is invalid
-static DF1(jtboxddline){F12IP;RZ(w=ddtokens(w,0b1110)) R box(w);}
+static DF1(jtboxddline){DF12IP;RZ(w=ddtokens(w,0b1110)) R box(w);}
 
 
 // Convert ASCII w to boxed lines.  w is the argument to m : w and thus might be from 9 : w or might contain

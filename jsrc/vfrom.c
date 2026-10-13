@@ -6,7 +6,7 @@
 #include "j.h"
 
 
-DF1(jtcatalog){F12IP;PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s,t=0,*u;
+DF1(jtcatalog){DF12IP;PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,n,p,*qv,r=0,*s,t=0,*u;
  F1RANK(1,jtcatalog,self);
  ASSERTF(!ISSPARSE((AT(w))),EVNONCE,"sparse arrays not supported");
  if((-AN(w)&-(AT(w)&BOX))>=0)R box(w);   // empty or unboxed, just box it
@@ -630,7 +630,7 @@ DFI2(jtfrom){A z;
 }   /* a{"r w main control */
 
 DF2(fork242);
-DF2(jtsfrom){F12IP;
+DF2(jtsfrom){DF12IP;
  if(likely(!ISSPARSE((AT(w))))){
   // not sparse, transfer to code to handle it if nonempty numeric.  If nonnumeric (must be boxed),
   // if the arg is empty, the details are tricky depending on the type and we just revert to boxed code
@@ -690,7 +690,7 @@ static F2(jtquicksel){F12IP;I index;
  R AT(w)&BOX?C(AAV(w)[index]):w;  // select the box, or return the entire unboxed w
 }
 
-DF2(jtfetch){F12IP;A*av, z;I n;
+DF2(jtfetch){DF12IP;A*av, z;I n;
  F2RANKW(1,RMAX,jtfetch,self);  // body of verb applies to rank-1 a, and must turn pristine off if used higher, since there may be repetitions.
  if(unlikely(ISSPARSE(AT(w)|AT(a)))){   // sparse x or y
   ASSERT(!ISSPARSE(AT(a)),EVNONCE)  // selector must be dense

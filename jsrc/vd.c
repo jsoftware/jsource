@@ -55,7 +55,7 @@ static A jtrinvip(J jt,A w,I n,I ncomp){PROLOG(0066);A ai,bx,di,z;I m;
 
 
 // 128!:1 Invert Upper-triangular matrix R
-DF1(jtrinv){F12IP;
+DF1(jtrinv){DF12IP;
  ARGCHK1(w);
  F1RANK(2,jtrinv,self);
  ASSERT(AR(w)==2,EVRANK);  // rank at least 2
@@ -190,7 +190,7 @@ static F1(jtltqip){F12IP;PROLOG(0067);A l0,l1,y,z;
 }
 
 // qr (?) decomposition of w, returns q;r
-DF1(jtqr){F12IP;A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
+DF1(jtqr){DF12IP;A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  F1RANK(2,jtqr,self);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  ASSERT(AT(w)&B01+INT+FL+CMPX+QP,EVDOMAIN);
@@ -402,7 +402,7 @@ static A jtgesv(J jt,A a,A w,B *handled){A z,zs;
 }
 
 // a %. w  for all types
-DF2(jtmdiv){F12IP;PROLOG(0069);A z;I t;
+DF2(jtmdiv){DF12IP;PROLOG(0069);A z;I t;
  F2RANK(RMAX,2,jtmdiv,self);
  if(ISSPARSE(AT(a)))RZ(a=denseit(a));
  t=AT(w);

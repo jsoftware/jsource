@@ -197,29 +197,29 @@ A jtfolk(J jtfg,A f,A g,A h){F12IP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fla
 }
 
 // Handlers for trains
-static DF1(taAV){F12IP;TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,0);}  // adv A A/V
-static DF2(tca){F12IP;TDECL; A t; RZ(df2(t,a,w,fs)); R hook(t,gs,0);}  // conj C A
-static DF1(tNVc){F12IP;TDECL; A z; R df2(z,fs,w,gs);}  // adv  V C or N C
-static DF1(tac){F12IP;TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,w);}  // adv  A C  adverbial hook
-static DF1(tcNV){F12IP;TDECL; A z; R df2(z,w,gs,fs);}  // adv  C V or C N
-static DF2(tcc){F12IP;TDECL; A t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,gs)); R hook(t,tt,0);}  // conj C C
+static DF1(taAV){DF12IP;TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,0);}  // adv A A/V
+static DF2(tca){DF12IP;TDECL; A t; RZ(df2(t,a,w,fs)); R hook(t,gs,0);}  // conj C A
+static DF1(tNVc){DF12IP;TDECL; A z; R df2(z,fs,w,gs);}  // adv  V C or N C
+static DF1(tac){DF12IP;TDECL; A t; RZ(df1(t,w,fs)); R hook(t,gs,w);}  // adv  A C  adverbial hook
+static DF1(tcNV){DF12IP;TDECL; A z; R df2(z,w,gs,fs);}  // adv  C V or C N
+static DF2(tcc){DF12IP;TDECL; A t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,gs)); R hook(t,tt,0);}  // conj C C
 
-static DF1(taaa){F12IP;TDECL; A z,t; RZ(df1(t,w,fs)); RZ(df1(z,t,gs)); R df1(t,z,hs);}  // adv A A A
-static DF2(tNVvc){F12IP;TDECL; A z,t; RZ(df2(t,a,w,hs)); R hook(fs,gs,t);}  // conj NV V C  - C may return another C
-static DF2(tcVCc){F12IP;TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,hs)); R hook(t,gs,tt);}  // conj C V/C C
-static DF2(taav){F12IP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df1(tt,w,gs)); R hook(t,tt,hs);}  // conj A A V
-static DF2(tcaa){F12IP;TDECL; A z,t; RZ(df2(t,a,w,fs)); RZ(df1(z,t,gs)); R df1(t,z,hs);}  // conj C A A
-static DF1(tNVca){F12IP;TDECL; A z,t; RZ(df1(t,w,hs)); R hook(fs,gs,t);}  // adv N/V C A
-static DF2(tNVcc){F12IP;TDECL; A z,t; RZ(df2(t,a,w,hs)); R hook(fs,gs,t);}  // conj N/V C C
-static DF1(taVCNV){F12IP;TDECL; A z,t; RZ(df1(t,w,fs)); R hook(t,gs,hs);}  // adv A V/C N/V
-static DF2(taca){F12IP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df1(tt,w,hs)); R hook(t,gs,tt);}  // conj A C A
-static DF2(tacc){F12IP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df2(tt,a,w,hs)); R hook(t,gs,tt);}  // conj A C C
-static DF2(tcVCNV){F12IP;TDECL; A z,t; RZ(df2(t,a,w,fs)); R hook(t,gs,hs);}  // conj C V/C N/V
-static DF2(tcca){F12IP;TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df1(tt,w,hs)); R hook(t,gs,tt);}  // conj C C A
+static DF1(taaa){DF12IP;TDECL; A z,t; RZ(df1(t,w,fs)); RZ(df1(z,t,gs)); R df1(t,z,hs);}  // adv A A A
+static DF2(tNVvc){DF12IP;TDECL; A z,t; RZ(df2(t,a,w,hs)); R hook(fs,gs,t);}  // conj NV V C  - C may return another C
+static DF2(tcVCc){DF12IP;TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df2(tt,a,w,hs)); R hook(t,gs,tt);}  // conj C V/C C
+static DF2(taav){DF12IP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df1(tt,w,gs)); R hook(t,tt,hs);}  // conj A A V
+static DF2(tcaa){DF12IP;TDECL; A z,t; RZ(df2(t,a,w,fs)); RZ(df1(z,t,gs)); R df1(t,z,hs);}  // conj C A A
+static DF1(tNVca){DF12IP;TDECL; A z,t; RZ(df1(t,w,hs)); R hook(fs,gs,t);}  // adv N/V C A
+static DF2(tNVcc){DF12IP;TDECL; A z,t; RZ(df2(t,a,w,hs)); R hook(fs,gs,t);}  // conj N/V C C
+static DF1(taVCNV){DF12IP;TDECL; A z,t; RZ(df1(t,w,fs)); R hook(t,gs,hs);}  // adv A V/C N/V
+static DF2(taca){DF12IP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df1(tt,w,hs)); R hook(t,gs,tt);}  // conj A C A
+static DF2(tacc){DF12IP;TDECL; A z,t, tt; RZ(df1(t,a,fs)); RZ(df2(tt,a,w,hs)); R hook(t,gs,tt);}  // conj A C C
+static DF2(tcVCNV){DF12IP;TDECL; A z,t; RZ(df2(t,a,w,fs)); R hook(t,gs,hs);}  // conj C V/C N/V
+static DF2(tcca){DF12IP;TDECL; A z,t, tt; RZ(df2(t,a,w,fs)); RZ(df1(tt,w,hs)); R hook(t,gs,tt);}  // conj C C A
 
 
 
-static DF1(jthkiota){F12IP;A a,e;I n;P*p;
+static DF1(jthkiota){DF12IP;A a,e;I n;P*p;
  ARGCHK1(w);
  SETIC(w,n);
  if(unlikely((AT(w)&SPARSE+B01)==SPARSE+B01)&&1==AR(w)){   // sparse boolean list
@@ -232,7 +232,7 @@ revert: ;
  R jthook1cell(jt,w,self);
 }    /* special code for (# i.@#) y */
 
-static DF1(jthkodom){F12IP;I n,*v;
+static DF1(jthkodom){DF12IP;I n,*v;
  ARGCHK1(w);
  if(INT&AT(w)&&1==AR(w)){
   n=AN(w); v=AV(w); DO(n, if(v[i]<0)goto revert;)  // revert if not all-nonneg integer list
@@ -242,7 +242,7 @@ revert: ;
  R jthook1cell(jt,w,self);
 }    /* special code for (#: i.@(* /)) */
 
-static DF1(jthkindexofmaxmin){F12IP;
+static DF1(jthkindexofmaxmin){DF12IP;
  ARGCHK2(w,self);
  // The code for ordinary search and min/max is very fast.  There's no value in trying to improve it.  The only
  // thing we have to add is setting intolerant comparison on the search, since we know we will be looking for something that is en exact match
@@ -250,7 +250,7 @@ static DF1(jthkindexofmaxmin){F12IP;
 }    /* special code for (i.<./) (i.>./) (i:<./) (i:>./) */
 
 // (compare L.) dyadic
-static DF2(jthklvl2){F12IP;
+static DF2(jthklvl2){DF12IP;
  F2RANK(0,RMAX,jthklvl2,self);
  I comparand; comparand=rei0(a);  // get value to compare against
  RETF(num(PEXT0(FAV(self)->flag,VFHKLVLGTX,1)^levelle(jt,w,comparand-(FAV(self)->flag&VFHKLVLDEC))));  // decrement for < or >:; complement for > >:
@@ -272,12 +272,12 @@ PRIM cmpabsblk[6] = {
 };
 
 // (compare |) dyadic, reverting if not float
-static DF2(jthkcmpabs){F12IP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtfg,a,w,self);
+static DF2(jthkcmpabs){DF12IP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtfg,a,w,self);
  z=jtatomic2(jtfg,a,w,(A)((I)&cmpabsblk[FAV(self)->localuse.lu1.linkvb]));
  RETF(z);
 }
 // (compare!.n |) dyadic, reverting if not float
-static DF2(jthkcmpfitabs){F12IP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtfg,a,w,self);
+static DF2(jthkcmpfitabs){DF12IP;A z; if(unlikely(!(AT(a)&AT(w)&FL)))R jthook2cell(jtfg,a,w,self);
  PUSHCCT(FAV(FAV(self)->fgh[0])->localuse.lu1.cct) z=jtatomic2(jtfg,a,w,(A)((I)&cmpabsblk[FAV(self)->localuse.lu1.linkvb]));
  POPCCT RETF(z);
 }
@@ -368,9 +368,9 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
    jteformat(jt,ds(CENQUEUE),z,zeroionei(1),0); R0;
   }
   if(rtn==0)R df1(z,t==VERB?a:w,t==VERB?w:a);  // V N, N/V A: we must execute immediately rather than returning a modifier for the trident.  VERB means N/V A.  Execution is x,self,self
-  // special processing: for display purposes only, we flag the gerunds in gerund@. gerund` gerund`:   `gerund ^:gerund
-  if(BOX&AT(a)&&AT(w)&CONJ&&(FAV(w)->id==CATDOT||FAV(w)->id==CGRAVE||FAV(w)->id==CGRCO)&&gerexact(a))flag+=VGERL;  // detect gerund@.  gerund`  gerund `:   and mark the compound
-  if(BOX&AT(w)&&AT(a)&CONJ&&(FAV(a)->id==CGRAVE||FAV(a)->id==CPOWOP&&1<AN(w))&&gerexact(w))flag+=VGERR;  // detect `gerund and ^:gerund  and mark the compound
+  // special processing: for display purposes only, we flag the gerunds in gerund@. gerund` gerund`:   `gerund ^:gerund and use the verbified gerund as the arg - only if all are ACV
+  if(BOX&AT(a)&&AT(w)&CONJ&&(FAV(w)->id==CATDOT||FAV(w)->id==CGRAVE||FAV(w)->id==CGRCO)&&gerexact(a)){A r; WITHJTJERROFF(r=fxeachv(1-(RMAX+1),a);) if(likely(r!=0)){flag+=VGERL; a=r;}}  // detect gerund@.  gerund`  gerund `:   and mark the compound
+  if(BOX&AT(w)&&AT(a)&CONJ&&(FAV(a)->id==CGRAVE||FAV(a)->id==CPOWOP&&1<AN(w))&&gerexact(w)){A r; WITHJTJERROFF(r=fxeachv(1-(RMAX+1),w);) if(likely(r!=0)){flag+=VGERR; w=r;}}  // detect `gerund and ^:gerund  and mark the compound
   // if the unexecutable bident is all nouns or primitive ACVs, mark the derived modifier as NAMELESS.  This is aimed mostly at each and every
 
   I flag2=VF2NAMELESS, ffix=VNONAME+VNOSELF; A ta=a; ta=AT(a)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX)); ffix&=FAV(ta)->flag;  // CPLUS to make nouns look primitive

@@ -5,7 +5,7 @@
 
 #include "j.h"
 
-DFI1(jtbehead){F12IP; R jtdrop(jtfg,zeroionei(1),wfg,0);}  //  }. with IRS
+DFI1(jtbehead){DF12IP; R jtdrop(jtfg,zeroionei(1),wfg,0);}  //  }. with IRS
 FI1(jtcurtail){F12IP; R jtdrop(jtfg,num(-1),wfg,0);}  // }: with IRS
 
 F1(jtshift1){F12IP;R drop(num(-1),over(zeroionei(1),w));}  // !.!.f, without IRS

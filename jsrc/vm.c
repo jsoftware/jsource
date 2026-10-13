@@ -589,7 +589,7 @@ F2(jtrdot2){F12IP;R tymes(a,rdot1(w));}
 F1(jtpolar){F12IP;ARGCHK1(w); A z; R cvt((AT(w)&SPARSE)+FL,dfv2(z,v2(10L,12L),w,qq(ds(CCIRCLE),v2(1L,0L))));}
 
 // +. y split into real & imaginary parts.  No IRS
-DF1(jtrect){F12IP;A e,z;B b;I r,t;P*wp,*zp;Z c;
+DF1(jtrect){DF12IP;A e,z;B b;I r,t;P*wp,*zp;Z c;
  ARGCHK1(w); 
  t=AT(w); r=AR(w);
  ASSERT(!AN(w)||t&NUMERIC,EVDOMAIN);

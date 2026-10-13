@@ -11,7 +11,7 @@
 // This routine calls a 'named' function, which was created by name~ or the equivalent for a stacked verb.
 // It also handles pseudo-named functions, which are anonymous entities that need to be given a temporary name
 // when they are running under debug.  Pseudo-named functions are created by namerefop.  We need to run them here so they get the debug side-effects of having a name.
-DF2(jtunquote){F12IP;A z;
+DF2(jtunquote){DF12IP;A z;
  // we stack sf ($:), curname, and local/global symbols, restoring them all on return (except perhaps globals which
  // is changed by cocurrent).  The layout in JTT must match the layout here
  struct unqstack {
@@ -432,7 +432,7 @@ F2(jtnamerefop){F12IP;V*v;
 // u./v.
 // We process this as 'u'~ where the name is flagged as NMIMPLOC
 // Bivalent: called with (a,w,self) or (w,self,self).  We treat as dyad but turn it into monad if input w is not a noun
-DF2(jtimplocref){F12IP;
+DF2(jtimplocref){DF12IP;
  A childself=JT(jt,implocref)[FAV(self)->id&1];  // pull from namerefs for u and v
  R unquote(a,EPDYAD?w:childself,childself); // call as (w,self,self) or (a,w,self)
 }

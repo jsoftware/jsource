@@ -1344,7 +1344,7 @@ A jtindexofsub(J jtfg,I mode,A afg,A wfg){A h=0,hi=mtv,z;B mk=wfg==mark,th;fauxb
 
 // verb to vector combine@e. compounds.  The i. code is in the self
 // because these are e. compounds we swap a and w.  No IRS
-DF2(jtcombineeps){F12IP;ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>>3)&7),w,a);}
+DF2(jtcombineeps){DF12IP;ARGCHK3(a,w,self);R indexofsub(II0EPS+((FAV(self)->flag>>3)&7),w,a);}
 
 // verb to handle compounds like m&i. e.&n .  m/n has already been hashed and the result saved away
 A jtindexofprehashed(J jtfg,A a,A w,A hs,A self){F12IP;A h,hi,*hv,x,z;AF fn;I ar,*as,at,c,f1,k,m,mode,n,
@@ -1390,7 +1390,7 @@ A jtindexofprehashed(J jtfg,A a,A w,A hs,A self){F12IP;A h,hi,*hv,x,z;AF fn;I ar
 // Now, support for the primitives that use indexof
 
 // x i. y, with IRS
-DFI2(jtindexof){IARG2 F12IP; R indexofsub(IIDOT,afg,wfg);}
+DFI2(jtindexof){IARG2 DF12IP; R indexofsub(IIDOT,afg,wfg);}
      /* a i."r w */
 
 // x i: y, with IRS
@@ -1438,26 +1438,26 @@ FI2(jteps){
 }    /* a e."r w */
 
 // I.@~: y   does not have IRS
-DF1(jtnubind){F12IP;
+DF1(jtnubind){DF12IP;
  ARGCHK1(w);
  R ISSPARSE(AT(w))?icap(nubsieve(w)):indexofsub(INUBI,w,w);
 }    /* I.@~: w */
 
 // i.@(~:!.0) y     does not have IRS
-DF1(jtnubind0){F12IP;A z;
+DF1(jtnubind0){DF12IP;A z;
  ARGCHK1(w);
  PUSHCCT(1.0) z=ISSPARSE(AT(w))?icap(nubsieve(w)):indexofsub(INUBI,w,w); POPCCT
  R z;
 }    /* I.@(~:!.0) w */
 
 // I.@e. y   does not have IRS
-DF2(jtepsind){F12IP;
+DF2(jtepsind){DF12IP;
  ARGCHK2(a,w);
  R unlikely(ISSPARSE(AT(w)|AT(w)))?jtupon2cell(jt,a,w,self):indexofsub(IIFBEPS,w,a);  // revert for sparse
 } 
 
 // i.@(e.!.0) y     does not have IRS
-DF2(jtepsind0){F12IP;A z;
+DF2(jtepsind0){DF12IP;A z;
  ARGCHK2(a,w);
  if(unlikely(ISSPARSE(AT(a)|AT(w))))R jtupon2cell(jt,a,w,self);  // revert for sparse
  PUSHCCT(1.0) z=indexofsub(IIFBEPS,w,a); POPCCT  // do operation intolerantly

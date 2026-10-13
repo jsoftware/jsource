@@ -878,7 +878,7 @@ F1(jtabase1){F12IP;A d,z;B*zv;I c,n,p,r,t,*v;UI x;
  RETF(z);
 }
 
-DF2(jtabase2){F12IP;A z;I an,ar,at,t,wn,wr,wt,zn;
+DF2(jtabase2){DF12IP;A z;I an,ar,at,t,wn,wr,wt,zn;
  ARGCHK2(a,w);
  an=AN(a); ar=AR(a); at=AT(a);
  wn=AN(w); wr=AR(w); wt=AT(w);

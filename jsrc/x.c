@@ -14,29 +14,29 @@
 // 0!:_1 set skip character for scripts (0!:_1 '' terminates script immediately; 0!:_1 c makes scripts discard lines till one starts with NB.c)
 // Behavior undefined if a script is not being read
 // Returns empty, which will not fail assert.
-static DF1(jtskipinscript){F12IP;
+static DF1(jtskipinscript){DF12IP;
  ARGCHK1(w);
  ASSERT(AT(w)&LIT,EVDOMAIN) ASSERT(AR(w)<=1, EVRANK) ASSERT(AN(w)<=1, EVLENGTH)
  jt->scriptskipbyte=AN(w)==0?255:CAV(w)[0];  // save the skip byte, or 255 for EOF
  R mtm;
 }
 
-static DF2(jttoggledissect12){F12IP; if(AT(w)&VERB)jt->dissectrunning^=1; else a=sc(jt->dissectrunning); R RETARG(a);}    // 9!:_4 toggle dissect status.  Bivalent.  Monad result is y, dyad result is current setting
+static DF2(jttoggledissect12){DF12IP; if(AT(w)&VERB)jt->dissectrunning^=1; else a=sc(jt->dissectrunning); R RETARG(a);}    // 9!:_4 toggle dissect status.  Bivalent.  Monad result is y, dyad result is current setting
 
 // undocumented 13!: functions, used to test condrange
-static DF2(jtfindrange){F12IP;
+static DF2(jtfindrange){DF12IP;
  ARGCHK2(a,w);
  I *av = AV(a);
  CR rng = condrange(AV(w),AN(w),av[0],av[1],av[2]);  // starting min, starting max, max range
  R v2(rng.min,rng.range);
 } // 13!:_1
-static DF2(jtfindrange4){F12IP;
+static DF2(jtfindrange4){DF12IP;
  ARGCHK2(a,w);
  I *av = AV(a);
  CR rng = condrange4(C4AV(w),AN(w),av[0],av[1],av[2]);
  R v2(rng.min,rng.range);
 }  // 13!:_2
-static DF2(jtfindrange2){F12IP;
+static DF2(jtfindrange2){DF12IP;
  ARGCHK2(a,w);
  I *av = AV(a);
  CR rng = condrange2(USAV(w),AN(w),av[0],av[1],av[2]);
@@ -44,7 +44,7 @@ static DF2(jtfindrange2){F12IP;
 }  // 13!:_3
 
 // 13!:_4  Return header info: k, flag, m, type, c, n, r
-static DF1(jthdrinfo){F12IP;A z;
+static DF1(jthdrinfo){DF12IP;A z;
  ARGCHK1(w);
  GAT0(z,INT,7,1);
  IAV1(z)[0]=AK(w); IAV1(z)[1]=AFLAG(w); IAV1(z)[2]=AM(w); IAV1(z)[3]=AT(w); IAV1(z)[4]=AC(w); IAV1(z)[5]=AN(w); IAV1(z)[6]=AR(w);
@@ -52,12 +52,12 @@ static DF1(jthdrinfo){F12IP;A z;
 }
 
 // 15!:24 <'name', query/set anchored.  name must be a global name found in the starting locale
-static DF1(jtanchor1){F12IP;
+static DF1(jtanchor1){DF12IP;
  ARGCHK1(w); ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AN(w)==1,EVLENGTH) A bc=C(AAV(w)[0]); ASSERT(AT(bc)&LIT,EVDOMAIN) ASSERT(AR(bc)<2,EVRANK) A nm; RZ(nm=nfs(AN(bc),CAV(bc),0)) ASSERT(vnm(NAV(nm)->n,NAV(nm)->s),EVILNAME) // audit name & get NM block
  ASSERT((w=jtprobequiet(jt,nm))!=0,EVVALUE) // look up the symbol, get its value.  scaf kludge! the value could be disappearing.  That seems vanishingly unlikely for the anchored flag in particular
  RETF(num(!!(AFLAG(w)&AFANCHORED)))  // return old value
 }
-static DF2(jtanchor2){F12IP; I newval=reb0(a);
+static DF2(jtanchor2){DF12IP; I newval=reb0(a);
  ARGCHK1(w); ASSERT(AT(w)&BOX,EVDOMAIN) ASSERT(AN(w)==1,EVLENGTH) A bc=C(AAV(w)[0]); ASSERT(AT(bc)&LIT,EVDOMAIN) ASSERT(AR(bc)<2,EVRANK) A nm; RZ(nm=nfs(AN(bc),CAV(bc),0)) ASSERT(vnm(NAV(nm)->n,NAV(nm)->s),EVILNAME)  // audit name & get NM block
  ASSERT((w=jtprobequiet(jt,nm))!=0,EVVALUE) // look up the symbol, get its value.  scaf kludge! the value could be disappearing.  That seems vanishingly unlikely for the anchored flag in particular
  ASSERT(!(AFLAG(w)&AFRO+AFVIRTUAL),EVRO) ASSERT(AC(w)==ACUC1,EVUNTIMELY) ASSERT(!(newval&(AFLAG(w)>>AFANCHOREDX)),EVUNTIMELY)   // error if value is read-only or already aliased, or has been anchored already
@@ -66,7 +66,7 @@ static DF2(jtanchor2){F12IP; I newval=reb0(a);
 } // error if trying to mark a block that is already aliased
 
 // 9!:48 and 9!:49, query/set exit sentence
-static DF1(jtexitsq){F12IP;
+static DF1(jtexitsq){DF12IP;
  ARGCHK1(w); ASSERTMTV(w);  // w must be empty
  A exp=0; while(!__atomic_compare_exchange_n(&JT(jt,exitsentence), &exp, (A)~0, 0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))exp=exp==(A)~0?0:exp;  // wait till we have read the sentence & written ~0 to it.  Ignore ~0, which means busy
  // We have the value, and have stored ~0 as a busy signal.  Protect the block, restore it to jt, and return it
@@ -74,7 +74,7 @@ static DF1(jtexitsq){F12IP;
  RETF(exp?exp:aqq)  // return empty string if no value
 }
 
-static DF1(jtexitss){F12IP;
+static DF1(jtexitss){DF12IP;
  ARGCHK1(w) RZ(w=vs(w)) if(AN(w)!=0){ra(w)}else w=0;  // w must be a string; protect it is not empty, otherwise set to 0
  A exp=0; while(!__atomic_compare_exchange_n(&JT(jt,exitsentence), &exp, w, 0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))exp=exp==(A)~0?0:exp;  // wait till we have read the sentence & written w to it.  Ignore ~0, which means busy
  if(exp!=0)fa(exp)   // if there was an old value, free it

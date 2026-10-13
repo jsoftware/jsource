@@ -190,7 +190,7 @@ static DFI1(jtgsuffix){A h,*hv,z,*zv;I m,n;
  SETIC(w,n); 
  h=FAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV1(z); I imod=0;
- DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(h,drop(sc(i),w),C(hv[imod]))); ++imod;);
+ DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(h,drop(sc(i),w),hv[imod])); ++imod;);   //   pyx cannot return a verb.
  R jtopenforassembly(jt,z);
 }    /* g\."r w for gerund g */
 
@@ -337,18 +337,18 @@ static F2(jtomask){F12IP;A c,r,x,y;I m,n,p;
  R reshapeW(over(r,c),over(x,y));
 }
 
-static DF2(jtgoutfix){F12IP;A h,*hv,x,z,*zv;I m,n;
+static DF2(jtgoutfix){DF12IP;A h,*hv,x,z,*zv;I m,n;
  RZ(x=omask(a,w));
  SETIC(x,n);
  h=FAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
  GATV0(z,BOX,n,1); zv=AAV1(z); I imod=0;
- DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(h,repeat(from(sc(i),x),w),C(hv[imod]))); ++imod;);
+ DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(h,repeat(from(sc(i),x),w),hv[imod])); ++imod;);    //   pyx cannot return a verb.
  R jtopenforassembly(jt,z);
 }
 
-static DF2(jtoutfix){F12IP;PROLOG(117);A fs=FAV(self)->fgh[0]; A z; F2RANK(0,RMAX,jtoutfix,self) z=eachl(omask(a,w),w,atop(fs,ds(CPOUND))); EPILOG(z);}
+static DF2(jtoutfix){DF12IP;PROLOG(117);A fs=FAV(self)->fgh[0]; A z; F2RANK(0,RMAX,jtoutfix,self) z=eachl(omask(a,w),w,atop(fs,ds(CPOUND))); EPILOG(z);}
 
-static DF2(jtofxinv){F12IP;A f,fs,z;C c;I t;V*v;
+static DF2(jtofxinv){DF12IP;A f,fs,z;C c;I t;V*v;
  F2RANKW(0,RMAX,jtofxinv,self);
  fs=FAV(self)->fgh[0]; f=FAV(fs)->fgh[0]; v=FAV(f); c=v->id; t=AT(w);  // self = f/\. fs = f/  f = f  v = verb info for f
  if(!(c==CPLUS||c==CBDOT&&t&INT||((c&-2)==CEQ)&&t&B01))R outfix(a,w,self);  // if not +/\. or m b./\. or =/\. or ~:/\.
@@ -357,7 +357,7 @@ static DF2(jtofxinv){F12IP;A f,fs,z;C c;I t;V*v;
  if(jt->jerr==EVNAN){RESETERR; R outfix(a,w,self);}else R z;  // failover if NaN
 }    /* a f/\. w where f has an "undo" */
 
-static DF2(jtofxassoc){F12IP;A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
+static DF2(jtofxassoc){DF12IP;A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 adocv;
  F2RANKW(0,RMAX,jtofxassoc,self);
  SETIC(w,m); k=rei0(a); c=ABSOFLO(k,IMAX);  // m = # items in w; k is value of a; c is # items per suffix
  f=FAV(self)->fgh[0]; x=FAV(f)->fgh[0]; v=FAV(x); id=CBDOT==v->id?(C)AV(v->fgh[1])[0]:v->id;  // self = f/\. f = f/  x = f  v = verb info for f
@@ -390,14 +390,14 @@ static DF2(jtofxassoc){F12IP;A f,i,j,p,s,x,z;C id,*zv;I c,d,k,kc,m,r,t;V*v;VA2 a
  R z;
 }    /* a f/\. w where f is an atomic associative fn */
 
-static DF1(jtiota1rev){F12IP;I j; SETIC(w,j); R apv(j,j,-1L);}
+static DF1(jtiota1rev){DF12IP;I j; SETIC(w,j); R apv(j,j,-1L);}
 
 F1(jtbsdot){F12IP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag&~(VNOLOCCHG+VNONAME+VNOSELF);C id;V*v;  // init flag is IRS1
  ARGCHK1(w);
  A z; fdefallo(z)
  if(NOUN&AT(w)){  // noun (gerund) case
   A fixw; RZ(fixw=fxeachv(1L,w));
-  fdeffill(z,0,CBSDOT,VERB, jtgsuffix,jtgoutfix, w,0L,fixw, VGERL|flag|gflg(fixw), RMAX,0L,RMAX); RETF(z);
+  fdeffill(z,0,CBSDOT,VERB, jtgsuffix,jtgoutfix, fixw,0L,fixw, VGERL|flag|gflg(fixw), RMAX,0L,RMAX); RETF(z);  // use verbified gerund
  }
  // falling through, u  is a verb
  v=FAV(w);  // verb info for w

@@ -169,7 +169,7 @@ _Static_assert((PTRPAR^PTMARKBACK&0xffff0000)==0,"MARKBACK must equal RPAR for e
 
 // multiple assignment not to constant names.  self has parms.  ABACK(self) is the symbol table to assign to, valencefns[0] is preconditioning routine to open value or convert it to AR
 // We flag all multiple assignments as final because the value is protected in the source
-static DF2(jtisf){F12IP;A am, mw; RZ(am=onm(a)); RZ(mw=CALL1(FAV(self)->valencefns[0],w,self)); RZ(symbisdel(am,mw,ABACK(self))); R num(0);} 
+static DF2(jtisf){DF12IP;A am, mw; RZ(am=onm(a)); RZ(mw=CALL1(FAV(self)->valencefns[0],w,self)); RZ(symbisdel(am,mw,ABACK(self))); R num(0);} 
 
 // assignment other than name =[.:], single or multiple
 // jt has flag set for final assignment (passed into symbis)

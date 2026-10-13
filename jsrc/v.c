@@ -84,7 +84,7 @@ static A jtlr2(J jt,A afg,A wfg){
 
 // ][, with IRS.  Must not call EPILOG because the verb propagates WILLOPEN.  When rank is specified ]"n does not propagate
 FI2(jtleft2){IARG2 F12IP; if(likely((acr&wcr)==RMAX))RETF(RETARG(a)); RETF(jtlr2(jt,wfg,afg));}  // swap a & w, and their ranks
-DFI2(jtright2){IARG2 F12IP;if(likely((acr&wcr)==RMAX))RETF(RETARG(w)); RETF(jtlr2(jt,afg,wfg));}
+DFI2(jtright2){IARG2 DF12IP;if(likely((acr&wcr)==RMAX))RETF(RETARG(w)); RETF(jtlr2(jt,afg,wfg));}
 
 F1(jtright1){F12IP;RETF(RETARG(w));} // no IRS
 // lev, dex, and ident - identity adverb/conjunction  (ident uses the same code as lev)
@@ -93,7 +93,7 @@ F2(jtlev){F12IP;RETF(RETARG(a));}  F2(jtdex){F12IP;RETF(RETARG(w));}
 
 
 // i. y
-DF1(jtiota){F12IP;A z;I m,n,*v;
+DF1(jtiota){DF12IP;A z;I m,n,*v;
  F1RANK(1,jtiota,self);
  PROLOG(000);
  if(AT(w)&XNUM+RAT)R cvt(XNUM,iota(vi(w)));  // if extended, take integer and convert
@@ -106,7 +106,7 @@ DF1(jtiota){F12IP;A z;I m,n,*v;
 }
 
 // i: w
-DF1(jtjico1){F12IP;A y,z;B b;D d,*v;I c,m,n; 
+DF1(jtjico1){DF12IP;A y,z;B b;D d,*v;I c,m,n; 
  F1RANK(0,jtjico1,self);  // run on every atom of w
  RZ(y=ccvt(FL,rect(w),0)); v=DAV(y); d=*v;  // convert to complex, d=real part of value
  m=v[1]?rei0(tail(y)):rei0(tymes(mag(w),num(2)));  // m=#steps: imaginary part if nonzero; otherwise 2*|w
@@ -144,7 +144,7 @@ DFI1(jtnum1){A z=0;
  mvc(natoms<<k,voidAV(z),1LL<<k,voidAV(a));  // could use voidAV0(a)
  R z;
 }
-DF2(jtnum2){F12IP;ARGCHK3(a,w,self); RETF(FAV(self)->fgh[2])}
+DF2(jtnum2){DF12IP;ARGCHK3(a,w,self); RETF(FAV(self)->fgh[2])}
 
 F2(jtfromr){F12IP;ARGCHK2(a,w); A z; R IRS2(jtfrom,jt,a, RMAX,w,1L,0);} // no agreement check because left rank is infinite - no frame  {"_ 1
 F2(jtrepeatr){F12IP;ARGCHK2(a,w); A z; R z=IRS2(jtrepeat,jt,a, RMAX,w,1L,0);}  // #"_ 1
@@ -153,7 +153,7 @@ A jttaker(J jt,I n,A w){ARGCHK1(w); A a,z; RZ(a=sc(n)); R z=IRS2(jttake,jt,a, RM
 A jtdropr(J jt,I n,A w){ARGCHK1(w); A a,z; RZ(a=sc(n)); R z=IRS2(jtdrop,jt,a, RMAX,w,1L,0);}  // n }."1 w
 
 // I. y
-DF1(jticap){F12IP;A a,e;I n;P*p;
+DF1(jticap){DF12IP;A a,e;I n;P*p;
  F1RANK(1,jticap,self);
  SETIC(w,n);
  if(unlikely((AT(w)&SPARSE+B01)==SPARSE+B01)){
@@ -164,7 +164,7 @@ DF1(jticap){F12IP;A a,e;I n;P*p;
 }
 
 // translate characters
-DF1(jtcharmap){F12IP; A z;B bb[256];I k,n;UC c,*u,*v,*yv,zz[256];
+DF1(jtcharmap){DF12IP; A z;B bb[256];I k,n;UC c,*u,*v,*yv,zz[256];
  ARGCHK1(w);
  A x=FAV(FAV(self)->fgh[2])->fgh[0], y=FAV(self)->fgh[0];  // extract translation tables
  if(!(LIT&AT(w)))R fork120(jt,w,self);  // revert if not byte args

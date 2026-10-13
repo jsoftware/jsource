@@ -538,7 +538,7 @@ static A jtcompidx(J jt,I axislen,A ind){
 // Execution of x m}"r y for sparse: one cell
  // Otherwise, w is sparse
  // ?t = underlying type of ?, s?=nonzero if sparse
-DF2(jtamendn2sp){F12IP;PROLOG(0007);
+DF2(jtamendn2sp){DF12IP;PROLOG(0007);
  A ind=FAV(self)->fgh[0];  // get ind from ind}
  I acr=AR(a), wcr=AR(w);
  I at=AT(a), wt=AT(w), indt=AT(ind);
@@ -773,11 +773,11 @@ indexforonecell:;  // cellframelen, wframelen (always 0), and ind0 must be set
  PRISTCLRF(w)
  EPILOG(z);
 }
-static DFI2(jtamendn2c){F12IP;R jtamendn2(jtfg,afg,wfg,FAV(self)->fgh[0],self);}  // entry point from normal compound, passes through
+static DFI2(jtamendn2c){DF12IP;R jtamendn2(jtfg,afg,wfg,FAV(self)->fgh[0],self);}  // entry point from normal compound, passes through
 
 // Execution of x u} y.  Call (x u y) to get the indices, convert to cell indexes, then
 // call merge2 to do the merge.  Pass inplaceability into merge2.
-static DF2(amccv2){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];
+static DF2(amccv2){DF12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];
  ARGCHK2(a,w); 
  PROLOG(000);
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);  // u} not supported for sparse
@@ -790,8 +790,8 @@ static DF2(amccv2){F12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];
 }
 
 
-static DF1(mergn1){F12IP;A ind,z; z=jtmerge1(jt,w,ind=FAV(self)->fgh[0]); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}  // no inplacing
-static DF1(mergv1){F12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];A ind,z; z=jtmerge1(jt,w,ind=CALL1(f1,w,fs)); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}
+static DF1(mergn1){DF12IP;A ind,z; z=jtmerge1(jt,w,ind=FAV(self)->fgh[0]); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}  // no inplacing
+static DF1(mergv1){DF12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];A ind,z; z=jtmerge1(jt,w,ind=CALL1(f1,w,fs)); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}
 
 // called from m}, m is usually NOT a gerund
 static B ger(J jt,A w){A*wv,x;
@@ -847,7 +847,7 @@ B jtgerexact(J jt, A w){A*wv;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
 
 // verb executed for [v0`]v1`v2} y
-static DF1(jtgav1){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
+static DF1(jtgav1){DF12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[2]);
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  // If the AR is a noun, just leave it as is
@@ -858,7 +858,7 @@ static DF1(jtgav1){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*hv=AAV(sv->fgh[
 }
 
 // verb executed for x v0`v1`v2} y
-static DF2(jtgav2){F12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(sv->fgh[2]);  // hv->verbs, already converted from gerunds
+static DF2(jtgav2){DF12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*hv=AAV(sv->fgh[2]);  // hv->verbs, already converted from gerunds
  I hn=AS(sv->fgh[2])[0];  // hn=# gerunds in h
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
@@ -894,7 +894,7 @@ static A jtgadv(J jt,A w){A hs;I n;
  I flag=VNOLOCCHG+VNONAME+VNOSELF;  // where we will build verb flags, inited as if wn<3
  if(wn==3){if(FAV(AAV(hs)[2])->id==CRIGHT)AS(hs)[0]=2; else flag=FAV(AAV(hs)[2])->flag|VNONAME+VNOSELF;}  // if v2=], remove it from gerund count in shape (leave in AN for free); if 3 gerunds, init from v2
  flag=(flag&FAV(AAV(hs)[0])->flag&FAV(AAV(hs)[1])->flag&VNOLOCCHG+VNONAME+VNOSELF)+(VGERL)+(alr-2>0?alr-2:alr);  // wn may be 2 or 3
- R fdef(0,CRBRACE,VERB, jtgav1,jtgav2, w,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb
+ R fdef(0,CRBRACE,VERB, jtgav1,jtgav2, hs,0L,hs,flag, RMAX,RMAX,RMAX);  // create the derived verb, using verbified gerund
 }
 
 // Execution of x -@{`[`]}"r y
@@ -907,7 +907,7 @@ static DFI2(jtamnegate){
 }
 
 // u} handling.  Self can be 0 to indicate this is a recursive call from a subroutine of jtamend
-DF1(jtamend){F12IP;
+DF1(jtamend){DF12IP;
  ARGCHK1(w);
  if(unlikely(AT(w)&VERB)) R fdef(0,CRBRACE,VERB,(AF)mergv1,(AF)amccv2,w,0L,0L,FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF, RMAX,RMAX,RMAX);  // verb} 
  else if(AT(w)&BOX&&unlikely(ger(jt,w))){A z;  // gerund}

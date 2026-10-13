@@ -51,7 +51,7 @@ F1(jtshasum1){F12IP;
   R shasum2(num(1),w);
 }
 
-DF2(jtshasum2){F12IP;
+DF2(jtshasum2){DF12IP;
   I n;
   A z;
   UC *v;

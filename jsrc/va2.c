@@ -1590,7 +1590,7 @@ I jtsumattymesprods(J jt,I it,void *avp, void *wvp,I dplen,I nfro,I nfri,I ndpo,
 
 #if C_AVX2 || EMU_AVX2
 // +/@:*"1 for QP.  Caller has handled any rank loop
-static DF2(jtsumattymes1E){F12IP;
+static DF2(jtsumattymes1E){DF12IP;
  I i; I n=AS(a)[AR(a)-1]; ASSERT(AS(w)[AR(w)-1]==n,EVLENGTH);  // length of vector; verify agreement
  E *x=EAV(a)+n, *y=EAV(w)+n;  // input pointers, advanced past end
  __m256d sgnbit=_mm256_broadcast_sd((D*)&Iimin); __m256d mantmask=_mm256_broadcast_sd((D*)&(I){0x000fffffffffffff});  /* needed masks: sign, mantissa */
@@ -1788,7 +1788,7 @@ DFI2(jtsumattymes1){
 
 
 // f/@:g when f and g are atomic.  If the args are big and not inplace it pays to execute one cell of g at a time to save cache footprint
-DF2(jtfslashatg){F12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
+DF2(jtfslashatg){DF12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
      n,nn,r,rs,*s,wk,wn,wr,*ws,wt,yt,zn,zt;VA2 adocv,adocvf;
  ARGCHK3(a,w,self);
  an=AN(a); ar=AR(a); as=AS(a); at=AT(a); at=an?at:B01;
@@ -1917,8 +1917,8 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
  }
 }
 
-DFI2(jtexpn2  ){IARG2 F12IP; if(unlikely(((((I)AR(w)-1)&SGNIF(AT(w),FLX))<0)))if(unlikely(0.5==DAV(w)[0]))R sqroot(a);  R jtatomic2(jtfg,afg,wfg,self);}  // use sqrt hardware for sqrt.  Only for atomic w. 
-DFI2(jtresidue){IARG2 F12IP; I intmod; if(!((AT(a)|AT(w))&((NOUN|SPARSE)&~INT)|AR(a))&&(intmod=IAV(a)[0], (intmod&-intmod)+(intmod<=0)==0))R intmod2(w,intmod); R jtatomic2(jtfg,afg,wfg,self);}  // special case for x an atom power of 2 
+DFI2(jtexpn2  ){IARG2 DF12IP; if(unlikely(((((I)AR(w)-1)&SGNIF(AT(w),FLX))<0)))if(unlikely(0.5==DAV(w)[0]))R sqroot(a);  R jtatomic2(jtfg,afg,wfg,self);}  // use sqrt hardware for sqrt.  Only for atomic w. 
+DFI2(jtresidue){IARG2 DF12IP; I intmod; if(!((AT(a)|AT(w))&((NOUN|SPARSE)&~INT)|AR(a))&&(intmod=IAV(a)[0], (intmod&-intmod)+(intmod<=0)==0))R intmod2(w,intmod); R jtatomic2(jtfg,afg,wfg,self);}  // special case for x an atom power of 2 
 
 
 // These are the unary ops that are implemented using a canned argument

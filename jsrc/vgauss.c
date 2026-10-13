@@ -7,7 +7,7 @@
 
 extern A jtthq1(J jt, Q y);
 // w is a rational matrix
-DF1(jtgausselm){F12IP;I c,e,i,j,r,r1,*s;Q p,*u,*v,*x;
+DF1(jtgausselm){DF12IP;I c,e,i,j,r,r1,*s;Q p,*u,*v,*x;
  F1RANK(2,jtgausselm,self);
  ASSERT(RAT&AT(w),EVNONCE);
  // This routine modifies w in place.  If w is virtual, that causes an error, because the blocks referred to in

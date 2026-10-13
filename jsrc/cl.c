@@ -9,7 +9,7 @@
 
 // Result logger for S:   w is the result; we add it (boxed) to AK(self), reallocating as needed.  AN is buffer size, AS[0] is #filled
 // result is 0 for error or a harmless small result ('') which will be collected at higher levels and discarded
-static DF1(jtscfn){F12IP;
+static DF1(jtscfn){DF12IP;
  ARGCHK1(w); A log=AKASA(self);
  if(AS(log)[0]==AN(log)){I n=AN(log); RZ(AKASA(self)=log=ext(1,log)); AS(log)[0]=n;}  // if current buffer is full, reallocate.  ext resets AS
  AAV1(log)[AS(log)[0]++]=incorp(w);  // copy in new result pointer.  log is allo'd at rank 1
@@ -21,7 +21,7 @@ static DF1(jtscfn){F12IP;
 // id in self distinguishes L: from S: 
 // AT(self) is the trigger level (the original n)
 // AM(self) is the block for u
-static DF1(jtlev1){F12IP;
+static DF1(jtlev1){DF12IP;
  ARGCHK1(w);  // self is never 0
  if(levelle(jt,w,FAV(self)->localuse.lslevels[2])){A z, fs=(A)AM(self); RZ(z=CALL1(FAV(fs)->valencefns[0],w,fs)); if(FAV(self)->id!=CSCAPCO)RETF(z); R scfn(z,self);} else{STACKCHKOFL R every(w,self);}  // since this recurs, check stack
 }
@@ -51,7 +51,7 @@ static I jtefflev(J jt,I n,A x){I t; R n>=0?n:(t=level(jt,x),MAX(0,n+t));}
 // execution of u L:/S: n y.  Bivalent.  Create the self to send to the recursion routine
 // L: and S: will be rarely used on pristine blocks, which be definition have all DIRECT contents & would thus be
 // better served by &.> .  Thus, we just mark the inputs as non-pristinable.
-static DF2(jtlscapco12){F12IP;PROLOG(556);A z;
+static DF2(jtlscapco12){DF12IP;PROLOG(556);A z;
  ARGCHK2(a,w);
  I wt=AT(w);
  PRIM shdr; A recurself=(A)&shdr;  // allocate the block we will recur with.  Next fill in fields needed by every and jtlev[12]

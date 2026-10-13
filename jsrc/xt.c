@@ -77,7 +77,7 @@ F1(jtsphwmk){F12IP;
   R v2(curr,hwmk);
 }
 
-DF1(jtspit){F12IP;A z;I k; 
+DF1(jtspit){DF12IP;A z;I k; 
  F1RANK(1,jtspit,self);
  jt->bytesmax=k=spstarttracking(); A *old=jt->tnextpushp;  // start keeping track of bytesmax
  z=exec1(w); spendtracking();  // end tracking, even if there was an error
@@ -242,7 +242,7 @@ __int64 GetMachineCycleCount()
 F1(jttss){F12IP;ASSERTMTV(w); R scf(tod()-JT(jt,tssbase));}
 
 // 6!:2 dyad
-DF2(jttsit2){F12IP;A z;D t;I n;I stackallo=0,i;
+DF2(jttsit2){DF12IP;A z;D t;I n;I stackallo=0,i;
  F2RANK(0,1,jttsit2,self);
  PROLOG(000);
  n=rei0(a);

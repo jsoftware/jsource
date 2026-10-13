@@ -69,7 +69,7 @@ F1(jtcrccompile){F12IP;A h,*hv;UINT z; UINT crctab[256];
 }
 
 // CRC where table has been precomputed and stored in h
-DF1(jtcrcfixedleft){F12IP;A h,*hv;I n;UINT*t,z;UC*v;
+DF1(jtcrcfixedleft){DF12IP;A h,*hv;I n;UINT*t,z;UC*v;
  ARGCHK1(w);
  h=FAV(self)->fgh[2]; hv=AAV(h); t=(UINT*)AV(C(hv[0])); z=(UINT)AV(C(hv[1]))[0];
  n=AN(w); v=UAV(w);
@@ -83,7 +83,7 @@ DF1(jtcrcfixedleft){F12IP;A h,*hv;I n;UINT*t,z;UC*v;
 #ifndef CRC32L
 #define CRC32L(acc,in) (0xffffffff&((acc*15015)^(in)))   // if no hardware CRC (rare), mix the bits a little
 #endif
-DF2(jtqhash12){F12IP; I hsiz; UI crc;
+DF2(jtqhash12){DF12IP; I hsiz; UI crc;
  ARGCHK2(a,w);
  if(EPDYAD){hsiz=rei0(a);} else{w=a; hsiz=0;}  // fetch hashtable size; set w=data to hash
  ASSERT(hsiz>=0,EVDOMAIN);
@@ -107,7 +107,7 @@ DF2(jtqhash12){F12IP; I hsiz; UI crc;
 // base64 stuff
 #include<assert.h>
 static C base64tab[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";  // wasm 65 including null terminating character
-DF1(jttobase64){F12IP;
+DF1(jttobase64){DF12IP;
  F1RANK(1,jttobase64,self);  // here we deal only with rank<= 1
  ASSERT(AT(w)&LIT,EVDOMAIN);  // we work only on ASCII (which includes UTF-8).  Other types must be converted first
  // Calculate # triples, #extras
@@ -168,7 +168,7 @@ static C base64invtab[256] = {
 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff
  };
 
-DF1(jtfrombase64){F12IP;
+DF1(jtfrombase64){DF12IP;
  F1RANK(1,jtfrombase64,self);  // here we deal only with rank<= 1
  ASSERT(AT(w)&LIT,EVDOMAIN);  // we work only on ASCII
  // Calculate the number of result bytes.  We take the number of input bytes, and discard trailing '=' on a 2- or 3-boundary
@@ -208,7 +208,7 @@ ASSERT(rc==1&&(I)zlen==AN(z),EVDOMAIN);  // make sure no invalid input bytes
   // the 3 bytes are characters AAAAABB BBBBCCCC CCDDDDDD in bits
   //                            7     0 15     8 23    16
 
-DF2(jtxxhash2){F12IP;
+DF2(jtxxhash2){DF12IP;
   I n,s;
   A z;
   UC *v;

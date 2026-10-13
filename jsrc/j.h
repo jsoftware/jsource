@@ -1098,11 +1098,12 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define WRITEUNLOCK(lock) ;
 #endif
 #define C(x) CCOMMON(x,,R 0)  // normal case: return on error
-#define CPYX(x) CCOMMONPYX(x,,R 0)  // wait for a pyx, but do not convert a gerund (leave it as verb)
 #define CERR(x) CCOMMON(x,,R jt->jerr)  // return error code on error
 #define CNOERR(x) CCOMMON(x,,)  // value has been resolved before & there cannot be an error
 #define CNULL(x) CCOMMON(x,if(likely(res!=0)),R 0)  // if x is 0, keep it 0; return 0 if resolves to error
 #define CNULLNOERR(x) ({A res=(x); if(res&&(AT(res)&BOX+PYX)==BOX+PYX)res=jtpyxvalid(jt,res); res; })   // if x is 0, keep it 0; ignore error, don't resolve pyx but use it if resolved already
+#define CPYX(x) CCOMMONPYX(x,,R 0)  // wait for a pyx, but do not convert a gerund (leave it as verb)
+#define CPYXNULL(x) CCOMMONPYX(x,if(likely(res!=0)),R 0)  // if x is 0, keep it 0; return 0 if resolves to error
 // CALL[12] is an eformat point if we have a valid self.  AT is 0 in an invalid self
 #define CALL1COMMON(f,w,fs,j,pop)   ({A carg1=(w), carg3=(A)(fs), cargz; cargz=(f)(j,carg1,carg3,carg3); pop if(unlikely(cargz==0)){if(AT(carg3)!=0)jteformat(j,carg3,carg1,0,0);} cargz;})
 #define CALL1(f,w,fs)   CALL1COMMON(f,w,fs,jt,)
@@ -1221,8 +1222,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define JTFGFROMJTFGFG jtfg=(J)(intptr_t)((I)jtfgfg&(BIT(48)-1))   // jt if flagged first in the low bits, and then in the top 16 bits.  This peels off the top flags, leaving jtfg with the bottom flags
 #define F12IP JJ JTFROMJTFG(JJ)
 #define F12JT JJ JTFROMJTFG(JJ)  // for documentation, when flags are not IP flags
-#define DF12IP JJ JTFROMJTFG(JJ) ; if(self&&!(AT(self)&VERB)SEGFAULT  //scaf!
-#define DF12JT JJ JTFROMJTFG(JJ) ; if(self&&!(AT(self)&VERB)SEGFAULT  // for documentation, when flags are not IP flags
+#define DF12IP JJ JTFROMJTFG(JJ) ; if(((I)self&-2)&&(AT(self)&NOUN))SEGFAULT  //scaf!
+#define DF12JT JJ JTFROMJTFG(JJ) ; if(((I)self&-2)&&(AT(self)&NOUN))SEGFAULT  // for documentation, when flags are not IP flags
 #define FPREFIP(T)         T jtfg=jt; JTFROMJTFG(T)  // turn off all flag bits in jt, leave them in jtfg
 #define F1PREFJT        FPREFIP(J)  // for doc purposes, use when the JT flags are not for inplacing
 #define F2PREFJT        FPREFIP(J)
@@ -1252,7 +1253,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 
 // FORK1 and FORK2 are NOT bivalent
 #define FORK1(name,opt) \
-DF1(name){F12IP;PROLOG(0000); PUSHZOMB; ARGCHK1D(w) \
+DF1(name){DF12IP;PROLOG(0000); PUSHZOMB; ARGCHK1D(w) \
 AF fghfn; A fs, gs, hs; \
 if(opt&0x100){ \
  /* h is omitted.  Fetch from g and f, and ignore @][ for hs purposes.  hfn is dyad for @: only */ \
@@ -1321,7 +1322,7 @@ RETF(z); \
 // g@:h is 1c0
 // &: is 148
 #define FORK2(name,opt) \
-DF2(name){F12IP;PROLOG(0000); PUSHZOMB; ARGCHK2D(a,w) \
+DF2(name){DF12IP;PROLOG(0000); PUSHZOMB; ARGCHK2D(a,w) \
 AF fghfn; A fs, gs, hs; \
 if(opt&0x100){ \
  /* h is omitted.  Fetch from g and f, and ignore @][ for hs purposes.  hfn is dyad for @: only */ \

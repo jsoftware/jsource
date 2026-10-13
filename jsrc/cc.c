@@ -16,13 +16,13 @@
 
 
 // f;.0 w
-static DF1(jtcut01){F12IP;A h,x,z;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; 
+static DF1(jtcut01){DF12IP;A h,x,z;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; 
  RZ(x=from(box(every(negate(shape(w)),ds(CIOTA))),w));
  if(VGERL&FAV(self)->flag){h=FAV(self)->fgh[2]; R df1(z,x,AAV(h)[0]);}else{ R CALL1(f1,x,fs);}  // not inplaceable
 }    /* f;.0 w */
 
 // a f;.0 w
-static DF2(jtcut02){F12IP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROLOG(876);I cger[128/SZI];
+static DF2(jtcut02){DF12IP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROLOG(876);I cger[128/SZI];
  ARGCHK2(a,w);
 #define ZZFLAGWORD state
  I state=ZZFLAGINITSTATE;  // init flags, including zz flags
@@ -131,7 +131,7 @@ static DF2(jtcut02){F12IP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROL
 }    /* a f;.0 w */
 
 // a ];.0 w
-DF2(jtrightcut0){F12IP;
+DF2(jtrightcut0){DF12IP;
  // We check for the special case of substr (a has 1 column) and handle it fast with a virtual result; revert for others
  if(unlikely(AR(w)==0)||unlikely(AR(a)!=2)||((AS(a)[0]^2)+(AS(a)[1]^1))!=0)R jtcut02(jt,a,w,self);  // exit if multiple substrs or w atomic
  RZ(a=vib(a));  // audit for valid integers
@@ -149,7 +149,7 @@ DF2(jtrightcut0){F12IP;
 
 // self is a compound, using @/@:/&/&:, that we tried to run with special code, but we found that we don't support the arguments
 // here we revert to the non-special code for the compound, without inplacing
-DF2(jtspecialatoprestart){F12IP;
+DF2(jtspecialatoprestart){DF12IP;
   ARGCHK3(a,w,self);  // return fast if there has been an error
   V *sv=FAV(self);  // point to verb info for the current overall compound
   R a==mark?on1(jt,w,self) : jtupon2(jt,a,w,self);  // figure out the default routine that should process the compound, and transfer to it
@@ -157,7 +157,7 @@ DF2(jtspecialatoprestart){F12IP;
 
 // x <;.0 y  and  x (<;.0~ -~/"2)~ y   where _1 { $x is 1 (i. e. 1 dimension of selection)  localuse distinguishes the two cases (relative vs absolute length)
 // We go for minimum overhead in the box allocation and copy
-DF2(jtboxcut0){F12IP;A z;I i;
+DF2(jtboxcut0){DF12IP;A z;I i;
  ARGCHK2(a,w);
  // NOTE: this routine is called from jtwords.  In that case, self comes from jtwords and is set up with the parm for x (<;.0~ -~/"2)~ y but with no failover routine.
  // Thus, the preliminary tests must not cause a failover.  They don't, because the inputs from jtwords are known to be well-formed
@@ -228,7 +228,7 @@ DF2(jtboxcut0){F12IP;A z;I i;
 // a ;@:(<;.0) w where a has one column (i. e. 1={:$a).  We allocate a single area and copy in the items
 // if we encounter a reversal, we abort
 // if it's a case we can't handle, we fail over to the normal code, with BOXATOP etc flags set
-DF2(jtrazecut0){F12IP;A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
+DF2(jtrazecut0){DF12IP;A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
  ARGCHK2(a,w);
  wt=AT(w); wv=CAV(w);
  ar=AR(a); as=AS(a);
@@ -252,7 +252,7 @@ DF2(jtrazecut0){F12IP;A z;C*wv,*zv;I ar,*as,(*av)[2],j,k,m,n,wt;
 }    /* a ;@:(<;.0) vector */
 
 
-static DF2(jtcut2bx){F12IP;A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
+static DF2(jtcut2bx){DF12IP;A*av,b,t,x,*xv,y,*yv;B*bv;I an,bn,i,j,m,p,q,*u,*v,*ws;
  ARGCHK3(a,w,self);
  q=(I)FAV(self)->localuse.lu1.gercut.cutn;  // fetch the n in the original u;.n
  an=AN(a); av=AAV(a);  ws=AS(w);
@@ -360,7 +360,7 @@ static A jtsely(J jt,A y,I r,I i,I j){A z;I c,*s,*v;
  R z;
 }    /* ((i+i.r){y)-"1 ({:$y){.j */
 
-static DF2(jtcut2sx){F12IP;V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; AF f1=FAV(fs)->valencefns[0]; PROLOG(0024);A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn,m,n,p,t,yn,*yu,*yv;P*ap;V*vf;
+static DF2(jtcut2sx){DF12IP;V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; AF f1=FAV(fs)->valencefns[0]; PROLOG(0024);A h=0,*hv,y,yy;B b,neg,pfx,*u,*v;C id;I d,e,hn,m,n,p,t,yn,*yu,*yv;P*ap;V*vf;
  PREF2(jtcut2sx); SETIC(w,n); t=AT(w); m=(I)sv->localuse.lu1.gercut.cutn; neg=0>m; pfx=m==1||m==-1; b=neg&&pfx;  // m = n from u;.n
  RZ(a=a==mark?eps(w,take(num(pfx?1:-1),w)):!ISSPARSE(AT(a))?sparse1(a):a);
  ASSERT(n==AS(a)[0],EVLENGTH);
@@ -589,7 +589,7 @@ void jtcopyTT(J jt, void *zv, void *wv, I n, I zt, I wt){
   else {D *targ=zv; I *src=wv; DQ(n, *targ++ = (D)*src++;)}
 }
 
-DF2(jtcut2){F12IP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/SZI];
+DF2(jtcut2){DF12IP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/SZI];
      I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
  F2RANKIP(lr(self),RMAX,jtcut2,self);  // left rank of ;.2 is 1, but left rank of /. is _ .  Right rank always _ .  For the monad, mark has rank 0
  SETIC(w,n); wt=AT(w);   // n=#items of w; wt=type of w
@@ -983,13 +983,13 @@ skipspecial:;
 }    /* f;.1  f;._1  f;.2  f;._2  monad and dyad */
 
 
-static DF1(jtcut1){F12IP;R jtcut2(jtfg,mark,w,self);}  // pass inplaceability through
+static DF1(jtcut1){DF12IP;R jtcut2(jtfg,mark,w,self);}  // pass inplaceability through
 
 // ;@((<@(f/\));._2 _1 1 2) when  f is atomic   also @: but only when no rank loop required  also \.
 // also [: ; (<@(f/\));._2 _1 1 2)  when no rank loop required
 // NOTE: if there are no cuts, this routine produces different results from the normal routine if the operation is one we recognise.
 //  This routine produces an extra axis, as if the shape of the boxed result were preserved even when there are no boxed results
-DF2(jtrazecut2){F12IP;A fs,gs,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p,q,r,*s,wt;
+DF2(jtrazecut2){DF12IP;A fs,gs,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=0,wi,p,q,r,*s,wt;
     VARPS adocv;
  ARGCHK2(a,w);
  gs=FAV(self)->fgh[1]; fs=FAV(FAV(gs)->fgh[0])->fgh[1];  // self is ;@:(<@(f/\);.1)     gs  gs is <@(f/\);.1   y is <@(f/\)  fs is   f/\  ...
@@ -1027,7 +1027,7 @@ DF2(jtrazecut2){F12IP;A fs,gs,z=0;B b; I neg,pfx;C id,sep,*u,*v,*wv,*zv;I d,k,m=
  AS(z)[0]=m; AN(z)=m*d; RETF(unlikely(((adocv.cv+VRD)&VRI))&&likely(rc!=EVNOCONV)?cvz(adocv.cv,z):z);
 }   
 
-DF1(jtrazecut1){F12IP;R jtrazecut2(jtfg,mark,w,self);}  // pass inplaceability through
+DF1(jtrazecut1){DF12IP;R jtrazecut2(jtfg,mark,w,self);}  // pass inplaceability through
 
 // if pv given, it is the place to put the shapes of the top 2 result axes.  If omitted, do them all and return an A block for them
 // if pv is given, set pv[0] to 0 if there is a 0 anywhere in the result frame
@@ -1063,7 +1063,7 @@ static F2(jttesa){F12IP;A x;I*av,ac,c,d,k,r,*s,t,*u,*v;
 #define STATEREFLECTX 0x400  // subarray must be reflected
 #define STATEREFLECTY 0x800
 #define STATETAKE 0x1000  // subarray must be shortened at the end
-static DF2(jttess2){F12IP;A z,zz=0,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,vsz,hsz,hss,hds,vss1,vss,vds1,vds,vlrc,vtrc,lrchsiz,hi,vi,vkeep1,vtrunc,hkeep1,htrunc;C *svh,*dvh;
+static DF2(jttess2){DF12IP;A z,zz=0,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,vsz,hsz,hss,hds,vss1,vss,vds1,vds,vlrc,vtrc,lrchsiz,hi,vi,vkeep1,vtrunc,hkeep1,htrunc;C *svh,*dvh;
  PROLOG(600);
  F2RANK(2,RMAX,jttess2,self)
 #define ZZFLAGWORD state
@@ -1262,7 +1262,7 @@ static DF2(jttess2){F12IP;A z,zz=0,strip;I n,rs[3],cellatoms,cellbytes,vmv,hmv,v
 
 }
 
-static DF1(jttess1){F12IP;A s;I m,r,*v;
+static DF1(jttess1){DF12IP;A s;I m,r,*v;
  ARGCHK1(w);
  r=AR(w); RZ(s=shape(w)); RZ(s=mkwris(s)); v=AV(s);
  m=IMAX; DO(r, if(m>v[i])m=v[i];); DO(r, v[i]=m;);  // Get length of long axis; set all axes to that length in a arg to cut
@@ -1356,7 +1356,7 @@ success:;
  PBOXCUTCHUNK t={pe,z,ss};c->c[ti]=t; R 0;}
 
 // <;.[12] 
-DF1(jtboxcutm21){F12IP;
+DF1(jtboxcutm21){DF12IP;
  if(AR(w)!=1||!(AT(w)&LIT)||AN(w)<=65536)R jtcut1(jt,w,self);  // no need to inplace this
  PROLOG(0026);
 #if 1   // test code
@@ -1426,7 +1426,7 @@ F2(jtcut){F12IP;A h=0;I flag=0,k;
   }
 #endif
 // fall through to...
- case 1: case -1: fdeffillall(z,0,CCUT,VERB, jtcut1, jtcut2,  a,w,h, flag, RMAX,1L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
+ case 1: case -1: fdeffillall(z,0,CCUT,VERB, jtcut1, jtcut2,  flag&VGERL?h:a,w,h, flag, RMAX,1L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
  case 3: case -3: case 259: case -259: fdeffillall(z,0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
  default:         ASSERT(0,EVDOMAIN);
  }

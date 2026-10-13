@@ -65,7 +65,7 @@ static F1X(jtltiea){F12JT;A t,*v,*wv,x,y;B b;C c;I n;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE));
  GATV0(y,BOX,n+n,1); v=AAV1(y);
- DO(n, *v++=i?t:mtv; x=C(wv[i]); c=IDD(x); RZ(x=lrr(x)); 
+ DO(n, *v++=i?t:mtv; x=CPYX(wv[i]); c=IDD(x); RZ(x=lrr(x)); 
      b=BETWEENC(c,CHOOK,CFORK)||i&&(lp(x)>0); RZ(*v++=parfn(jtfg,b,x)););
  R raze(y);
 }
@@ -76,7 +76,7 @@ static F1X(jtltieb){F12JT;A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE)); RZ(pt=over(scc(')'),t));
  GATV0(y,BOX,n+n,1); v=AAV1(y);
  if(1>=n)x=mtv; else{GATV0(x,LIT,n-2,1); s=CAV1(x); DQ(n-2, *s++='(';);}
- DO(n, x=i==1?t:x; x=i>1?pt:x; *v++=x; x=C(wv[i]); c=IDD(x); RZ(x=lrr(x)); 
+ DO(n, x=i==1?t:x; x=i>1?pt:x; *v++=x; x=CPYX(wv[i]); c=IDD(x); RZ(x=lrr(x)); 
      b=BETWEENC(c,CHOOK,CFORK)||i&&(lp(x)>0); RZ(*v++=parfn(jtfg,b,x)););
  R raze(y);
 }
@@ -294,13 +294,13 @@ static F2X(jtlinsert){F12JT;A*av,f,g,h,t,t0,t1,t2,*u,y;B b,ft,gt,ht;C c,id;I n;V
  n=AN(a); av=AAV(a);  
  v=FAV(w); id=v->id;
  b=id==CCOLONE&&VXOP&v->flag;  // b if operator, which is spaced as if a hook/fork: u body [v]
- I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=CNULL(v->fgh[fndx]); A gs=CNULL(v->fgh[fndx^1]); A hs=CNULL(v->fgh[2]);  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
+ I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=CPYXNULL(v->fgh[fndx]); A gs=CPYXNULL(v->fgh[fndx^1]); A hs=CPYXNULL(v->fgh[2]);  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
  if(id==CIBEAM&&!(AT(w)&CONJ)){fs=scib(FAV(w)->localuse.lu1.foreignmn[0]); gs=scib(FAV(w)->localuse.lu1.foreignmn[1]);}  // scb to simplify display
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
 // ?t tells whether () is needed around the f/g/h component
- if(1<=n){f=C(av[0]); t=fs; c=ID(t); ft=BETWEENC(c,CHOOK,CADVF)||(b||BETWEENC(id,CHOOK,CADVF))&&NOUN&AT(t)&&(lp(f)>0);}  // f: () if it's invisible   or   noun left end of nvv or n (op)
- if(2<=n){g=C(av[1]); t=gs; c=ID(t); gt=VERB&AT(w)    ?BETWEENC(c,CHOOK,CADVF):((BETWEENC(id,CHOOK,CADVF))|lp(g))>0;}  // g: paren any invisible modifier, or in invisible modifier if it needs parens
- if(3<=n){h=C(av[2]); t=hs; c=ID(t); ht=VERB&AT(w)&&!b?c==CHOOK:((BETWEENC(id,CHOOK,CADVF)&&!b)|lp(h))>0;}  // h: in verb fork, paren hook; in trident, paren any train
+ if(1<=n){f=CPYX(av[0]); t=fs; c=ID(t); ft=BETWEENC(c,CHOOK,CADVF)||(b||BETWEENC(id,CHOOK,CADVF))&&NOUN&AT(t)&&(lp(f)>0);}  // f: () if it's invisible   or   noun left end of nvv or n (op)
+ if(2<=n){g=CPYX(av[1]); t=gs; c=ID(t); gt=VERB&AT(w)    ?BETWEENC(c,CHOOK,CADVF):((BETWEENC(id,CHOOK,CADVF))|lp(g))>0;}  // g: paren any invisible modifier, or in invisible modifier if it needs parens
+ if(3<=n){h=CPYX(av[2]); t=hs; c=ID(t); ht=VERB&AT(w)&&!b?c==CHOOK:((BETWEENC(id,CHOOK,CADVF)&&!b)|lp(h))>0;}  // h: in verb fork, paren hook; in trident, paren any train
  switch(!(b||BETWEENC(id,CHOOK,CADVF))?id:2==n?CHOOK:CFORK){  // if operator or invisible, ignore the type and space based on length
  case CADVF:
  case CHOOK:
@@ -365,10 +365,10 @@ static DF1X(jtlrr){F12JT;A hs,t,*tv;C id;I fl,m;V*v;
  if(AT(w)&NOUN)R lnoun(C(w));
  v=FAV(w); id=v->id;  // outer verb, & its id
  // if f is 0, we take f from g.  In other words, adverbs can put their left arg in either f or g.  u b. uses g so that it can leave f=0 to allow it to function as an ATOMIC2 op
- I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=CNULL(v->fgh[fndx]); A gs=CNULL(v->fgh[fndx^1]);  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
+ I fndx=(id==CBDOT)&&!v->fgh[0]; A fs=CPYXNULL(v->fgh[fndx]); A gs=CPYXNULL(v->fgh[fndx^1]);  // In verb for m b., if f is empty look to g for the left arg.  It would be nice to be more general
  if(id==CATCO&&AT(w)&VERB&&FAV(gs)->id==CTDOT)R lrr(gs);  // if <@:t. discard the <@:
  if(id==CIBEAM&&!(AT(w)&CONJ)){fs=scib(FAV(w)->localuse.lu1.foreignmn[0]); gs=scib(FAV(w)->localuse.lu1.foreignmn[1]);}  // scb to simplify display
- hs=CNULL(v->fgh[2]); fl=v->flag; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
+ hs=CPYXNULL(v->fgh[2]); fl=v->flag; if(id==CBOX)gs=0;  // ignore gs field in BOX, there to simulate BOXATOP
  if(id==CFORK&&hs==0){hs=gs; gs=fs; fs=ds(CCAP);}  // reconstitute capped fork
  if(fl&VXOPCALL)R lrr(hs);   // pseudo-named entity created during debug of operator.  The defn is in h
  m=(I)!!fs+(I)(gs&&id!=CBOX)+(I)(BETWEENC(id,CFORK,CADVF)&&hs)+(I)(hs&&id==CCOLONE&&VXOP&fl);  // BOX has g for BOXATOP; ignore it; get # nonzero values in f g h
@@ -381,8 +381,10 @@ static DF1X(jtlrr){F12JT;A hs,t,*tv;C id;I fl,m;V*v;
  GATV0(t,BOX,m,1); tv=AAV1(t);
  if(2<m)RZ(tv[2]=incorp(lrr(hs)));   // fill in h if present
  // for top-level of gerund (indicated by self!=0), any noun type could not have come from an AR, so return it as is
- if(1<m)RZ(tv[1]=incorp(fl&VGERR?tiefn(jtfg,fxeach(gs,(A)&jtfxself[!!self]),ltext):lrr(0&&BETWEENC(id,CFDOT,CFCODOT)?hs:gs)));  // fill in g if present
- if(0<m)RZ(tv[0]=incorp(fl&VGERL?tiefn(jtfg,fxeach(fs,(A)&jtfxself[!!self]),ltext):lrr(fs)));  // fill in f (always present)
+// obsolete  if(1<m)RZ(tv[1]=incorp(fl&VGERR?tiefn(jtfg,fxeach(gs,(A)&jtfxself[!!self]),ltext):lrr(0&&BETWEENC(id,CFDOT,CFCODOT)?hs:gs)));  // fill in g if present
+// obsolete  if(0<m)RZ(tv[0]=incorp(fl&VGERL?tiefn(jtfg,fxeach(fs,(A)&jtfxself[!!self]),ltext):lrr(fs)));  // fill in f (always present)
+ if(1<m)RZ(tv[1]=incorp(fl&VGERR?tiefn(jtfg,gs,ltext):lrr(0&&BETWEENC(id,CFDOT,CFCODOT)?hs:gs)));  // fill in g if present
+ if(0<m)RZ(tv[0]=incorp(fl&VGERL?tiefn(jtfg,fs,ltext):lrr(fs)));  // fill in f (always present)
  R linsert(t,w);
 }
 

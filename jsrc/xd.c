@@ -128,7 +128,7 @@ F1(jtfullname){F12IP;C dirpath[_MAX_PATH];
 #if !SY_WINCE
 
 // 1!:7 permissions
-DF1(jtjfperm1){F12IP;A y,fn,z;C *s;F f;int x; US *p,*q;
+DF1(jtjfperm1){DF12IP;A y,fn,z;C *s;F f;int x; US *p,*q;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(0,jtjfperm1,self);
  RE(f=stdf(w)); if(f){ASSERT((y=fname(sc((I)f)))!=0,EVFNUM) RZ(y=str0(y))} else ASSERT(y=str0(vslit(C(AAV(w)[0]))),EVFNUM)
@@ -142,7 +142,7 @@ DF1(jtjfperm1){F12IP;A y,fn,z;C *s;F f;int x; US *p,*q;
  R z;
 }
 
-DF2(jtjfperm2){F12IP;A y,fn;C*s;F f;int x=0;US *p;
+DF2(jtjfperm2){DF12IP;A y,fn;C*s;F f;int x=0;US *p;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F2RANK(1,0,jtjfperm2,self);
  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=C(AAV(w)[0]),EVFNUM)
@@ -159,7 +159,7 @@ DF2(jtjfperm2){F12IP;A y,fn;C*s;F f;int x=0;US *p;
 
 #else /* SY_WINCE: */
 
-DF1(jtjfperm1){F12IP;A y,z;C*p,*q,*s;F f; DWORD attr;
+DF1(jtjfperm1){DF12IP;A y,z;C*p,*q,*s;F f; DWORD attr;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(0,jtjfperm1,self);
  RE(f=stdf(w)); if(f){ASSERT((y=fname(sc((I)f)))!=0,EVFNUM) RZ(y=str0(y))} else ASSERT(y=str0(vslit(C(AAV(w)[0]))),EVFNUM)
@@ -241,7 +241,7 @@ F1(jtjdir){F12IP;PROLOG(0102);A z,fn,*zv;I j=0,n=32;HANDLE fh; WIN32_FIND_DATAW 
  EPILOG(z);
 }
 
-DF1(jtjfatt1){F12IP;A y,fn;F f;U x;
+DF1(jtjfatt1){DF12IP;A y,fn;F f;U x;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(0,jtjfatt1,self);
  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)))} else ASSERT(y=C(AAV(w)[0]),EVFNUM)
@@ -251,7 +251,7 @@ DF1(jtjfatt1){F12IP;A y,fn;F f;U x;
  jsignal(EVFNAME); R 0; 
 }
 
-DF2(jtjfatt2){F12IP;A y,fn;F f;U x;
+DF2(jtjfatt2){DF12IP;A y,fn;F f;U x;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F2RANK(1,0,jtjfatt2,self);
  RE(x=attu(a));
@@ -397,11 +397,11 @@ F1(jtjdir){F12IP;PROLOG(0103);A*v,z,*zv;C*dir,*pat,*s,*x;I j=0,n=32;DIR*DP;struc
 
 
 
-DF1(jtjfatt1){F12IP;ASSERT(0,EVNONCE);}
-DF2(jtjfatt2){F12IP;ASSERT(0,EVNONCE);}
+DF1(jtjfatt1){DF12IP;ASSERT(0,EVNONCE);}
+DF2(jtjfatt2){DF12IP;ASSERT(0,EVNONCE);}
 
 
-DF1(jtjfperm1){F12IP;A y;F f;C b[11];
+DF1(jtjfperm1){DF12IP;A y;F f;C b[11];
  ASSERT(!JT(jt,seclev),EVSECURE)
  struct_stat64 dirstatbuf[3];
  F1RANK(0,jtjfperm1,self);
@@ -423,7 +423,7 @@ static const struct tperms {C*c;I p[4];} permtab[]=
        {"-xTt",{0,S_IXOTH,S_ISVTX,S_ISVTX+S_IXOTH}},
     };
 
-DF2(jtjfperm2){F12IP;A y;C*s;F f;int x=0,i;C*m;
+DF2(jtjfperm2){DF12IP;A y;C*s;F f;int x=0,i;C*m;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F2RANK(1,0,jtjfperm2,self);
  RE(f=stdf(w)); if(f){RZ(y=fname(sc((I)f)));y=str0(y);} else ASSERT(y=str0(vslit(C(AAV(w)[0]))),EVFNUM)

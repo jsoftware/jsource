@@ -90,7 +90,7 @@ try {
 #endif
 
 // 2!:0
-DF1(jthost){F12IP;A z;
+DF1(jthost){DF12IP;A z;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(1,jthost,self);
  RZ(w=vslit(w));
@@ -165,7 +165,7 @@ DF1(jthost){F12IP;A z;
 }
 
 // 2!:1
-DF1(jthostne){F12IP;
+DF1(jthostne){DF12IP;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(1,jthostne,self);
  RZ(w=vslit(w));
@@ -216,7 +216,7 @@ F1(jtjwait ){F12IP;ASSERT(0,EVDOMAIN);}  // 2!:3
 
 #define CL(f) {close(f[0]);close(f[1]);}
 
-DF1(jthostio){F12IP;C*s;A z;F*pz;int fi[2],fo[2],r;int fii[2],foi[2];
+DF1(jthostio){DF12IP;C*s;A z;F*pz;int fi[2],fo[2],r;int fii[2],foi[2];
  ASSERT(!JT(jt,seclev),EVSECURE)
  if(pipe(fi)==-1) ASSERT(0,EVFACE);
  if(pipe(fo)==-1){CL(fi); ASSERT(0,EVFACE);}

@@ -76,7 +76,7 @@ F1(jtjlocks){F12IP;A y; ASSERTMTV(w); ASSERT(!JT(jt,seclev),EVSECURE) READLOCK(J
      /* return the locks, a 3-column table of (number,index,length) */
 
 // 1!:31
-DF1(jtjlock){F12IP;B b;I*v;
+DF1(jtjlock){DF12IP;B b;I*v;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(1,jtjlock,self);
  RZ(w=vi(w)); 
@@ -119,7 +119,7 @@ found: ;   // here when a file was unlocked.  We know we have given up the lock 
 }    /* unlock all existing locks for file# x */
 
 // 1!:32
-DF1(jtjunlock){F12IP;
+DF1(jtjunlock){DF12IP;
  ASSERT(!JT(jt,seclev),EVSECURE)
  F1RANK(1,jtjunlock,self); 
  ASSERT(INT&AT(w),EVDOMAIN); 

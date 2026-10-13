@@ -368,7 +368,7 @@ endcell:;  // here when we have moved all the data & fill for a or w
  RETF(z);  // no EPILOG needed - we made the result recursive
 }    /* overall control, and a,w and a,"r w for cell rank <: 2 */
 
-DF2(jtstitch){F12IP;I ar,wr; A z;
+DF2(jtstitch){DF12IP;I ar,wr; A z;
  ARGCHK2(a,w);
  ar=AR(a); wr=AR(w);
  ASSERT((-ar&-wr&-(AS(a)[0]^AS(w)[0]))>=0,EVLENGTH);  // a or w scalar, or same # items    always OK to fetch s[0]

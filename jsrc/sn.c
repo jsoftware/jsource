@@ -240,7 +240,7 @@ F1(jtnch){F12IP;READLOCK(JT(jt,stlock)) READLOCK(ALOCK(JT(jt,stloc))) READLOCK(J
 
 // 4!:55 y.  y is boxed names.  Delete names in y
 // Result is array of booleans, 1 if name OK
-DF1(jtex){F12IP;jtfg=jt;A*wv,y,z;B*zv;I i,n;  // clear all jt flags in jtfg
+DF1(jtex){DF12IP;jtfg=jt;A*wv,y,z;B*zv;I i,n;  // clear all jt flags in jtfg
  ARGCHK1(w);
  PROLOG(000);
  protectlocals(jt,0);  // we must ra() any local names on the current sentence's stack, since we may be about to delete them

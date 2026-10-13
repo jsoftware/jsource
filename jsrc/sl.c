@@ -458,7 +458,7 @@ static A jtlocale(J jt,B b,A w){A g=0,*wv,y;
 }    /* last locale (symbol table) from boxed locale names; 0 if none or error.  if b=1, create locale for each name */
 
 // 18!:2 y  return boxed locale path.  y is locale name/number
-DF1(jtlocpath1){F12IP;AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,self); RZ(vlocnl(1,w)); RZ(g=locale(1,C(w)));
+DF1(jtlocpath1){DF12IP;AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,self); RZ(vlocnl(1,w)); RZ(g=locale(1,C(w)));
  A *gp=LOCPATH(g);  // the path for the current locale.  It must be non0 normally, but if another deleted the locale while we are running it might be 0
  if(gp==0)RETF(mtv)   // if locale has been deleted, return something
  I npath; for(npath=0;*gp;--gp,++npath);  // npath is # names in path
@@ -472,7 +472,7 @@ DF1(jtlocpath1){F12IP;AD * RESTRICT g; AD * RESTRICT z; F1RANK(0,jtlocpath1,self
 // null systemlock handler to wait for quiet system.  Used for changing locale path
 static A jtnullsyslock(JTT* jt){R (A)1;}
 
-DF2(jtlocpath2){F12IP;A g,h; AD * RESTRICT x;
+DF2(jtlocpath2){DF12IP;A g,h; AD * RESTRICT x;
  F2RANK(1,0,jtlocpath2,self);
  ACVCACHECLEAR;  // changing any path invalidates all lookups
  RZ(g=locale(1,w));
@@ -678,7 +678,7 @@ F1(jtsetpermanent){F12IP;A g;
 
 // 18!:55 destroy locale(s) from user's point of view.  This counts as one usecount; others are in execution and in paths.  When all go to 0, delete the locale
 // Bivalent: if x is 271828, do the deletion even if on a permanent locale (for testcases only), but only in master thread
-DF2(jtlocexmark){F12IP;A g,*wv,y,z;B *zv;C*u;I i,m,n;
+DF2(jtlocexmark){DF12IP;A g,*wv,y,z;B *zv;C*u;I i,m,n;
  ACVCACHECLEAR;  // destroying a locale invalidates all lookups
  if(unlikely(EPDYAD)){  // dyadic call
   I x=i0(a); if(jt->jerr){RESETERR; ASSERT(0,EVVALENCE)} ASSERT(x==271828,EVVALENCE)  // if not 271828, valence error

@@ -11,10 +11,10 @@ static I jtfdepger(J jt,A w){R 0;
 
 
 // $: itself
-DF2(jtself12){F12IP;A z;  A fs=jt->parserstackframe.sf; I dyad=EPDYAD; AF f12=FAV(fs)->valencefns[dyad]; STACKCHKOFL RETF((f12)(jtfg,a,dyad?w:fs,fs));}
+DF2(jtself12){DF12IP;A z;  A fs=jt->parserstackframe.sf; I dyad=EPDYAD; AF f12=FAV(fs)->valencefns[dyad]; STACKCHKOFL RETF((f12)(jtfg,a,dyad?w:fs,fs));}
 
 // (u $::) set recursion point.  Stack the old recursion point, set the new, then execute it
-static DF2(jtsetself12){F12IP; A stacksf=jt->parserstackframe.sf; A fs=FAV(self)->fgh[0]; jt->parserstackframe.sf=fs; I dyad=EPDYAD; A z=((FAV(fs)->valencefns[dyad])(jtfg,a,dyad?w:fs,fs)); jt->parserstackframe.sf=stacksf; RETF(z)}
+static DF2(jtsetself12){DF12IP; A stacksf=jt->parserstackframe.sf; A fs=FAV(self)->fgh[0]; jt->parserstackframe.sf=fs; I dyad=EPDYAD; A z=((FAV(fs)->valencefns[dyad])(jtfg,a,dyad?w:fs,fs)); jt->parserstackframe.sf=stacksf; RETF(z)}
 // $:: set u as the recursion point
 F1(jtdolcoco){F12IP; ASSERT(VERB&AT(w),EVDOMAIN) R fdef(0,CSETSELF,VERB,(AF)(jtsetself12),(AF)(jtsetself12),w,0L,0L,FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF,(I)mr(w),(I)rr(w),(I)lr(w));}
 

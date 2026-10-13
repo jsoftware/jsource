@@ -560,7 +560,7 @@ C* getlocale(JS jt){JJ jm=MDTHREAD(jt); A y=jtlocname(jm,mtv); y=AAV(y)[0]; R CA
 // The array allocated by jga is post processed inside jtwd and becomes the return value of jtwd, ie, the result of calling 11!:0 in J script.
 //
 // This may be confusing because the actual callback functions do not appear anywhere inside JE source.
-DF1(jtwd){F12IP;A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
+DF1(jtwd){DF12IP;A z=0;C*p=0;D*pd;I e,*pi,t;V*sv;
   F1RANK(1,jtwd,self);
   ARGCHK1(w);
   ASSERT(2>AR(w),EVRANK);

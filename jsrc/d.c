@@ -404,10 +404,10 @@ static F2(jtdbsig){F12IP;I e;
  R 0;
 }    
 
-DF2(jtdbsig12){F12IP; R jtdbsig(jt,w==self?(A)0:a, w==self?a:w);}     /* 13!:8  signal error bivalent, called as a, w, self  or w,self,self */
+DF2(jtdbsig12){DF12IP; R jtdbsig(jt,w==self?(A)0:a, w==self?a:w);}     /* 13!:8  signal error bivalent, called as a, w, self  or w,self,self */
 
 // 9!:59 set emsgslvl, return previous
-DF1(jtemsglevel){F12IP;
+DF1(jtemsglevel){DF12IP;
  if(!AN(w))R mtm;
  RZ(w=vi(w)); I e=AV(w)[0]; 
  ASSERT(e<=7,EVDOMAIN);  // must be integer in range 0-7

@@ -510,7 +510,7 @@ static DFI1(jtred0){A x,z;I f,*s;
 }    /* f/"r w identity case */
 
 // general reduce.  We inplace the results into the next iteration.  This routine cannot inplace its inputs.
-static DFI1(jtredg){IARG1CR F12IP;PROLOG(0020);A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; AD * RESTRICT a;I i,n;
+static DFI1(jtredg){IARG1CR DF12IP;PROLOG(0020);A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1]; AD * RESTRICT a;I i,n;
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  // loop over rank
  if(wcr<wr)R rank1ex(w,self,wcr,jtredg);
@@ -587,7 +587,7 @@ static A jtredsp1(J jt,A w,A self,C id,VARPSF ado,I cv,I f,I r,I zt){A e,x,z;I m
  R redsp1a(id,z,e,n,AR(w),AS(w));
 }    /* f/"r w for sparse vector w */
 
-DF1(jtredravel){F12IP;A f,x,z;I n;P*wp;
+DF1(jtredravel){DF12IP;A f,x,z;I n;P*wp;
  PROLOG(0000);
  if(likely(!ISSPARSE(AT(w)))){RZ(z=on1cell(jtfg,w,self));  // reversion is the normal path
  }else{
@@ -962,7 +962,7 @@ static DFI1(jtredstitch){A c,y;I f,n,*s,*v;
   RETF(y);
 }}   /* ,./"r w */
 
-static DF1(jtredstiteach){F12IP;A*wv,y;I n,p,r,t;
+static DF1(jtredstiteach){DF12IP;A*wv,y;I n,p,r,t;
  ARGCHK1(w);
  n=AN(w);
  if(!(2<n&&1==AR(w)&&BOX&AT(w)))R reduce(w,self);
@@ -987,7 +987,7 @@ static DFI1(jtredcateach){A*u,*v,*wv,x,*xv,z,*zv;I m,mn,n,zm,zn;I n1=0,n2=0;
  RETF(z);
 }    /* ,&.>/"r w */
 
-static DF2(jtoprod){F12IP;A z; R dfv2(z,a,w,FAV(self)->fgh[2]);}  // x u/ y - transfer to the u"lr,_ verb (precalculated)
+static DF2(jtoprod){DF12IP;A z; R dfv2(z,a,w,FAV(self)->fgh[2]);}  // x u/ y - transfer to the u"lr,_ verb (precalculated)
 
 
 F1(jtslash){F12IP;A h;AF f1;C c;V*v;
@@ -1025,7 +1025,7 @@ DFI1(jtmean){
 
 #if 0     // obsolete but keep as example of coding a primitive as an addon
 // entry point to execute monad/dyad Fold after the noun arguments are supplied
-static DF2(jtfoldx){F12IP;  // this stands in place of jtxdefn, which inplaces
+static DF2(jtfoldx){DF12IP;  // this stands in place of jtxdefn, which inplaces
  // see if this is monad or dyad
  I foldflag=((~AT(w))>>(VERBX-3))&8;  // flags: dyad mult fwd rev  if w is not conj, this must be a dyad call
  self=foldflag?self:w; w=foldflag?w:a; a=foldflag?a:mtv; // if monad, it's w self garbage,  move to '' w self
@@ -1041,7 +1041,7 @@ static DF2(jtfoldx){F12IP;  // this stands in place of jtxdefn, which inplaces
 }
 
 // u F. F.. F.: F: F:. F:: v
-DF2(jtfold){F12IP;
+DF2(jtfold){DF12IP;
  // Apply Fold_j_ to the input arguments, creating a derived verb to do the work
  ASSERTVV(a,w)   // nouns not allowed
  A foldconj; ASSERT(foldconj=jtfindnameinscript(jt,"~addons/dev/fold/foldr.ijs","Foldr_j_",CONJ),EVNONCE);
@@ -1059,7 +1059,7 @@ DF2(jtfold){F12IP;
 }
 
 // [x] Z: y, bivalent
-DF2(jtfoldZ){F12IP;
+DF2(jtfoldZ){DF12IP;
  ASSERT(jt->foldrunning,EVSYNTAX);  // If fold not running, fail.  Should be a semantic error rather than syntax
  // The name FoldZ_j_ should have been loaded at startup.  If not, fail
  A foldvb; ASSERT(foldvb=jtfindnameinscript(jt,"~addons/dev/fold/foldr.ijs","FoldZ_j_",VERB),EVNONCE)   // error if undefined or not verb
@@ -1083,7 +1083,7 @@ DF2(jtfoldZ){F12IP;
 #define STATEMULT BIT(STATEMULTX)
 #define STATEDYADX 29   // call is dyadic.  Must be the MSB of the flags
 #define STATEDYAD BIT(STATEDYADX)
-static DF2(jtfold12){F12IP;A z,vz;
+static DF2(jtfold12){DF12IP;A z,vz;
  struct foldstatus foldinfo={{0,0,0},0};  // fold status shared between F: and Z: exestatus[3] followed by zstatus mask: fold limit; abort; abort iteration; quiet iteration; halt after current
  ARGCHK2(a,w);
  I dyad=EPDYAD; w=EPDYAD?w:a; A uself=FAV(self)->fgh[0]; A vself=FAV(self)->fgh[1];
@@ -1238,7 +1238,7 @@ exitpop:;   // here to abort on error, after popping stack
  zz=0; goto abortexit;  // otherwise, must be error in u or v, which will have been previously signaled - keep the error
 }
 // u F. F.. F.: F: F:. F:: v
-DF2(jtfold){F12IP;
+DF2(jtfold){DF12IP;
  ASSERTVV(a,w);  // must be verb ops
  A z; fdefallo(z);   // allocate verb result
  fdeffillall(z,0,FAV(self)->id,VERB, jtfold12,jtfold12, a,w,0L, FAV(a)->flag&FAV(w)->flag&VNONAME+VNOSELF, RMAX,RMAX,RMAX,FAV(z)->lu2.lc=FAV(self)->id,);
@@ -1246,7 +1246,7 @@ DF2(jtfold){F12IP;
 }
 
 // Z: y
-DF1(jtfoldZ1){F12IP;
+DF1(jtfoldZ1){DF12IP;
  ARGCHK1(w)
  ASSERT(jt->afoldinfo,EVUNTIMELY);  // If fold not running, fail.
  I type; type=rei0(w);  // verify atomic integer
@@ -1254,7 +1254,7 @@ DF1(jtfoldZ1){F12IP;
  RETF(sc(jt->afoldinfo->exestats[type]));  // return the value
 }
 // x Z: y
-DF2(jtfoldZ2){F12IP;
+DF2(jtfoldZ2){DF12IP;
  ARGCHK2(a,w)
  ASSERT(jt->afoldinfo,EVUNTIMELY);  // If fold not running, fail.
  I type; type=rei0(a);  // verify atomic integer

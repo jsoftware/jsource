@@ -20,11 +20,11 @@
 // self is a cyclic iterator
 // we extract the pointer to the verb to be executed, advance the cycle pointer (.gerx) with wraparound, and call the verb
 // pass inplaceability through
-static DF2(jtexeccyclicgerund){F12IP;  // call is w,self or a,w,self
+static DF2(jtexeccyclicgerund){DF12IP;  // call is w,self or a,w,self
  // find the real self, valence-dependent
   ARGCHK1(w);
  I ismonad=AT(w)==0; self=ismonad?w:self;
- I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx; A vbtoexec=C(AAV(FAV(self)->fgh[2])[nexttoexec]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
+ I nexttoexec=FAV(self)->localuse.lu1.gercut.cgerx; A vbtoexec=AAV(FAV(self)->fgh[2])[nexttoexec]; AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec  pyx cannot return a verb.
  ++nexttoexec; nexttoexec=AN(FAV(self)->fgh[2])==nexttoexec?0:nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // cyclically advance exec pointer
  w=ismonad?vbtoexec:w; A z=(*fntoexec)(jtfg,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
  if(unlikely(z==0)){jteformat(jt,vbtoexec,ismonad?0:a,w,0);}  // if error, we must format it here because cyclic gerund is invalid
@@ -33,7 +33,7 @@ static DF2(jtexeccyclicgerund){F12IP;  // call is w,self or a,w,self
 
 // similar, for executing m@.v on cells sequentially.  This for I selectors
 // pass inplaceability through
-static DF2(jtexecgerundcellI){F12IP;  // call is w,self or a,w,self
+static DF2(jtexecgerundcellI){DF12IP;  // call is w,self or a,w,self
  // find the real self, valence-dependent
  ARGCHK1(w);
  I ismonad=AT(w)==0; self=ismonad?w:self;  // set ismonad if call is w,self; update self ptr then
@@ -41,7 +41,7 @@ static DF2(jtexecgerundcellI){F12IP;  // call is w,self or a,w,self
  I gerx=IAV(FAV(self)->fgh[1])[nexttoexec];  // selector for that cell
  gerx+=REPSGN(gerx)&AN(FAV(self)->fgh[2]);  // if negative, back up from end
  ASSERTGOTO(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX,errorwind);  // must be in range of # gerunds
- A vbtoexec=C(AAV(FAV(self)->fgh[2])[gerx]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
+ A vbtoexec=AAV(FAV(self)->fgh[2])[gerx]; AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec    pyx cannot return a verb.
  ++nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec; // advance to next cell
  w=ismonad?vbtoexec:w; A z=(*fntoexec)(jtfg,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
  if(unlikely(z==0)){jteformat(jt,vbtoexec,ismonad?0:a,w,0);}  // if error, we must format it here because cyclic gerund is invalid
@@ -52,7 +52,7 @@ errorwind:;  // here if there is an error in the result of calculating the selec
   RETF(0);
 }
 // This for B selectors
-static DF2(jtexecgerundcellB){F12IP;  // call is w,self or a,w,self
+static DF2(jtexecgerundcellB){DF12IP;  // call is w,self or a,w,self
  // find the real self, valence-dependent
  ARGCHK1(w);
  I ismonad=AT(w)==0; self=ismonad?w:self;  // set ismonad if call is w,self; update self ptr then
@@ -60,7 +60,7 @@ static DF2(jtexecgerundcellB){F12IP;  // call is w,self or a,w,self
  I gerx=BAV(FAV(self)->fgh[1])[nexttoexec];
  gerx+=REPSGN(gerx)&AN(FAV(self)->fgh[2]);
  ASSERTGOTO(BETWEENO(gerx,0,AN(FAV(self)->fgh[2])),EVINDEX,errorwind);
- A vbtoexec=C(AAV(FAV(self)->fgh[2])[gerx]); AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec
+ A vbtoexec=AAV(FAV(self)->fgh[2])[gerx]; AF fntoexec=FAV(vbtoexec)->valencefns[1-ismonad]; ASSERT(fntoexec!=0,EVDOMAIN); // get fn to exec    pyx cannot return a verb.
  ++nexttoexec; FAV(self)->localuse.lu1.gercut.cgerx=nexttoexec;
  w=ismonad?vbtoexec:w; A z=(*fntoexec)(jtfg,a,w,vbtoexec);  // vector to the function, as a,vbtoexec or a,w,vbtoexec as appropriate
  if(unlikely(z==0)){jteformat(jt,vbtoexec,ismonad?0:a,w,0);}  // if error, we must format it here because cyclic gerund can't
@@ -97,18 +97,19 @@ static A jtcreategerunditerator(J jt, A z, A w, A r){  // z is result area, w is
  R z;
 }
 
-// w is a gerund whose max rank is r.  Result is a boxed array of VERBs, one for each gerund, if they are well formed
+// w is a gerund whose max rank is low 6 bits of r.  Result is a boxed array of VERBs, one for each gerund, if they are well formed
 // If the gerund is alrady a verb, leave it as is, otherwise convert from AR
+// if r is negative, we allow all parts of speech, otherwise just verbs (because we want to display gerund` & the like as linear not AR)
 A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w); 
- ASSERT(r>=AR(w),EVRANK);  // max rank allowed
+ ASSERT((r&RMAX)>=AR(w),EVRANK);  // max rank allowed
  ASSERT(n!=0,EVLENGTH);  // gerund must not be empty
  ASSERT(BOX&AT(w),EVDOMAIN);   // must be boxed
  // scaf  have flag indicating 'all contents are verbs', created by `
  I zr=AR(w); GATV(z,BOX,n,AR(w),AS(w)); zv=AAVn(zr,z);  // allocate one box per gerund
 // obsolete  DO(n, RZ(zv[i]=x=incorp(fx(C(wv[i])))); ASSERT(VERB&AT(x),EVDOMAIN););   // create verb, verify it is a verb  No incorporation since it's not a noun
- DO(n, RZ(zv[i]=x=incorp(fx(CPYX(wv[i])))); ASSERT(VERB&AT(x),EVDOMAIN););   // create verb, verify it is a verb  No incorporation since it's not a noun
+ DO(n, RZ(zv[i]=x=incorp(fx(CPYX(wv[i])))); ASSERT(((r&ADV+CONJ)|VERB)&AT(x),EVDOMAIN););   // create verb, verify it is a verb  No incorporation since it's not a noun
  R z;
 }
 
@@ -122,27 +123,29 @@ PRIM jtfxself[2]={
 // self is a parm passed through to jtfx, coming from jtfxself above.  if AK(self) is nonzero, we return nouns as is
 // Result claims to be an array of boxes, but each box holds an A with possibly a function type
 // scaf this should be merged into fxeachv since only verbs can come out at the top level
-DF1(jtfxeach){F12IP;RETF(every(w,self));}
+// obsolete DF1(jtfxeach){DF12IP;RETF(every(w,self));}
+DF1(jtfxeach){DF12IP;A z; GATV0(z,BOX,AN(w),1); A *zv=AAV(z), *wv=AAV(w); DO(AN(w), A zz; RZ(df1(zz,wv[i],self)) RZ(zv[i]=incorp(zz)) ) RETF(z);}
 
-static DF1(jtcon1){F12IP;A h,*hv,*x,z;V*sv;
+
+static DF1(jtcon1){DF12IP;A h,*hv,*x,z;V*sv;
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  I zr=AR(h); GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAVn(zr,z);
- DQ(AN(h), RZ(*x++=incorp(CALL1(FAV(C(*hv))->valencefns[0],  w,C(*hv)))); ++hv;);
+ DQ(AN(h), RZ(*x++=incorp(CALL1(FAV(*hv)->valencefns[0],  w,*hv))); ++hv;);   //   pyx cannot return a verb.
  R jtopenforassembly(jt,z);
 }
 
-static DF2(jtcon2){F12IP;A h,*hv,*x,z;V*sv;
+static DF2(jtcon2){DF12IP;A h,*hv,*x,z;V*sv;
  sv=FAV(self); h=sv->fgh[2]; hv=AAV(h);
  I zr=AR(h); GATV(z,BOX,AN(h),AR(h),AS(h)); x=AAVn(zr,z);
- DQ(AN(h), RZ(*x++=incorp(CALL2(FAV(C(*hv))->valencefns[1],a,w,C(*hv)))); ++hv;);
+ DQ(AN(h), RZ(*x++=incorp(CALL2(FAV(*hv)->valencefns[1],a,w,*hv))); ++hv;);   //   pyx cannot return a verb.
  R jtopenforassembly(jt,z);
 }
 
 // u`:3 insert 
-static DF1(jtinsert){F12IP;A hs,*hv,z;I hfx,j,m,n;A *old;
+static DF1(jtinsert){DF12IP;A hs,*hv,z;I hfx,j,m,n;A *old;
  ARGCHK1(w);
  SETIC(w,n); j=n-1; hs=FAV(self)->fgh[2]; m=AN(hs); hfx=j%m; hv=AAV(hs);  // m cannot be 0
- if(!n)R dfv1(z,w,iden(C(*hv)));
+ if(!n)R dfv1(z,w,iden(*hv));   // pyx cannot return a verb.
  RZ(z=from(num(-1),w));
  old=jt->tnextpushp;
  --m; DQ(n-1, --j; --hfx; hfx=(hfx<0)?m:hfx; RZ(z=CALL2(FAV(hv[hfx])->valencefns[1],from(sc(j),w),z,hv[hfx])); z=gc(z,old);)
@@ -159,7 +162,7 @@ F2(jtevger){F12IP;A hs;I k;
  RZ(hs=fxeachv(RMAX,a));
  ASSERT(BETWEENC(k^1,GAPPEND^1,GINSERT^1),EVDOMAIN)   // require valid type
  AF f1=k==GAPPEND?(AF)jtcon1:(AF)jtinsert; AF f2=k==GAPPEND?(AF)jtcon2:(AF)jtvalenceerr; I r2=k==GAPPEND?RMAX:0;  // variable parts
- R fdef(0,CGRCO,VERB, f1,f2,   a,w,hs, gflg(hs)+VGERL, RMAX,r2,r2); // `:0: jtcon1/jtcon2   `:3:jtinsert/err
+ R fdef(0,CGRCO,VERB, f1,f2,   hs,w,hs, gflg(hs)+VGERL, RMAX,r2,r2); // `:0: jtcon1/jtcon2   `:3:jtinsert/err
 }
 
 // u`v.  Allow append-in-place to m
@@ -168,7 +171,7 @@ F2(jttie){F12IP;ARGCHK2(a,w); R jtapip((J)((I)jtfg&(~JTFLAGMSK+JTINPLACEA+JTINPL
 
 // m@.v y.  Execute the verbs at high rank
 // Bivalent entry point: called as (jt,w,self,self) or (jt,a,w,self)
-static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
+static DF2(jtcasei12){DF12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
  ARGCHK2(a,w);
  PROLOG(997);
  // see if we were called as monad or dyad.  If monad, fix up w and self
@@ -281,7 +284,7 @@ static DF2(jtcasei12){F12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
     }
    //  pull the function for the value, execute on the value with forced attributes (ASSUMEBOXATOP, WILLBEOPENED, COUNTITEMS)
    // take inplaceability from the selected verb always - we have made the cells inplaceable if possible
-    A fs=C(AAV(FAV(self)->fgh[2])[currres]);  // fetch the gerund to execute
+    A fs=AAV(FAV(self)->fgh[2])[currres];  // fetch the gerund to execute    pyx cannot return a verb.
     RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((I)jt+(JTINPLACEA*(ZZFLAGWORD>>ZZFLAGISDYADX)+JTINPLACEW)),
      virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace depending on valence
 
@@ -345,7 +348,7 @@ assemblyerror: RESETERR jt->etxinfo->asseminfo.assemframelen=0; jt->jerr=EVASSEM
   // There was only 1 cell in the result.  Apply the selected verb, inplace if possible
   I vx=rei0(vres);  // fetch index of gerund
   vx+=REPSGN(vx)&AN(FAV(self)->fgh[2]); ASSERTGOTO(BETWEENO(vx,0,AN(FAV(self)->fgh[2])),EVINDEX,errorwind);
-  A ger=C(AAV(FAV(self)->fgh[2])[vx]);  // the selected gerund
+  A ger=AAV(FAV(self)->fgh[2])[vx];  // the selected gerund.  pyx cannot return a verb.
   R (FAV(ger)->valencefns[state>>ZZFLAGISDYADX])(jtfg,a,state&ZZFLAGISDYAD?w:ger,ger);  // inplace if the verb can handle it
  }
 errorwind:;  // here if there is an error in the result of calculating the selector.  We must send that result to eformat
@@ -374,6 +377,6 @@ F2(jtagendai){F12IP;I flag;
  // verb v.  Create a "BOX" type holding the verb form of each gerund
  A avb; RZ(avb = incorp(fxeachv(1L,a)));
   // Calculate NOLOCCHG/VNONAME+VNOSELF from all of the verbs (both a and w), provided the user can handle it
- R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,avb, (gflg(avb)&FAV(w)->flag)+VGERL, RMAX, RMAX, RMAX);
+ R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, avb,w,avb, (gflg(avb)&FAV(w)->flag)+VGERL, RMAX, RMAX, RMAX);  // use verbified gerund
 }
 

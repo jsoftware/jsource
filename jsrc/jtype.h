@@ -1244,8 +1244,8 @@ union{
 
 // bits 8 and above are available for all verbs:
 #define VGERLX          8
-#define VGERL           (((I)1)<<VGERLX)          /* gerund left  argument           */
-#define VGERR           (I)512          /* gerund right argument           */
+#define VGERL           (((I)1)<<VGERLX)     // f arg has been successfully processed by fxeachv and can be displayed as a gerund
+#define VGERR           (I)512          // fgarg has been successfully processed by fxeachv and can be displayed as a gerund
 // bit 10 free
 #define VIRS1X          11
 #define VIRS1           (I)2048         /* 11 monad has integral rank support */

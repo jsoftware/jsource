@@ -730,8 +730,8 @@ DFI1(jtgr1){A z;I f,ai,m,n,*s,t,wn,zn;
  EPILOG(z);
 }    /*   grade"r w main control for dense w */
 
-DFI1(jtgrade1){IARG1 F12IP;A z; jtfg=(J)((I)jtfg&~JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(wfg)); RETF(grd1sp(wfg));}
-DFI1(jtdgrade1){IARG1 F12IP;A z; jtfg=(J)(((I)jtfg&~JTFLAGMSK)+JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(wfg)); RETF(grd1sp(wfg));}
+DFI1(jtgrade1){IARG1 DF12IP;A z; jtfg=(J)((I)jtfg&~JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(wfg)); RETF(grd1sp(wfg));}
+DFI1(jtdgrade1){IARG1 DF12IP;A z; jtfg=(J)(((I)jtfg&~JTFLAGMSK)+JTDESCEND); if(likely(!ISSPARSE(AT(w))))RETF(gr1(wfg)); RETF(grd1sp(wfg));}
 // Since grade2 pulls from a, mark a as non-pristine.  But since there can be no repeats, transfer a's pristinity to result if a is inplaceable
 // We do this in jtgr2 because it has a branch where all boxed values go
 FI2(jtgrade2){IARG2 F12IP;A z; if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jtfg&~JTDESCEND),afg,wfg)); RETF(jtgrd2sp((J)((I)jtfg&~JTDESCEND),afg,wfg));}
@@ -776,7 +776,7 @@ FI2(jtdgrade2){IARG2 F12IP;A z; if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jt
   }  \
  }
 
-DF2(jtordstat){F12IP;A q,t=0;I j,m,m0,m1,n,wt;D *qv;
+DF2(jtordstat){DF12IP;A q,t=0;I j,m,m0,m1,n,wt;D *qv;
  I i=NRANDS-1;  // i points to the next random number to draw
  ARGCHK2(a,w);
  n=AN(w); wt=AT(w); j=rei0(a);
@@ -787,7 +787,7 @@ DF2(jtordstat){F12IP;A q,t=0;I j,m,m0,m1,n,wt;D *qv;
  if(wt&FL)OSLOOP(D,scf) else OSLOOP(I,sc);
 }    /* a{/:~w */
 
-DF2(jtordstati){F12IP;A t;I n,wt;
+DF2(jtordstati){DF12IP;A t;I n,wt;
  ARGCHK2(a,w);
  n=AN(w); wt=AT(w);
  if(((4-n)&((AR(a)|(1^AR(w)))-1)&(-(wt&FL+INT)))>=0)R jthook2cell(jt,a,w,self);  // revert if not int/float, len>4, and (atom a & list w)

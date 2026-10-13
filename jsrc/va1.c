@@ -335,7 +335,7 @@ static A jtva1s(J jt,A w,A self,I cv,VA1F ado){A e,x,z,ze,zx;B c;I n,oprc,t,zt;P
 
 #define VA1CASE(e,f) (10*(e)+(f))
 
-static DF1(jtva1){F12IP;A z;I cv,n,wt,zt;VA1F ado;
+static DF1(jtva1){DF12IP;A z;I cv,n,wt,zt;VA1F ado;
  UA *u=(UA*)((I)va1tab+__atomic_load_n(&FAV(self)->localuse.lu1.uavandx[0],__ATOMIC_RELAXED));
  ARGCHK1(w);
  wt=AT(w); n=AN(w);
@@ -410,7 +410,7 @@ static DF1(jtva1){F12IP;A z;I cv,n,wt,zt;VA1F ado;
 
 // Consolidated entry point for ATOMIC1 verbs.
 // This entry point supports inplacing
-DF1(jtatomic1){F12IP;A z;
+DF1(jtatomic1){DF12IP;A z;
  ARGCHK1(w);
  I awm1=AN(w)-1;
  // check for singletons
@@ -433,13 +433,13 @@ DF1(jtatomic1){F12IP;A z;
 }
 
 #define SETCONPTR(n) A conptr=num(n); A conptr2=zeroionei(n); conptr=AT(w)&INT?conptr2:conptr; conptr2=numvr(n); conptr=AT(w)&FL?conptr2:conptr;  // for 0 or 1 only
-DF1(jtnegate){F12IP;ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); SETCONPTR(0) R jtatomic2(jtfg,conptr,w,(A)&dsCMINUS_NEG);}   // w remains inplaced
-DF1(jtrecip ){F12IP;ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); A conptr=num(1); A conptr2=numvr(1); R jtatomic2(jtfg,AT(w)&XNUM+RAT?conptr:conptr2,w,(A)&dsCDIV_RECIP);}  // w remains inplaced
-DF1(jtpix){F12IP; ARGCHK1(w); if(unlikely(XNUM&AT(w)))if(jt->xmode==XMFLR||jt->xmode==XMCEIL)R jtatomic1(jtfg,w,self); R jtatomic2(jtfg,AT(w)&QP?pieE:pie,w,(A)&dsCSTAR_CIRCLE);}
+DF1(jtnegate){DF12IP;ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); SETCONPTR(0) R jtatomic2(jtfg,conptr,w,(A)&dsCMINUS_NEG);}   // w remains inplaced
+DF1(jtrecip ){DF12IP;ARGCHK1(w); if(unlikely(AT(w)&QP))R jtva1(jt,w,self); A conptr=num(1); A conptr2=numvr(1); R jtatomic2(jtfg,AT(w)&XNUM+RAT?conptr:conptr2,w,(A)&dsCDIV_RECIP);}  // w remains inplaced
+DF1(jtpix){DF12IP; ARGCHK1(w); if(unlikely(XNUM&AT(w)))if(jt->xmode==XMFLR||jt->xmode==XMCEIL)R jtatomic1(jtfg,w,self); R jtatomic2(jtfg,AT(w)&QP?pieE:pie,w,(A)&dsCSTAR_CIRCLE);}
 
 // special code for x ((<[!.0] |) * ]) y, implemented as if !.0
 #if C_AVX2 || EMU_AVX2
-DF2(jtdeadband){F12IP;A zz;
+DF2(jtdeadband){DF12IP;A zz;
  ARGCHK2(a,w);
  I n=AN(w);  // number of atoms to process
   // revert if not the special case we handle: both args FL, not sparse, a is an atom, w is nonempty

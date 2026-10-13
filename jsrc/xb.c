@@ -626,7 +626,7 @@ F2(jtfc2){F12IP;A z;I j,m,n,p,zt;float*s;
 }
 
 // _1 3!:7 y - convert boolean to packed integer
-static DF1(jtpackbytem1){F12IP;
+static DF1(jtpackbytem1){DF12IP;
  I wn=AN(w); if(unlikely(wn==0))R mtvi; if(unlikely(!(AT(w)&B01)))RZ(w=ccvt(B01,w,0)) UI8 * RESTRICT wv=I8AV(w);  // if no bits, empty result; point to first input bit
  A z; GATV0(z,INT,(wn+BW-1)>>(LGBW),1) C * RESTRICT zv=CAV1(z);  // allocate result & point to it
 #ifdef PEXT
@@ -651,7 +651,7 @@ static DF1(jtpackbytem1){F12IP;
 #else
  #define __builtin_popcountg __builtin_popcountl
 #endif
-static DF1(jtpopcount){F12IP;
+static DF1(jtpopcount){DF12IP;
  I wn=AN(w); if(unlikely(wn==0))R zeroionei(0); UI * RESTRICT wv=IAV(w); wn<<=bplg(AT(w)); // if no bits, empty result; point to first input bit; get # bytes in input
  I count=0; DO(wn>>LGSZI, count+=__builtin_popcountg(wv[i]);)  // count 1-bits in full Is
  if(unlikely(wn&(SZI-1)))count+=__builtin_popcountg(wv[wn>>LGSZI]<<((-wn&(SZI-1))<<LGBB));  // add on any remnant
@@ -659,7 +659,7 @@ static DF1(jtpopcount){F12IP;
 }
 
 // 1 3!:7 y - convert any type (normally packed integers) to boolean
-static DF1(jtpackbyte1){F12IP;
+static DF1(jtpackbyte1){DF12IP;
  I wn=AN(w); if(unlikely(wn==0))R mtv; C * RESTRICT wv=CAV(w); wn<<=bplg(AT(w)); // if no bits, empty result; point to first input bit; get # bytes in input
  A z; GATV0(z,B01,wn<<LGBB,1) UI8 * RESTRICT zv=UI8AV1(z);  // allocate result & point to it.  The allocation is always an integral # of I8s
 #if defined(PDEP) && SY_64
@@ -672,7 +672,7 @@ static DF1(jtpackbyte1){F12IP;
 }
 
 // 3!:7 Convert from/to packed bits
-DF2(jtpackbyte){F12IP;
+DF2(jtpackbyte){DF12IP;
  ARGCHK2(a,w);
  I j=rei0(a); ASSERT(BETWEENC(j,-1,1),EVDOMAIN) // x is -1/0/1
  AF cellrtn=jtpackbyte1; cellrtn=j==0?jtpopcount:cellrtn; cellrtn=j<0?jtpackbytem1:cellrtn;  // routine for 1 cell
@@ -688,26 +688,26 @@ DF2(jtpackbyte){F12IP;
 //  2 - complement bits
 //  3 - store 1
 // others TBD
-static DF2(jtpkbyterdcell){F12IP;
+static DF2(jtpkbyterdcell){DF12IP;
  A z;GATV0(z,B01,AN(a),1) C *zv=BAV1(z);    // allocate result area and pointer to it
  C *wv=CAV(w); UI wn=AN(w)<<(bplg(AT(w))+LGBB);  // point to the bytes.  We don't care what type.  get total # bits in arg
  UI *av=UIAV(a);  // point to indexes
  DO(AN(a), UI ax=av[i]; ASSERT(ax<wn,EVINDEX) zv[i]=SHMSK(wv[ax>>LGBB],ax&(BB-1),1);)  // extract each byte, copy to result
  RETF(z);
 }
-static DF2(jtpkbyterd){F12IP;
+static DF2(jtpkbyterd){DF12IP;
  ARGCHK2(a,w)  // verify arguments present
  if(unlikely(!(AT(a)&INT)))RZ(a=ccvt(INT,a,0))  // indexes must be INT
  DF2RANK(1,1,jtpkbyterdcell,self)
 }
 
 #if 0
-static DF2(jtpkbytewrcell){F12IP;
+static DF2(jtpkbytewrcell){DF12IP;
 R 0;
 }
 #endif
 // 3!:8 modify packed bits.  We use non-RMW cycles, 1 byte long.  A byte should not be shared for modification between two threads.
-static DF2(jtpkbytewr){F12IP;A z;
+static DF2(jtpkbytewr){DF12IP;A z;
  ARGCHK2(a,w)  // verify arguments present
  ASSERT(AT(w)&DIRECT,EVDOMAIN)  // mustn't modify bits in INDIRECT pointers
  if(unlikely(!(AT(a)&INT)))RZ(a=ccvt(INT,a,0))  // indexes must be INT
@@ -734,7 +734,7 @@ static DF2(jtpkbytewr){F12IP;A z;
 //  2 - complement bits
 //  3 - store 1
 // others TBD
-DF1(jtpkbyte){F12IP;
+DF1(jtpkbyte){DF12IP;
  ARGCHK1(w)   // verify arg present
  I j=rei0(w); ASSERT(BETWEENC(j,-1,3),EVDOMAIN) // x is -1..3
  AF f=j<0?jtpkbyterd:jtpkbytewr;  // _1 for read, others for write
@@ -1179,7 +1179,7 @@ F1(jtetoint){F12IP;
 // Bivalent.  left arg is 3 characters, one to use as the decimal point, one to store just after the value (usually ' ' or 'Z'),
 // one for result precision ('d'=date only, '0'-'9' give # fractional digits)
 // Default is '. 0'
-DF2(jtetoiso8601){F12IP;UC decimalpt,zuluflag;I prec;
+DF2(jtetoiso8601){DF12IP;UC decimalpt,zuluflag;I prec;
  ARGCHK1(w);
  ASSERT(SY_64,EVNONCE);
  // If monad, supply defaults; if dyad, audit
@@ -1200,7 +1200,7 @@ DF2(jtetoiso8601){F12IP;UC decimalpt,zuluflag;I prec;
 // Bivalent.  left arg is 'd', '0', '3', or '9', like 3d digit of 6!:16, default '9'
 // optional second box of x is #seconds to local timezone, i. e 180 for GMT+03; if given all UTC times will be
 // converted to local time
-DF2(jtiso8601toe){F12IP;A z;I prec;I local;
+DF2(jtiso8601toe){DF12IP;A z;I prec;I local;
  ARGCHK1(w);
  ASSERT(SY_64,EVNONCE);
  // If monad, supply defaults; if dyad, audit
@@ -1330,7 +1330,7 @@ static A efstring(J jt,A w,I prec){
 
 // 6!:18 convert a block of strings to nanosecond times.  Result has one INT for each string
 // Bivalent.  left arg is 'd', '0', '3', or '9', like 3d digit of 6!:16, default '9'
-DF2(jtstringtoe){F12IP;A z;I prec;
+DF2(jtstringtoe){DF12IP;A z;I prec;
  ARGCHK1(w);
  ASSERT(SY_64,EVNONCE);
  // If monad, supply defaults; if dyad, audit

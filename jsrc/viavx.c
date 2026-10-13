@@ -1149,7 +1149,7 @@ inplace:;
 
 // verb to vector combine@e. compounds.  The i. code is in the self
 // because these are e. compounds we swap a and w
-DF2(jtcombineeps){F12IP;ARGCHK3(a,w,self);R indexofsub(II0EPS+PEXT0(FAV(self)->flag,3,7),w,a);}
+DF2(jtcombineeps){DF12IP;ARGCHK3(a,w,self);R indexofsub(II0EPS+PEXT0(FAV(self)->flag,3,7),w,a);}
 
 // verb to execute compounds like m&i. e.&n .  m/n has already been hashed and the result saved away
 // a is the arg that was indexed, used only if we have to revert to rerunning the operation
@@ -1209,7 +1209,7 @@ A jtindexofprehashed(J jtfg,A a,A w,A hs,A self){F12IP;A h,*hv,x,z;IFN fn;I ar,*
 }
 
 // x i. y, with IRS, supports inplacing (in subroutine)
-DFI2(jtindexof){IARG2CR F12IP;
+DFI2(jtindexof){IARG2CR DF12IP;
  if(unlikely(a==ds(CALP))&&likely(AT(w)&LIT)&&likely(acr==1)&&likely(!ISSPARSE(AT(w)))){R jtadotidot(jt,w);}  // catch special case of a. i. y
  R jtindexofsub(jtfg,IIDOT,afg,wfg);  // pass inplaceability through
 }
@@ -1260,7 +1260,7 @@ F2(jtless){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
 }    /* a-.w */
 
 // x ([ -. -.[!.f]) y.  does not have IRS, supports inplacing on a (the unhashed argument)
-DF2(jtintersect){F12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
+DF2(jtintersect){DF12IP;A x=w;I ar,at,k,r,*s,wr,*ws;
  ARGCHK2(a,w);
  PROLOG(000);
  at=AT(a); ar=AR(a);
@@ -1295,13 +1295,13 @@ FI2(jteps){
 }    /* a e."r w */
 
 // I.@~: y   does not have IRS
-DF1(jtnubind){F12IP;
+DF1(jtnubind){DF12IP;
  ARGCHK1(w);
  R unlikely(ISSPARSE(AT(w)))?on1cell(jt,w,self):indexofsub(INUBI,w,w);  // revert for sparse.  No inplacing - could do
 }    /* I.@~: w */
 
 // I.@(~:!.0) y     does not have IRS
-DF1(jtnubind0){F12IP;A z;
+DF1(jtnubind0){DF12IP;A z;
  ARGCHK1(w);
  if(unlikely(ISSPARSE(AT(w))))R on1cell(jt,w,self);  // revert for sparse
  PUSHCCT(1.0) z=indexofsub(INUBI,w,w); POPCCT  // do operation intolerantly.  Could inplace
@@ -1309,13 +1309,13 @@ DF1(jtnubind0){F12IP;A z;
 }    /* I.@(~:!.0) w */
 
 // I.@e. y   does not have IRS
-DF2(jtepsind){F12IP;
+DF2(jtepsind){DF12IP;
  ARGCHK2(a,w);
  R unlikely(ISSPARSE(AT(w)|AT(w)))?jtupon2cell(jt,a,w,self):indexofsub(IIFBEPS,w,a);  // revert for sparse.  Could inplace
 } 
 
 // i.@(e.!.0) y     does not have IRS
-DF2(jtepsind0){F12IP;A z;
+DF2(jtepsind0){DF12IP;A z;
  ARGCHK2(a,w);
  if(unlikely(ISSPARSE(AT(a)|AT(w))))R jtupon2cell(jt,a,w,self);  // revert for sparse
  PUSHCCT(1.0) z=indexofsub(IIFBEPS,w,a); POPCCT  // do operation intolerantly

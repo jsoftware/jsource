@@ -107,7 +107,7 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A z;
 // obsolete   DO(AN(h), flag&=FAV(f1v[i])->flag; if(f1v[i]!=fv[i]){A t;RZ(t=aro(f1v[i])) INCORPNV(t) fv[i]=t;})  // update AR in f of any changed component.
   DO(AN(f), flag&=FAV(fv[i])->flag; A t=REFIXA(na,fv[i]); R255(t); if(t!=fv[i]){INCORPNV(t) fv[i]=t;})  // update AR in f of any changed component.
   RZ(f=fxeachv(1,f))  // agenda must be verbified - it will already be, unless there was a pun
-  R fdef(0,CATDOT,VERB, FAV(w)->valencefns[0],FAV(w)->valencefns[1], f,g,f, flag+VGERL, RMAX, RMAX, RMAX);   // create new verb, setting flags, and using verbified gerund
+  R fdef(0,CATDOT,VERB, FAV(w)->valencefns[0],FAV(w)->valencefns[1], f,g,0, flag+VGERL, RMAX, RMAX, RMAX);   // create new verb, setting flags, and using verbified gerund
  case CGRCO:
   // we fix each gerund, and then convert it to AR and back.  This is needless potentially expensive conversions.  We should
   // fix each gerund, but AR only the ones that changed so that we keep f matching h; and use the fixed ones without un-AR scaf   scaf change this to fix the verbs not the ARs

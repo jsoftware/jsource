@@ -401,14 +401,14 @@ static DFI1(jtprefix){A fs=FAV(self)->fgh[0];
  R eachl(apv(SETIC(w,wr),1L,1L),w,atop(fs,ds(CTAKE)));
 }    /* f\"r w for general f */
 
-static DFI1(jtgprefix){A h,*hv,z,*zv;I m,n,r;
+static DFI1(jtgprefix){A f,*fv,z,*zv;I m,n,r;
  IARG1R F12IP;
  ASSERT(!ISSPARSE(AT(w)),EVNONCE);
  if(unlikely(wcr<wr)){R rank1ex(w,self,wr,jtgprefix);}
  SETIC(w,n); 
- h=FAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
+ f=FAV(self)->fgh[0]; fv=AAV(f); m=AN(f);
  GATV0(z,BOX,n,1); zv=AAV1(z); I imod=0;
- DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(h,take(sc(1+i),w),hv[imod])); ++imod;);
+ DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(f,take(sc(1+i),w),fv[imod])); ++imod;);
  R jtopenforassembly(jt,z);
 }    /* g\"r w for gerund g */
 
@@ -475,7 +475,7 @@ static DF1(jtinfix2){DF12IP;PROLOG(0019);
 static DF2(jtginfix){DF12IP;A h,*hv,x,z,*zv;I d,m,n;
  m=rei0(vib(a)); 
  RZ(x=ifxi(m,w));
- h=FAV(self)->fgh[2]; hv=AAV(h); d=AN(h);
+ h=FAV(self)->fgh[0]; hv=AAV(h); d=AN(h);
  if(SETIC(x,n)){
   GATV0(z,BOX,n,1); zv=AAV1(z);
   DO(n, RZ(zv[i]=df1(h,seg(from(sc(i),x),w),hv[i%d])););   //   pyx cannot return a verb.
@@ -943,7 +943,7 @@ F1(jtbslash){F12IP;A f;AF f1=jtinfixprefix1,f2=jtinfixprefix2;V*v;I flag=FAV(ds(
  A z; fdefallo(z)
  if(NOUN&AT(w)){
   A fixw; RZ(fixw=fxeachv(1L,w));  // convert gerunds to verbs
-  fdeffill(z,0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, fixw,0L,fixw, VGERL|flag|gflg(fixw), RMAX,0L,RMAX); RETF(z);   // install common flags, use verbified gerund
+  fdeffill(z,0,CBSLASH,VERB, jtinfixprefix1,jtinfixprefix2, fixw,0L,0, VGERL|flag|gflg(fixw), RMAX,0L,RMAX); RETF(z);   // install common flags, use verbified gerund
  }
  // falling through, w is verb
  v=FAV(w);  // v is the u in u\ y

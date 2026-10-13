@@ -16,9 +16,10 @@
 
 
 // f;.0 w
-static DF1(jtcut01){DF12IP;A h,x,z;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; 
- RZ(x=from(box(every(negate(shape(w)),ds(CIOTA))),w));
- if(VGERL&FAV(self)->flag){h=FAV(self)->fgh[2]; R df1(z,x,AAV(h)[0]);}else{ R CALL1(f1,x,fs);}  // not inplaceable
+static DF1(jtcut01){DF12IP;A x,z;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; 
+ RZ(x=from(box(every(negate(shape(w)),ds(CIOTA))),w));   // create reversed indexes, extract reversed array
+// obsolete  if(VGERL&FAV(self)->flag){h=FAV(self)->fgh[2]; R df1(z,x,AAV(h)[0]);}else{ R CALL1(f1,x,fs);}  // not inplaceable
+ if(VGERL&FAV(self)->flag){R df1(z,x,AAV(fs)[0]);}else{ R CALL1(f1,x,fs);}  // not inplaceable
 }    /* f;.0 w */
 
 // a f;.0 w
@@ -367,7 +368,7 @@ static DF2(jtcut2sx){DF12IP;V* RESTRICT sv=FAV(self); A fs=sv->fgh[0]; AF f1=FAV
  ap=PAV(a);
  if(!(equ(num(0),SPA(ap,e))&&AN(SPA(ap,a))))R cut2(cvt(B01,a),w,self); 
  vf=FAV(fs);
- if(VGERL&sv->flag){h=sv->fgh[2]; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
+ if(VGERL&sv->flag){h=sv->fgh[0]; hv=AAV(h); hn=AN(h); id=0;}else id=vf->id; 
  y=SPA(ap,i); yn=AN(y); yv=AV(y); u=v=BAV(SPA(ap,x)); e=m=0;
  GATV0(yy,INT,yn+1,1); yu=AV1(yy); *yu++=p=pfx?n:-1;
  switch(pfx+(I )(((id&~1)==CLEFT)||id==CCOMMA?2:0)){  // [ ] ,
@@ -1422,12 +1423,12 @@ F2(jtcut){F12IP;A h=0;I flag=0,k;
  case 2: case -2:
 #if 0 && C_AVX2 && PYXES //temp. disabled; broken scaf
   if(FAV(a)->id==CBOX){ //<;._2
-   fdeffillall(z,0,CCUT,VERB,jtboxcutm21,jtcut2, a,w,h, flag,RMAX,1,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
+   fdeffillall(z,0,CCUT,VERB,jtboxcutm21,jtcut2, flag&VGERL?h:a,w,0, flag,RMAX,1,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
   }
 #endif
 // fall through to...
- case 1: case -1: fdeffillall(z,0,CCUT,VERB, jtcut1, jtcut2,  flag&VGERL?h:a,w,h, flag, RMAX,1L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
- case 3: case -3: case 259: case -259: fdeffillall(z,0,CCUT,VERB, jttess1,jttess2, a,w,h, flag, RMAX,2L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
+ case 1: case -1: fdeffillall(z,0,CCUT,VERB, jtcut1, jtcut2,  flag&VGERL?h:a,w,0, flag, RMAX,1L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
+ case 3: case -3: case 259: case -259: fdeffillall(z,0,CCUT,VERB, jttess1,jttess2, a,w,0, flag, RMAX,2L,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.gercut.cutn=k); R z;
  default:         ASSERT(0,EVDOMAIN);
  }
 }

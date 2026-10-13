@@ -184,13 +184,13 @@ static DFI1(jtsuffix){A fs=FAV(self)->fgh[0];
  R eachl(IX(SETIC(w,wcr)),w,atop(fs,ds(CDROP)));
 }    /* f\."r w for general f */
 
-static DFI1(jtgsuffix){A h,*hv,z,*zv;I m,n;
+static DFI1(jtgsuffix){A f,*fv,z,*zv;I m,n;
  IARG1R F12IP;
  if(wcr<wr)R rank1ex(w,self,wcr,jtgsuffix);
  SETIC(w,n); 
- h=FAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
+ f=FAV(self)->fgh[0]; fv=AAV(f); m=AN(f);
  GATV0(z,BOX,n,1); zv=AAV1(z); I imod=0;
- DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(h,drop(sc(i),w),hv[imod])); ++imod;);   //   pyx cannot return a verb.
+ DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(f,drop(sc(i),w),fv[imod])); ++imod;);   //   pyx cannot return a verb.
  R jtopenforassembly(jt,z);
 }    /* g\."r w for gerund g */
 
@@ -337,12 +337,12 @@ static F2(jtomask){F12IP;A c,r,x,y;I m,n,p;
  R reshapeW(over(r,c),over(x,y));
 }
 
-static DF2(jtgoutfix){DF12IP;A h,*hv,x,z,*zv;I m,n;
+static DF2(jtgoutfix){DF12IP;A f,*fv,x,z,*zv;I m,n;
  RZ(x=omask(a,w));
  SETIC(x,n);
- h=FAV(self)->fgh[2]; hv=AAV(h); m=AN(h);
+ f=FAV(self)->fgh[0]; fv=AAV(f); m=AN(f);
  GATV0(z,BOX,n,1); zv=AAV1(z); I imod=0;
- DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(h,repeat(from(sc(i),x),w),hv[imod])); ++imod;);    //   pyx cannot return a verb.
+ DO(n, imod=(imod==m)?0:imod; RZ(zv[i]=dfv1(f,repeat(from(sc(i),x),w),fv[imod])); ++imod;);    //   pyx cannot return a verb.
  R jtopenforassembly(jt,z);
 }
 
@@ -397,7 +397,7 @@ F1(jtbsdot){F12IP;A f;AF f1=jtsuffix,f2=jtoutfix;I flag=FAV(ds(CBSDOT))->flag&~(
  A z; fdefallo(z)
  if(NOUN&AT(w)){  // noun (gerund) case
   A fixw; RZ(fixw=fxeachv(1L,w));
-  fdeffill(z,0,CBSDOT,VERB, jtgsuffix,jtgoutfix, fixw,0L,fixw, VGERL|flag|gflg(fixw), RMAX,0L,RMAX); RETF(z);  // use verbified gerund
+  fdeffill(z,0,CBSDOT,VERB, jtgsuffix,jtgoutfix, fixw,0L,0, VGERL|flag|gflg(fixw), RMAX,0L,RMAX); RETF(z);  // use verbified gerund
  }
  // falling through, u  is a verb
  v=FAV(w);  // verb info for w

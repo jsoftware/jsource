@@ -677,7 +677,7 @@ DF2(jtkeybox){DF12IP;PROLOG(0009);A ai,z=0;I nitems;
  AFLAGINIT(z,-(AT(w)&DIRECT) & AFPRISTINE)  // maybe pristine
  ASSERT(y!=0,EVWSFULL);  // if we broke out on allocation failure, fail.
  EPILOG(z);
-}    // a <./ w
+}    // a </. w
 
 
 F2(jtkeytally);
@@ -849,7 +849,7 @@ F1(jtsldot){F12IP;A h=0;AF f1=jtoblique,f2;C c,d,e;I flag=0;V*v;
               // otherwise (including keymean) fall through to...
  default: f2=jtkey; flag |= (FAV(w)->flag&VNOLOCCHG); break;  // pass through NOLOCCHG.
  }
- fdeffill(z,0,CSLDOT,VERB, f1,f2, flag&VGERL?h:w,0L,h, flag, RMAX,RMAX,RMAX); R z;
+ fdeffill(z,0,CSLDOT,VERB, f1,f2, flag&VGERL?h:w,0L,0, flag, RMAX,RMAX,RMAX); R z;
 }
 
 // f/.. - looks like /. except for id
@@ -858,6 +858,6 @@ F1(jtsldotdot){F12IP;A h=0;
 // by /. and ;.1 must be the same as far as flags etc.
  ARGCHK1(w);
  I flag; if(NOUN&AT(w)){RZ(h=fxeachv(1L,w)); flag=gflg(h)+VGERL;}else flag=(FAV(w)->flag&VNONAME+VNOSELF);  // pass through rollup flags
- R fdef(0,CSLDOTDOT,VERB,jtvalenceerr,jtkey, flag&VGERL?h:w,0L,h, flag, RMAX,RMAX,RMAX);
+ R fdef(0,CSLDOTDOT,VERB,jtvalenceerr,jtkey, flag&VGERL?h:w,0L,0, flag, RMAX,RMAX,RMAX);
 }
 

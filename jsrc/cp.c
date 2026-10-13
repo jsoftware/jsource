@@ -144,7 +144,7 @@ revert:;
  R jtpowatom12(jt,origa,origw,self);
 }
 
-// general u^:n w where n is any integer array or finite atom.  If atom, it will be negative.  Bivalent
+// general u^:n w where n is any integer array or finite atom.  If atom, it will be negative.  Bivalent.  self->h is n
 static DF2(jtply12){DF12IP;A fs=FAV(self)->fgh[0]; PROLOG(0040);A zz=0;
 #define ZZWILLBEOPENEDNEVER 1  // can't honor willbeopened because the results are recycled as inputs
 #define ZZPOPNEVER 1  // can't pop the inputs - 
@@ -263,7 +263,7 @@ static DF2(jtgcr12){DF12IP;PROLOG(0);
  w=EPMONAD?0:w;  // throughout this bivalent routine a is w/a w is 0/w  (monad/dyad) w!=0 is the dyad flag
  if(unlikely(a==w))jtfg=(J)((I)jtfg&~(JTINPLACEA+JTINPLACEW));  // cannot inplace a/w if they are equal
  I origjtfg=(I)jtfg;  // remember initial inplacing status of args - after equality check
- A *hv=AAV(FAV(self)->fgh[2]); I hn=AN(FAV(self)->fgh[2]);  // hv->v0`v1`v2.  These cannot be pyxes.  hn is their number
+ A *hv=AAV(FAV(self)->fgh[1]); I hn=AN(FAV(self)->fgh[1]);  // hv->v0`v1`v2.  These cannot be pyxes.  hn is their number
  STACKCHKOFL     // unless we prevent it, the gerund might return a gerund, creating an infinite loop
  A ff;   // the routine for the function -  u or u^:newpower
  A z0; RZ(z0=CALL12(w,FAV(hv[hn-2])->valencefns[!!w],a,w,hv[hn-2]))  // z=.[x] v1 y  which is the power to use
@@ -299,7 +299,7 @@ static F2(jtgconj){F12JT;A hs;
  ARGCHK2(a,w);
  ASSERT((AN(w)&-2)==2,EVLENGTH);  // length is 2 or 3
  RZ(hs=fxeachv(1,w));  // convert gerund to array of A blocks, each verified to be a verb.
- R fdef(0,CPOWOP,VERB, jtgcr12,jtgcr12, a,hs,hs, gflg(hs)+VGERR, RMAX,RMAX,RMAX);  //  calc common flags across all components   use verbified gerund
+ R fdef(0,CPOWOP,VERB, jtgcr12,jtgcr12, a,hs,0, gflg(hs)+VGERR, RMAX,RMAX,RMAX);  //  calc common flags across all components   use verbified gerund
 }
 
 

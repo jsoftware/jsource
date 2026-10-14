@@ -698,10 +698,10 @@ void bli_zgemm_128_3x2
   c[pc      ].imag += p1[3];
 
   pc = 2*rs_c;
-  c[pc      ].real += p1[0];
-  c[pc      ].imag += p1[1];
-  c[pc+=cs_c].real += p1[2];
-  c[pc      ].imag += p1[3];
+  c[pc      ].real += p2[0];
+  c[pc      ].imag += p2[1];
+  c[pc+=cs_c].real += p2[2];
+  c[pc      ].imag += p2[3];
 
 }
 

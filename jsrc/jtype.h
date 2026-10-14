@@ -711,6 +711,8 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
 #define AFSENTENCEWORD      BIT(AFSENTENCEWORDX)   // this block comes from an executing sentence and is protected by it
 #define AFANCHOREDX     9     // matches INT2X
 #define AFANCHORED      BIT(AFANCHOREDX)   // this block must not be aliased (it is needed inplace)
+#define AFGERUNDOKX     10     // matches INT4X
+#define AFGERUNDOK      BIT(AFGERUNDOKX)   // this block has BOX type and all its components are VERB type
 #define AFUNINCORPABLEX 16      // 16
 #define AFUNINCORPABLE  BIT(AFUNINCORPABLEX)  // (used in result.h) this block is a virtual block used for subarray tracking and must not
                                 // ever be put into a boxed array, even if WILLBEOPENED is set, because it changes and is probably on the C stack rather than 
@@ -749,13 +751,13 @@ _Static_assert(C2TX+1==C4TX,"LIT4 and LIT2 bits must be contiguous");
    // block was incorporated.
    // NOTE: if a block becomes shared, the value of PRISTINE becomes immaterial
 #define AFDPARENX CONWX     // matches CONW 26
-#define AFDPAREN  BIT(AFDPARENX)  // In the words of an external definition, this word replaced the original and must use linear rep for its display
+#define AFDPAREN  BIT(AFDPARENX)  // In the words of an explicit definition, this word replaced the original and must use linear rep for its display
    // MUST BE GREATER THAN ANY DIRECT FLAG (not including the SPARSE flag)
+// NOTE: bit 28 (LPAR) is used to check for freed bufs in DEADARG
 #define AFUPPERTRIX RPARX      // matches RPAR 30
 #define AFUPPERTRI  BIT(AFUPPERTRIX)  // (used in cip.c) This is an upper-triangular matrix
 #define AFUNAUDITABLEX RPARX      // matches RPAR 30 used only when AUDITEXECRESULTS
 #define AFUNAUDITABLE  BIT(AFUNAUDITABLEX)  // set in xdic in values that cannot be audited (always virtual results)
-// NOTE: bit 28 (LPAR) is used to check for freed bufs in DEADARG
 
 #define AFAUDITUCX      32   // this & above is used for auditing the stack (you must run stack audits on a 64-bit system)
 #define AFAUDITUC       BIT(AFAUDITUCX)    // this field is used for auditing the tstack, holds the number of deletes implied on the stack for the block

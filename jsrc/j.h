@@ -1223,8 +1223,8 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define JTFGFROMJTFGFG jtfg=(J)(intptr_t)((I)jtfgfg&(BIT(48)-1))   // jt if flagged first in the low bits, and then in the top 16 bits.  This peels off the top flags, leaving jtfg with the bottom flags
 #define F12IP JJ JTFROMJTFG(JJ)
 #define F12JT JJ JTFROMJTFG(JJ)  // for documentation, when flags are not IP flags
-#define DF12IP JJ JTFROMJTFG(JJ) ; if(((I)self&-2)&&(AT(self)&NOUN))SEGFAULT  //scaf!
-#define DF12JT JJ JTFROMJTFG(JJ) ; if(((I)self&-2)&&(AT(self)&NOUN))SEGFAULT  // for documentation, when flags are not IP flags
+#define DF12IP JJ JTFROMJTFG(JJ)
+#define DF12JT JJ JTFROMJTFG(JJ)  // for documentation, when flags are not IP flags
 #define FPREFIP(T)         T jtfg=jt; JTFROMJTFG(T)  // turn off all flag bits in jt, leave them in jtfg
 #define F1PREFJT        FPREFIP(J)  // for doc purposes, use when the JT flags are not for inplacing
 #define F2PREFJT        FPREFIP(J)

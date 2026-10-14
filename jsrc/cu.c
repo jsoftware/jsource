@@ -373,21 +373,23 @@ static DF1(jtsunder){DF12IP;PROLOG(777);
 
 
 // u&.v
-F2(jtunder){F12IP;A x,wvb=w;AF f1,f2;B b,b1;C uid;I gside=-1;V*u,*v;
+F2(jtunder){F12IP;A x,wvb=w;AF f1,f2;B b,b1;C uid;I flag=0,gside=-1;V*u,*v;
  ARGCHK2(a,w);
  A z; fdefallo(z)
  if(AT(w)&BOX){
   // Must be the gerund form.  Extract v and remember which argument it will apply to
   ASSERT((AR(w)^1)+(AN(w)^2)==0,EVDOMAIN);  // must be 2-element list
-  ASSERT((AN(AAV(w)[0])==0) | (AN(AAV(w)[1])==0),EVDOMAIN);  // one must be empty
-  gside=AN(AAV(w)[0])==0;  // the index to the argument v will act on (or -1 if not gerund).  Can't be a pyx
-  wvb=fx(AAV(w)[gside]);  // turn the gerund into a verb
+  ASSERT(((AN(AAV(w)[0])==0)>(AT(AAV(w)[0])&VERB)) | ((AN(AAV(w)[1])==0)>(AT(AAV(w)[1])&VERB)),EVDOMAIN);  // at least one must be empty noun
+  gside=((AN(AAV(w)[0])==0)>(AT(AAV(w)[0])&VERB));  // the index to the argument v will act on (0=a, 1=w, or -1 if not gerund).  Can't be a pyx
+  RZ(wvb=fx(AAV(w)[gside])); ASSERT(AT(wvb)&VERB,EVDOMAIN)  // turn the gerund into a verb
+  RZ(w=take(sc(-(4*gside-2)),box(wvb)))  // box the verb; overtake to add a:, _2 {. if gside is 1, 2 {. if gside is 0
+  flag|=VGERR;  // for display, format this as a gerund.  We can set this only if we have verified that all gerunds are verbs or a:
  }
  ASSERTVV(a,wvb); v=FAV(wvb);  // v is V* for w
  f1=0; f2=0; I sundern;   // type of structural under
  // Set flag with NOLOCCHG status of u/v, and inplaceable.  It will stay inplaceable unless we select an uninplaceable processing routine, or we
  // learn that v is uninplaceable.  If v is unknown, keep inplaceable, because we will later evaluate the compound & might be able to inplace then
- I flag = (FAV(a)->flag&v->flag&VNOLOCCHG+VNONAME+VNOSELF);
+ flag|=(FAV(a)->flag&v->flag&VNOLOCCHG+VNONAME+VNOSELF);
  // Look for special cases of v.  If v is WILLOPEN, so will the compound be - for all valences
  switch(v->id&gside){  // never special if gerund - this could evaluate to 0 or 1, neither of which is one of these codes
  case COPE:   // u&.>
@@ -438,7 +440,7 @@ sunder:  // come here for all structural under
  // The standard verbs start with a rank loop; set the flag indicating that
  if(!f1){f1=r?(flag&VFUNDERHASINV?jtunderh1:jtunder1):(flag&VFUNDERHASINV?jtunderh10:jtunder10); flag2|=VF2RANKATOP1;}  // allow inplace if v is known inplaceable
  if(!f2){f2=rlr+rrr?(flag&VFUNDERHASINV?jtunderh2:jtunder2):(flag&VFUNDERHASINV?jtunderh20:jtunder20); flag2|=VF2RANKATOP2;}  // allow inplace if v is known inplaceable
- fdeffillall(z,flag2,CUNDER,VERB,(AF)(f1),(AF)(f2),a,w,h,(flag),rmr,rlr,rrr,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.wvb=wvb); R z;
+ fdeffillall(z,flag2,CUNDER,VERB,(AF)(f1),(AF)(f2),a,w,h,(flag),rmr,rlr,rrr,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.wvb=wvb); R z;  // scaf lose wvb, take from w
 }
 
 F2(jtundco){F12IP;AF f1=0,f2;I gside=-1, flag=0;

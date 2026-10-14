@@ -166,7 +166,8 @@ F2(jtevger){F12IP;A hs;I k;
 }
 
 // u`v.  Allow append-in-place to m
-F2(jttie){F12IP;ARGCHK2(a,w); R jtapip((J)((I)jtfg&(~JTFLAGMSK+JTINPLACEA+JTINPLACEW)),VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}  // don't pass MODIFIER flag through
+// obsolete F2(jttie){F12IP;ARGCHK2(a,w); R jtapip((J)((I)jtfg&(~JTFLAGMSK+JTINPLACEA+JTINPLACEW)),VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}  // don't pass MODIFIER flag through
+F2(jttie){F12IP;ARGCHK2(a,w);I gflg; if(AT(a)&VERB){RZ(a=box(a)) gflg=AFGERUNDOK;}else gflg=AFLAG(a)&AFGERUNDOK; if(AT(w)&VERB){RZ(w=box(w))}else gflg&=AFLAG(w); RZ(a=over(a,w)) AFLAGORLOCAL(a,gflg) R a;}  // don't pass MODIFIER flag through.  Can't inplace lest a be used in adverbial hook
 
 
 // m@.v y.  Execute the verbs at high rank
@@ -375,8 +376,8 @@ F2(jtagendai){F12IP;I flag;
  ASSERT(NOUN&AT(a),EVDOMAIN);  // u must always be a gerund
  if(unlikely(NOUN&AT(w)))R exg(gerfrom(w,a));  // noun form, as before
  // verb v.  Create a "BOX" type holding the verb form of each gerund
- A avb; RZ(avb = incorp(fxeachv(1L,a)));
+ if(!(AFLAG(a)&AFGERUNDOK))RZ(a=incorp(fxeachv(1L,a)));   // if the gerund already contains all verbs, no need to fix it explicitly
   // Calculate NOLOCCHG/VNONAME+VNOSELF from all of the verbs (both a and w), provided the user can handle it
- R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, avb,w,0, (gflg(avb)&FAV(w)->flag)+VGERL, RMAX, RMAX, RMAX);  // use verbified gerund
+ R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,0, (gflg(a)&FAV(w)->flag)+VGERL, RMAX, RMAX, RMAX);  // use verbified gerund
 }
 

@@ -60,23 +60,23 @@ static A jtlcpb(J jtfg,B b,A w){F12JT;A z=w;B p;C c,*v,*wv,*zv;I n;
 
 static A jtlcpx(J jtfg,A w){F12JT;ARGCHK1(w); R parfn(jtfg,lp(w)>0,w);}
 
-// display a list of boxes as if they come from a gerund.  Normal ()
+// display a list of boxes as if they come from a gerund.  Normal ().  The boxes must have been validated by fxeachv
 static F1X(jtltiea){F12JT;A t,*v,*wv,x,y;B b;C c;I n;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE));
  GATV0(y,BOX,n+n,1); v=AAV1(y);
- DO(n, *v++=i?t:mtv; x=CPYX(wv[i]); c=IDD(x); RZ(x=lrr(x)); 
+ DO(n, *v++=i?t:mtv; x=CPYX(wv[i]); c=IDD(x); x=(c==0)?ds(CACE):x; RZ(x=lrr(x)); // NOUN must have come from a: in &.n
      b=BETWEENC(c,CHOOK,CFORK)||i&&(lp(x)>0); RZ(*v++=parfn(jtfg,b,x)););
  R raze(y);
 }
 
-// display a list of boxes as if they come from a gerund.  Full ()
+// display a list of boxes as if they come from a gerund.  Full ().  The boxes must have been validated by fxeachv
 static F1X(jtltieb){F12JT;A pt,t,*v,*wv,x,y;B b;C c,*s;I n;
  ARGCHK1(w);
  n=AN(w); wv=AAV(w);  RZ(t=spellout(CGRAVE)); RZ(pt=over(scc(')'),t));
  GATV0(y,BOX,n+n,1); v=AAV1(y);
  if(1>=n)x=mtv; else{GATV0(x,LIT,n-2,1); s=CAV1(x); DQ(n-2, *s++='(';);}
- DO(n, x=i==1?t:x; x=i>1?pt:x; *v++=x; x=CPYX(wv[i]); c=IDD(x); RZ(x=lrr(x)); 
+ DO(n, x=i==1?t:x; x=i>1?pt:x; *v++=x; x=CPYX(wv[i]); c=IDD(x); x=(c==0)?ds(CACE):x; RZ(x=lrr(x)); 
      b=BETWEENC(c,CHOOK,CFORK)||i&&(lp(x)>0); RZ(*v++=parfn(jtfg,b,x)););
  R raze(y);
 }

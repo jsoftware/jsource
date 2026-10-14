@@ -159,7 +159,21 @@ assert. 1.1e_8>e
 {{
 techo (6!:2) 'c=: %. a' [ a=: 0.0231*_4000+(0 _150 + (?4) + (4 _3 p. ((*9!:56'debug')+.QKTEST+.-.IF64)) * 200+?300)?@$12200
 techo e=. >./|,a - (a X c) X a
+if. -. 1.2e_8>e do.
+ techo 'cblas ', (": 9!:56 'cblas'), '  a''s shape ', (": $a), '  e ', ": e
+ techo 'c: NaN count ', (": +/ , 128!:5 c), '  infinity count ', ": +/ , (_ = | c) > 128!:5 c
+ techo '|pinv(a) a - I| ', ": >./ , | (=i.{:$a) - c X a
+ 'q r' =: 128!:0 a
+ techo 'QR: |a - q r| ', (": >./ , | a - q X r), '  |q''q - I| ', ": >./ , | (=i.{:$a) - (|:q) X q
+ cb =. 9!:56 'cblas'
+ 0 (9!:56) 'cblas'
+ c0 =: %. a
+ cb (9!:56) 'cblas'
+ techo 'e ', ": >./ , | a - (a X c0) X a
+ techo 'X check ', ": >./ , | (a X c) - a (+/@:*"1)"1 _ |: c
+end.
 assert. 1.2e_8>e
+techo 'correct'
 techo (6!:2) 'c=: %. b' [ b=: j./0.0231*_4000+(2 , 0 _150 + (?4) + (4 _3 p. ((*9!:56'debug')+.QKTEST+.-.IF64)) * 200+?300)?@$12200
 techo e=. >./|,b - (b X c) X b
 assert. 1.3e_8>e

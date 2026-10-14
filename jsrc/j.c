@@ -37,7 +37,7 @@ I __attribute__((aligned(ABDY))) maskec4123[4]={0xc0000000c0000000, 0x8000000000
 I __attribute__((aligned(CACHELINESIZE))) validitymask[16]={-1, -1, 0, 0, -1, -1, 0, 0, -1, -1, 0, 0,0,0,0,0};  // native ss2/neon register is s64x2
 #endif
 // ASSERTAGREE does a fetch from validitymask[rank], i. e. up to [63].  If rank>4 the fetch is discarded, but to make sure it doesn't segfault
-// we follow it here with a bunch of blocks.  Of course the linker might not allocate them this way, but it usually does and the tests will fail if it doesn't.
+// we follow validitymask here with a bunch of blocks.  Of course the linker might not allocate them this way, but it usually does and the tests will fail if it doesn't.
 #define CREBLOCKVEC0(name,t) I __attribute__((aligned(ABDY))) B##name[NORMAH+1]={(NORMAH+1)*SZI,(t)&TRAVERSIBLE,0,(t),ACPERMANENT,0,1,0};  // no padding at end - no atoms should be referenced
 CREBLOCKVEC0(aqq,LIT)  // ''
 CREBLOCKVEC0(mtv,B01)  // i.0 boolean

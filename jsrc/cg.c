@@ -98,7 +98,7 @@ static A jtcreategerunditerator(J jt, A z, A w, A r){  // z is result area, w is
 }
 
 // w is a gerund whose max rank is low 6 bits of r.  Result is a boxed array of VERBs, one for each gerund, if they are well formed
-// If the gerund is alrady a verb, leave it as is, otherwise convert from AR
+// If the gerund is already a verb, leave it as is, otherwise convert from AR
 // if r is negative, we allow all parts of speech, otherwise just verbs (because we want to display gerund` & the like as linear not AR)
 A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n;
  ARGCHK1(w);

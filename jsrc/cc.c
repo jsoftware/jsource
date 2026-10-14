@@ -31,7 +31,6 @@ static DF2(jtcut02){DF12IP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PRO
 
  if(likely(!(VGERL&FAV(self)->flag))){
   fs=FAV(self)->fgh[0];  // the verb we will execute
-
  }else{
   RZ(fs=createcycliciterator((A)&cger, self));  // use a verb that cycles through the gerunds.
  }
@@ -453,26 +452,6 @@ static C*jtidenv0(J jt,A a,A w,V*sv,I zt,A*zz){A fs,y,z;
  R CAV(y);
 }    /* pointer to identity element */
 
-/* locals in cut2:                       */
-/* b    1 iff _1 cut                     */
-/* c    atoms in an item of w            */
-/* d    adjusted length of current cut   */
-/* e    max width of a cut               */
-/* h    gerund                           */
-/* hv   gerund                           */
-/* id   function code                    */
-/* k    # bytes in an item of w          */
-/* m    # of cuts                        */
-/* n    #a and #w                        */
-/* neg  1 iff _1 or _2 cut               */
-/* p    remaining length in a            */
-/* pfx  1 iff 1 or _1 cut                */
-/* q    length of current cut            */
-/* sep  the cut character                */
-/* u    ptr to a for next    cut         */
-/* v    ptr to a for current cut         */
-/* v1   ptr to w for current cut         */
-
 // the values are 1 byte, either 8 bits or 1 bit
 #define FRETLOOPBYTE(decl,compI,comp) \
 { \
@@ -602,7 +581,7 @@ DF2(jtcut2){DF12IP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/
  I state=ZZFLAGINITSTATE;  // init flags, including zz flags
 
  r=MAX(1,AR(w)); wv=CAV(w); PROD(wcn,AR(w)-1,AS(w)+1) k=wcn<<bplg(wt);   // r=rank>.1, s->w shape, wv->w data, wcn=#atoms in cell of w, k=#bytes in cell of w;
- // If the verb is a gerund, it comes in through h, otherwise the verb comes through f.  Set up for the two cases
+ // The verb comes through f, but it might be gerubnds.  Set up for the two cases
  if(!(VGERL&FAV(self)->flag)){
   fs=FAV(self)->fgh[0];  // the verb we will execute
   id=FAV(fs)->id;  // fetch its pseudocharacter

@@ -1350,7 +1350,7 @@ typedef struct __attribute__((aligned(ABDY))) {I memhdr[AKXR(0)/SZI]; union { V 
 // validitymask[15] will be 0 on any platform
 #define NUMERIC0 ((C*)(validitymask+12))  // 0 0 0 0 for numeric fill
 #define FUNCTYPE0 ((A)(validitymask+12))  // 0 0 0 0, which has a 0 in the AT field
-#define FUNCID0 ((A)(validitymask-4*(!SY_64)))  // 0 in index [15] ([19] for 32-bit), which has a 0 in the id field of V
+#define FUNCID0 ((A)(validitymask+2*(!SY_64)))  // 0 in index [15] ([19] for 32-bit but the storage is long long!), which has a 0 in the id field of V
 #define SYMVAL0 ((L*)(validitymask+12))  // 0 0, which has a 0 in the val field of L
 #define AFLAG0 ((A)(validitymask+12))  // 0 0 0 0, which has a 0 in the flag field and type field of A
 #define ANLEN0 ((A)(validitymask+12-4))  // x x x x 0 0, which has a 0 in the AN field

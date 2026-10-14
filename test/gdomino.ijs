@@ -280,7 +280,7 @@ vals =: {{
   assert. *./ (0 < 9 o. d) *. 0 = 11 o. d
   Ri =. 128!:1 R
   assert. 0 *./@:= , (>/~ i.40) * Ri
-  assert. 1e3 > (nrm (=i.40) - R X Ri) % eps * (nrm R) * nrm Ri
+  assert. (tol '') > (nrm (=i.40) - R X Ri) % eps * (nrm R) * nrm Ri
  end.
  1
 }}

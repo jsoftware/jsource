@@ -363,7 +363,7 @@ static void dldiag(){}
 #define jgmpfn(fn)
 #else
 static void dldiag(){char*s=dlerror();if(s)fprintf(stderr,"%s\n",s);}
-#define jgmpfn(fn) j##fn= dlsym(libgmp,"__g"#fn); dldiag();
+#define jgmpfn(fn) j##fn= dlsym(libgmp,"__g"#fn); if(!(j##fn)){fprintf(stderr,"%s\n","error loading "#fn);};
 #endif
 
 // referenced gmp routines are declared twice:
@@ -377,11 +377,9 @@ void jgmpinit(C*libpath) {
 #endif
 #ifndef IMPORTGMPLIB
  if (jmpz_init) return; // link with libgmp only once
-#endif
-#ifndef IMPORTGMPLIB
  C dllpath[1000];
 #if defined(__wasm__)
- libgmp= 0;
+ libgmp= 0; R;
 #elif defined(_WIN32)
 #if !defined(_WIN64)
  if(libpath&&*libpath){
@@ -400,24 +398,28 @@ void jgmpinit(C*libpath) {
 #if !defined(_WIN64)
  }
 #endif
+/*
+// mpir has no gmpn_gcd_11
+ if(libgmp){
+  if(!GetProcAddress(libgmp,"__gmpn_gcd_11")){   // check system libgmp version is 6.2.x
+   FreeLibrary(libgmp); libgmp= 0; R;
+  }
+ }
+*/
+ if (!libgmp) {dldiag();R;}
 #elif defined(__APPLE__)
 #if defined(__aarch64__)||defined(_M_ARM64)
- if((libgmp= dlopen("/opt/homebrew/lib/" LIBGMPNAME, RTLD_LAZY))){
-  if(!dlsym(libgmp,"__gmpn_gcd_11")){   /* check system libgmp version is 6.2.x  */
-   dlclose(libgmp); libgmp= 0;
-  }
- }
+ libgmp= dlopen("/opt/homebrew/lib/" LIBGMPNAME, RTLD_LAZY);
 #else
- if((libgmp= dlopen("/usr/local/lib/" LIBGMPNAME, RTLD_LAZY))){
-  if(!dlsym(libgmp,"__gmpn_gcd_11")){   /* check system libgmp version is 6.2.x  */
-   dlclose(libgmp); libgmp= 0;
-  }
- }
+ libgmp= dlopen("/usr/local/lib/" LIBGMPNAME, RTLD_LAZY);
 #endif
  if(!libgmp) {
   strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,LIBGMPNAME);
   if(!(libgmp= dlopen(dllpath, RTLD_LAZY)))  /* first try libj directory */
   libgmp= dlopen(LIBGMPNAME, RTLD_LAZY);
+ }
+ if(!dlsym(libgmp,"__gmpn_gcd_11")){   /* check system libgmp version is 6.2.x  */
+  dlclose(libgmp); libgmp= 0; R;
  }
  if (!libgmp) {dldiag();R;}
 #else
@@ -427,12 +429,7 @@ void jgmpinit(C*libpath) {
    if(!strcmp(libpath,usrlib[i])) {FHS=1; break;}
    i++;
   }
-  if((libgmp= dlopen(LIBGMPNAME10, RTLD_LAZY))){
-   if(!dlsym(libgmp,"__gmpn_gcd_11")){   /* check system libgmp version is 6.2.x  */
-    dlclose(libgmp); libgmp= 0;
-   }
-  }
-//  fprintf(stderr, "%s\n", (libgmp)?"using system libgmp":"not using system libgmp");
+  libgmp= dlopen(LIBGMPNAME10, RTLD_LAZY);
 #if !SY_64
   if(!libgmp) {
    strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,LIBGMPNAME2);
@@ -446,6 +443,11 @@ void jgmpinit(C*libpath) {
    libgmp= dlopen(FHS?LIBGMPNAME10:LIBGMPNAME, RTLD_LAZY);
   }
  } else libgmp= dlopen(LIBGMPNAME10, RTLD_LAZY);
+ if(!libgmp){
+  if(!dlsym(libgmp,"__gmpn_gcd_11")){   /* check system libgmp version is 6.2.x  */
+   dlclose(libgmp); libgmp= 0; R;
+  }
+ }
  if (!libgmp) {dldiag();R;}
 #endif
 #endif
@@ -453,6 +455,11 @@ void jgmpinit(C*libpath) {
  mp_set_memory_functions(jmalloc4gmp, jrealloc4gmp, jfree4gmp);
 #else
  jgmpfn(mp_set_memory_functions);
+#ifdef _WIN32
+ if(!(jmp_set_memory_functions)){FreeLibrary(libgmp); libgmp=0; R;}
+#else
+ if(!(jmp_set_memory_functions)){dlclose(libgmp); libgmp=0; R;}
+#endif
  jmp_set_memory_functions(jmalloc4gmp, jrealloc4gmp, jfree4gmp);
  gemptr= gempool;          // silly hack to avert silly libgmp failure case
  gempwsfull= 0;

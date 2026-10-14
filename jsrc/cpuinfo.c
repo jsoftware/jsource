@@ -27,7 +27,9 @@ extern uint64_t g_cpuFeatures,g0_cpuFeatures;
 extern uint64_t g_cpuFeatures2,g0_cpuFeatures2;
 extern int numberOfCores;
 
-#if defined(__aarch64__)||defined(_M_ARM64)
+#if defined(ANDROID)
+const char *usrlib[]={"/data/local/tmp/jlibrary/bin", 0 };
+#elif defined(__aarch64__)||defined(_M_ARM64)
 #if defined(__APPLE__)
 const char *usrlib[]={"/opt/homebrew/lib","/lib64","/lib","/lib/aarch64-linux-gnu", 0 };
 #else

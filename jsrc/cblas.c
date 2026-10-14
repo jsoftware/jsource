@@ -36,7 +36,9 @@ char hasopenmp=0;
 #elif !defined(_WIN64)
 #define LIBCBLASNAME2 "libopenblas_32.dll"
 #endif
-#elif defined(ANDROID) || defined(__OpenBSD__)
+#elif defined(ANDROID)
+#define LIBCBLASNAME "libopenblas.so"
+#elif defined(__OpenBSD__)
 #define LIBCBLASNAME "liblapack.so"
 #elif defined(__FreeBSD__)
 #define LIBCBLASNAME "libopenblas.so.0"
@@ -59,7 +61,7 @@ static void dldiag(){}
 #define jcblasfn1(fn) j##fn= fn;    // from framework accelerate
 #else
 static void dldiag(){char*s=dlerror();if(s)fprintf(stderr,"%s\n",s);}
-#define jcblasfn1(fn) j##fn= dlsym(libcblas,""#fn); dldiag();
+#define jcblasfn1(fn) j##fn= dlsym(libcblas,""#fn); if(!(j##fn)){fprintf(stderr,"%s\n","error loading "#fn);};
 #endif
 #endif
 

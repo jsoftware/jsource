@@ -280,7 +280,7 @@ vals =: {{
   assert. *./ (0 < 9 o. d) *. 0 = 11 o. d
   Ri =. 128!:1 R
   assert. 0 *./@:= , (>/~ i.40) * Ri
-  assert. 1e3 > (nrm (=i.40) - R X Ri) % eps * (nrm R) * nrm Ri
+  assert. (tol '') > (nrm (=i.40) - R X Ri) % eps * (nrm R) * nrm Ri
  end.
  1
 }}
@@ -350,7 +350,7 @@ inplace =: {{
  assert. W -: > 1 { (%. ; ]) W+0
  assert. W -: > 1 { ((] %. ]) ; ]) W+0
  assert. W -: > 1 { (%.@] ; ]) W+0
- assert. 1e3 > (nrm W - W X (] %. ]) W+0) % eps * (nrm W) * nrm (] %. ]) W+0
+ assert. (tol'') > (nrm W - W X (] %. ]) W+0) % eps * (nrm W) * nrm (] %. ]) W+0
  assert. (2 2$1) -: (%. :: ]) 0 + 2 2$1
  assert. (2 2$1) -: 1 2 (%. :: ]) 0 + 2 2$1
  Vc =. 'CMPX' rnd 30 60
@@ -386,17 +386,35 @@ big =: {{
  1
 }}
 
+nans =: {{
+ de =. 'domain error'&-:
+ for_a. (2 2$0 1 2 _) ; (2 2$_. 1 2 3) ; (3 3$1 2 3 4 __ 6 7 8 10) ; (4 2$1 2 3 _ 5 6 7 8) ; (3 2$1 _ 0 1 0 1) ; (2 3$1 2 _. 4 5 6) ; (2 2$1j1 _ 2 3) ; (2 2$1 2 3 4j_.) ; (3 1$1 _ 2) do. a =. > a
+  assert. de %. etx a
+  assert. de ((#a)$1) %. etx a
+  if. >:/ $ a do. assert. de 128!:0 etx a end.
+ end.
+ assert. de %. etx _ (<1 0 0)} 2 3 3 $ 1 2 3 4 5 6 7 8 10
+ assert. de %. etx 1 1 $ _.
+ assert. de 128!:0 etx 1 1 $ _
+ assert. de %. etx 3 3$1e300 1e300 1 1e300 1 1e300 1 2 3
+ assert. de %. etx 1 _.
+ assert. _ -: %. 0
+ assert. 0 -: %. _
+ assert. 128!:5 %. _.
+ 1
+}}
+
 illcond =: {{
  for_k. 1e4 1e8 1e11 do.
-  W=. k mk 30 30 [ xt=. 'FL' rnd 30 2
-  r=. (W X xt) %. W
+  W =. k mk 30 30 [ xt =. 'FL' rnd 30 2
+  r =. (W X xt) %. W
   assert. (1e3 * k * eps) > (nrm r - xt) % nrm xt
-  W=. k mk 90 30
-  P=. %. W
+  W =. k mk 90 30
+  P =. %. W
   assert. 1e3 > (nrm (=i.30) - P X W) % eps * k
-  P=. %. |: W
+  P =. %. |: W
   assert. 1e3 > (nrm (=i.30) - (|: W) X P) % eps * k
-  'Q R'=. 128!:0 W
+  'Q R' =. 128!:0 W
   assert. 1e3 > (nrm (=i.30) - (ct Q) X Q) % eps
  end.
  assert. 'domain error' -: %. etx 1e18 mk 30 30
@@ -416,6 +434,7 @@ exact ''
 inplace ''
 cells ''
 big ''
+nans ''
 cblas (9!:56) 'cblas'
 shapes ''
 qrshapes ''
@@ -424,6 +443,7 @@ exact ''
 inplace ''
 cells ''
 big ''
+nans ''
 agree ''
 lapackonly^:cblas ''
 illcond^:cblas ''

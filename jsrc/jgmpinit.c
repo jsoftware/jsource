@@ -401,7 +401,7 @@ void jgmpinit(C*libpath) {
 /*
 // mpir has no gmpn_gcd_11
  if(libgmp){
-  if(!GetProcAddress(libgmp,"__gmpn_gcd_11")){   /* check system libgmp version is 6.2.x  */
+  if(!GetProcAddress(libgmp,"__gmpn_gcd_11")){   // check system libgmp version is 6.2.x
    FreeLibrary(libgmp); libgmp= 0; R;
   }
  }

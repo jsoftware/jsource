@@ -269,6 +269,12 @@ static A jtqrlapack(J jt,A w){PROLOG(0067);A q,r,tau,sg,wk,z;
  EPILOG(z);
 }
 
+// 1 if every element of the FL or CMPX array w is finite: x*0 is 0 for finite x but NaN for an infinity or NaN.
+static B allfinite(A w){D s=0, *v=DAV(w); I n=AN(w)<<((AT(w)&CMPX)!=0);
+ DQ(n, s+=*v++*0.0;);
+ R s==0;
+}
+
 // qr decomposition of w, returns q;r
 DF1(jtqr){F12IP;A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  F1RANK(2,jtqr,self);
@@ -276,18 +282,21 @@ DF1(jtqr){F12IP;A r,z;D c=inf,d=0,x;I n1,n,*s,wr;
  ASSERT(AT(w)&B01+INT2+INT4+INT+FL+CMPX+QP,EVDOMAIN);
  wr=AR(w); s=AS(w);
  ASSERT(2>wr||s[0]>=s[1],EVLENGTH);
+ ASSERT(!(AT(w)&FL+CMPX) || allfinite(w), EVDOMAIN);
  if(hascblas && wr==2 && AN(w) && AT(w)&(B01+INT2+INT4+INT+FL+CMPX) && s[0]*s[1]<=INT_MAX
   && (AT(w)&CMPX ? jzgeqrf_&&jzungqr_ : jdgeqrf_&&jdorgqr_)){
   RZ(z=jtqrlapack(jt,w));
  } else{
   if(AT(w)&INT2+INT4)RZ(w=cvt(FL,w));
-  RZ(z=qrr(w));
+  z=qrr(w);
+  if(!z&&jt->jerr==EVNAN){RESETERR; ASSERT(0,EVDOMAIN);} // NaN error -> domain error
+  RZ(z);
  }
  r=C(AAV(z)[1]); n=AS(r)[0]; n1=1+n;
  if(FL&AT(r)){D*v=DAV(r);  DQ(n, x= ABS(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  else        {Z*v=ZAV(r);  DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  ASSERT(!n||c>d*FUZZ,EVDOMAIN);
-RETF(z);
+ RETF(z);
 }
 
 // Computes determinant from LU factors (or of a triangular w, with ipiv=0) for integer correction.
@@ -336,26 +345,65 @@ static D luanorm(A w,I n){D r=0;
  R r;
 }
 
-// jtlucondok, jttrcondok, jttriok return 1 = OK, 0 = numerically singular (or inf/NaN), -1 = allocation failed.
+// jtlucondok and jttrcondok return 1 = OK, 0 = numerically singular (or inf/NaN), -1 = allocation failed.
 
 // Used by jtgesv, which never forms the inverse (jtlq computes the exact condition number from the inverse instead).
 // After xGETRF has factored square w, decide whether w is invertible using xGECON.
-// If xGECON is not available, only exact singularity is detected.
 static I jtlucondok(J jt,A w,int n,D anorm){int info=0; D rcond=0; C norm='1'; A wk; D *wv;
  if(!(anorm<inf))R 0;  // inf or NaN in w
  if(AT(w)&FL){
-  if(!jdgecon_)R 1;
   GATV0E(wk,FL,5*(I)n,1,R -1); wv=DAV(wk); // allocate workspace: work 4n D, iwork n int
   jdgecon_(&norm,&n,DAV(w),&n,&anorm,&rcond,wv,(int*)(wv+4*(I)n),&info);
  }else{
-  if(!jzgecon_)R 1;
   GATV0E(wk,FL,6*(I)n,1,R -1); wv=DAV(wk); // allocate workspace: work 2n Z, rwork 2n D
   jzgecon_(&norm,&n,(dcomplex*)ZAV(w),&n,&anorm,&rcond,(dcomplex*)wv,wv+4*(I)n,&info);
  }
  R info==0 && rcond>FUZZ; // false if rcond is NaN
 }
 
-// Singularity test for least squares, minimum norm, pseudo-inverse.
+// Used by jtgesv instead of jtlucondok when n<=GESVEXACT. After xGETRF has factored square w, compute the inverse of the
+// matrix LAPACK sees one column at a time from the factors, and measure its 1-norm exactly. For small n this is much cheaper than xGECON.
+#define GESVEXACT 8
+static I luinvcondok(I t,A w,int n,int *ipiv,D anorm){D inorm=0;
+ if(!(anorm<inf))R 0; // inf or NaN in w
+ if(t&FL){D *a=DAV(w), x[GESVEXACT];
+  for(I j=0;j<n;++j){
+   DO(n, x[i]=0.0;); x[j]=1.0; // start with e_j
+   DO(n, I p=ipiv[i]-1; if(p!=i){D s=x[i]; x[i]=x[p]; x[p]=s;}); // apply the row interchanges
+   for(I k=0;k<n;++k){D xk=x[k]; // forward substitution with L (solve L y = x)
+    for(I i=k+1;i<n;++i)x[i]-=a[i+k*n]*xk;
+   }
+   for(I k=n-1;k>=0;--k){D xk=x[k]/=a[k+k*n]; // back substitution with U (solve U z = y)
+    for(I i=0;i<k;++i)x[i]-=a[i+k*n]*xk;
+   }
+   D s=0; DO(n, s+=ABS(x[i]);); // take the column sum and keep the largest
+   if(!(s<inf))R 0; if(s>inorm)inorm=s; // inf or NaN: singular
+  }
+ }else{Z *a=ZAV(w), x[GESVEXACT];
+  for(I j=0;j<n;++j){
+   DO(n, x[i].re=x[i].im=0.0;); x[j].re=1.0;
+   DO(n, I p=ipiv[i]-1; if(p!=i){Z s=x[i]; x[i]=x[p]; x[p]=s;});
+   for(I k=0;k<n;++k){Z xk=x[k];
+    for(I i=k+1;i<n;++i){Z l=a[i+k*n];
+     x[i].re-=l.re*xk.re-l.im*xk.im; x[i].im-=l.re*xk.im+l.im*xk.re;
+    }
+   }
+   for(I k=n-1;k>=0;--k){
+    // x[k]/u = x[k]*conj(u)/|u|^2.  Scale u by r first so |u|^2 cannot underflow or overflow (u is not 0: xGETRF info was 0).
+    Z u=a[k+k*n]; D r=MAX(ABS(u.re),ABS(u.im)), ur=u.re/r, ui=u.im/r, m=(ur*ur+ui*ui)*r;
+    Z xk={(x[k].re*ur+x[k].im*ui)/m, (x[k].im*ur-x[k].re*ui)/m}; x[k]=xk;
+    for(I i=0;i<k;++i){Z l=a[i+k*n];
+     x[i].re-=l.re*xk.re-l.im*xk.im; x[i].im-=l.re*xk.im+l.im*xk.re;
+    }
+   }
+   D s=0; DO(n, s+=zmag(x[i]););
+   if(!(s<inf))R 0; if(s>inorm)inorm=s;
+  }
+ }
+ R 1.0/(anorm*inorm)>FUZZ;
+}
+
+// Singularity test for triangular solve, least squares, minimum norm, pseudo-inverse.
 // Those paths factor w = Q*R (or L*Q) with Q orthonormal, so w and its factor R have the same
 // condition number. xTRCON estimates rcond ~ 1/(||R||*||R^-1||);
 // t     FL or CMPX
@@ -370,15 +418,6 @@ static I jttrcondok(J jt,I t,C uplo,int n,void *fac,int lda){int info=0; D rcond
   jztrcon_(&norm,&uplo,&diag,&n,(dcomplex*)fac,&lda,&rcond,(dcomplex*)wv,wv+4*(I)n,&info);
  }
  R info==0 && rcond>FUZZ; // false if rcond is NaN
-}
-
-// Rank test on the nxn triangular factor of a QR/LQ (arguments as for jttrcondok).
-// xTRCON if the library has it, otherwise the Roger's ratio of the smallest to the largest |diagonal element|.
-static I jttriok(J jt,I t,C uplo,int n,void *fac,int lda){D c=inf,d=0,x; I ld1=(I)lda+1;
- if(t&FL?jdtrcon_!=0:jztrcon_!=0)R jttrcondok(jt,t,uplo,n,fac,lda);
- if(t&FL){D*v=fac; DQ(n, x= ABS(*v); if(x<c)c=x; if(x>d)d=x; v+=ld1;);}
- else    {Z*v=fac; DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=ld1;);}
- R c>d*FUZZ; // false if a diagonal element is NaN
 }
 
 // return inverse of w
@@ -418,7 +457,7 @@ static A jtlq(J jtfg,A w,D *det){F12IP;A l;D c=inf,d=0,x;I n1,n,*ws,wr;
  }
  // Tall matrix: pseudo-inverse from Householder QR
  if(hascblas && AT(w)&(B01+INT2+INT4+INT+FL+CMPX) && wr==2 && ws[0]>ws[1] && ws[0]*ws[1]<=INT_MAX
-  && (AT(w)&CMPX ? jzgeqrf_&&jzungqr_&&jcblas_ztrsm : jdgeqrf_&&jdorgqr_&&jcblas_dtrsm)){
+  && (AT(w)&CMPX ? jzgeqrf_&&jztrcon_&&jzungqr_&&jcblas_ztrsm : jdgeqrf_&&jdtrcon_&&jdorgqr_&&jcblas_dtrsm)){
   I t=AT(w)&CMPX?CMPX:FL, im=ws[0], in=ws[1]; int m=(int)im, n=(int)in, info=0, lwork, lw2; A q,r,tau,wk; I ok;
   if(AT(w)!=t)RZ(w=cvt(t,w));
   RZ(q=cant1(w));
@@ -436,7 +475,7 @@ static A jtlq(J jtfg,A w,D *det){F12IP;A l;D c=inf,d=0,x;I n1,n,*ws,wr;
    for(I j=0;j<in;++j) // 2.
     for(I i=0;i<in;++i)
      rv[i+j*in]=i<=j?qv[i+j*im]:0.0;
-   ok=jttriok(jt,t,'U',n,rv,n); // 3.
+   ok=jttrcondok(jt,t,'U',n,rv,n); // 3.
    if(ok<0) R 0; // allocation failed
    ASSERT(ok,EVDOMAIN);
    jdorgqr_(&m,&n,&n,qv,&m,DAV(tau),DAV(wk),&lwork,&info); // 4.
@@ -454,7 +493,7 @@ static A jtlq(J jtfg,A w,D *det){F12IP;A l;D c=inf,d=0,x;I n1,n,*ws,wr;
    for(I j=0;j<in;++j) // 2.
     for(I i=0;i<in;++i)
      rv[i+j*in]=i<=j?qv[i+j*im]:zeroZ;
-   ok=jttriok(jt,t,'U',n,rv,n); // 3.
+   ok=jttrcondok(jt,t,'U',n,rv,n); // 3.
    if(ok<0) R 0;
    ASSERT(ok,EVDOMAIN);
    jzungqr_(&m,&n,&n,(dcomplex*)qv,&m,(dcomplex*)ZAV(tau),(dcomplex*)ZAV(wk),&lwork,&info); // 4.
@@ -465,15 +504,23 @@ static A jtlq(J jtfg,A w,D *det){F12IP;A l;D c=inf,d=0,x;I n1,n,*ws,wr;
   RETF(q);
  }
  // when LAPACK is not applicable.
- if(AT(w)&(B01+INT2+INT4+INT))RZ(w=cvt(FL,w));
+ if(AT(w)&B01+INT2+INT4+INT){
+  RZ(w=cvt(FL,w));
+ }else if(AT(w)&FL+CMPX){
+  ASSERT(allfinite(w),EVDOMAIN);
+ }
  if(wr==1)RZ(w=table(w)); // convert column vector to column matrix
  RZ(w=conjug(cant1(w))); // create w*, where the result will be built inplace
- RZ(l=jtltqip(jt,w)); n=AS(l)[0]; n1=1+n;
+ l=jtltqip(jt,w);
+ if(!l&&jt->jerr==EVNAN){RESETERR; ASSERT(0,EVDOMAIN);} // NaN error -> domain error
+ RZ(l); n=AS(l)[0]; n1=1+n;
  // build determinant for integer correction, if that is enabled (i. e. nonzero)
  if(FL&AT(l)){D*v=DAV(l); D determ=*det; DQ(n, x= ABS(*v); if(determ!=0){determ*=x; if(determ>1e20)determ=0.0;} if(x<c)c=x; if(x>d)d=x; v+=n1;); *det=determ;}
  else        {Z*v=ZAV(l);  DQ(n, x=zmag(*v); if(x<c)c=x; if(x>d)d=x; v+=n1;);}
  ASSERT(!n||c>d*FUZZ,EVDOMAIN);
- RETF(pdt(jtrinvip(jt,l,n,AT(w)&FL?2:0),w));  // engage fast reciprocal for float matrices
+ A z=pdt(jtrinvip(jt,l,n,AT(w)&FL?2:0),w);  // engage fast reciprocal for float matrices
+ if(!z&&jt->jerr==EVNAN){RESETERR; ASSERT(0,EVDOMAIN);}
+ RETF(z);
 }
 
 static A jtminvdet(J jtfg,A w,D *det){F12IP;PROLOG(0068);A q,y,z;I m,n,*s,t,wr;
@@ -535,7 +582,7 @@ static C trikind(A w,I n){B up=1, lo=1;
 }
 // Solve (w+/ .*z)-:a using LAPACK for dense non-empty a and w where w is square matrix.  a is not an atom (jtmdiv extends an atom to a vector).
 static A jtgesv(J jtfg,A a,A w){F12IP;A z;
- int n=(int)AS(w)[0],nrhs,info,*ipiv=0; C trans='T', diag='N', uplo=0; A ipa; I ok;
+ int n=(int)AS(w)[0],nrhs,info,*ipiv=0; C trans='T', uplo=0; A ipa; I ok;
  I at=AT(a), wt=AT(w), t=((at|wt)&CMPX)?CMPX:FL;
  // Check inplaceability.
  I ipw=AC(w)&SGNIF(jtfg,JTINPLACEWX);
@@ -567,7 +614,7 @@ static A jtgesv(J jtfg,A a,A w){F12IP;A z;
   D anorm=luanorm(w,n); // take the norm before xGETRF overwrites w
   if(t==FL)jdgetrf_(&n,&n,DAV(w),&n,ipiv,&info); else jzgetrf_(&n,&n,(dcomplex*)ZAV(w),&n,ipiv,&info);
   ASSERT(!info,EVDOMAIN); // exactly singular
-  ok=jtlucondok(jt,w,n,anorm);
+  ok=n<=GESVEXACT?luinvcondok(t,w,n,ipiv,anorm):jtlucondok(jt,w,n,anorm); // small n: exact test, without xGECON's overhead
   if(ok<0) R 0; // allocation failure
   ASSERT(ok,EVDOMAIN); // numerically singular
   if(t==FL) jdgetrs_(&trans,&n,&nrhs,DAV(w),&n,ipiv,DAV(z),&n,&info);
@@ -641,7 +688,7 @@ static A jtgels(J jtfg,A a,A w){F12IP;A b,z,zs;
  }
  ASSERT(!info,EVDOMAIN);
  // Rank test on the triangular factor left in w. Its condition number is that of w.
- I ok=tall?jttriok(jt,t,'U',n,voidAV(w),m):jttriok(jt,t,'U',m,voidAV(w),n);
+ I ok=tall?jttrcondok(jt,t,'U',n,voidAV(w),m):jttrcondok(jt,t,'U',m,voidAV(w),n);
  if(ok<0)R 0;
  ASSERT(ok,EVDOMAIN);
  RZ(z=take(v2(inrhs,in),b)); // (inrhs,in) {. b
@@ -698,10 +745,10 @@ DF2(jtmdiv){F12IP;PROLOG(0069);A z;I at=AT(a), wt=AT(w);
   && AN(w)>1 && AN(a)>0 // a, w must be non-empty and w must have at least two elements, so in particular w mustn't be an atom.
   && AR(a) && AS(a)[0]==wm // leading axes of a and w must have the same length
   && wm*wn<=INT_MAX && wmx*(AN(a)/wm)<=INT_MAX){ // LAPACK indexes with int: w and the right-hand-side workspace must fit.
-  if(AR(w)==2 && AS(w)[0]==AS(w)[1] && (((at|wt)&CMPX) ? jzgetrf_&&jzgetrs_ : jdgetrf_&&jdgetrs_)){ // square w: solve systems of linear equations
+  if(AR(w)==2 && AS(w)[0]==AS(w)[1] && (((at|wt)&CMPX) ? jzgetrf_&&jzgetrs_&&jzgecon_ : jdgetrf_&&jdgetrs_&&jdgecon_)){ // square w: solve systems of linear equations
    z=jtgesv(jtfg,a,w);
    EPILOG(z);
-  }else if(((at|wt)&CMPX)?(jzgels_!=0):(jdgels_!=0)){ // non-square (or vector) w: least squares if tall, minimum norm if wide.
+  }else if(((at|wt)&CMPX)? jzgels_&&jztrcon_ : jdgels_&&jdtrcon_){ // non-square (or vector) w: least squares if tall, minimum norm if wide.
    z=jtgels(jtfg,a,w);
    EPILOG(z);
   }
@@ -713,4 +760,3 @@ DF2(jtmdiv){F12IP;PROLOG(0069);A z;I at=AT(a), wt=AT(w);
  if(at&B01+INT2+INT4+INT) RZ(z=icor(z,detv)); // integer correct if a is not float (& correction is possible)
  EPILOG(z);
 }
-

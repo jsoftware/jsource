@@ -197,9 +197,8 @@ assert. 1.03e_8>e
 1e_10 > >./ , | (=i.3) - (] +/ .* %.) ?3 5$123
 'length error' -: 3 4 5  %. etx ?7 4$100
 
-NB. domain or NaN error
-'error' -: _5 {. %. etx 2 2 $ 0 1 2 _
-'error' -: _5 {. %. etx 2 2$0 1e_309 10 10
+'domain error' -: %. etx 2 2 $ 0 1 2 _
+'domain error' -: %. etx 2 2$0 1e_309 10 10
 
 9!:19 ct
 

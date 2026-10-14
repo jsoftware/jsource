@@ -171,6 +171,13 @@ if. -. 1.2e_8>e do.
  cb (9!:56) 'cblas'
  techo 'e ', ": >./ , | a - (a X c0) X a
  techo 'X check ', ": >./ , | (a X c) - a (+/@:*"1)"1 _ |: c
+ qrerr =: {{
+   A =. 0.0231*_4000+y ?@$ 12200
+   'Q R' =. 128!:0 A
+   (>./ , | A - Q X R) % >./ , | A
+ }}
+ techo 'cblas ', ": 9!:56 'cblas'
+ techo (,. qrerr"1) 400 ,. 64 100 120 127 128 129 130 150 200 271
 end.
 assert. 1.2e_8>e
 techo 'correct'

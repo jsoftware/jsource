@@ -83,11 +83,11 @@ if [ "$1" = "linux" ]; then
  if [ $m64 -eq 1 ]; then
   cp mpir/linux/x86_64/libgmp.so $B
   cp pcre2/linux/x86_64/libjpcre2.so $A/tools/regex/.
-  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/linux/x86_64/libopenblas.dll"
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/linux/x86_64/libopenblas.so"
  else
   cp mpir/linux/i386/libgmpd.so $C/libgmp32.so
   cp pcre2/linux/i386/libjpcre2.so $A/tools/regex/libjpcre2_32.so
-  curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/linux/i386/libopenblas.dll"
+  curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/linux/i386/libopenblas.so"
  fi
 elif [ "$1" = "raspberry" ]; then
  if [ $m64 -eq 1 ]; then

@@ -93,9 +93,11 @@ elif [ "$1" = "raspberry" ]; then
  if [ $m64 -eq 1 ]; then
   cp mpir/linux/aarch64/libgmp.so $B
   cp pcre2/linux/aarch64/libjpcre2.so $A/tools/regex/.
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/linux/aarch64/libopenblas.so"
  else
   cp mpir/linux/arm/libgmp.so $C/libgmp32.so
   cp pcre2/linux/arm/libjpcre2.so $A/tools/regex/libjpcre2_32.so
+  curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/linux/arm/libopenblas.so"
  fi
 elif [ "$1" = "darwin" ]; then
  brew install libomp

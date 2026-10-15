@@ -83,17 +83,21 @@ if [ "$1" = "linux" ]; then
  if [ $m64 -eq 1 ]; then
   cp mpir/linux/x86_64/libgmp.so $B
   cp pcre2/linux/x86_64/libjpcre2.so $A/tools/regex/.
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/linux/x86_64/libopenblas.so"
  else
   cp mpir/linux/i386/libgmpd.so $C/libgmp32.so
   cp pcre2/linux/i386/libjpcre2.so $A/tools/regex/libjpcre2_32.so
+  curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/linux/i386/libopenblas.so"
  fi
 elif [ "$1" = "raspberry" ]; then
  if [ $m64 -eq 1 ]; then
   cp mpir/linux/aarch64/libgmp.so $B
   cp pcre2/linux/aarch64/libjpcre2.so $A/tools/regex/.
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/linux/aarch64/libopenblas.so"
  else
   cp mpir/linux/arm/libgmp.so $C/libgmp32.so
   cp pcre2/linux/arm/libjpcre2.so $A/tools/regex/libjpcre2_32.so
+  curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/linux/arm/libopenblas.so"
  fi
 elif [ "$1" = "darwin" ]; then
  brew install libomp
@@ -125,14 +129,14 @@ elif [ "$1" = "windows" ]; then
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/x64/lib/libomp.lib" $B
   cp pcre2/windows/x64/jpcre2.dll $A/tools/regex/.
   # cp pthreads4w/x64/pthreadVC3.dll $B
-  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/libopenblas.dll"
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/windows/x64/libopenblas.dll"
  elif [ "$2" = "i386" ]; then
   cp mpir/windows/x86/mpir.dll $C/mpir32.dll
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/bin/libomp.dll" $C
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/lib/libomp.lib" $C
   cp pcre2/windows/x86/jpcre2.dll $A/tools/regex/jpcre2_32.dll
   # cp pthreads4w/x86/pthreadVC3.dll $C
-  curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_32.dll"
+  curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/windows/x86/libopenblas.dll"
  else
   cp mpir/windows/arm64/mpir.dll $B
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/ARM64/bin/libomp.dll" $B || true
@@ -141,7 +145,7 @@ elif [ "$1" = "windows" ]; then
   cp "/c/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/Llvm/ARM64/lib/libomp.lib" $B || true
   cp pcre2/windows/arm64/jpcre2.dll $A/tools/regex/jpcre2_arm64.dll
   # cp pthreads4w/arm64/pthreadVC3.dll $B
-  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/libopenblas_arm64.dll"
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/windows/arm64/libopenblas.dll"
  fi
 fi
 
@@ -176,10 +180,10 @@ if [ "$1" = "android" ]; then
  cd android
  ndk-build
  # static library not copied by ndk-build
- cp obj/local/armeabi-v7a/libj.a libs/armeabi-v7a/.
- cp obj/local/arm64-v8a/libj.a libs/arm64-v8a/.
- # cp obj/local/x86/libj.a libs/x86/.
- # cp obj/local/x86_64/libj.a libs/x86_64/.
+ cp obj/local/armeabi-v7a/libj.a libs/armeabi-v7a/. || true
+ cp obj/local/arm64-v8a/libj.a libs/arm64-v8a/. || true
+ cp obj/local/x86/libj.a libs/x86/. || true
+ cp obj/local/x86_64/libj.a libs/x86_64/. || true
  zip -r ../androidlibs.zip libs
  cd ..
  # build binary for armeabi

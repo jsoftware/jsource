@@ -42,7 +42,7 @@ copy mpir\windows\x64\mpir.dll %B%
 copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin\libomp.dll" %B%
 copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\lib\libomp.lib" %B%
 copy pcre2\windows\x64\jpcre2.dll %A%\tools\regex\.
-curl --output-dir "%B%" -O "https://www.jsoftware.com/download/lapackbin/x64/libopenblas.dll"
+curl --output-dir "%B%" -O "https://www.jsoftware.com/download/lapackbin/windows/x64/libopenblas.dll"
 GOTO L01C
 :L01A
 mkdir j32
@@ -55,7 +55,7 @@ copy mpir\windows\x86\mpir.dll %C%\mpir32.dll
 copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\bin\libomp.dll" %C%
 copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\lib\libomp.lib" %C%
 copy pcre2\windows\x86\jpcre2.dll %A%\tools\regex\jpcre2_32.dll
-curl --output-dir "%C%" -O "https://www.jsoftware.com/download/lapackbin/x86/libopenblas.dll"
+curl --output-dir "%C%" -O "https://www.jsoftware.com/download/lapackbin/windows/x86/libopenblas.dll"
 GOTO L01C
 :L01B
 mkdir j64
@@ -68,7 +68,7 @@ copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\ARM
 copy "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\Llvm\ARM64\bin\libomp.dll" %B%
 copy "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\Llvm\ARM64\lib\libomp.lib" %B%
 copy pcre2\windows\arm64\jpcre2.dll %A%\tools\regex\jpcre2_arm64.dll
-curl --output-dir "%B%" -O "https://www.jsoftware.com/download/lapackbin/arm64/libopenblas.dll"
+curl --output-dir "%B%" -O "https://www.jsoftware.com/download/lapackbin/windows/arm64/libopenblas.dll"
 :L01C
 
 copy version.txt jsrc\jversion.h

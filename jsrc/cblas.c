@@ -31,24 +31,21 @@ char hasopenmp=0;
 #endif
 #elif defined(_WIN32)
 #define LIBCBLASNAME "libopenblas.dll"
-#if defined(__aarch64__)||defined(_M_ARM64)
-#define LIBCBLASNAME2 "libopenblas_arm64.dll"
-#elif !defined(_WIN64)
+#if !SY_64
 #define LIBCBLASNAME2 "libopenblas_32.dll"
 #endif
 #elif defined(ANDROID)
 #define LIBCBLASNAME "libopenblas.so"
 #elif defined(__OpenBSD__)
 #define LIBCBLASNAME "liblapack.so"
+#define LIBCBLASNAME2 "libopenblas.so"
 #elif defined(__FreeBSD__)
 #define LIBCBLASNAME "libopenblas.so.0"
+#define LIBCBLASNAME2 "libopenblas.so"
 #else
 #define LIBCBLASNAME "liblapack.so.3"
+#define LIBCBLASNAME2 "libopenblas.so"
 #endif
-/* atlas provides cblas only. missing/usable lapack?
-/usr/lib/i386-linux-gnu/libatlas.so.3.10.3
-/usr/lib/x86_64-linux-gnu/libatlas.so.3.10.3
-*/
 
 #ifdef _WIN32
 static void dldiag(){}
@@ -77,15 +74,18 @@ void cblasinit(C*libpath) {
 #elif defined(__wasm__)
  libcblas= 0;
 #elif defined(_WIN32)
-#if defined(__aarch64__)||defined(_M_ARM64)||!defined(_WIN64)
+#if !SY_64
  if(libpath&&*libpath){
-  strcpy(cblasfile,libpath);strcat(cblasfile,"\\");strcat(cblasfile,LIBCBLASNAME2);
+  strcpy(cblasfile,libpath);strcat(cblasfile,"\\");strcat(cblasfile,LIBCBLASNAME);
   if(!(libcblas= LoadLibraryA(cblasfile))){  /* first try current directory */
    strcpy(cblasfile,libpath);strcat(cblasfile,"\\..\\addons\\math\\lapack2\\lib\\");strcat(cblasfile,LIBCBLASNAME2);
-   if(!(libcblas= LoadLibraryA(cblasfile)))  /* lapack2 addon lib folder */
-    libcblas= LoadLibraryA(strcpy(cblasfile,LIBCBLASNAME2));
+   if(!(libcblas= LoadLibraryA(cblasfile))){  /* lapack2 addon lib folder */
+    strcpy(cblasfile,libpath);strcat(cblasfile,"\\..\\addons\\math\\lapack2\\lib\\");strcat(cblasfile,LIBCBLASNAME);
+    if(!(libcblas= LoadLibraryA(cblasfile)))  /* lapack2 addon lib folder */
+     libcblas= LoadLibraryA(strcpy(cblasfile,LIBCBLASNAME));
+   }
   }
- } else libcblas= LoadLibraryA(strcpy(cblasfile,LIBCBLASNAME2));
+ } else libcblas= LoadLibraryA(strcpy(cblasfile,LIBCBLASNAME));
  if(libcblas && !GetProcAddress(libcblas,"cblas_dgemm")){   /* check cblas routine */
   FreeLibrary(libcblas); libcblas= 0;
  }
@@ -117,7 +117,23 @@ void cblasinit(C*libpath) {
    }
   }
   if(!libcblas) libcblas= dlopen(strcpy(cblasfile,LIBCBLASNAME), RTLD_LAZY);
- } else libcblas= dlopen(strcpy(cblasfile,LIBCBLASNAME), RTLD_LAZY);
+#ifdef LIBCBLASNAME2
+//  if(libcblas) { dlclose(libcblas); libcblas= 0;}  /* test LIBCBLASNAME2 */
+  if(!libcblas) {
+   strcpy(cblasfile,libpath);strcat(cblasfile,"/");strcat(cblasfile,LIBCBLASNAME2);
+   if(!(libcblas= dlopen(cblasfile, RTLD_LAZY))){  /* first try current directory */
+    strcpy(cblasfile,libpath);strcat(cblasfile,"/../addons/math/lapack2/lib/");strcat(cblasfile,LIBCBLASNAME2);
+    if(!(libcblas= dlopen(cblasfile, RTLD_LAZY)))  /* lapack2 addon lib folder */
+     libcblas= dlopen(strcpy(cblasfile,LIBCBLASNAME2), RTLD_LAZY);
+   }
+  }
+#endif
+ } else {
+  libcblas= dlopen(strcpy(cblasfile,LIBCBLASNAME), RTLD_LAZY);
+#ifdef LIBCBLASNAME2
+  if(!libcblas) libcblas= dlopen(strcpy(cblasfile,LIBCBLASNAME2), RTLD_LAZY);
+#endif
+ }
  if(libcblas && !dlsym(libcblas,"cblas_dgemm")){   /* check cblas routine */
   dlclose(libcblas); libcblas= 0;
  }

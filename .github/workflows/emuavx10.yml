@@ -103,6 +103,7 @@ jobs:
       script/testga.sh linux x86_64 || exit 1
       cp jlibrary/bin/* j64 || true
       rm -f j64/profile.ijs
+      rm -f j64/libopenblas*
       ls -l j64
       zip -r l64.zip j64
 
@@ -208,6 +209,7 @@ jobs:
       script/testga.sh linux i386 || exit 1
       cp jlibrary/bin32/* j32 || true
       rm -f j32/profile.ijs
+      rm -f j32/libopenblas*
       ls -l j32
       zip -r l32.zip j32
 
@@ -310,6 +312,7 @@ jobs:
       rm -rf jlibrary/bin/ios
       cp jlibrary/bin/* j64 || true
       rm -f j64/profile.ijs
+      rm -f j64/libopenblas*
       ls -l j64
       zip -r m64.zip j64
 
@@ -370,6 +373,7 @@ jobs:
       rm -rf jlibrary/bin/ios
       cp jlibrary/bin/* j64 || true
       rm -f j64/profile.ijs
+      rm -f j64/libopenblas*
       ls -l j64
       zip -r m64arm.zip j64
 
@@ -429,6 +433,7 @@ jobs:
       script/testga.sh raspberry arm64 || exit 1
       cp jlibrary/bin/* j64 || true
       rm -f j64/profile.ijs
+      rm -f j64/libopenblas*
       ls -l j64
       zip -r rpi64.zip j64
 
@@ -493,6 +498,7 @@ jobs:
       script/testga.sh raspberry armv6l || exit 1
       cp jlibrary/bin32/* j32 || true
       rm -f j32/profile.ijs
+      rm -f j32/libopenblas*
       ls -l j32
       zip -r rpi32.zip j32
 
@@ -549,6 +555,7 @@ jobs:
        script/testga.sh raspberry arm64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
+       rm -f j64/libopenblas*
        zip -r rpi64.zip j64
        zip rpi64.zip /usr/bin/zip
        zip rpi64.zip /usr/bin/unzip
@@ -621,6 +628,7 @@ jobs:
        find j32 -type f -exec chmod a+rw {} \;
        cp jlibrary/bin32/* j32 || true
        rm -f j32/profile.ijs
+       rm -f j32/libopenblas*
        zip -r rpi32.zip j32
        rm -rf j32
        mkdir j32
@@ -698,6 +706,7 @@ jobs:
        script/testga.sh openbsd x86_64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
+       rm -f j64/libopenblas*
        ls -l j64
        zip -r obsd64.zip j64
 
@@ -764,6 +773,7 @@ jobs:
        script/buildga.sh openbsd arm64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
+       rm -f j64/libopenblas*
        ls -l j64
        zip -r obsdarm64.zip j64
 
@@ -834,6 +844,7 @@ jobs:
        script/testga.sh freebsd x86_64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
+       rm -f j64/libopenblas*
        ls -l j64
        zip -r fbsd64.zip j64
 
@@ -904,6 +915,7 @@ jobs:
        script/testga.sh freebsd arm64 || exit 1
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
+       rm -f j64/libopenblas*
        ls -l j64
        zip -r fbsdarm64.zip j64
 
@@ -1715,5 +1727,3 @@ jobs:
       webhook_url: ${{ secrets.WEBHOOK_URL }}
       webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
       data: '{ "id": "jebuild" }'
-
-

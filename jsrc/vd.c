@@ -270,9 +270,9 @@ static A jtqrlapack(J jt,A w){PROLOG(0067);A q,r,tau,sg,wk,z;
 }
 
 // 1 if every element of the FL or CMPX array w is finite: x*0 is 0 for finite x but NaN for an infinity or NaN.
-static B allfinite(A w){D s=0, *v=DAV(w); I n=AN(w)<<((AT(w)&CMPX)!=0);
- DQ(n, s+=*v++*0.0;);
- R s==0;
+static B allfinite(A w){D *v=DAV(w); I n=AN(w)<<((AT(w)&CMPX)!=0);
+ DQ(n, if(unlikely(*v++*0.0!=0.))R 0;);
+ R 1;
 }
 
 // qr decomposition of w, returns q;r
@@ -337,7 +337,8 @@ static D luanorm(A w,I n){D r=0;
    for(I j=0;j<n;++j)s+=ABS(v[j]);
   }else{
    Z* v=ZAV(w)+i*n;
-   for(I j=0;j<n;++j)s+=zmag(v[j]);
+   for(I j=0;j<n;++j)s+=sqrt(v[j].re*v[j].re+v[j].im*v[j].im); // fast, but the squares can overflow or underflow
+   if(!(s>1e-150&&s<1e150)){s=0; for(I j=0;j<n;++j)s+=zmag(v[j]);} // so redo an extreme (or NaN) row with zmag, which scales
   }
   if(s!=s)R s; // NaN
   if(s>r)r=s;
@@ -345,7 +346,7 @@ static D luanorm(A w,I n){D r=0;
  R r;
 }
 
-// jtlucondok and jttrcondok return 1 = OK, 0 = numerically singular (or inf/NaN), -1 = allocation failed.
+// jtlucondok, luinvcondok and jttrcondok return 1 = OK, 0 = numerically singular (or inf/NaN), -1 = allocation failed.
 
 // Used by jtgesv, which never forms the inverse (jtlq computes the exact condition number from the inverse instead).
 // After xGETRF has factored square w, decide whether w is invertible using xGECON.
@@ -362,8 +363,8 @@ static I jtlucondok(J jt,A w,int n,D anorm){int info=0; D rcond=0; C norm='1'; A
 }
 
 // Used by jtgesv instead of jtlucondok when n<=GESVEXACT. After xGETRF has factored square w, compute the inverse of the
-// matrix LAPACK sees one column at a time from the factors, and measure its 1-norm exactly. For small n this is much cheaper than xGECON.
-#define GESVEXACT 8
+// matrix LAPACK sees one column at a time from the factors, and measure its 1-norm exactly. For small n this is cheaper than xGECON.
+#define GESVEXACT 12
 static I luinvcondok(I t,A w,int n,int *ipiv,D anorm){D inorm=0;
  if(!(anorm<inf))R 0; // inf or NaN in w
  if(t&FL){D *a=DAV(w), x[GESVEXACT];
@@ -526,7 +527,7 @@ static A jtlq(J jtfg,A w,D *det){F12IP;A l;D c=inf,d=0,x;I n1,n,*ws,wr;
 static A jtminvdet(J jtfg,A w,D *det){F12IP;PROLOG(0068);A q,y,z;I m,n,*s,t,wr;
  F1RANK(2,jtminv,DUMMYSELF);
  t=AT(w); wr=AR(w); s=AS(w); m=wr?s[0]:1; n=1<wr?s[1]:1;
- if(!wr){*det=0.0; R recip(w);}
+ if(!wr){ASSERT(t&NUMERIC,EVDOMAIN); *det=0.0; R recip(w);}
  if(!AN(w)){*det=0.0; R cant1(w);}  // empty: the pseudo-inverse is the empty transpose, also for wide w
  if(wr==2 && m<n){  // For a wide w (m<n), %. w takes the pseudo-inverse of its transpose, which is tall, and transposes the result back.
   RZ(z=jtminvdet(jt,cant1(w),det));

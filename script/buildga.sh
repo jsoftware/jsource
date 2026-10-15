@@ -178,10 +178,10 @@ if [ "$1" = "android" ]; then
  cd android
  ndk-build
  # static library not copied by ndk-build
- cp obj/local/armeabi-v7a/libj.a libs/armeabi-v7a/.
- cp obj/local/arm64-v8a/libj.a libs/arm64-v8a/.
- # cp obj/local/x86/libj.a libs/x86/.
- # cp obj/local/x86_64/libj.a libs/x86_64/.
+ cp obj/local/armeabi-v7a/libj.a libs/armeabi-v7a/. || true
+ cp obj/local/arm64-v8a/libj.a libs/arm64-v8a/. || true
+ cp obj/local/x86/libj.a libs/x86/. || true
+ cp obj/local/x86_64/libj.a libs/x86_64/. || true
  zip -r ../androidlibs.zip libs
  cd ..
  # build binary for armeabi

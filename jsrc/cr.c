@@ -617,7 +617,7 @@ A jtirs2(J jtfg,A a,A w,A fs,I l,I r,AF f2){F12IP;A z;I ar,wr;
 // end of sparse-only
 
 
-static DF1(cons1a){DF12IP;RETF(FAV(self)->fgh[0])}  // scaf bivalent
+static DF1(cons1a){DF12IP;RETF(FAV(self)->fgh[0])}  // scaf! bivalent
 static DF2(cons2a){DF12IP;RETF(FAV(self)->fgh[0])}
 
 // Constant verbs do not inplace because we loop over cells.  We could speed this up if it were worthwhile.
@@ -759,7 +759,6 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
  // Get the action routines and flags to use for the derived verb
  if(unlikely(NOUN&AT(a))){  // could be gerund"n or noun"n
   // gerund requires: some rank not RMAX; boxed m; rank of m=1; and then the gerund must be well formed.
-// obsolete   if(((hv[0]^RMAX)|(hv[1]^RMAX)|(hv[2]^RMAX)) && ((AFLAG(ger=a)&AFGERUNDOK)||(!((AR(a)^1) | (AT(a)&(NOUN&~BOX))) && (ger=({A x; WITHJTJERROFF(x=fxeachv(1LL,a);) x;}))))){
   if(((hv[0]^RMAX)|(hv[1]^RMAX)|(hv[2]^RMAX)) && (AR(a)==1) && (ger=({A x; WITHJTJERROFF(x=fxeachv(1LL,a);) x;}))){
    f1=cycr1; f2=cycr2;  // process this with the cyclic-gerund routines
    vf=(gflg(ger)&~VNOLOCCHG)|VGERL;   // the cyclic processor does not inplace or IRS.  Mark as gerund for display

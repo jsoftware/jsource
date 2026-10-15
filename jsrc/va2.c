@@ -1958,7 +1958,7 @@ static VF eqnetbl[2][11] = {
 // result is a VA2 struct  containing ado and cv.  If failure, ado is 0 and the caller should signal domain error
 // The type has been converted to dense type
 // opchar is the VA2C* code for the operation
-VA2 jtvar(J jt,I opchar,I at,I wt){   // scaf parm should be lu2.lc not self?
+VA2 jtvar(J jt,I opchar,I at,I wt){
  // If there is a pending error, it might be one that can be cured with a retry; for example, fixed-point
  // overflow, where we will convert to float.  If the error is one of those, get the routine and conversion
  // for it, and return.

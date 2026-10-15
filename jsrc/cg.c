@@ -108,7 +108,6 @@ A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n;
  ASSERT(n!=0,EVLENGTH);  // gerund must not be empty
  ASSERT(BOX&AT(w),EVDOMAIN);   // must be boxed
  I zr=AR(w); GATV(z,BOX,n,AR(w),AS(w)); zv=AAVn(zr,z);  // allocate one box per gerund
-// obsolete  DO(n, RZ(zv[i]=x=incorp(fx(C(wv[i])))); ASSERT(VERB&AT(x),EVDOMAIN););   // create verb, verify it is a verb  No incorporation since it's not a noun
  DO(n, RZ(zv[i]=x=incorp(fx(CPYX(wv[i])))); ASSERT(((r&ADV+CONJ)|VERB)&AT(x),EVDOMAIN););   // create verb, verify it is a verb  No incorporation since it's not a noun
  R z;
 }
@@ -162,7 +161,6 @@ F2(jtevger){F12IP;A hs;I k;
 }
 
 // u`v.  Allow append-in-place to m
-// obsolete F2(jttie){F12IP;ARGCHK2(a,w); R jtapip((J)((I)jtfg&(~JTFLAGMSK+JTINPLACEA+JTINPLACEW)),VERB&AT(a)?arep(a):a,VERB&AT(w)?arep(w):w);}  // don't pass MODIFIER flag through
 F2(jttie){F12IP;ARGCHK2(a,w);I gflg; if(AT(a)&VERB){RZ(a=box(a)) gflg=AFGERUNDOK;}else gflg=AFLAG(a)&AFGERUNDOK; if(AT(w)&VERB){RZ(w=box(w))}else gflg&=AFLAG(w); RZ(a=over(a,w)) AFLAGORLOCAL(a,gflg) R a;}  // don't pass MODIFIER flag through.  Can't inplace lest a be used in adverbial hook
 
 
@@ -376,7 +374,6 @@ F2(jtagendai){F12IP;I flag;
   } 
   R exg(gerfrom(w,a));  // fall through to general case: multiple verbs selected, or nonverb.  This can return any type
  }
-// obsolete  RZ(a=incorp(fxeachv(1L,a)));  // verb v.  Create a "BOX" type holding the verb form of each gerund
  RZ(a=fxeachv(1L,a));  // verb v.  Create a "BOX" type holding the verb form of each gerund in u, ensuring they are all verbs
   // Calculate NOLOCCHG/VNONAME+VNOSELF from all of the verbs (both a and w), provided the user can handle it
  R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,0, (gflg(a)&FAV(w)->flag)+VGERL, RMAX, RMAX, RMAX);  // use verbified gerund

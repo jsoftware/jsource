@@ -18,7 +18,6 @@
 // f;.0 w
 static DF1(jtcut01){DF12IP;A x,z;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0]; 
  RZ(x=from(box(every(negate(shape(w)),ds(CIOTA))),w));   // create reversed indexes, extract reversed array
-// obsolete  if(VGERL&FAV(self)->flag){h=FAV(self)->fgh[2]; R df1(z,x,AAV(h)[0]);}else{ R CALL1(f1,x,fs);}  // not inplaceable
  if(VGERL&FAV(self)->flag){R df1(z,x,AAV(fs)[0]);}else{ R CALL1(f1,x,fs);}  // not inplaceable
 }    /* f;.0 w */
 

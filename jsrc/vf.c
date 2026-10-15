@@ -154,7 +154,6 @@ FI2(jtrotate){A z;C *u,*v;I af,d,k,m,n,p,*s,wf,wn;
    backslack=(ks+js-backslack)&~(jt->fill?REPSGN(av[i+1]):0);  // backslack is neg if we can move AK right, EXCEPT when right-shift with fill
    frontslack=(e-(ks+js)-frontslack)&(jt->fill?REPSGN(av[i+1]):-1);  // frontslack is neg if we can move AK left, EXCEPT when left-shift with fill
    if((backslack|frontslack)<0){   // there is room for inplacing, front or back
-// obsolete     if(((e-(ks+js))&REPSGN(backslack))>((ks+js)&REPSGN(frontslack))){  // choose the allowed direction that has the smaller wrapped area.  The unwrapped area will stay in place; its length is e-k
     if((backslack<0?e-(ks+js):-1)>(frontslack<0?ks+js:-1)){  // choose the allowed direction that has the smaller wrapped area.  The unwrapped area will stay in place; its length is e-k.  Don't pick a direction disabled in *slack
      // inplace, adding to AK.  Still copy back to front
      AK(z)+=ks+js; k=av[i+1]<0?ks:k;  // move AK right, which shifts the buffer left.  If k was calculated from <<, the wrap length is correct.  If from >>, take other side

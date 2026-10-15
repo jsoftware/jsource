@@ -29,8 +29,6 @@ static F1(jtdrr){F12IP;PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m
  if(!m)R spella(w);  // if no components, it must be a primitive, out it
  m+=!b&&!xop||hs&&xop;   // if operator, add component for v if conjunction; if not operator, add component UNLESS w is an invisible bident: for w itself or for h
  if(evoke(w))R drr(sfne(w));  // turn nameref into string or verb; then take rep, which is the result
-// obsolete  if(fs)RZ(df=fl&VGERL?every(fxeach(fs,(A)&jtfxself[0]),(A)&drrself):drr(fs));  // recursively take rep of 1st component
-// obsolete  if(gs)RZ(dg=fl&VGERR?every(fxeach(gs,(A)&jtfxself[0]),(A)&drrself):drr(gs));  // ... and second
  if(fs)RZ(df=fl&VGERL?selfeach(fs,(A)&drrself):drr(fs));  // recursively take rep of 1st component
  if(gs)RZ(dg=fl&VGERR?selfeach(gs,(A)&drrself):drr(gs));  // ... and second
  if(ex)RZ(dg=unparsem(num(0),w));  // get rep of body of explicit definition, if any

@@ -121,7 +121,6 @@ static F1(jttconnect){F12IP;A*wv,x,y,z;B b,d;C c,*u,*xv,*yv,*zv;I e,i,j,m,n,p,q,
 
 EVERYFS(trrself,jttrr,0,0,VFLAGNONE)
 
-// obsolete static F1(jttreach){F12IP;R troot(scc('0'),graft(ope(every(w,(A)&trrself))));}
 static F1(jttreach){F12IP;R troot(scc('0'),graft(ope(selfeach(w,(A)&trrself))));}
 
 static F1(jttrr){F12IP;PROLOG(0058);A hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
@@ -139,8 +138,6 @@ static F1(jttrr){F12IP;PROLOG(0058);A hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  if(!m){RETF(tleaf(spella(w)));}
  if(evoke(w)){RZ(w=sfne(w)); RETF((AT(w)&FUNC?jttrr:jttleaf)(jt,w));}
  GATV0(t,BOX,m,1); x=AAV1(t);
-// obsolete  if(0<m)RZ(x[0]=incorp(fl&VGERL?treach(fxeach(fs,(A)&jtfxself[0])):trr(fs)));
-// obsolete  if(1<m)RZ(x[1]=incorp(fl&VGERR?treach(fxeach(gs,(A)&jtfxself[0])):ex?trr(unparsem(num(0),w)):trr(gs)));
  if(0<m)RZ(x[0]=incorp(fl&VGERL?treach(fs):trr(fs)));
  if(1<m)RZ(x[1]=incorp(fl&VGERR?treach(gs):ex?trr(unparsem(num(0),w)):trr(gs)));
  if(2<m)RZ(x[2]=incorp(trr(hs)));

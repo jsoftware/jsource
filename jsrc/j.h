@@ -1091,7 +1091,6 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #endif
 #define WRITEUNLOCK(lock) __atomic_fetch_and(&lock,WLOCKBIT-1, __ATOMIC_ACQ_REL);  // clear all the write bits
 #else
-// obsolete #define CCOMMON(x,pref,err) (x)
 #define CCOMMONPYX(x,pref,err) (x)
 #define READLOCK(lock) ;
 #define WRITELOCK(lock) ;

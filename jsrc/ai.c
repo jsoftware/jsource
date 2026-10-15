@@ -167,7 +167,6 @@ xco:
   R fdef(0,CPOWOP,VERB, jtexpandf,jtvalenceerr, fampg?fampg:amp(f,g),num(-1),0L, VNONAME+VNOSELF, RMAX,0L,0L);
   break;
  case CPOWOP:  // ^:
-// obsolete   if(VGERL&u->flag){SEGFAULT; ff=AAV(u->fgh[2])[1]; R amp(nf?x:ff,nf?ff:x);}
   if(u->valencefns[0]==jtinvh1)R invamp(nf?f:u->fgh[2],nf?u->fgh[2]:g,0);  // m&(#.^:_1) : try new inverse after moving to old
   break;
  case CCOMMA:  // ,
@@ -301,7 +300,6 @@ xco:
   // otherwise fall through to...
  case CPOWOP:   
   if(vf&&ng){p=rei0(g); R -1==p?f:1==p?invrecur(f):powop(0>p?f:invrecur(f),sc(ABS(p)),0);}  // u^:n; inverse is (uinv)[^:_n if n is not -1]
-// obsolete   if(VGERL&v->flag){SEGFAULT; R AAV(v->fgh[2])[1];} 
   break;
  case CTILDE:
   if(nf)R invrecur(symbrd(f));  // name~ - resolve name & try again

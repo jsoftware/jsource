@@ -812,7 +812,6 @@ extern RESTRICTF A jtgafv(J,I);
 extern RESTRICTF A jtgah(J,I,A);
 extern A        jtgc(J,A,A*);
 extern I        jtgc3(J,A*,A*,A*,A*);
-// obsolete extern B        jtgerexact(J, A);
 extern B        jtglobinit(JS);
 extern B        jthasimploc(J,A);
 extern I        jti0(J,A);

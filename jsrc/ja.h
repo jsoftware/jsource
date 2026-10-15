@@ -423,7 +423,6 @@ AT(fffz)=(ffft); AFLAGINIT(fffz,(ffft)&RECURSIBLE); /* install actual type.  Wai
 #define fdefnoerr(flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) ({A fffz; GAT0E(fffz,INT,(VERBSIZE+SZI-1)>>LGSZI,0,goto retpoint) fdeffill(fffz,flag2,id,t,f1,f2,fs,gs,hs,flag,m,l,r) retpoint:; fffz;})  // this version returns 0 if allocation error
 
 #define fdep(x)                     0
-// obsolete #define fdepger(x)                  jtfdepger(jt,(x))
 #define filler(x)                   jtfiller(jt,(x))  
 #define fillv0(x)               jtfillv0(jt,(x))
 #define findnl(x)                   jtfindnl(jt, (x))
@@ -501,7 +500,6 @@ AT(fffz)=(ffft); AFLAGINIT(fffz,(ffft)&RECURSIBLE); /* install actual type.  Wai
 #define gcd(x,y)                    jtatomic2(jt,(x),(y),ds(CPLUSDOT)) 
 #define gconj(x,y)                  jtgconj(jt,(x),(y))   
 #define ge(x,y)                     jtatomic2(jt,(x),(y),ds(CGE)) 
-// obsolete #define gerexact(x)                 jtgerexact(jt,(x)) 
 #define gerfrom(x,y)                jtgerfrom(jt,(x),(y))
 #define getsen(x)                   jtgetsen(jt,(x))
 #define gjoin(x,y,z)                jtgjoin(jt,(x),(y),(z))   

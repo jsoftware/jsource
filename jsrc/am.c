@@ -793,61 +793,6 @@ static DF2(amccv2){DF12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];
 static DF1(mergn1){DF12IP;A ind,z; z=jtmerge1(jt,w,ind=FAV(self)->fgh[0]); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}  // no inplacing
 static DF1(mergv1){DF12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];A ind,z; z=jtmerge1(jt,w,ind=CALL1(f1,w,fs)); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}
 
-#if 0  // obsolete 
-// called from m}, m is usually NOT a gerund
-static B ger(J jt,A w){A*wv,x;
- if(likely(!(BOX&AT(w))||!AN(w)))R 0;
- wv=AAV(w); 
- DO(AN(w), x=C(wv[i]); if((-(BOX&AT(x))&(((AR(x)^1)|(AN(x)^2))-1))<0)x=C(AAV(x)[0]); if(((-(LIT&AT(x))&(AR(x)-2)&-AN(x)))>=0)R 0;);  // box/rank1/N=2; lit/R<2/N!=0
- R 1;
-}    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
-
-// w is the contents of a presumptive AR/gerund.  Return 1 if good form for AR/gerund, 0 if not
-// we do not check the type of names, since they might become defined later
-static B gerar(J jt, A w){A x; C c;
- I n = AN(w); 
- // literal contents are OK if a valid name or a primitive
- if(AT(w)&LIT) {
-  C *stg = CAV(w);
-  if(!vnm(n,stg)){
-   // not name, see if valid primitive
-   UC p = spellin(n,stg);
-   R (p>>7)|!!ds(p);  // return if valid primitive (all non-ASCII are valid primitives, but 0: is not in pst[] so force that in)
-  }
- } else if(likely(AT(w)&BOX)) {A *wv;I bmin=0,bmax=0;
-  // boxed contents.  There must be exactly 2 boxes.  The first one may be a general AR; or the special cases singleton 0, 2, 3, or 4
-  // Second may be anything for special case 0 (noun); otherwise must be a valid gerund, 1 or 2 boxes if first box is general AR, 2 boxes if special case
-  // 2 (hook) or 4 (bident), 3 if special case 3 (fork)
-  // 
-  if(unlikely(!(n==2)))R 0;  // verify 2 boxes
-  wv=AAV(w);  x=C(wv[0]); // point to pointers to boxes; point to first box contents
-  // see if first box is a special flag
-  if((SGNIF(AT(x),LITX)&(AR(x)-2)&((AN(x)^1)-1))<0){ // LIT, rank<2, AN=1
-   c = CAV(x)[0];   // fetch that character
-   if(c=='0')R 1;    // if noun, the second box can be anything & is always OK, don't require AR there
-   I oride=2+(c&1);  // 2 if '2'/'4', 3 if '3'
-   bmin=BETWEENC(c,'2','4')?oride:bmin; bmax=BETWEENC(c,'2','4')?oride:bmax; 
-  }
-  // If the first box is not a special case, it had better be a valid AR; and it will take 1 or 2 operands
-  if(bmin==0){if(unlikely(!(gerar(jt,x))))R 0; bmin=1,bmax=2;}
-  // Now look at the second box.  It should contain between bmin and bmax boxes, each of which must be an AR
-  x=C(wv[1]);   // point to second box
-  if(unlikely((SGNIF(AT(x),BOXX) & ((AR(x)^1)-1))>=0))R 0;   // verify it contains a list of boxes
-  if(unlikely(!BETWEENC(AN(x),bmin,bmax)))R 0;  // verify correct number of boxes
-  R gerexact(x);  // recursively audit the other ARs in the second box
- } else R 0;
- R 1;
-}
-
-B jtgerexact(J jt, A w){A*wv;
- if(unlikely(!(BOX&AT(w))))R 0;   // verify gerund is boxed
- if(unlikely(!(AN(w))))R 0;   // verify there are boxes
- wv=AAV(w);   // point to pointers to contents
- DO(AN(w), if(!(gerar(jt, C(wv[i]))))R 0;);   // fail if any box contains a non-gerund
- R 1;
-}    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
-#endif
-
 // verb executed for [v0`]v1`v2} y
 static DF1(jtgav1){DF12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*fv=AAV(sv->fgh[0]);
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
@@ -889,12 +834,10 @@ static A jtgadv(J jt,A w){A hs;I n;
  ARGCHK1(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
  I wn=AN(w); RZ(hs=fxeachv(1,w));   // convert to v1`v0`v1 or v0`v1`v2; convert each gerund to verb
-// obsolete  ASSERT(BETWEENC(wn,2,3),EVLENGTH);  // verify 2-3 gerunds
  // hs is a BOX array, but its elements are ARs and cannot be pyxes
  // The derived verb is NOLOCCHG if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
  I alr=atoplr(AAV(hs)[0]);   // Also set the LSB flags to indicate whether v0 is u@[ or u@]
  I flag=VNOLOCCHG+VNONAME+VNOSELF;  // where we will build verb flags, inited as if wn<3
-// obsolete if(wn==3){if(FAV(AAV(hs)[2])->id==CRIGHT)AS(hs)[0]=2; else flag=FAV(AAV(hs)[2])->flag|VNONAME+VNOSELF;}  // if v2=], remove it from gerund count in shape (leave in AN for free); if 3 gerunds, init from v2
  if(wn==3){flag=FAV(AAV(hs)[2])->flag|VNONAME+VNOSELF;}  // if 3 gerunds, init from v2
  flag=(flag&FAV(AAV(hs)[0])->flag&FAV(AAV(hs)[1])->flag&VNOLOCCHG+VNONAME+VNOSELF)+(VGERL)+(alr-2>0?alr-2:alr);  // wn may be 2 or 3
  R fdef(0,CRBRACE,VERB, jtgav1,jtgav2, hs,0L,0,flag, RMAX,RMAX,RMAX);  // create the derived verb, using verbified gerund
@@ -913,7 +856,6 @@ static DFI2(jtamnegate){
 DF1(jtamend){DF12IP;
  ARGCHK1(w);
  if(unlikely(AT(w)&VERB)) R fdef(0,CRBRACE,VERB,(AF)mergv1,(AF)amccv2,w,0L,0L,FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF, RMAX,RMAX,RMAX);  // verb} 
-// obsolete  else if(AT(w)&BOX&&likely(AN(w)>0)&&unlikely(AT(AAV(w)[0])&BOX+VERB)&&unlikely(ger(jt,w))){A z;  // gerund}
  else if(AT(w)&BOX&&likely(BETWEENC(AN(w),2,3))&&unlikely(AT(AAV(w)[0])&BOX+VERB+JCHAR)){A z;  // gerund}
   ASSERT(self!=0,EVNONCE);  // execute exception if gerund returns gerund
   RZ(z=gadv(w))   // get verbs for v0`v1[`v2]}, as verbs, and the verb to process the args

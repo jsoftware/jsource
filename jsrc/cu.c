@@ -440,7 +440,7 @@ sunder:  // come here for all structural under
  // The standard verbs start with a rank loop; set the flag indicating that
  if(!f1){f1=r?(flag&VFUNDERHASINV?jtunderh1:jtunder1):(flag&VFUNDERHASINV?jtunderh10:jtunder10); flag2|=VF2RANKATOP1;}  // allow inplace if v is known inplaceable
  if(!f2){f2=rlr+rrr?(flag&VFUNDERHASINV?jtunderh2:jtunder2):(flag&VFUNDERHASINV?jtunderh20:jtunder20); flag2|=VF2RANKATOP2;}  // allow inplace if v is known inplaceable
- fdeffillall(z,flag2,CUNDER,VERB,(AF)(f1),(AF)(f2),a,w,h,(flag),rmr,rlr,rrr,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.wvb=wvb); R z;  // scaf lose wvb, take from w
+ fdeffillall(z,flag2,CUNDER,VERB,(AF)(f1),(AF)(f2),a,w,h,(flag),rmr,rlr,rrr,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.wvb=wvb); R z;  // the verb is part of w & protected by it.  We could take it from w but this is easier (questionable decision)
 }
 
 F2(jtundco){F12IP;AF f1=0,f2;I gside=-1, flag=0;

@@ -62,7 +62,7 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A z;
  ARGCHK1(w);
  // If we are only interested in replacing locatives, and there aren't any, exit fast
  if(NOUN&AT(w)){R w;}  // return noun value; only way a name gets here is by ".@noun which turns into ".@(name+noun) for execution.  Also in debug, but that's discarded
- if(FAV(w)->flag&VNONAME)R w;  // if value already fixed (or m : n which gets VNONAME+VNOSELF set), keep it.  This prunes all branches with no names, since VNONAME+VNOSELF is propagated from the bottom up during tree creation   scaf should check for unchanged args & suppress rebuild
+ if(FAV(w)->flag&VNONAME)R w;  // if value already fixed (or m : n which gets VNONAME+VNOSELF set), keep it.  This prunes all branches with no names, since VNONAME+VNOSELF is propagated from the bottom up during tree creation
  // continuing, there is a name in the branch and we have to plod through the tree to find it
  fauxblock(fauxself); A aa; fauxINT(aa,fauxself,3,0); AN(aa)=1; IAV0(aa)[1]=IAV(a)[1]; IAV0(aa)[2]=IAV(a)[2];  // place to build recursion parm - copy the recursion namelist and length
  A f=FAV(w)->fgh[0]; A g=FAV(w)->fgh[1]; A h=FAV(w)->fgh[2]; I id=FAV(w)->id;   // fetch fgh of compound, and the type
@@ -101,10 +101,8 @@ static A jtfixa(J jtfg,A a,A w){F12JT;A z;
  case CATDOT:
   // we fix each verb-gerund; for each component that changed
   IAV0(aa)[0]=(aif|na);
-// obsolete  A f1; RZ(f1=every2(aa,f,(A)&arofixaself)); A *f1v=AAV(f1); // fix each component of gerund h, point to boxes
   g=REFIXA(na,g); R255(g); RZ(f=ca(f)); A *fv=AAV(f);  // fix g, and make a nonrecursive copy of f where we will record changes to it
   I flag=VNOLOCCHG+VNONAME+VNOSELF&FAV(g)->flag;  // we will collect combined NOLOCCHG/VNONAME+VNOSELF over g/h
-// obsolete   DO(AN(h), flag&=FAV(f1v[i])->flag; if(f1v[i]!=fv[i]){A t;RZ(t=aro(f1v[i])) INCORPNV(t) fv[i]=t;})  // update AR in f of any changed component.
   DO(AN(f), flag&=FAV(fv[i])->flag; A t=REFIXA(na,fv[i]); R255(t); if(t!=fv[i]){INCORPNV(t) fv[i]=t;})  // update AR in f of any changed component.
   RZ(f=fxeachv(1,f))  // agenda must be verbified - it will already be, unless there was a pun
   R fdef(0,CATDOT,VERB, FAV(w)->valencefns[0],FAV(w)->valencefns[1], f,g,0, flag+VGERL, RMAX, RMAX, RMAX);   // create new verb, setting flags, and using verbified gerund

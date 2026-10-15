@@ -47,7 +47,7 @@ switch ($arch) {
         Copy-Item -Path "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\bin\libomp.dll" -Destination $C -Force
         Copy-Item -Path "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\lib\libomp.lib" -Destination $C -Force
         Copy-Item -Path "pcre2\windows\x86\jpcre2.dll" -Destination "$A\tools\regex\jpcre2_32.dll" -Force
-        Invoke-WebRequest -Uri "https://www.jsoftware.com/download/lapackbin/x86/libopenblas.dll" -OutFile "$C\libopenblas.dll"
+        Invoke-WebRequest -Uri "https://www.jsoftware.com/download/lapackbin/windows/x86/libopenblas.dll" -OutFile "$C\libopenblas.dll"
     }
     "arm64" {
         New-Item -ItemType Directory -Force -Path "j64" | Out-Null
@@ -58,7 +58,7 @@ switch ($arch) {
         Copy-Item -Path "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\ARM64\bin\libomp.dll" -Destination $B -Force
         Copy-Item -Path "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\ARM64\lib\libomp.lib" -Destination $B -Force
         Copy-Item -Path "pcre2\windows\arm64\jpcre2.dll" -Destination "$A\tools\regex\jpcre2_arm64.dll" -Force
-        Invoke-WebRequest -Uri "https://www.jsoftware.com/download/lapackbin/arm64/libopenblas.dll" -OutFile "$B\libopenblas.dll"
+        Invoke-WebRequest -Uri "https://www.jsoftware.com/download/lapackbin/windows/arm64/libopenblas.dll" -OutFile "$B\libopenblas.dll"
     }
     "x64" {
         New-Item -ItemType Directory -Force -Path "j64" | Out-Null
@@ -71,7 +71,7 @@ switch ($arch) {
         Copy-Item -Path "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\bin\libomp.dll" -Destination $B -Force
         Copy-Item -Path "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64\lib\libomp.lib" -Destination $B -Force
         Copy-Item -Path "pcre2\windows\x64\jpcre2.dll" -Destination "$A\tools\regex\" -Force
-        Invoke-WebRequest -Uri "https://www.jsoftware.com/download/lapackbin/x64/libopenblas.dll" -OutFile "$B\libopenblas.dll"
+        Invoke-WebRequest -Uri "https://www.jsoftware.com/download/lapackbin/windows/x64/libopenblas.dll" -OutFile "$B\libopenblas.dll"
     }
     default {
         Write-Error "Unsupported architecture: $arch"

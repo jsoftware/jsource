@@ -369,8 +369,10 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
   }
   if(rtn==0)R df1(z,t==VERB?a:w,t==VERB?w:a);  // V N, N/V A: we must execute immediately rather than returning a modifier for the trident.  VERB means N/V A.  Execution is x,self,self
   // special processing: for display purposes only, we flag the gerunds in gerund@. gerund` gerund`:   `gerund ^:gerund and use the verbified gerund as the arg - only if all are ACV
-  if(BOX&AT(a)&&AT(w)&CONJ&&(FAV(w)->id==CATDOT||FAV(w)->id==CGRAVE||FAV(w)->id==CGRCO)&&gerexact(a)){A r; WITHJTJERROFF(r=fxeachv(1-(RMAX+1),a);) if(likely(r!=0)){flag+=VGERL; a=r;}}  // detect gerund@.  gerund`  gerund `:   and mark the compound
-  if(BOX&AT(w)&&AT(a)&CONJ&&(FAV(a)->id==CGRAVE||FAV(a)->id==CPOWOP&&1<AN(w))&&gerexact(w)){A r; WITHJTJERROFF(r=fxeachv(1-(RMAX+1),w);) if(likely(r!=0)){flag+=VGERR; w=r;}}  // detect `gerund and ^:gerund  and mark the compound
+// obsolete   if(BOX&AT(a)&&AT(w)&CONJ&&(FAV(w)->id==CATDOT||FAV(w)->id==CGRAVE||FAV(w)->id==CGRCO)&&gerexact(a)){A r; WITHJTJERROFF(r=fxeachv(1-(RMAX+1),a);) if(likely(r!=0)){flag+=VGERL; a=r;}}  // detect gerund@.  gerund`  gerund `:   and mark the compound
+// obsolete   if(BOX&AT(w)&&AT(a)&CONJ&&(FAV(a)->id==CGRAVE||FAV(a)->id==CPOWOP&&1<AN(w))&&gerexact(w)){A r; WITHJTJERROFF(r=fxeachv(1-(RMAX+1),w);) if(likely(r!=0)){flag+=VGERR; w=r;}}  // detect `gerund and ^:gerund  and mark the compound
+  if(BOX&AT(a)&&AT(w)&CONJ&&(FAV(w)->id==CATDOT||FAV(w)->id==CGRAVE||FAV(w)->id==CGRCO)){A r; WITHJTJERROFF(r=fxeachv(1-(RMAX+1),a);) if(likely(r!=0)){flag+=VGERL; a=r;}}  // detect gerund@.  gerund`  gerund `:   and mark the compound
+  if(BOX&AT(w)&&AT(a)&CONJ&&(FAV(a)->id==CGRAVE||FAV(a)->id==CPOWOP&&1<AN(w))){A r; WITHJTJERROFF(r=fxeachv(1-(RMAX+1),w);) if(likely(r!=0)){flag+=VGERR; w=r;}}  // detect `gerund and ^:gerund  and mark the compound
   // if the unexecutable bident is all nouns or primitive ACVs, mark the derived modifier as NAMELESS.  This is aimed mostly at each and every
 
   I flag2=VF2NAMELESS, ffix=VNONAME+VNOSELF; A ta=a; ta=AT(a)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX)); ffix&=FAV(ta)->flag;  // CPLUS to make nouns look primitive

@@ -758,8 +758,9 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
 
  // Get the action routines and flags to use for the derived verb
  if(unlikely(NOUN&AT(a))){  // could be gerund"n or noun"n
-  // gerund requires: some rank not RMAX; boxed m; rank of m=1; and then the gerund must be well formed.  We can bypass the audit of 1 if the gerund is pre-validated as verbs coming from `
-  if(((hv[0]^RMAX)|(hv[1]^RMAX)|(hv[2]^RMAX)) && ((AFLAG(ger=a)&AFGERUNDOK)||(!((AR(a)^1) | (AT(a)&(NOUN&~BOX))) && (ger=({A x; WITHJTJERROFF(x=fxeachv(1LL,a);) x;}))))){
+  // gerund requires: some rank not RMAX; boxed m; rank of m=1; and then the gerund must be well formed.
+// obsolete   if(((hv[0]^RMAX)|(hv[1]^RMAX)|(hv[2]^RMAX)) && ((AFLAG(ger=a)&AFGERUNDOK)||(!((AR(a)^1) | (AT(a)&(NOUN&~BOX))) && (ger=({A x; WITHJTJERROFF(x=fxeachv(1LL,a);) x;}))))){
+  if(((hv[0]^RMAX)|(hv[1]^RMAX)|(hv[2]^RMAX)) && (AR(a)==1) && (ger=({A x; WITHJTJERROFF(x=fxeachv(1LL,a);) x;}))){
    f1=cycr1; f2=cycr2;  // process this with the cyclic-gerund routines
    vf=(gflg(ger)&~VNOLOCCHG)|VGERL;   // the cyclic processor does not inplace or IRS.  Mark as gerund for display
    r[0]=r[1]=r[2]=RMAX;  // actual rank of gerund"n is _; the gerund is applied at rank n

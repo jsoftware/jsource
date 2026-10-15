@@ -122,7 +122,7 @@ static F1(jttconnect){F12IP;A*wv,x,y,z;B b,d;C c,*u,*xv,*yv,*zv;I e,i,j,m,n,p,q,
 EVERYFS(trrself,jttrr,0,0,VFLAGNONE)
 
 // obsolete static F1(jttreach){F12IP;R troot(scc('0'),graft(ope(every(w,(A)&trrself))));}
-static F1(jttreach){F12IP;R troot(scc('0'),graft(ope(fxeach(w,(A)&trrself))));}
+static F1(jttreach){F12IP;R troot(scc('0'),graft(ope(selfeach(w,(A)&trrself))));}
 
 static F1(jttrr){F12IP;PROLOG(0058);A hs,s,t,*x,z;B ex,xop;C id;I fl,*hv,m;V*v;
  ARGCHK1(w);

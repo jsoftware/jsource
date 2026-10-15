@@ -31,8 +31,8 @@ static F1(jtdrr){F12IP;PROLOG(0055);A df,dg,hs,*x,z;B b,ex,xop;C c,id;I fl,*hv,m
  if(evoke(w))R drr(sfne(w));  // turn nameref into string or verb; then take rep, which is the result
 // obsolete  if(fs)RZ(df=fl&VGERL?every(fxeach(fs,(A)&jtfxself[0]),(A)&drrself):drr(fs));  // recursively take rep of 1st component
 // obsolete  if(gs)RZ(dg=fl&VGERR?every(fxeach(gs,(A)&jtfxself[0]),(A)&drrself):drr(gs));  // ... and second
- if(fs)RZ(df=fl&VGERL?fxeach(fs,(A)&drrself):drr(fs));  // recursively take rep of 1st component
- if(gs)RZ(dg=fl&VGERR?fxeach(gs,(A)&drrself):drr(gs));  // ... and second
+ if(fs)RZ(df=fl&VGERL?selfeach(fs,(A)&drrself):drr(fs));  // recursively take rep of 1st component
+ if(gs)RZ(dg=fl&VGERR?selfeach(gs,(A)&drrself):drr(gs));  // ... and second
  if(ex)RZ(dg=unparsem(num(0),w));  // get rep of body of explicit definition, if any
  GATV0(z,BOX,m,1); x=AAV1(z);
  RZ(x[0]=incorp(df));  // always out f first
@@ -94,13 +94,13 @@ static DF1(jtfxchar){DF12IP;A y;C c,d,id,*s;I m,n;
 // self is normally 0; if nonzero, we return a noun type ('0';<value) as is rather than returning value, and leave adv/conj ARs looking like nouns
 DF1(jtfx){DF12IP;A f,fs,g,h,p,q,*wv,y,*yv;C id;I m,n=0;
  ARGCHK1(w);
- if(AT(w)&VERB+ADV+CONJ)R w;  // if gerund (boxed VERB), treat it as a verb - return it as is.  Also if other AR that has been converted to CAV
+ if(AT(w)&VERB+ADV+CONJ)R w;  // if gerund (boxed V), treat it as a verb - return it as is.  Also if other AR that has been converted to CAV
  // if string, handle that special case (name/primitive)
  if(LIT&AT(w))R fxchar(w,self);
+ ASSERT(BOX&AT(w),EVDOMAIN);  // AR contents must be string or boxed.  We reject numerics quickly so that m} doesn't take analysis time
  STACKCHKOFL
  // otherwise, it had better be boxed with rank 0 or 1, and 1 or 2 atoms
  m=AN(w);   // m=#atoms
- ASSERT(BOX&AT(w),EVDOMAIN);
  ASSERT(1>=AR(w),EVRANK);
  ASSERT(BETWEENC(m,1,2),EVLENGTH);
  wv=AAV(w); y=C(wv[0]);  // set wv->box pointers, y->first box

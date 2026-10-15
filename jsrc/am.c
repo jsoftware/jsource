@@ -793,6 +793,7 @@ static DF2(amccv2){DF12IP;A fs=FAV(self)->fgh[0]; AF f2=FAV(fs)->valencefns[1];
 static DF1(mergn1){DF12IP;A ind,z; z=jtmerge1(jt,w,ind=FAV(self)->fgh[0]); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}  // no inplacing
 static DF1(mergv1){DF12IP;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencefns[0];A ind,z; z=jtmerge1(jt,w,ind=CALL1(f1,w,fs)); if(unlikely(z==0))jteformat(jt,self,w,0,ind); R z;}
 
+#if 0  // obsolete 
 // called from m}, m is usually NOT a gerund
 static B ger(J jt,A w){A*wv,x;
  if(likely(!(BOX&AT(w))||!AN(w)))R 0;
@@ -845,6 +846,7 @@ B jtgerexact(J jt, A w){A*wv;
  DO(AN(w), if(!(gerar(jt, C(wv[i]))))R 0;);   // fail if any box contains a non-gerund
  R 1;
 }    /* 0 if w is definitely not a gerund; 1 if possibly a gerund */
+#endif
 
 // verb executed for [v0`]v1`v2} y
 static DF1(jtgav1){DF12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*fv=AAV(sv->fgh[0]);
@@ -859,7 +861,7 @@ static DF1(jtgav1){DF12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,*fv=AAV(sv->fgh
 
 // verb executed for x v0`v1`v2} y
 static DF2(jtgav2){DF12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*fv=AAV(sv->fgh[0]);  // hv->verbs, already converted from gerunds
- I fn=AN(sv->fgh[0]);  // fn=# gerunds in h
+ I fn=AS(sv->fgh[0])[0];  // fn=# gerunds in h.  We use AS rather than AN because we may have discarded a trailing value
  // first, get the indexes to use.  Since this is going to call m} again, we protect against
  // stack overflow in the loop in case the generated ff generates a recursive call to }
  dfv2(ffm,a,w,fv[1]);  // x v1 y - no inplacing.
@@ -886,13 +888,14 @@ static DF2(jtgav2){DF12IP;V* RESTRICT sv=FAV(self); A ff,ffm,ffx,ffy,*fv=AAV(sv-
 static A jtgadv(J jt,A w){A hs;I n;
  ARGCHK1(w);
  ASSERT(BOX&AT(w),EVDOMAIN);
- I wn=AN(w); ASSERT(BETWEENC(wn,2,3),EVLENGTH);  // verify 2-3 gerunds
- RZ(hs=fxeachv(1,w));   // convert to v1`v0`v1 or v0`v1`v2; convert each gerund to verb
+ I wn=AN(w); RZ(hs=fxeachv(1,w));   // convert to v1`v0`v1 or v0`v1`v2; convert each gerund to verb
+// obsolete  ASSERT(BETWEENC(wn,2,3),EVLENGTH);  // verify 2-3 gerunds
  // hs is a BOX array, but its elements are ARs and cannot be pyxes
  // The derived verb is NOLOCCHG if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
  I alr=atoplr(AAV(hs)[0]);   // Also set the LSB flags to indicate whether v0 is u@[ or u@]
  I flag=VNOLOCCHG+VNONAME+VNOSELF;  // where we will build verb flags, inited as if wn<3
- if(wn==3){if(FAV(AAV(hs)[2])->id==CRIGHT)AS(hs)[0]=2; else flag=FAV(AAV(hs)[2])->flag|VNONAME+VNOSELF;}  // if v2=], remove it from gerund count in shape (leave in AN for free); if 3 gerunds, init from v2
+// obsolete if(wn==3){if(FAV(AAV(hs)[2])->id==CRIGHT)AS(hs)[0]=2; else flag=FAV(AAV(hs)[2])->flag|VNONAME+VNOSELF;}  // if v2=], remove it from gerund count in shape (leave in AN for free); if 3 gerunds, init from v2
+ if(wn==3){flag=FAV(AAV(hs)[2])->flag|VNONAME+VNOSELF;}  // if 3 gerunds, init from v2
  flag=(flag&FAV(AAV(hs)[0])->flag&FAV(AAV(hs)[1])->flag&VNOLOCCHG+VNONAME+VNOSELF)+(VGERL)+(alr-2>0?alr-2:alr);  // wn may be 2 or 3
  R fdef(0,CRBRACE,VERB, jtgav1,jtgav2, hs,0L,0,flag, RMAX,RMAX,RMAX);  // create the derived verb, using verbified gerund
 }
@@ -910,9 +913,10 @@ static DFI2(jtamnegate){
 DF1(jtamend){DF12IP;
  ARGCHK1(w);
  if(unlikely(AT(w)&VERB)) R fdef(0,CRBRACE,VERB,(AF)mergv1,(AF)amccv2,w,0L,0L,FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF, RMAX,RMAX,RMAX);  // verb} 
- else if(AT(w)&BOX&&unlikely(ger(jt,w))){A z;  // gerund}
+// obsolete  else if(AT(w)&BOX&&likely(AN(w)>0)&&unlikely(AT(AAV(w)[0])&BOX+VERB)&&unlikely(ger(jt,w))){A z;  // gerund}
+ else if(AT(w)&BOX&&likely(BETWEENC(AN(w),2,3))&&unlikely(AT(AAV(w)[0])&BOX+VERB+JCHAR)){A z;  // gerund}
   ASSERT(self!=0,EVNONCE);  // execute exception if gerund returns gerund
-  RZ(z=gadv(w))   // get verbs for v0`v1`v2}, as verbs, and the verb to process the args
+  RZ(z=gadv(w))   // get verbs for v0`v1[`v2]}, as verbs, and the verb to process the args
   A *fx=AAV(FAV(z)->fgh[0]);
   if((FAV(fx[0])->id&~1)==CATCO&&FAV(FAV(fx[0])->fgh[0])->id==CMINUS&&AT(FAV(fx[0])->fgh[1])&VERB&&FAV(FAV(fx[0])->fgh[1])->id==CFROM&&FAV(fx[1])->id==CLEFT&&(AN(FAV(z)->fgh[0])<3||FAV(fx[2])->id==CRIGHT)){
    FAV(z)->valencefns[1]=jtamnegate;    // if gerund is -@[:]{`[ [`]], change the dyad function pointer to the special code

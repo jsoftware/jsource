@@ -102,11 +102,11 @@ static A jtcreategerunditerator(J jt, A z, A w, A r){  // z is result area, w is
 // if r is negative, we allow all parts of speech, otherwise just verbs (because we want to display gerund` & the like as linear not AR)
 A jtfxeachv(J jt,I r,A w){A*wv,x,z,*zv;I n;
  ARGCHK1(w);
+ if(likely(AFLAG(w)&AFGERUNDOK))R w;  // if w is known to have been created by ` applied to verbs, we can accept it immediately
  n=AN(w); wv=AAV(w); 
  ASSERT((r&RMAX)>=AR(w),EVRANK);  // max rank allowed
  ASSERT(n!=0,EVLENGTH);  // gerund must not be empty
  ASSERT(BOX&AT(w),EVDOMAIN);   // must be boxed
- // scaf  have flag indicating 'all contents are verbs', created by `
  I zr=AR(w); GATV(z,BOX,n,AR(w),AS(w)); zv=AAVn(zr,z);  // allocate one box per gerund
 // obsolete  DO(n, RZ(zv[i]=x=incorp(fx(C(wv[i])))); ASSERT(VERB&AT(x),EVDOMAIN););   // create verb, verify it is a verb  No incorporation since it's not a noun
  DO(n, RZ(zv[i]=x=incorp(fx(CPYX(wv[i])))); ASSERT(((r&ADV+CONJ)|VERB)&AT(x),EVDOMAIN););   // create verb, verify it is a verb  No incorporation since it's not a noun
@@ -119,12 +119,8 @@ PRIM jtfxself[2]={
 {{1,0,0,0,0,0,0},{{.valencefns={jtfx,0},.fgh={0,0,0},.localuse=0,.flag=0,.flag2=0,.lrr=0,.mr=0,.id=0,.lu2.lc=0}}}
 };
 
-// run jtfx on each box in w, turning AR into an A block.  This is used for creating representations of a gerund, where we force the AR to A form (if it isn't already) before converting that to the rep
-// self is a parm passed through to jtfx, coming from jtfxself above.  if AK(self) is nonzero, we return nouns as is
-// Result claims to be an array of boxes, but each box holds an A with possibly a function type
-// scaf this should be merged into fxeachv since only verbs can come out at the top level
-// obsolete DF1(jtfxeach){DF12IP;RETF(every(w,self));}
-DF1(jtfxeach){DF12IP;A z; GATV0(z,BOX,AN(w),1); A *zv=AAV(z), *wv=AAV(w); DO(AN(w), A zz; RZ(df1(zz,wv[i],self)) RZ(zv[i]=incorp(zz)) ) RETF(z);}
+// run self on each box in w, turning AR into an A block. This is like every() but we do not convert verbs to ARs
+DF1(jtselfeach){DF12IP;A z; GATV0(z,BOX,AN(w),1); A *zv=AAV(z), *wv=AAV(w); DO(AN(w), A zz; RZ(df1(zz,CPYX(wv[i]),self)) RZ(zv[i]=incorp(zz)) ) RETF(z);}
 
 // u`:0 append
 static DF1(jtcon1){DF12IP;A f,*fv,*x,z;V*sv;
@@ -160,7 +156,7 @@ F2(jtevger){F12IP;A hs;I k;
  k=rei0(w); 
  if(k==GTRAIN)R exg(a);  // `:6
  RZ(hs=fxeachv(RMAX,a));
- ASSERT(BETWEENC(k^1,GAPPEND^1,GINSERT^1),EVDOMAIN)   // require valid type
+ ASSERT(BETWEENC(k^1,GAPPEND^1,GINSERT^1),EVDOMAIN)   // require valid type (0 or 3)
  AF f1=k==GAPPEND?(AF)jtcon1:(AF)jtinsert; AF f2=k==GAPPEND?(AF)jtcon2:(AF)jtvalenceerr; I r2=k==GAPPEND?RMAX:0;  // variable parts
  R fdef(0,CGRCO,VERB, f1,f2,   hs,w,0, gflg(hs)+VGERL, RMAX,r2,r2); // `:0: jtcon1/jtcon2   `:3:jtinsert/err
 }
@@ -374,9 +370,14 @@ static F2(jtgerfrom){F12IP;A*av,*v,z;I n;
 F2(jtagendai){F12IP;I flag;
  ARGCHK2(a,w)
  ASSERT(NOUN&AT(a),EVDOMAIN);  // u must always be a gerund
- if(unlikely(NOUN&AT(w)))R exg(gerfrom(w,a));  // noun form, as before
- // verb v.  Create a "BOX" type holding the verb form of each gerund
- if(!(AFLAG(a)&AFGERUNDOK))RZ(a=incorp(fxeachv(1L,a)));   // if the gerund already contains all verbs, no need to fix it explicitly
+ if(unlikely(NOUN&AT(w))){  // noun form, as before
+  if(likely(AT(w)&INT+B01&&likely(AN(w)==1))){  // dominant case of integer singleton
+   I j=BIV0(w); j+=REPSGN(j)&AN(w); ASSERT(BETWEENO(j,0,AN(a)),EVINDEX) if(AT(AAV(a)[j])&VERB)R AAV(a)[j];  // extract index, handle negative, verify inrange, return selected verb (if it is a verb)
+  } 
+  R exg(gerfrom(w,a));  // fall through to general case: multiple verbs selected, or nonverb.  This can return any type
+ }
+// obsolete  RZ(a=incorp(fxeachv(1L,a)));  // verb v.  Create a "BOX" type holding the verb form of each gerund
+ RZ(a=fxeachv(1L,a));  // verb v.  Create a "BOX" type holding the verb form of each gerund in u, ensuring they are all verbs
   // Calculate NOLOCCHG/VNONAME+VNOSELF from all of the verbs (both a and w), provided the user can handle it
  R fdef(0,CATDOT,VERB, jtcasei12,jtcasei12, a,w,0, (gflg(a)&FAV(w)->flag)+VGERL, RMAX, RMAX, RMAX);  // use verbified gerund
 }

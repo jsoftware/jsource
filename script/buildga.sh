@@ -108,7 +108,6 @@ elif [ "$1" = "openbsd" ]; then
  if [ "$2" = "x86_64" ]; then
   cp mpir/openbsd/x86_64/libgmp.so $B
   cp pcre2/openbsd/x86_64/libjpcre2.so $A/tools/regex/.
-  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/openbsd/x86_64/libopenblas.so"
  else
   cp mpir/openbsd/aarch64/libgmp.so $B
   cp pcre2/openbsd/aarch64/libjpcre2.so $A/tools/regex/.
@@ -118,7 +117,6 @@ elif [ "$1" = "freebsd" ]; then
  if [ "$2" = "x86_64" ]; then
   cp mpir/freebsd/x86_64/libgmp.so $B
   cp pcre2/freebsd/x86_64/libjpcre2.so $A/tools/regex/.
-  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/freebsd/x86_64/libopenblas.so"
  else
   cp mpir/freebsd/aarch64/libgmp.so $B
   cp pcre2/freebsd/aarch64/libjpcre2.so $A/tools/regex/.

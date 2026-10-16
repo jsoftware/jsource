@@ -266,7 +266,7 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
   if(!(AFLAG(w)&AFNJA)&&!((AFLAG(w)&AFUNAUDITABLE)&&(AFLAG(w)&AFVIRTUAL))){A*wv=AAV(w);
    I acbias=(AFLAG(w)&BOX)!=0; A bv;  // subtract 1 if recursive; value of 
      // AT of ) looks like a pyx, so we have to test
-   if(AFLAG(w)&AFPRISTINE){DO(AN(w), if((bv=CNULLNOERR(QCWORD(wv[i])))&&AT(bv)!=RPAR)if(!((AT(bv)&DIRECT)>0))SEGFAULT;)}  // wv[i]&&(AC(w)-acbias)>1|| can't because other uses may be not deleted yet
+   if(AFLAG(w)&AFPRISTINE){DO(AN(w), if((bv=CNULLNOERR(QCWORD(wv[i])))&&AT(bv)!=RPAR)if(!((AT(bv)&DIRECT+VERB)>0))SEGFAULT;)}  // box may contain VERB if gerund
    {DO(AN(w), if((bv=CNULLNOERR(QCWORD(wv[i])))&&AT(bv)!=RPAR)auditblock(jt,bv,nonrecur,0););}
   }
   break;

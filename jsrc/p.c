@@ -271,7 +271,7 @@ void auditblock(J jt,A w, I nonrecurok, I virtok) {
   }
   break;
  case VERBX: case ADVX:  case CONJX: 
-  {V*v=FAV(w); DO(3, if(v->fgh[i])auditblock(jt,CNOERR(v->fgh[i]),nonrecur,0);)} break;
+  {V*v=FAV(w); DO(3, if(v->fgh[i])auditblock(jt,CPYXNOERR(v->fgh[i]),nonrecur,0);)} break;  // do not convert ACV to AR
  case B01X: case INTX: case FLX: case CMPXX: case QPX: case LITX: case C2TX: case C4TX: case NAMEX: case SYMBX: case CONWX: case INT2X: case INT4X:  // direct forms, but possibly sparse
   if(ISSPARSE(AT(w))){P*v=PAV(w);  A x;
 #if AUDITEXECRESULTS > 1

@@ -38,8 +38,10 @@ static const C*qq=">)}]";
 #define BITSf  14
 #define BITSz  16
 
-#define NMODVALS 11
+#define NMODVALS 13
 
+#define mF  (mods&0x4000)
+#define mE  (mods&0x2000)
 #define mC  (mods&0x1000)
 #define mL  (mods&0x0800)
 #define mK  (mods&0x0400)
@@ -55,12 +57,14 @@ static const C*qq=">)}]";
 #define uI  (u[3])
 #define uB  (u[4])
 #define uD  (u[5])
-#define uM  (u[6])
-#define uN  (u[7])
-#define uP  (u[8])
-#define uQ  (u[9])
-#define uR  (u[10])
-#define uS  (u[11])
+#define uE  (u[6])
+#define uF  (u[7])
+#define uM  (u[8])
+#define uN  (u[9])
+#define uP  (u[10])
+#define uQ  (u[11])
+#define uR  (u[12])
+#define uS  (u[13])
 
 
 static F1(jtfmtbfc){F12IP;A*u,z;B t;C c,p,q,*s,*wv;I i,j,m,n;
@@ -134,12 +138,13 @@ static B jtwidthdp(J jt, A a, I *w, I *d){
 } /* width and decimal places */
 
 /* parse a single boxed format phrase                                        */
-/* result:   (width,decimal_places,modifiers);k;j;i;b;d;m;n;p;q;r;s                */
-/* where modifiers are 2b1 1111 1111 1111                                        */
-/* corresponding to      c lkji bdmn pqrs                                        */
-/* k j i b d m n p q r s are the strings to use; s is '' if all defaults           */
+/* result:   (width,decimal_places,modifiers);k;j;i;b;d;e;f;m;n;p;q;r;s              */
+/* where modifiers are 2b11 1111 1111 1111                                       */
+/* corresponding to      fe c lkji bdmn pqrs                                     */
+/* k j i b d e f m n p q r s are the strings to use; s is '' if all defaults       */
+/* d<xx> is shown for _, e<xx> for __, f<xx> for _.                              */
 
-static F1(jtfmtparse){F12IP;A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdbijklc",*cu1="?kjibdmnpqrs",d,*s,*wv;
+static F1(jtfmtparse){F12IP;A x,z,*zv;B ml[2+NMODVALS],mod,t;C c,*cu="srqpnmdbijklcef",*cu1="?kjibdefmnpqrs",d,*s,*wv;
      I fb,i,j,mi,n,n1,p,q,vals[3]={-1,-1,0};
  ARGCHK1(w);
  w=C(AAV(w)[0]); n=AN(w);
@@ -256,14 +261,14 @@ static B jtsprintfeD(J jt, C *x, I m, I dp, D dw, C *subs) {I y,y0;int decpt,sig
 /* else.                                                                     */    
 /*  base   =:(3+nc)$width, dec_places, mods, col_width_0, col_width_1, ...   */
 /* end.                                                                      */
-/* strings =:(nf,11)$k0;j0;i0;b0;d0;m0;n0;p0;q0;r0;s0; b1;d1; ...                      */
+/* strings =:(nf,13)$k0;j0;i0;b0;d0;e0;f0;m0;n0;p0;q0;r0;s0; b1;d1; ...                */
 /* length  =:($y)$number_length_0_0, number_length_0_1, ... (in w, not      */
 /* bitflags=:($y)$bitflags_0_0, bitflags_0_1, ...            column order)  */
 
 #define mods_coldp 0x40000000 /* applied to modifiers when we're computing this columns # of decimal places */
 
 static F2(jtfmtprecomp) {F12IP;A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
-     I d,i,*ib,imod,*iw,*iv,maxl,mods,n,nB,nD,nMN,nPQ,nI,nc,nf,*s,wr,*ws,wt;
+     I d,i,*ib,imod,*iw,*iv,maxl,mods,n,nB,nD,nE,nF,nMN,nPQ,nI,nc,nf,*s,wr,*ws,wt;
  ARGCHK2(a,w); 
  nf=AS(a)[0]; nf=1==AR(a)?1:nf; n=AN(w); wt=AT(w); wr=AR(w); ws=AS(w); SHAPEN(w,wr-1,nc);   // nf=#cells, nc=length of 1-cell (# columns), n=#atoms in w
  ASSERT(ISDENSETYPE(wt,B01+INT+FL+XNUM), EVDOMAIN);
@@ -359,9 +364,15 @@ static F2(jtfmtprecomp) {F12IP;A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
  for(i=0;i<n;i++) {  // go through the values figuring the length needed for each value
   ib+=4; u+=NMODVALS; --imod; ib=(imod==0)?AV(base):ib; u=(imod==0)?AAV(strs)-1:u; imod=(imod==0)?nf:imod;
   ++imodc; imodc=(imodc==nc)?0:imodc;  // imodc is i%nc
-  nB=AN(C(uB)); nD=AN(C(uD)); nMN=AN(C(uM))+AN(C(uN)); nPQ=AN(C(uP))+AN(C(uQ)); nI=AN(C(uI));
-  d=ib[1]; mods=ib[2]; 
-  if(*bits&BITSf) { if(mI&&*bits&BITS__)*iv=nI; else if(mD) *iv=nD; else *iv=2-!!(*bits&BITS_); }
+  nB=AN(C(uB)); nD=AN(C(uD)); nE=AN(C(uE)); nF=AN(C(uF)); nMN=AN(C(uM))+AN(C(uN)); nPQ=AN(C(uP))+AN(C(uQ)); nI=AN(C(uI));
+  d=ib[1]; mods=ib[2];
+  if(*bits&BITSf) {
+   if(mI&&*bits&BITS__)*iv=nI;         // i<xx> has priority for __
+   else if(mD&&*bits&BITS_ )*iv=nD;    // d<xx> for _
+   else if(mE&&*bits&BITS__)*iv=nE;    // e<xx> for __
+   else if(mF&&*bits&BITS_d)*iv=nF;    // f<xx> for _.
+   else *iv=2-!!(*bits&BITS_);         // default: _ is 1 wide, __ and _. are 2
+  }
   else if(*bits&BITSz) { 
    if(mB) *iv=nB; 
    else {
@@ -419,8 +430,8 @@ static F2(jtfmtprecomp) {F12IP;A*as,base,fb,len,strs,*u,z;B*bits,*bw;D dtmp,*dw;
 /* a is jtfmtprecomp result */
 /* w is argument to format, but with BO1, INT, FL, or XNUM type. */
 static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
-    B *bits,*bv;C*cB,*cD,*cM,*cN,*cP,*cQ,*cR,*cI,*cv,**cvv,*cx,*subs;D dtmp,*dv;
-    I coll,d,g,h,i,*ib,imod,*iv,*il,j,k,l,m,mods,nB,nD,nM,nN,nP,nQ,nR,nI,n,nc,nf,t,wr,*ws,y,zs[2];
+    B *bits,*bv;C*cB,*cD,*cE,*cF,*cM,*cN,*cP,*cQ,*cR,*cI,*cv,**cvv,*cx,*subs;D dtmp,*dv;
+    I coll,d,g,h,i,*ib,imod,*iv,*il,j,k,l,m,mods,nB,nD,nE,nF,nM,nN,nP,nQ,nR,nI,n,nc,nf,t,wr,*ws,y,zs[2];
  ARGCHK1(a); u=AAV(a); base=*u++; strs=*u++; len=*u++; fb=*u++; u=0; subs=0;  // extract components: len->lengths of the values
  ARGCHK1(w); n=AN(w); t=AT(w); wr=AR(w); ws=AS(w); SHAPEN(w,wr-1,nc); 
  ASSERT(ISDENSETYPE(t,B01+INT+FL+XNUM), EVDOMAIN);
@@ -475,8 +486,8 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
   }
   if(j==nc) j=0;
   k=l=ib[0]; d=ib[1]; mods=ib[2]; coll=ib[3+(I )(1==nf)*j];
-  nB= AN(uB); nD= AN(uD); nM= AN(uM); nN= AN(uN); nP= AN(uP); nQ= AN(uQ); nR= AN(uR); nI= AN(uI);
-  cB=CAV(uB); cD=CAV(uD); cM=CAV(uM); cN=CAV(uN); cP=CAV(uP); cQ=CAV(uQ); cR=CAV(uR); cI=CAV(uI);
+  nB= AN(uB); nD= AN(uD); nE= AN(uE); nF= AN(uF); nM= AN(uM); nN= AN(uN); nP= AN(uP); nQ= AN(uQ); nR= AN(uR); nI= AN(uI);
+  cB=CAV(uB); cD=CAV(uD); cE=CAV(uE); cF=CAV(uF); cM=CAV(uM); cN=CAV(uN); cP=CAV(uP); cQ=CAV(uQ); cR=CAV(uR); cI=CAV(uI);
   subs=AN(uS)?CAV(uS):(C*)"e,.-*";
   switch(mode) {
   case 0: v=*a1v; cv=CAV(v); break;
@@ -492,7 +503,9 @@ static A jtfmtallcol(J jt, A a, A w, I mode) {A *a1v,base,fb,len,strs,*u,v,x;
    // format the value.
    if(*bits&BITSf) {  // value is _ __ _. (and therefore FL type)
     if(mI && *bits&BITS__)MC(cv, cI, nI);  // NULL has priority i<xx>
-    else if(mD) MC(cv, cD, nD);  // if d<xx> given, use it
+    else if(mD && *bits&BITS_ )MC(cv, cD, nD);  // d<xx> for _
+    else if(mE && *bits&BITS__)MC(cv, cE, nE);  // e<xx> for __
+    else if(mF && *bits&BITS_d)MC(cv, cF, nF);  // f<xx> for _.
     else if(*bits&BITS_ ) { cv[0]='_'; }  // otherwise, use the visual representation of the value
     else if(*bits&BITS__) { cv[0]='_'; cv[1]='_'; }
     else                  { cv[0]='_'; cv[1]='.'; }

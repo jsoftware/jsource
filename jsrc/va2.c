@@ -450,17 +450,17 @@ bitwiseexit:;
 
  rotateresult:
  RE(0);  // if error on D arg, make sure we abort
- ziv=BW10000(aiv,wiv);  // do the rotate
+ ziv=BW10000(aiv,wiv,UI);  // do the rotate
  goto bitwiseexit;
 
  lslresult:
  RE(0);  // if error on D arg, make sure we abort
- ziv=BW10001(aiv,wiv);  // do the lsl
+ ziv=BW10001(aiv,wiv,UI);  // do the lsl
  goto bitwiseexit;
 
  aslresult:
  RE(0);  // if error on D arg, make sure we abort
- ziv=BW10010(aiv,wiv);  // do the rsl
+ ziv=BW10010(aiv,wiv,I);  // do the rsl
  goto bitwiseexit;
 
  compareresult:

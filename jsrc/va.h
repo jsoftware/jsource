@@ -164,9 +164,17 @@
 #define BW1110(x,y)     (~( (x)& (y)))
 #define BW1111(x,y)     (-1|(x)|(y))
 
-#define BW10000(x,y)    (((UI)(y)<<((x)&(BW-1)))|((UI)(y)>>(-(x)&(BW-1)))) // left-rotate
-#define BW10001(x,y)    ((x)>=0?((x)>=BW?0:(UI)(y)<<(x)):((x)<=-BW?0:(UI)(y)>>-(x))) // left-shift unsigned
-#define BW10010(x,y)    ((x)>=0?((x)>=BW?0:(I)(y)<<(x)):((x)<=-BW?(I)(y)>>(BW-1):(I)(y)>>-(x))) // left-shift signed
+#define BWI BW
+#define BWUI BW
+#define BWI4 32
+#define BWUI4 32
+#define BWI2 16
+#define BWUI2 16
+#define BWI1 8
+#define BWUI1 8
+#define BW10000(x,y,T)    (((y)<<((x)&(BW##T-1)))|((y)>>(-(x)&(BW##T-1)))) // left-rotate
+#define BW10001(x,y,T)    ((x)>=0?((x)>=BW##T?0:(y)<<(x)):((x)<=-BW##T?0:(y)>>-(x))) // left-shift unsigned
+#define BW10010(x,y,T)    ((x)>=0?((x)>=BW##T?0:(y)<<(x)):((x)<=-BW##T?(y)>>(BW##T-1):(y)>>-(x))) // left-shift signed
 
 
 // value in vaptr[]
@@ -272,6 +280,17 @@
  }
 
 #define APFX(f,Tz,Tx,Ty,pfx,pref,suff)  APFXL(f,Tz,Tx,Ty,,pfx,pref,suff)
+
+// suff must return the correct result
+#define APFXLT(f,Tz,Tx,Ty,ldfn,pfx,pref,suff)   \
+ AHDR2(f,Tz,Tx,Ty){Tx u;Ty v;                                  \
+  pref \
+  if(m<0)DQUC(m, u=ldfn(*x++); v=ldfn(*y++); *z++=pfx(u,v,Tz); )   \
+  else if(m&1){m>>=1; DQU(n, u=ldfn(*x++); DQU(m, v=ldfn(*y++); *z++=pfx(u,v,Tz);))}   \
+  else{m>>=1; DQU(n,  v=ldfn(*y++); DQU(m, u=ldfn(*x++); *z++=pfx(u,v,Tz);    ))}  \
+  suff \
+ }
+#define APFXT(f,Tz,Tx,Ty,pfx,pref,suff)  APFXLT(f,Tz,Tx,Ty,,pfx,pref,suff)
 
 // *a=val, for length n&7 bytes
 #define STOREn(val,a,n) {UI t=(val); C *v=(C*)(a); if(SY_64){if((n)&4){*(UI4*)v=(UI4)t; v+=sizeof(UI4); t>>=(BW-1)&(sizeof(UI4)*BB);}} \

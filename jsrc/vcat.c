@@ -417,7 +417,8 @@ FI2(jtapip){A h;
  // one of the uses is for the mapping header.
  // In both cases we require the inplaceable bit in jt, so that a =: (, , ,) a  , which has zombieval set, will inplace only the last append
  // Allow only DIRECT and BOX types, to simplify usecounting (we don't have to EPILOG for RAT/XNUM)
- if((SGNIF((I)jtfg,JTINPLACEAX)&-ar&~(ar-wr)&(rnotmax-1))<0){  // inplaceable, ar!=0, wr<=ar, ranks=MAX, all close at hand  scaf! but virt exten is OK even if noninplaceable
+ //
+ if((SGNIF((I)jtfg,JTINPLACEAX)&-ar&~(ar-wr)&(rnotmax-1))<0){  // inplaceable context, ar!=0, wr<=ar, ranks=MAX, all close at hand
    // collect some values into a flags register
 #define FGLGK 0x7
 #define FGVIRTREQDX 3    // if virtual extension required
@@ -441,7 +442,7 @@ FI2(jtapip){A h;
       // otherwise NJA will always extend if zombieval, because assignment would copy the data
   ncmp=((AFLAG(a)>>AFKNOWNNAMEDX)&SGNTO0((AC(a)^ACUC1)-1))>(UI)jtzv?nlo:-1;  // virt extension is (x { (a , item)).  We restrict it to private names because (1) their usecount is not incremented when stacked, so
       // if we supported public names, whose usecount is 2 after stacking, we would NOT support private names and in fact would give invalid extensions on them; (2) virt extension is not threadsafe because it does not lock
-      // the block it is extending
+      // the block it is extending.  It would be valid to virtexten a block with a usecount>1, except there is no way to prevent the block from simultaneously being extended more than once, which would cause double-use of the extension area
   if(likely((nhi^nlo)>ncmp))goto noapip; fgwd|=FGVIRTREQD;   // skip if virt extension not allowed; remember if it is
 pipok:;  // 
   if(likely(at&(DIRECT|BOX)) && likely(!ISSPARSE(AT(w)))){  // We need DIRECT or BOX args, and not sparse (a cannot be sparse

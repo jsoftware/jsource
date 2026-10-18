@@ -172,8 +172,8 @@
 #define BWUI2 16
 #define BWI1 8
 #define BWUI1 8
-#define BW10000(x,y,T)    (((y)<<((x)&(BW##T-1)))|((y)>>(-(x)&(BW##T-1)))) // left-rotate
-#define BW10001(x,y,T)    ((x)>=0?((x)>=BW##T?0:(y)<<(x)):((x)<=-BW##T?0:(y)>>-(x))) // left-shift unsigned
+#define BW10000(x,y,T)    (((UI)(y)<<(UI)((x)&(BW##T-1)))|((UI)(y)>>(UI)(-(x)&(BW##T-1)))) // left-rotate
+#define BW10001(x,y,T)    ((x)>=0?((x)>=BW##T?0:(UI)(y)<<(x)):((x)<=-BW##T?0:(UI)(y)>>-(x))) // left-shift unsigned
 #define BW10010(x,y,T)    ((x)>=0?((x)>=BW##T?0:(y)<<(x)):((x)<=-BW##T?(y)>>(BW##T-1):(y)>>-(x))) // left-shift signed
 
 

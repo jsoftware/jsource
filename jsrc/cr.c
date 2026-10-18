@@ -617,19 +617,19 @@ A jtirs2(J jtfg,A a,A w,A fs,I l,I r,AF f2){F12IP;A z;I ar,wr;
 // end of sparse-only
 
 
-static DF1(cons1a){DF12IP;RETF(FAV(self)->fgh[0])}  // scaf! bivalent
-static DF2(cons2a){DF12IP;RETF(FAV(self)->fgh[0])}
+// obsolete static DF1(cons1a){DF12IP;RETF(FAV(self)->fgh[0])}
+static DF2(cons12a){DF12IP;RETF(FAV(self)->fgh[0])}  // bivalent
 
 // Constant verbs do not inplace because we loop over cells.  We could speed this up if it were worthwhile.
 static DF1(cons1){DF12IP;
  ARGCHK1(w);
  I mr=efr(AR(w),(I)FAV(self)->localuse.lu1.srank[0]);
- RETF(rank1ex(w,self,mr,cons1a))
+ RETF(rank1ex(w,self,mr,cons12a))
 }
 static DF2(cons2){DF12IP;
  ARGCHK2(a,w);
  I lr2=efr(AR(a),(I)FAV(self)->localuse.lu1.srank[1]), rr2=efr(AR(w),(I)FAV(self)->localuse.lu1.srank[2]);
- RETF(rank2ex(a,w,self,lr2,rr2,lr2,rr2,cons2a))
+ RETF(rank2ex(a,w,self,lr2,rr2,lr2,rr2,cons12a))
 }
 
 // cyclic-gerund verbs for m"n create an iterator from the gerund and pass that into rank processing, looping over cells

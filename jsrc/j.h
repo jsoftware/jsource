@@ -2333,10 +2333,11 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
 #define PUSHNOMSGS MAYBEPUSHNOMSGS(1);  // turn off message formatting by pretending we've already done it
 #define MAYBEWITHMSGSOFF(offcond,stmt) {MAYBEPUSHNOMSGS(offcond) stmt POPMSGS}  // execute stmt, optionally with msgs off.  Use only around internal functions
 #define WITHMSGSOFF(stmt) MAYBEWITHMSGSOFF(1,stmt)  // execute stmt with debug/eformat turned off; restore at end.  Sets jt->jerr if error, and should be used when calling possible user code
-// scaf! in next line, remove TRAPPING if TRACEDB is not set, so that an error will offer post-mortem debug
 #define MAYBEWITHDEBUG(dbg,jt,stmt) if(dbg){stmt}else{UC _d=jt->uflags.trace&TRACEDB;jt->uflags.trace&=~TRACEDB; \
  US _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT|EMSGSTATETRAPPING; \
- stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug/eformat turned off; restore at end.  Sets jt->jerr if error, and should be used when calling possible user code
+ stmt jt->uflags.trace=_d|(jt->uflags.trace&~TRACEDB); jt->emsgstate=_e;}  // execute stmt with debug/eformat turned off; restore at end.  Sets jt->jerr if error, and should be used when calling possible user code.
+               //  We would like to set TRAPPING only if tracedb is set because TRAPPING suppresses post-mortem, and we want to offer pm if debug is off; but many places run WITHDEBUGOFF to run, say, on a cell
+               // of fills, which really is trapping.  If we find an error that is not offered for pm, we should look to ue a different error-test there.
 #define WITHDEBUGOFF(stmt) MAYBEWITHDEBUG(0,jt,stmt)
 #define WITHEFORMATDEFERRED(stmt) {US _e=jt->emsgstate; jt->emsgstate|=EMSGSTATENOTEXT|EMSGSTATENOLINE|EMSGSTATENOEFORMAT; \
  stmt US _f=jt->emsgstate; jt->emsgstate=_e|(_f&EMSGSTATEUSERMSG); \

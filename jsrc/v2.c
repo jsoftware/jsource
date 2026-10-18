@@ -450,9 +450,10 @@ F1(jtfactor){F12IP;PROLOG(0063);A y,z;
  RZ(init4792(jt));
  if(AT(w)&XNUM+RAT)R xfactor(w);  // if XNUM, use elliptic routines
  if(ISDENSETYPE(AT(w),FL+CMPX+QP)){  //  only integers can be factored
-  RZ(y=pcvt(INT,w)); 
-  if(INT&AT(y))w=y; 
-  else{RZ(y=pcvt(XNUM,xco1(w))); ASSERT(XNUM&AT(y),EVDOMAIN); R pcvt(INT,xfactor(y));}
+  RZ(y=pcvt(INT,w));   // try converting to I
+  if(INT&AT(y))w=y;   // if success, fall through, process as I
+  else{RZ(y=ccvt(XNUM,xco1(w),0)); R pcvt(INT,xfactor(y));}   // otherwise must be representable as XNUM, and do that
+// obsolete  ASSERT(XNUM&AT(y),EVDOMAIN);
  }
  if(unlikely(AT(w)&INT2+INT4))RZ(w=cvt(INT,w))
  F1RANKSUFF(0,jtfactor,DUMMYSELF,R maximum(z,zeroionei(1)););

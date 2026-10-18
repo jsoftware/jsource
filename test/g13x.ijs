@@ -1,6 +1,8 @@
 prolog './g13x.ijs'
 NB. 13!: ----------------------------------------------------------------
 
+0!:_1 '^'
+
 empty 0&T.^:(0=1&T.) ::1:''
 
 original=: 9!:6''
@@ -512,7 +514,7 @@ assert. *./ ('spelling error';'(invalid character in sentence, codepoint 160)') 
 if. 3 = 4!:0<'f' do. eformat_j_ =: f f. end.
 1
 }} ''
-
+NB.^
 NB. test host recursion states. a:&(13!:8) means no text
 1 = 13!:_9 ''  NB. 13!:_9 sets/reads state, which is prompt/recur/unsafe
 NB. in script, 1!:1 doesn't prompt.  OK from console  ([ 13!:_9@1:) 'control error' -: 1!:1 etx 1 [ 13!:_9 (5)   NB. set in prompt mode, verify reprompt fails

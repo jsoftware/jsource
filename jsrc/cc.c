@@ -132,7 +132,7 @@ static DF2(jtcut02){DF12IP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PRO
 // a ];.0 w
 DF2(jtrightcut0){DF12IP;
  // We check for the special case of substr (a has 1 column) and handle it fast with a virtual result; revert for others
- if(unlikely(AR(w)==0)||unlikely(AR(a)!=2)||((AS(a)[0]^2)+(AS(a)[1]^1))!=0)R jtcut02(jt,a,w,self);  // exit if multiple substrs or w atomic
+ if(unlikely(AR(w)==0)||unlikely(AR(a)!=2)||((AS(a)[0]^2)+(AS(a)[1]^1)+((I)jtfg&JTWILLBEREALIZED))!=0)R jtcut02(jt,a,w,self);  // exit if multiple substrs or w atomic, or if the caller will realize our result
  RZ(a=vib(a));  // audit for valid integers
  I wr=AR(w), wi=AS(w)[0], a0=IAV(a)[0], a1=IAV(a)[1];  // rank of w, number of items, starting index, length
  if(unlikely(a1<0))R jtcut02(jt,a,w,self);  // if reversal called for, revert, can't give virtual result

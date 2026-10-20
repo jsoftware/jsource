@@ -39,7 +39,7 @@ DF1(jtcatalog){DF12IP;PROLOG(0072);A b,*wv,x,z,*zv;C*bu,*bv,**pv;I*cv,i,j,k,m=1,
 // return a single cell of w with rank wcr, from audited cell index j.  wr is AR(w), wt is AT(w)
 static INLINE A jtget1cell(J jtfg,A w,I wcr,I j,I wt,I wr){F12IP; A z;
  I *ws=AS(w); I m; PROD(m,wcr,ws+wr-wcr);  // shape of w, number of atoms in a cell
- if(m<MINVIRTSIZE(wt)){  // if cell too small for virtual, allocate & fill here.  Any indirect can be virtual
+ if(((I)jtfg&JTWILLBEREALIZED?0:m)<MINVIRTSIZE(wt)){  // if cell too small for virtual, allocate & fill here.  Any indirect can be virtual
   I k=bplg(wt); GA(z,wt,m,wcr,ws+wr-wcr) JMC(CAVn(wcr,z),CAV(w)+j*(m<<k),m<<k,0);  // copy in the data, possibly overstoring up to 7 bytes.  Nonrecursive block
   // We transferred one I/A out of w.  We must mark w non-pristine.  If it was inplaceable, we can transfer the pristine status.  We overwrite w because it is no longer in use
   PRISTXFERF(z,w)  // this destroys w
@@ -204,13 +204,13 @@ static A jtaxisfrom(J jtfg,A w,struct faxis *axes,I rflags){F12IP;I i;
   I nsel=axes[r].nsel;  // #selectors, neg if complementary
   I lenaxis=axes[r].lenaxis;  // length of last axis
   DPMULDE(zn,nsel^REPSGN(nsel),zn);  // * last-axis size, gives result size
-  if(((nunitsels-r)|(zn-MINVIRTSIZE(wt)))>=0){  // if there is only one axis left, and result is big enough (if indirect, anything is OK)
+  if(((nunitsels-r)|(zn-MINVIRTSIZE(wt)))>=0){  // if there is only one axis left, and result is big enough (if indirect, anything is OK), and caller will not immediately realize
    // There is only one application of the last axis.  If the indexes are sequential, we can make the result virtual
    // We allow virtualing even for NJA blocks.  We allow for ANCHORED because it's just too useful when the user knows what he's doing. 
    // If the block can be virtual, we create the virtual here and return
    I *sels=axes[r].sels;  // pointer to selectors of last axis
    I index0;  // indexes of first item if virtual is OK
-   if(nsel>=0){  // normal axis
+   if(likely(nsel>=0)){  // normal axis
     index0=sels[0]; index0+=REPSGN(index0)&lenaxis;  // index of first item, accounting for negative indexing
     if((UI)index0>=(UI)lenaxis)goto novirtual; if(index0+nsel>lenaxis)goto novirtual;  // if first value out of range, or too many selectors, can't be virtual
     // check the last item before checking the middle.
@@ -224,10 +224,12 @@ static A jtaxisfrom(J jtfg,A w,struct faxis *axes,I rflags){F12IP;I i;
     index0=axes[r].sel0; I axn=axes[r].lenaxis; I indexn=likely(index0<lenaxis-nsel)?axes[r].sels[index0]:axn;  // start of gap, axis len, end+1 of gap (or len of axis if there is no next sel)
     if(nsel>indexn-index0)goto novirtual;  // if the first gap does not account for all the selectors, we can't make a virtual one
    }
-   // nsel has been modified if shape changes
-   // indexes are consecutive and in range.  Make the result virtual.  Rank of w cell must be > 0, since we have >=2 consecutive result atoms
    // if the selected length is the axis length, and there is only one axis, we are taking the entire w arg - just return it
    if(unlikely((r+(nsel^lenaxis))==0))R RETARG(w);
+   // nsel has been modified if shape changes
+   // indexes are consecutive and in range.  Make the result virtual.  Rank of w cell must be > 0, since we have >=2 consecutive result atoms
+   // if the caller is going to realize the result immediately, don't return a virtual unless we can return a self-virtual
+   if((I)jtfg&JTWILLBEREALIZED)goto novirtual;  // Don't virtual is caller will realize.  Tempting to virtual-in-place, but it is a slow test & might waste lots of memory
    I baseadj=base-CAV(w);  // movement of base needed from upper selectors.  Must calculate before virtual in case it self-virtuals and moves w
    I wr=AR(w);  // get rank of w before it is destroyed by possible self-virtualing
    RZ(z=virtualip(w,index0*celllen,zr));  // inplace w OK since no cells repeated

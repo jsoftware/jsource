@@ -254,7 +254,7 @@ DFI2(jtover){AD * RESTRICT z;I replct,framect,ma,mw,p,q,t,zn;
   }else{moveawS(zv,av,wv,framect,k,ma,mw,arptreset,replct,!!(t&(0b110000<<23)));}   // if scalar rep
   if(unlikely(_ttop+1!=jt->tnextpushp))z=EPILOGNORET(z); RETF(z);  // if nothing to pop, return z as is; otherwise we musat EPILOG in case z needs protection from the frees
  }
- // if max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case including fill
+ // falling through, max cell-rank>2, or an argument is empty, or (joining table/table or table/row with cells of different lengths), do general case including fill
  // calculate number of repeats of each outer cell, and the total # cells
  I *as=AS(a), *ws=AS(w);
  I minf=MIN(af,wf), maxf=MAX(af,wf); ASSERTAGREE(as,ws,minf)   // verify frames agree

@@ -110,17 +110,19 @@ typedef I SI;
 #define JTINPLACEW      (((I)1)<<JTINPLACEWX)
 #define JTINPLACEAX     1   // turn this on in jt to indicate that a can be inplaced.  Must be 1+JTINPLACEWX
 #define JTINPLACEA      (((I)1)<<JTINPLACEAX)
-#define JTSPARSEARGX    3  // used inside va2() to indicate that an arg was sparse.  Leave bit 3 as cordon sanitaire against inplaci\ng errors
+#define JTSPARSEARGX    3  // used inside va2() to indicate that an arg was sparse.  Leave bit 2 as cordon sanitaire against inplacing errors
 #define JTSPARSEARG     (((I)1)<<JTSPARSEARGX)
 
 // Flags in hook/fork and rank loops, therefore destroyed for any verb using F?RANK
 // Bit 3 in JT is unused, to allow for carry from PROP to WILLOPEN
-// Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
+// Next flags must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTWILLBEOPENEDX 4   // result of this exec will be opened immediately, so it can contain virtual references to an input to the current verb
      // Note: this flag MUST NOT equal BOX, or BOX<<1, or 1 or 2
 #define JTWILLBEOPENED  (((I)1)<<JTWILLBEOPENEDX)
-#define JTRETRYX        6  // in va1, this bit is set to indicate that the current execution is a retry
+#define JTRETRYX        5  // in va1, this bit is set to indicate that the current execution is a retry
 #define JTRETRY         (((I)1)<<JTRETRYX)
+#define JTWILLBEREALIZEDX 6   // result of this exec will be realized, so called functions should not return virtuals
+#define JTWILLBEREALIZED  (((I)1)<<JTWILLBEREALIZEDX)
 // Next flag must match result.h and VF2 flags, and must be above ZZFLAGBOXATOP
 #define JTCOUNTITEMSX   7   // result of this exec will be go into ;, so an item count in m would be helpful
 #define JTCOUNTITEMS    (((I)1)<<JTCOUNTITEMSX)
@@ -1291,11 +1293,15 @@ union{
 #define VF2WILLOPEN1PROPX  3   // If WILLBEOPENED is set in jt coming into this verb, it should be passed through to the execution of the verb producing y.  Monadic case.  Cannot be set if WILLOPEN is set.
                            // Setting this warrants that this verb will not raise the usecount of y or any of its contents even if they are passed through to the result.
 #define VF2WILLOPEN1PROP       ((I)(((I)1)<<VF2WILLOPEN1PROPX))
-// next flag must be same as JTWILLBEOPENED
-#define VF2WILLOPEN1X      4   // This verb will open y as its first act, or will discard y.  No boxed contents in y can appear in the result (they may be virtual).  Monad case only.  This becomes the WILLBEOPENED flag in jt
+// next flag must be same as JTWILLBEOPENED and must match WILLBEOPENED in result.h
+#define VF2WILLOPEN1X      4   // Monad of this verb will open y as its first act, or will discard y.  No boxed contents in y can appear in the result (they may be virtual).  Monad case only.  This becomes the WILLBEOPENED flag in jt
 #define VF2WILLOPEN1       ((I)(((I)1)<<VF2WILLOPEN1X))
-// must leave a gap for WILLBEOPENED in result.h
-// 5-6 free
+#define VF2WILLREALIZE1PROPX  5   // If WILLBEREALIZED is set in jt coming into this verb, it should be passed through to the execution of the verb producing y.  Monadic case.  Cannot be set if WILLREALIZE is set.
+                           // Setting this warrants that this verb will not raise the usecount of y or any of its contents even if they are passed through to the result.
+#define VF2WILLREALIZE1PROP       ((I)(((I)1)<<VF2WILLREALIZE1PROPX))
+// next flag must be same as JTWILLBEREALIZED
+#define VF2WILLREALIZE1X      6   // Monad of this verb will realize y, so called functions shouldn't produce virtuals.  Monad case only.  This becomes the WILLBEREALIZED flag in jt
+#define VF2WILLREALIZE1       ((I)(((I)1)<<VF2WILLREALIZE1X))
 // next flag must be same as JTCOUNTITEMS
 #define VF2USESITEMCOUNT1X 7   // This verb can make use of an item count stored in m.  Monad case only
 #define VF2USESITEMCOUNT1  ((I)(((I)1)<<VF2USESITEMCOUNT1X))
@@ -1321,25 +1327,33 @@ union{
 #define VF2WILLOPEN2WPROP     ((I)(((I)1)<<VF2WILLOPEN2WPROPX))
 #define VF2WILLOPEN2WX      16   // This verb will open y as its first act  This becomes the WILLBEOPENED flag in jt
 #define VF2WILLOPEN2W       ((I)(((I)1)<<VF2WILLOPEN2WX))
-#define VF2WILLOPEN2APROPX  17   // If WILLBEOPENED is set in jt coming into this verb, it should be passed through to the execution of the verb producing x.  Dyadic case.  Cannot be set if WILLOPEN is set.
-#define VF2WILLOPEN2APROP     ((I)(((I)1)<<VF2WILLOPEN2APROPX))
-#define VF2WILLOPEN2AX      18   // This verb will open x as its first act.  This becomes the WILLBEOPENED flag in jt
-#define VF2WILLOPEN2A       ((I)(((I)1)<<VF2WILLOPEN2AX))
+#define VF2WILLREALIZE2WPROPX  17   // If WILLBEREALIZED is set in jt coming into this verb, it should be passed through to the execution of the verb producing x.  Dyadic case.  Cannot be set if WILLREALIZE is set.
+#define VF2WILLREALIZE2WPROP     ((I)(((I)1)<<VF2WILLREALIZE2WPROPX))
+#define VF2WILLREALIZE2WX      18   // This verb will open x as its first act.  This becomes the WILLBEREALIZED flag in jt
+#define VF2WILLREALIZE2W       ((I)(((I)1)<<VF2WILLREALIZE2WX))
 #define VF2USESITEMCOUNT2WX 19   // This verb can make use of an item count stored in m.  This becomes the COUNTITEMS flag in jt
 #define VF2USESITEMCOUNT2W  ((I)(((I)1)<<VF2USESITEMCOUNT2WX))
-#define VF2IMPLOCX 20   // This verb is one of u. v.
-#define VF2IMPLOC  ((I)(((I)1)<<VF2IMPLOCX))
-#define VF2USESITEMCOUNT2AX 21   // This verb can make use of an item count stored in m.  This becomes the COUNTITEMS flag in jt
+#define VF2WILLOPEN2APROPX  20   // If WILLBEOPENED is set in jt coming into this verb, it should be passed through to the execution of the verb producing x.  Dyadic case.  Cannot be set if WILLOPEN is set.
+#define VF2WILLOPEN2APROP     ((I)(((I)1)<<VF2WILLOPEN2APROPX))
+#define VF2WILLOPEN2AX      21   // This verb will open x as its first act.  This becomes the WILLBEOPENED flag in jt
+#define VF2WILLOPEN2A       ((I)(((I)1)<<VF2WILLOPEN2AX))
+#define VF2WILLREALIZE2APROPX 22   // If WILLBEREALIZED is set in jt coming into this verb, it should be passed through to the execution of the verb producing x.  Dyadic case.  Cannot be set if WILLREALIZE is set.
+#define VF2WILLREALIZE2APROP     ((I)(((I)1)<<VF2WILLREALIZE2APROPX))
+#define VF2WILLREALIZE2AX   23   // This verb will open x as its first act.  This becomes the WILLBEREALIZED flag in jt
+#define VF2WILLREALIZE2A       ((I)(((I)1)<<VF2WILLREALIZE2AX))
+#define VF2USESITEMCOUNT2AX 24   // This verb can make use of an item count stored in m.  This becomes the COUNTITEMS flag in jt
 #define VF2USESITEMCOUNT2A  ((I)(((I)1)<<VF2USESITEMCOUNT2AX))
-#define VF2CACHEABLEX 21   // In a nameref, indicates the nameref is cacheable
+#define VF2IMPLOCX 25   // This verb is one of u. v.
+#define VF2IMPLOC  ((I)(((I)1)<<VF2IMPLOCX))
+#define VF2CACHEABLEX 26   // In a nameref, indicates the nameref is cacheable
 #define VF2CACHEABLE  ((I)(((I)1)<<VF2CACHEABLEX))
-#define VF2PRIMX 22   // Set in primitive ACV
+#define VF2PRIMX 27   // Set in primitive ACV
 #define VF2PRIM  ((I)(((I)1)<<VF2PRIMX))
-#define VF2NAMELESSX 23   // Indicates value should be stacked instead of nameref
+#define VF2NAMELESSX 28   // Indicates value should be stacked instead of nameref
 #define VF2NAMELESS  ((I)(((I)1)<<VF2NAMELESSX))
-#define VF2CACHEDX 24   // In a nameref, indicates the nameref is cached, i. e. cacheable and filled in
+#define VF2CACHEDX 29   // In a nameref, indicates the nameref is cached, i. e. cacheable and filled in
 #define VF2CACHED  ((I)(((I)1)<<VF2CACHEDX))
-#define VF2PSEUDONAMEX 25  // in a nameref, indicates the nameref is VXOP type, either with a locative or during debug
+#define VF2PSEUDONAMEX 30  // in a nameref, indicates the nameref is VXOP type, either with a locative or during debug
 #define VF2PSEUDONAME  ((I)(((I)1)<<VF2PSEUDONAMEX))
 
 // layout of primitive, in the primtbl.  It is a memory header (shape 0) followed by a V

@@ -808,13 +808,14 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
       PSTK *fsa1=&stack[1]; fsa=pt0ecam&FLGPLINE2+FLGPLINE1?fsa:fsa1;    // pointer to the operator's stack slot  1 2 2
       AF actionfn=FAV(fs)->valencefns[pmask>>2];  // the routine we will execute.    Stop using pmask $$$
       // If it is an inplaceable assignment to a known name that has a value, remember the value (the name will of necessity be the one thing pointing to the value)
-      // We handle =: N V N, =: V N, =: V V N.  In the last case both Vs must be NOLOCCHG.  When we set jt->zombieval we are warranting
+      // We handle =: N V N (line 2), =: V N (line 0) , =: V V N (line 1).  In the last case both Vs must be NOLOCCHG.  When we set jt->zombieval we are warranting
       // that the next assignment will overwrite the value, and that the reassigned value is available for inplacing.  In the V V N case,
       // this may be over two verbs
       // Consider the case name =. name , 3 + +
       // the name =. name , 3 will come to execution.  Can it inplace?  Yes, because the modified value of name will be on the stack after
       // execution.  That will then execute as (name' + +) creating a fork that will assign to name.  So we can inplace any execution, because
       // it always produces a noun and the only things executable from the stack are tridents
+      I jtlsbs;  // will be LSB flags in jt
       if(withprob(!PTISNOTASGNNAME,0.1)){I targc;  //  Is this an assignment to a single name? targc is # refs in the assigned symbol that is allowed for inplaceables (depends on public/private).
        A zval=__atomic_load_n(&QCWORD(y)->mback.lookaside,__ATOMIC_RELAXED);  // fetch lookaside: (1) 0 for value error/unallocated (name_:)/synthetic; (2) 0x40 if unallocated but bucketed (i. e. positive bucketx), usually global; (3) local value
              // in case it's local, start a fetch of the symbol#, whose PTYPE is not 0 if defined.  y is the name, which has not been stacked yet
@@ -852,7 +853,8 @@ reexec012:;  // enter here with fs, fs1, and pmask set when we know which line w
 anchoredip:;  // here when we have detected that an anchored name is inplaceable
         jt->zombieval=zval;
        }
-      }
+       jtlsbs=~(pt0ecam>>(FLGPMSKX+1-JTWILLBEREALIZEDX))&JTWILLBEREALIZED;  // set 'don't realize' on any line-0 or line-2 exec that is to be assigned, since the result would be realized right away
+      }else jtlsbs=0;
       FILLREG(actionfn)  // get function address into a register for the expected pipeline break on the indirect call
       PSTK *arga=fsa; arga=pt0ecam&FLGPLINE2?stack:arga; A arg1=arga[1].a;  // 1st arg, reconstituted 1 1 2->1 2 0; then fetch  monad or left dyad  2 3 1
       arga=pt0ecam&FLGPLINE2?&stack[3]:arga; A arg2=arga[0].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
@@ -871,9 +873,9 @@ anchoredip:;  // here when we have detected that an anchored name is inplaceable
          // we encode omitted or non-abandoned tpop[aw] as STKNAMED+!FAOWED.  We do not use 0 for tpopw then, because the branches to skip out of STKNAMED+!FAOWED will predict correctly and we want the free loop to run exactly twice always.
          // tpopa/tpopw are:  monad: w -  dyad: a w
 #ifdef PEXT
-#define jtlsbs PEXT(pt0ecam,FLGPLINE2|FLG1)  // bit 1 if dyad, and always bit 0
+      jtlsbs+=PEXT(pt0ecam,FLGPLINE2|FLG1);  // bit 1 if dyad, and always bit 0
 #else
-#define jtlsbs (SHMSK(pt0ecam,FLGPMSKX+1,2)|1)
+      jtlsbs+=(SHMSK(pt0ecam,FLGPMSKX+1,2)|1);
 #endif
       y=(*actionfn)((J)((I)jt+jtlsbs),QCWORD(arg1),QCWORD(arg2),QCWORD(stack->a));   // set inplacing flags  bit 0, and bit 1 if dyadic.  Other flags are clear incl MODX $$$
       // When we don't break we lose time waiting for stack->a to be read and masked, but not much.

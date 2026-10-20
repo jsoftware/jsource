@@ -72,7 +72,7 @@ static INLINE A jttk(A w, I *u, I n, I wf, J jtfg, I istake, I wcr, A a, I wt){F
   R tks(s,w);
  }
  // see if a virtual can be returned
- if(!((AN(a)^1)|wf|!wcr)&&likely(AN(w)>0)&&likely(!(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic; and avoid virtualling NJA
+ if(!((AN(a)^1)|wf|!wcr|((I)jtfg&JTWILLBEREALIZED))&&likely(AN(w)>0)&&likely(!(AFLAG(w)&(AFNJA)))){  // if there is only 1 take axis, w has no frame and is not atomic; and avoid virtualling NJA
   // if the length of take is within the bounds of the first axis
   I tdlen=IAV(a)[0];  // get the one number in a, the take/drop amount
   I nitems=ws[0];  // number of items of w

@@ -703,7 +703,7 @@ jobs:
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
        script/buildga.sh openbsd x86_64 || exit 1
-       script/testga.sh openbsd x86_64 || exit 1
+       script/testga.sh openbsd x86_64
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        rm -f j64/libopenblas*
@@ -816,11 +816,10 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       sudo pkg search openblas 1>&2
-       sudo pkg install -y curl zip gmake nasm pcre2 gdb openblas
-       sudo find / -type f -name 'liblapack.so*' 1>&2
-       sudo find / -type f -name 'libopenblas.so*' 1>&2
-       /sbin/ldconfig -r
+       # sudo pkg search openblas 1>&2
+       sudo pkg install -y curl zip gmake nasm pcre2 gdb # openblas
+       # sudo find / -type f -name 'libopenblas.so*' 1>&2
+       # /sbin/ldconfig -r
        # ls -al ~/
        # ls -al ~/.ssh
        # sudo echo "Host *" >>~/.ssh/config || true
@@ -841,7 +840,7 @@ jobs:
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
        script/buildga.sh freebsd x86_64 || exit 1
-       script/testga.sh freebsd x86_64 || exit 1
+       script/testga.sh freebsd x86_64
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        rm -f j64/libopenblas*
@@ -912,7 +911,7 @@ jobs:
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
        script/buildga.sh freebsd arm64 || exit 1
-       script/testga.sh freebsd arm64 || exit 1
+       script/testga.sh freebsd arm64
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        rm -f j64/libopenblas*

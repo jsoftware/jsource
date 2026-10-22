@@ -13,9 +13,9 @@ on:
 # if: ${{ false }}
 
 env:
- DEBUGLEVEL: 3
+ DEBUGLEVEL: 0
  OPTL: -O2
- OPTLD: -O0
+ OPTLD: -O2
  NO_UNDEFINED: 1
  _MEMAUDIT: 0
  AUDITEXECRESULTS: 1
@@ -30,8 +30,8 @@ jobs:
 # for selected jobs, disable all and disable the selected needs
 
  all:
-  #if: false
-  if: true
+  if: false
+  #if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Runall jobs"

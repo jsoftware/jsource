@@ -681,10 +681,7 @@ jobs:
       run: |
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg_search openblas 1>&2 || true
-       sudo pkg_add curl zip gmake nasm pcre2 gdb lldb openblas
-       find / -type f -name 'liblapack.so*' 1>&2
-       find / -type f -name 'libopenblas.so*' 1>&2
+       sudo pkg_add curl zip gmake nasm pcre2 gdb lldb
        /sbin/ldconfig -r
        # ls -al ~/
        # ls -al ~/.ssh
@@ -847,8 +844,6 @@ jobs:
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        rm -f j64/libopenblas*
-       # mkdir -p j64
-       # cp /usr/local/lib/libopenblas.so.0 j64/libopenblas.so 
        ls -l j64
        zip -r fbsd64.zip j64
 

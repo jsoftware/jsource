@@ -784,7 +784,7 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   // For monads: atomic verbs ignore rank, but they require the localuse field, so we can't just point the rank verb at them; we use a passthrough routine instead.  Otherwise, if the verb supports
   // IRS, go to the appropriate routine depending on the sign of rank; otherwise we will be doing an explicit rank loop: distinguish
   // rank-0, IRS, and all-purpose cases
-  flag2|=av->flag2&VF2WILLOPEN1;  // if u will open, so will u"n
+  flag2|=av->flag2&VF2WILLOPEN1|VF2WILLREALIZE1|VF2WILLOPEN2A|VF2WILLREALIZE2A|VF2WILLOPEN2W|VF2WILLREALIZE2W;  // if u will open/realize, so will u"n
   if(av->flag&VISATOMIC1){f1=jtrank10atom;}else{if(av->flag&VIRS1&&!unlikely(isfloat)){f1=rank1i;}else{f1=hv[0]|isfloat?rank1:jtrank10; flag2|=VF2RANKONLY1;}}  // ATOMIC calls a routine that ignores ranks
   // For dyad: atomic verbs take the rank from this block, so we take the action routine, and also the parameter it needs; otherwise, use processor for IRS, or rank 0, or general case
   if(av->flag&VFUSEDOK2){if(unlikely((hv[1]|hv[2])==0))hv[1]=hv[2]=RMAX; f2=(hv[1]|hv[2])>=0?rank2atomic:rank2atomicneg; lc=av->lu2.lc;}  // transfer the fn-address and fn-code from the atomic to the fused block

@@ -308,9 +308,9 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
  wv=FAV(w); d=wv->id;
  if((d&~1)==CLEFT){
   // the very common case u@] and u@[.  Take NOLOCCHG and inplaceability from u.  No IRS.
-  // We must copy forwarded flags from f to f@][.  These are WILLOPEN/USESITEMCOUNT.  WILLOPEN/USESITEMCOUNT are copied from the  // monad into the monad and (A if @[, W if @])
+  // We must copy forwarded flags from f to f@][.  These are WILLOPEN/WILLREALIZE/USESITEMCOUNT.  They are copied from the monad into the monad and (A if @[, W if @])
   // BOXATOP is set if a is <
-  flag2|=(c==CBOX)*(VF2BOXATOP2+VF2BOXATOP1)+(av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2USESITEMCOUNT1)*(1+(d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1);
+  flag2|=(c==CBOX)*(VF2BOXATOP2+VF2BOXATOP1)+(av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2WILLREALIZE1+VF2WILLREALIZE1PROP+VF2USESITEMCOUNT1)*(1+((d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1));
   fdeffill(z,flag2,CAT,VERB, jtonright12,d&1?jtonright12:onleft2, a,0,0, (av->flag&VNOLOCCHG+VNONAME+VNOSELF), RMAX,RMAX,RMAX); FAV(z)->fgh[1]=w; R z;  // ra not needed on w
  }
  // Set flag with NOLOCCHG status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
@@ -402,13 +402,17 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
  if(unlikely(d==COPE))if(!(flag2&VF2BOXATOP1))flag2|=VF2ATOPOPEN1;  // @>, but not <@> which would be confused with &.>
  if(unlikely(d==CCOMMA))if(av->valencefns[0]==jtisitems)f1=jtisnotempty;  // *@#@,
 
- // Copy the open/raze status from v into u@v (PROP/ITEMCOUNT valid only if v has infinite rank, because otherwise there might be result assembly;
+ // Copy the open/realize/raze status from v into u@v (PROP/ITEMCOUNT valid only if v has infinite rank, because otherwise there might be result assembly;
  // but v will never have those flags set if it doesn't have infinite rank)
- flag2 |= wv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
+ flag2 |= wv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2WILLREALIZE1|VF2WILLREALIZE2W|VF2WILLREALIZE2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
  // If v propagates OPEN status, copy from av
  flag2|=((wv->flag2&(VF2WILLOPEN1PROP|VF2WILLOPEN2WPROP|VF2WILLOPEN2APROP))&REPSGN(SGNIF(av->flag2,VF2WILLOPEN1X)))<<(VF2WILLOPEN1X-VF2WILLOPEN1PROPX);
- // if u and v both propagate, the compound does so also
+ // if u and v both propagate REALIZE, the compound does so also
  flag2|=((wv->flag2&(VF2WILLOPEN1PROP|VF2WILLOPEN2WPROP|VF2WILLOPEN2APROP))&REPSGN(SGNIF(av->flag2,VF2WILLOPEN1PROPX)));
+ // If v propagates REALIZE status, copy from av
+ flag2|=((wv->flag2&(VF2WILLREALIZE1PROP|VF2WILLREALIZE2WPROP|VF2WILLREALIZE2APROP))&REPSGN(SGNIF(av->flag2,VF2WILLREALIZE1X)))<<(VF2WILLREALIZE1X-VF2WILLREALIZE1PROPX);
+ // if u and v both propagate, the compound does so also
+ flag2|=((wv->flag2&(VF2WILLREALIZE1PROP|VF2WILLREALIZE2WPROP|VF2WILLREALIZE2APROP))&REPSGN(SGNIF(av->flag2,VF2WILLREALIZE1PROPX)));
 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  // If the compound has rank 0, switch to the loop for that; if rank is infinite, avoid the loop; if v is atomic, switch to the loop that gives a msg if executed on non-atom
@@ -540,8 +544,8 @@ F2(jtampco){F12IP;AF f1=on1cell,f2=on2cell;C c,d;I flag,flag2=0,linktype=0;V*wv;
  else if(unlikely(BOTHEQ8(c,d,CGRADE,CGRADE))){f1=jtranking; flag+=VIRS1;}  // /:&:/: monad
  else if(unlikely(BOTHEQ8(c,d,CCOMMA,CBOX))){f2=jtjlink; linktype=ACINPLACE;}  // x ,&< y   supports IP
 
- // Copy the monad open/raze status from v into u&:v
- flag2 |= wv->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
+ // Copy the monad open/realize/raze status from v into u&:v
+ flag2 |= wv->flag2&(VF2WILLOPEN1|VF2WILLREALIZE1|VF2USESITEMCOUNT1);
 
  // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
  flag2|=(f1==on1cell)<<VF2RANKATOP1X;  flag2|=VF2RANKATOP2;
@@ -640,7 +644,7 @@ F2(jtamp){F12IP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v
 
   if(c==COPE)flag2|=flag2&VF2BOXATOP1?VF2ATOPOPEN2A|VF2ATOPOPEN2W:VF2ATOPOPEN1|VF2ATOPOPEN2A|VF2ATOPOPEN2W;  // &>, but not <&> which would be confused with &.>
 
-  flag2 |= v->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1);  // Copy the monad open/raze status from v into u&v
+  flag2 |= v->flag2&(VF2WILLOPEN1|VF2WILLREALIZE1|VF2USESITEMCOUNT1);  // Copy the monad open/realize/raze status from v into u&v
 
   // Install the flags to indicate that this function starts out with a rank loop, and thus can be subsumed into a higher rank loop
   // If the compound has rank 0, switch to the loop for that; if infinite rank, avoid the loop
@@ -659,7 +663,7 @@ F2(jtamp){F12IP;A h=0;AF f1,f2;B b;C c;I flag,flag2=0,linktype=0,mode=-1,p,r;V*v
   p=FAV(va)->flag; flag=(FAV(va)->flag&VNOLOCCHG+VNONAME+VNOSELF);
 
   // take WILLOPEN/COUNT for the monad from the appropriate side of the dyadic verb.
-  flag2=((FAV(va)->flag2)>>(AT(a)&VERB?VF2WILLOPEN2AX-VF2WILLOPEN1X:VF2WILLOPEN2WX-VF2WILLOPEN1X))&(VF2WILLOPEN1|VF2USESITEMCOUNT1);
+  flag2=((FAV(va)->flag2)>>(AT(a)&VERB?VF2WILLOPEN2AX-VF2WILLOPEN1X:VF2WILLOPEN2WX-VF2WILLOPEN1X))&(VF2WILLOPEN1|VF2WILLREALIZE1|VF2USESITEMCOUNT1);
 
   // look for supported forms: comparison, i.-family, 128!:3, 1&(17 b.).  But not if the arg is atomic or empty - no value in that
   if((-AN(na)&-AR(na))<0){  // noun is not atomic and not empty

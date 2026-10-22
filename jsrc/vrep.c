@@ -388,6 +388,7 @@ static REPF(jtrep1s){F12IP;A ax,e,x,y,z;B*b;I c,d,cd,j,k,m,n,p,q,*u,*v,wr,*ws;P*
 }    /* scalar #"r sparse   or  sparse #"0 (dense or sparse) */
 
 A (*reptab[])() = {jtrepisx,jtrepidx,jtrepbsx,jtrepbdx,jtrepzsx,jtrepzdx,jtrep1s,jtrep1d};
+// x#y with IRS.  DO NOT do EPILOG in any branch because we mark this verb as WILLOPENPROP and WILLREALIZEPROP
 DFI2(jtrepeat){A z;
  IARG2CR F12IP;
  I wf=wr-wcr;

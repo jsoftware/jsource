@@ -170,7 +170,7 @@ fslocal:;  // come here when the name we are about to execute was found in a loc
      // set the flags in the nameref to what they are in the value.  This will allow compounds using this nameref (created in the parsing of later sentences)
      // to use the flags.  If we do PPPP, this will be too late
      FAV(self)->flag=FAV(fs)->flag&(VNOLOCCHG+VNONAME+VNOSELF);  // combining flags, do not require looking into id.  Cannot set IRS because unquote doesn't handle it
-     FAV(self)->flag2=(FAV(fs)->flag2&(VF2WILLOPEN1+VF2USESITEMCOUNT1+VF2WILLOPEN2W+VF2WILLOPEN2A+VF2USESITEMCOUNT2W+VF2USESITEMCOUNT2A))|(VF2CACHED+VF2CACHEABLE);  // combining flags, do not require looking into id
+     FAV(self)->flag2=(FAV(fs)->flag2&(VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2WILLREALIZE1+VF2WILLREALIZE1PROP+VF2USESITEMCOUNT1+VF2WILLOPEN2W+VF2WILLOPEN2WPROP+VF2WILLREALIZE2W+VF2WILLREALIZE2WPROP+VF2WILLOPEN2A+VF2WILLOPEN2APROP+VF2WILLREALIZE2A+VF2WILLREALIZE2APROP+VF2USESITEMCOUNT2W+VF2USESITEMCOUNT2A))|(VF2CACHED+VF2CACHEABLE);  // combining flags, do not require looking into id
          // indicate cached has been filled in, preventing any further changes to the caching
 // flag2: if we look through name(s) when replacing f[12] and fs, we could support VF2BOXATOP1+VF2BOXATOP2+VF2ATOPOPEN1+VF2ATOPOPEN2W+VF2ATOPOPEN2A+
 //  and we might be able to use VF2RANKATOP1+VF2RANKATOP2+VF2RANKONLY1+VF2RANKONLY2+  but we haven't checked the loops yet

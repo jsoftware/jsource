@@ -1273,7 +1273,7 @@ A hx; \
 if(opt&0x1){hx=w; \
 }else{J jtf; \
  I wof = (FAV(gs)->flag2>>((opt&0x40?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtfg)>>1)&VF2WILLOPEN1PROP);  /* shift all g willopen flags into position, carry PROP into WILLOPEN if incoming WILLOPEN */ \
- jtf=JPTROP(jt,+,(((I)w&(opt>>5)&1) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1)));  \
+ jtf=JPTROP(jt,+,(((I)w&(opt>>5)&1) + (wof & ((I)jtfg&JTWILLBEOPENED?VF2WILLOPEN1+VF2USESITEMCOUNT1:VF2WILLOPEN1+VF2WILLREALIZE1+VF2USESITEMCOUNT1))));  /* if WILLBEOPENED into g, suppress WILLREALIZE from g */ \
  RZEFCALL(hx,(fghfn)(jtf,PTR(w),hs,hs),hs,PTR(w),0); \
  hx=PTROP(hx,+,(I)(hx!=w)*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  ARGCHK1D(hx) \
@@ -1286,7 +1286,7 @@ if(!(opt&0x40)){  /* f produces a result */ \
  }else{J jtf; \
   fghfn=FAVV(fs)->valencefns[0]; \
   I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtfg)>>1)&VF2WILLOPEN1PROP);  /* all g willopen flags, carry PROP into WILLOPEN if incoming WILLOPEN */ \
-  jtf=JPTROP(jt,+,(((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); /* install inplace & willopen flags */\
+  jtf=JPTROP(jt,+,(((I)w&(JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & ((I)jtfg&JTWILLBEOPENED?VF2WILLOPEN1+VF2USESITEMCOUNT1:VF2WILLOPEN1+VF2WILLREALIZE1+VF2USESITEMCOUNT1)))); /* install inplace & willopen flags */\
   RZEFCALL(fx,(fghfn)(jtf,PTR(w),fs,fs),fs,PTR(w),0); \
   hx=PTROP(hx,+,(I)(fx!=w)*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   ARGCHK2D(fx,hx) \
@@ -1345,16 +1345,17 @@ A hx; \
 if(opt&0x2){hx=w; \
 }else if(opt&0x1){hx=PTROP(a,-,PEXT0((I)a,JTINPLACEAX,JTINPLACEW)); \
 }else{J jtf; \
- I wof = (FAV(gs)->flag2>>(((opt&0xc0)==0xc0?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtfg)>>1)&VF2WILLOPEN1PROP);  /* shift all willopen flags into position, propagate willopen */ \
+ I wof = (FAV(gs)->flag2>>(((opt&0xc0)==0xc0?VF2WILLOPEN1X:VF2WILLOPEN2WX)-VF2WILLOPEN1X)) + ((((I)jtfg)>>1)&VF2WILLOPEN1PROP+VF2WILLREALIZE1PROP);  /* shift all willopen flags into position, propagate willopen */ \
+ wof&=((I)jtfg&JTWILLBEOPENED?VF2WILLOPEN1+VF2USESITEMCOUNT1:VF2WILLOPEN1+VF2WILLREALIZE1+VF2USESITEMCOUNT1); /* if WILLBEOPENED into g, remove REALIZE out of g */ \
  if(opt&0xc){ \
   /* h@][.  Don't allow inplacing if a=w, because f will need the value for sure then.  Exception: NVV, where f needs nothing */ \
   /* bits 4-5=f is [] per se, 6-7=@[], so OR means 'f ignores RL'.  Bits 2-3=h is @[] so ~bits 2-3 10=@], 01=@[ (only choices) which mean 'h uses RL' - inplace if h uses an arg f ignores  */ \
   /* the flags in gh@][ are passed through from gh */ \
-  jtf=JPTROP(jt,+,(-(((I)(PTRSNE(a,w)|((opt&0x30)==0x30))))) & (((((I)(opt&0x4?a:w))&(((opt>>4)|(opt>>6))&~(opt>>2)&3))!=0) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+  jtf=JPTROP(jt,+,(-(((I)(PTRSNE(a,w)|((opt&0x30)==0x30))))) & (((((I)(opt&0x4?a:w))&(((opt>>4)|(opt>>6))&~(opt>>2)&3))!=0) + wof)); \
   RZEFCALL(hx,(fghfn)(jtf,PTR(opt&0x4?a:w),hs,hs),hs,PTR(opt&0x4?a:w),0); \
   hx=PTROP(hx,+,(I)(hx!=(opt&0x4?a:w))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  }else{ \
-  jtf=JPTROP(jt,+,(-(((I)(PTRSNE(a,w)|((opt&0xc0)==0xc0))))) & ((((I)a|(I)w)&(((opt>>4)|(opt>>6))&3)) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+  jtf=JPTROP(jt,+,(-(((I)(PTRSNE(a,w)|((opt&0xc0)==0xc0))))) & ((((I)a|(I)w)&(((opt>>4)|(opt>>6))&3)) + wof)); \
   RZEFCALL(hx,(fghfn)(jtf,PTR(a),PTR(w),hs),hs,PTR(a),PTR(w)); \
   hx=PTROP(hx,+,(I)((hx!=w)&(hx!=a))*JTINPLACEW);  /* result is inplaceable unless it equals noninplaceable input */ \
  } \
@@ -1369,10 +1370,11 @@ if((opt&0xc0)!=0xc0){ /* if we are running f */ \
  }else if(opt&0x10){fx=PTR(a); hx=PTROP(hx,+,((I)a&JTINPLACEA)); \
  }else{J jtf; \
   if(!(opt&0x100)){if(opt&0xc0){fghfn=FAVV(fs)->valencefns[0];}else{fghfn=FAVV(fs)->valencefns[1];}}  /* if not fork, leave f=h */ \
-  I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtfg)>>1)&VF2WILLOPEN1PROP);  /* all willopen flags, propagate willopen */ \
+  I wof = (FAV(gs)->flag2>>(VF2WILLOPEN2AX-VF2WILLOPEN1X)) + ((((I)jtfg)>>1)&VF2WILLOPEN1PROP+VF2WILLREALIZE1PROP);  /* all willopen flags, propagate willopen */ \
+  wof&=((I)jtfg&JTWILLBEOPENED?VF2WILLOPEN1+VF2USESITEMCOUNT1:VF2WILLOPEN1+VF2WILLREALIZE1+VF2USESITEMCOUNT1); /* if WILLBEOPENED into g, remove REALIZE out of g */ \
   if(opt&0xc0){ \
    /* f@][.  Before we execute, free the argument we don't need (unless it equals the other argument or hx) */ \
-   jtf=JPTROP(jt,+,((opt&0x40?((I)a>>JTINPLACEAX)&(I)PTRSNE(hx,a):((I)w>>JTINPLACEWX)&(I)PTRSNE(hx,w)) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+   jtf=JPTROP(jt,+,((opt&0x40?((I)a>>JTINPLACEAX)&(I)PTRSNE(hx,a):((I)w>>JTINPLACEWX)&(I)PTRSNE(hx,w)) + wof)); \
    /* free only if c<0.  Shift (UI)c>>1 to disable the free.  Special case: PRISTINE blocks can generate AC=8..xx where xx is anything, if the block is abandoned & picked up multiple times.  So check AC */ \
    /* Check AC and zap/free only if the block can be freed; zapping otherwise would leave no way to make the usecount positive in every() */ \
    if(opt&0x40){if(w=*tpopw){I c2=AC(w), c=(UI)c2>>!PTRSNE(w,hx); c=(UI)c>>(tpopa==tpopw); if((c&(-(AT(w)&DIRECT)|SGNIF(AFLAG(w),AFPRISTINEX)))<0){if(likely(c==(ACINPLACE+ACUC1))){*tpopw=0; fanapop(w,AFLAG(w));}}}} \
@@ -1380,7 +1382,7 @@ if((opt&0xc0)!=0xc0){ /* if we are running f */ \
    RZEFCALL(fx,(fghfn)(jtf,PTR(opt&0x40?a:w),fs,fs),fs,PTR(opt&0x40?a:w),0); \
    hx=PTROP(hx,+,((I)(fx!=(opt&0x40?a:w)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   }else{ \
-   jtf=JPTROP(jt,+,((((I)a|(I)w)&(JTINPLACEA*(I)PTRSNE(hx,a)+JTINPLACEW*(I)PTRSNE(hx,w))) + (wof & VF2WILLOPEN1+VF2USESITEMCOUNT1))); \
+   jtf=JPTROP(jt,+,((((I)a|(I)w)&(JTINPLACEA*(I)PTRSNE(hx,a)+JTINPLACEW*(I)PTRSNE(hx,w))) + wof)); \
    RZEFCALL(fx,(fghfn)(jtf,PTR(a),PTR(w),fs),fs,PTR(a),PTR(w)); \
    hx=PTROP(hx,+,((I)((fx!=w)&(fx!=a)))*JTINPLACEA);  /* result is inplaceable unless it equals noninplaceable input */ \
   } \

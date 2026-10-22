@@ -419,7 +419,7 @@ F2(jtunder){F12IP;A x,wvb=w;AF f1,f2;B b,b1;C uid;I flag=0,gside=-1;V*u,*v;
 sunder:  // come here for all structural under
   fdeffillall(z,VF2NONE,CUNDER,VERB,jtsunder,jtvalenceerr,a,w,0,flag,RMAX,RMAX,RMAX,fffv->localuse.lu1.sundern=sundern,) R z;  // process the structural under when the argument arrives
  }
- I flag2=(FAV(wvb)->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1))*((VF2WILLOPEN1+VF2WILLOPEN2A+VF2WILLOPEN2W)>>VF2WILLOPEN1X);
+ I flag2=(FAV(wvb)->flag2&(VF2WILLOPEN1|VF2WILLREALIZE1|VF2USESITEMCOUNT1))*((VF2WILLOPEN1+VF2WILLOPEN2A+VF2WILLOPEN2W)>>VF2WILLOPEN1X);   // copy open/realize/retore from monad w to monad/dyads
  I r=mr(wvb);
  // Create the standard g^:_1 @ (f & g) to use if we have no special processing (allows easy reversion)
  // if gerund form, use (f g)"lf mg  for a:`v or (f~ g)~"mg rf for v`a:

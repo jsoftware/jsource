@@ -46,7 +46,7 @@ DFI1(jtbox){A y,z,*zv;C*wv;I f,k,m,n,*ws;
   // single box: fast path.  Allocate a scalar box and point it to w.
   INCORPNC(w);  // this realizes w if virtual or ANCHORED
   I aband=SGNTO0(AC(w))&((I)jtfg>>JTINPLACEWX);  // aband = 1 if w is abandoned
-  // it's not worth checking WILLBEOPENED, because the only reasonable time to box is at the end of a compound, which has its own result
+  // it's not worth checking WILLBEOPENED, because the only reasonable time to box is at the end of a compound, which has its own result   scaf this seems wrong, since the test is so cheap
   // if w is abandoned and is the last thing on the tstack (somewhat likely, from the tests), back up the tstack so that the GA writes over it, effecting a ra().  We still have to make sure the block is recursive
   if(withprob((UI)aband>((UI)(jt->tnextpushp-1)^(UI)AZAPLOC(w)),0.3)){jt->tnextpushp=jt->tnextpushp-1; razapwhenatend(w);} else ra(w)  // INCORPNC+this=INCORPRA
   GAT0E(z,BOX,1,0,tpush(w); R0);  // allocate the result; if error, undo the ra()
@@ -630,6 +630,7 @@ static A jtrazeg(J jt,A w,I t,I n,I r,A*v){A y,z;C*zu;I c=0,i,j,k,m,*s,*v1,yr,*y
 }    /* raze general case */
 
 // ; y
+// Do not EPILOG
 F1(jtraze){F12IP;A*v,y,z;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
  ARGCHK1(w);
  n=AN(w); v=AAV(w);  // n=#,w  v->w data
@@ -680,7 +681,7 @@ F1(jtraze){F12IP;A*v,y,z;C* RESTRICT zu;I *wws,d,i,klg,m=0,n,r=1,t=0,te=0;
   DO(n, y=v[i]; d=AN(y)<<klg; JMC(zu,AV(y),d,0); zu+=d;)   // copy the items
  }
 
- RETF(z);
+ RETF(z);  // No EPILOG - this verb does WILLOPENPROP
 }
 
 F1(jtrazeh){F12IP;A*wv,y,z;C*xv,*yv,*zv;I c=0,ck,dk,i,k,n,p,r,*s,t;

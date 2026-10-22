@@ -76,11 +76,15 @@ A jtfolk(J jtfg,A f,A g,A h){F12IP;A p,q,x,y;AF f1=0,f2=0;B b;C c,fi,gi,hi;I fla
    // capped fork  inplace if h can handle it, NOLOCCHG if gh are safe
    flag=((gv->flag&hv->flag)&VNOLOCCHG+VNONAME+VNOSELF);  // We accumulate the flags for the derived verb.  Start with NOLOCCHG if all descendants are, and inplacing if h handles it
    // Copy the open/raze status from v into u@:v
-   flag2 |= hv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
+   flag2 |= hv->flag2&(VF2WILLOPEN1|VF2WILLOPEN2W|VF2WILLOPEN2A|VF2WILLREALIZE1|VF2WILLREALIZE2W|VF2WILLREALIZE2A|VF2USESITEMCOUNT1|VF2USESITEMCOUNT2W|VF2USESITEMCOUNT2A);
    // If v propagates OPEN status, copy from av
    flag2|=((hv->flag2&(VF2WILLOPEN1PROP|VF2WILLOPEN2WPROP|VF2WILLOPEN2APROP))&REPSGN(SGNIF(gv->flag2,VF2WILLOPEN1X)))<<(VF2WILLOPEN1X-VF2WILLOPEN1PROPX);
+   // If v propagates REALIZE status, copy from av
+   flag2|=((hv->flag2&(VF2WILLREALIZE1PROP|VF2WILLREALIZE2WPROP|VF2WILLREALIZE2APROP))&REPSGN(SGNIF(gv->flag2,VF2WILLREALIZE1X)))<<(VF2WILLREALIZE1X-VF2WILLREALIZE1PROPX);
    // if u and v both propagate, the compound does so also
    flag2|=((hv->flag2&(VF2WILLOPEN1PROP|VF2WILLOPEN2WPROP|VF2WILLOPEN2APROP))&REPSGN(SGNIF(gv->flag2,VF2WILLOPEN1PROPX)));
+   // if u and v both propagate, the compound does so also
+   flag2|=((hv->flag2&(VF2WILLREALIZE1PROP|VF2WILLREALIZE2WPROP|VF2WILLREALIZE2APROP))&REPSGN(SGNIF(gv->flag2,VF2WILLREALIZE1PROPX)));
   }
   switch(fi){
   case CCAP:  // [: g h
@@ -345,11 +349,11 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
     }
    }
 
-   // Copy the open/raze status from u (for a) and v (for w) or both (for monad).  PROP is not needed, since (u ][) is silly.
+   // Copy the open/realize/raze status from u (for a) and v (for w) or both (for monad).  PROP is not needed, since (u ][) is silly.
    // Since this status is a characteristic of the combined verb specs, it does not depend on the selection of f[12]
-   I flag2=((v->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1))<<(VF2WILLOPEN2WX-VF2WILLOPEN1X)) |  // dyad w from v monad w
-             (u->flag2&(VF2WILLOPEN2A|VF2USESITEMCOUNT2A)) |    // dyad a from u dyad a
-             (v->flag2&(VF2WILLOPEN1|VF2USESITEMCOUNT1) & ((u->flag2&(VF2WILLOPEN2A|VF2USESITEMCOUNT2A))>>(VF2WILLOPEN2AX-VF2WILLOPEN1X))); // monad only if monad w AND dyad a
+   I flag2=((v->flag2&(VF2WILLOPEN1|VF2WILLREALIZE1|VF2USESITEMCOUNT1))<<(VF2WILLOPEN2WX-VF2WILLOPEN1X)) |  // dyad w from v monad w
+             (u->flag2&(VF2WILLOPEN2A|VF2WILLREALIZE2A|VF2USESITEMCOUNT2A)) |    // dyad a from u dyad a
+             (v->flag2&(VF2WILLOPEN1|VF2WILLREALIZE1|VF2USESITEMCOUNT1) & ((u->flag2&(VF2WILLOPEN2A|VF2WILLREALIZE2A|VF2USESITEMCOUNT2A))>>(VF2WILLOPEN2AX-VF2WILLOPEN1X))); // monad only if monad w AND dyad a
 
    // Return the derived verb
    fdeffillall(z,flag2,CHOOK, VERB, f1,f2, a,w,0L, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.linkvb=linktype)

@@ -96,6 +96,7 @@ static FI2(jtrotsp){A q,x,y,z;B bx,by;I af,*av,d,k,m,n,p,*qv,*s,*v,wf;P*wp,*zp;
 // r is signed shift amount, n is axis length
 #define ROTF(r) {UI ar=ABSUI(r); if(unlikely(ar>=(UI)n)){if(jt->fill)ar=n; else{r=r%n; ar=ABSUI(r);}} k=dk*ar; kd=e-k; ks=r<0?kd:0; jd=r<0?k:0; kd-=ks; js=k-jd;}   // UI in case ABS(IMIN)
 
+// Do not EPILOG
 FI2(jtrotate){A z;C *u,*v;I af,d,k,m,n,p,*s,wf,wn;
  IARG2CR F12IP;
  if(unlikely(ISSPARSE(AT(w))))R rotsp(afg,wfg);
@@ -174,7 +175,7 @@ FI2(jtrotate){A z;C *u,*v;I af,d,k,m,n,p,*s,wf,wn;
  } 
  // w is going to be replaced.  That makes it non-pristine; but if it is inplaceable it can pass its pristinity to the result, as long as there is no fill
  PRISTXFERFIF(z,origw,jt->fill==0)  // transfer pristinity if there is no fill
- RETF(z);
+ RETF(z);  // This verb propagates WILLOPEN/WILLREALIZE and must not perform EPILOG
 }    /* a|.!.f"r w */
 
 static FI1(jtrevsp){A a,q,x,y,z;I c,f,k,m,n,*v;P*wp,*zp;
@@ -194,6 +195,7 @@ static FI1(jtrevsp){A a,q,x,y,z;I c,f,k,m,n,*v;P*wp,*zp;
  R z;
 }    /* |."r w on sparse arrays */
 
+// Do not EPILOG
 DFI1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,*v,*ws,wt;
  IARG1CR F12IP;
  if(unlikely(ISSPARSE(AT(w))))R revsp(wfg);  // if sparse, process, preserving rank
@@ -225,7 +227,7 @@ DFI1(jtreverse){A z;C*wv,*zv;I f,k,m,n,nk,*v,*ws,wt;
   }else{C*s=wv-k,*t; DQ(m, t=s+=nk; DQ(n, MC(zv,t,k); zv+=k; t-=k;););}  // one-ended copy, not in place
   break;
  }
- RETF(z);  // This verb propagates WILLOPEN and must not perform EPILOG
+ RETF(z);  // This verb propagates WILLOPEN/WILLREALIZE and must not perform EPILOG
 }    /* |."r w */
 
 

@@ -112,6 +112,7 @@ elif [ "$1" = "openbsd" ]; then
  else
   cp mpir/openbsd/aarch64/libgmp.so $B
   cp pcre2/openbsd/aarch64/libjpcre2.so $A/tools/regex/.
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/openbsd/arm_64/libopenblas.so"
  fi
 elif [ "$1" = "freebsd" ]; then
  # cp /usr/local/lib/libgmp.so.10 $B/libgmp.so
@@ -122,6 +123,7 @@ elif [ "$1" = "freebsd" ]; then
  else
   cp mpir/freebsd/aarch64/libgmp.so $B
   cp pcre2/freebsd/aarch64/libjpcre2.so $A/tools/regex/.
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/freebsd/arm_64/libopenblas.so"
  fi
 elif [ "$1" = "windows" ]; then
  export NASM=$GITHUB_WORKSPACE/openssl-asm/nasm

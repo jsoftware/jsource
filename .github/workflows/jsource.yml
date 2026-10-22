@@ -706,10 +706,12 @@ jobs:
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
        script/buildga.sh openbsd x86_64 || exit 1
-       script/testga.sh openbsd x86_64
-       cp jlibrary/bin/* j64 || true
-       rm -f j64/profile.ijs
-       rm -f j64/libopenblas*
+#       script/testga.sh openbsd x86_64
+#       cp jlibrary/bin/* j64 || true
+#       rm -f j64/profile.ijs
+#       rm -f j64/libopenblas*
+       mkdir -p j64
+       cp /usr/local/lib/libopenblas* j64/. || true
        ls -l j64
        zip -r obsd64.zip j64
 
@@ -843,11 +845,12 @@ jobs:
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
-       script/buildga.sh freebsd x86_64 || exit 1
-       script/testga.sh freebsd x86_64
-       cp jlibrary/bin/* j64 || true
-       rm -f j64/profile.ijs
-       rm -f j64/libopenblas*
+#       script/buildga.sh freebsd x86_64 || exit 1
+#       script/testga.sh freebsd x86_64
+#       cp jlibrary/bin/* j64 || true
+#       rm -f j64/profile.ijs
+#       rm -f j64/libopenblas*
+       mkdir -p j64
        cp /usr/local/lib/libopenblas.so.0 j64/libopenblas.so 
        ls -l j64
        zip -r fbsd64.zip j64

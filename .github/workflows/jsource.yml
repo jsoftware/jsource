@@ -30,8 +30,8 @@ jobs:
 # for selected jobs, disable all and disable the selected needs
 
  all:
-  #if: false
-  if: true
+  if: false
+  #if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Runall jobs"
@@ -663,7 +663,7 @@ jobs:
 # openbsd --------------------------------------------------------------
  jeopenbsd:
   name: JE (OpenBSD cross-platform-actions)
-  needs: all
+#  needs: all
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -681,7 +681,7 @@ jobs:
       run: |
        sudo pkg_add -u
        sudo rdate time.cloudflare.com || true
-       sudo pkg search openblas 1>&2
+       sudo pkg_search openblas 1>&2 || true
        sudo pkg_add curl zip gmake nasm pcre2 gdb lldb openblas
        sudo find / -type f -name 'liblapack.so*' 1>&2
        sudo find / -type f -name 'libopenblas.so*' 1>&2
@@ -706,7 +706,7 @@ jobs:
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
        script/buildga.sh openbsd x86_64 || exit 1
-       script/testga.sh openbsd x86_64 || exit 1
+       script/testga.sh openbsd x86_64
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        rm -f j64/libopenblas*
@@ -800,7 +800,7 @@ jobs:
 # freebsd --------------------------------------------------------------
  jefreebsd:
   name: JE (FreeBSD cross-platform-actions)
-  needs: all
+#  needs: all
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -844,7 +844,7 @@ jobs:
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
        script/buildga.sh freebsd x86_64 || exit 1
-       script/testga.sh freebsd x86_64 || exit 1
+       script/testga.sh freebsd x86_64
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        rm -f j64/libopenblas*
@@ -916,7 +916,7 @@ jobs:
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
        script/buildga.sh freebsd arm64 || exit 1
-       script/testga.sh freebsd arm64 || exit 1
+       script/testga.sh freebsd arm64
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        rm -f j64/libopenblas*

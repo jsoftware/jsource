@@ -1,12 +1,13 @@
 // define SORTQNAME to be the function name, SORTQTYPE to be the type of items sorted
-// v->first value, n=# values
-SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
+// v->first value, n=# values, rmin-rmax are the range that is needed (we skip partitions that are outside that range)
+SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n, I rmin, I rmax){
  // loop till tail-recursion finished
  I l=0, r=n-1; I stackp=0; I stack[32][2];
  while(1){
   // the batch is short, sort it by fixed comparison; then pick up the next batch
   // we write this out in situ rather than calling a subroutine because there's not much register pressure
   // here and the compiler will not need to save/restore registers.  This doesn't matter for the floating-point version but it does for integer.
+  if(unlikely(r<rmin)||unlikely(l>rmax))goto skippartition;  // if this partition is outside the area of interest, skip it
   while(r-l<=4){SORTQTYPE a,b,c,d,e;UI f;
    SORTQTYPE *vv = v+l;  // advance to the block to be reordered 
    switch(r-l){   // this is 1 LESS than the length of the block
@@ -34,6 +35,7 @@ SORTQSCOPE void SORTQNAME(SORTQTYPE *v, I n){
     break;
    case -1: case 0:;
    }
+skippartition:;  // come here to skip the whole partition
    // that batch is sorted; move to the next
    if(--stackp<0)R;  // back up stack; if we're finishing the last call, we're through
    l=stack[stackp][0]; r=stack[stackp][1];  // resume the next 

@@ -674,24 +674,24 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 // modes for indexofsub()
 #define IIOPMSKX        5  // # bits of flags
 #define IIOPMSK         (BIT(IIOPMSKX)-1)     // operation bits.  INTER also uses bit 3, which is included as a modifier in the switches
-#define IIDOT           0        // IIDOT and IICO must be 0-1
-#define IICO            1
-#define INUBSV          2   // BIT arrays INUBSV-INUBI init to 1 to that out-of-bounds in LESS keeps the value
-#define ILESS           3   // -.
-#define INUB            4   // ~.    NUB must be paired with NUBI
-#define INUBI           5   // I.@:~:
-#define IEPS            6   // BIT arrays IEPS and above init to 0 so out-of-bounds means not included
+#define IIDOT           0x00        // IIDOT and IICO must be 0-1
+#define IICO            0x01
+#define INUBSV          0x02   // BIT arrays INUBSV-INUBI init to 1 to that out-of-bounds in LESS keeps the value
+#define ILESS           0x03   // -.
+#define INUB            0x04   // ~.    NUB must be paired with NUBI
+#define INUBI           0x05   // I.@:~:
+#define IEPS            0x06   // BIT arrays IEPS and above init to 0 so out-of-bounds means not included
 // the I...EPS values below are wired into the function table at the end of vcompsc.c, where they are combined with a comparison
-#define II0EPS          7  // i.&0@:e.   this must come first; others base on it
-#define II1EPS          8  // i.&1@:e.
-#define IJ0EPS          9  // i:&0@:e.
-#define IJ1EPS          10  // i:&1@:e.
-#define ISUMEPS         11  // +/@:e.
-#define IANYEPS         12  // +./@:e.
-#define IALLEPS         13  // *./@:e.
-#define IIFBEPS         14   // I.@e.
-#define IFORKEY         15  // special key support: like i.~, but add # values mapped to the index, and return #unique values in AM
-#define IINTER          16  // ([ -. -.)   LSBs cause BIT arrays to init to 0 meaning 'don't keep'
+#define II0EPS          0x07  // i.&0@:e.   this must come first; others base on it
+#define II1EPS          0x08  // i.&1@:e.
+#define IJ0EPS          0x09  // i:&0@:e.
+#define IJ1EPS          0x0a  // i:&1@:e.
+#define ISUMEPS         0x0b  // +/@:e.
+#define IANYEPS         0x0c  // +./@:e.
+#define IALLEPS         0x0d  // *./@:e.
+#define IIFBEPS         0x0e   // I.@e.
+#define IFORKEY         0x0f  // special key support: like i.~, but add # values mapped to the index, and return #unique values in AM
+#define IINTER          0x10  // ([ -. -.)   LSBs cause BIT arrays to init to 0 meaning 'don't keep'
 #define INUBIP          0x14  // ~. inplace  LSBs cause BIT arrays to init to 1
 #define IIMODFIELD      ((I)7<<IIOPMSKX)  // bits used to indicate processing options
 #define IIMODPACKX      5  // must not exceed 5 since used in a shift

@@ -1036,17 +1036,17 @@ extern void     spellit(C,C*);
 extern I        smmallosize(A);
 extern void     smmfrr(A);
 extern I        sqrtE(J,I,E*,E*);
-extern void     vvsortqs8ai(IL*,I);
-extern void     vvsortqs8ao(IL*,IL*,I);
-extern void     vvsortqs4ai(I4*,I);
+extern void     vvsortqs8ai(IL*,I,I,I);
+// obsolete extern void     vvsortqs8ao(IL*,IL*,I);
+extern void     vvsortqs4ai(I4*,I,I,I);
 extern void     vvsortqs4ao(I4*,I4*,I);
-#if BW==64
-#define vvsortqiai vvsortqs8ai
-#define vvsortqiao vvsortqs8ao
-#else
-#define vvsortqiai vvsortqs4ai
-#define vvsortqiao vvsortqs4ao
-#endif
+// obsolete #if BW==64
+// obsolete #define vvsortqiai vvsortqs8ai
+// obsolete #define vvsortqiao vvsortqs8ao
+// obsolete #else
+// obsolete #define vvsortqiai vvsortqs4ai
+// obsolete #define vvsortqiao vvsortqs4ao
+// obsolete #endif
 extern I        strtoI10s(I,C*);
 extern D        tod(void);
 extern void     va1primsetup(A);

@@ -284,7 +284,7 @@ static GF(jtgrdq){F1PREFJT;
   // install item number
   DO(n, I v=wv[i]^sortdown63; v^=(UI)REPSGN(v)>>1; v=(v==0)?-1:v; zv[i]=(v&(~itemmask))+i;)
   // sort the result area in place
-  vvsortqs8ai(zv,n);  // always ascending
+  vvsortqs8ai(zv,n,0,IMAX);  // always ascending
   // pass through the result area, removing the upper bits.  If consecutive values have the same upper bits, go through them,
   // replacing the upper bits with the actual bits from the input (after honoring sign/direction bits), and then re-sort the result in place.
   // remove the upper bits from that sorted result
@@ -296,7 +296,7 @@ static GF(jtgrdq){F1PREFJT;
     I j=i;do{
      I v=wv[zv[j]&itemmask]^sortdown63; v^=(UI)REPSGN(v)>>1; v=(v==0)?-1:v; zv[j]=((v&itemmask)<<hbit)+(zv[j]&itemmask); // fetch original v, reconstitute; get itemmask in uppper bits 
     }while(!(++j==n || (((nextv=zv[j])^currv)&~itemmask)));
-    vvsortqs8ai(zv+i,j-i);  // sort the collision area in place, ascending.  j points to first item beyond the collision area, and nextv is its value
+    vvsortqs8ai(zv+i,j-i,0,IMAX);  // sort the collision area in place, ascending.  j points to first item beyond the collision area, and nextv is its value
     while(i<j){zv[i]&=itemmask; ++i;}
     i=j-1;  // pick up after the batch
    }
@@ -436,7 +436,7 @@ static GF(jtgriq){F1PREFJT;
   DO(n, I v=wv[i]^gradedown; if(siglost|=itemsigmsk&((v&-itemmsb)+itemmsb))break; zv[i]=(v<<hbit)+i;)
   // If there was no loss of significance, just sort the values and return the indexes
   if(!siglost){
-   vvsortqs8ai(zv,n);  // sort em (in place), ascending
+   vvsortqs8ai(zv,n,0,IMAX);  // sort em (in place), ascending
    DO(n, zv[i]&=itemmask;)   // the indexes are right
   }else{
    // We encountered significance when we tried to shift the values to make room for the indexes.  We will have to sort
@@ -444,7 +444,7 @@ static GF(jtgriq){F1PREFJT;
    // First, install the item number in the LSBs
    DO(n, I v=wv[i]^gradedown; zv[i]=(v&~itemmask)+i;)
    // sort the result area in place
-   vvsortqs8ai(zv,n);
+   vvsortqs8ai(zv,n,0,IMAX);
    // pass through the result area, removing the upper bits.  If consecutive values have the same upper bits, go through them,
    // replacing the upper bits with the actual bits from the input (after honoring sign/direction bits), and then re-sort the result in place.
    // remove the upper bits from that sorted result
@@ -456,7 +456,7 @@ static GF(jtgriq){F1PREFJT;
      I j=i;do{
       I v=wv[zv[j]&itemmask]^gradedown; zv[j]=((v&itemmask)<<hbit)+(zv[j]&itemmask); // fetch original v, reconstitute; get itemmask in upper bits 
      }while(!(++j==n || (((nextv=zv[j])^currv)&~itemmask)));
-     vvsortqs8ai(zv+i,j-i);  // sort the collision area in place.  j points to first item beyond the collision area, and nextv is its value
+     vvsortqs8ai(zv+i,j-i,0,IMAX);  // sort the collision area in place.  j points to first item beyond the collision area, and nextv is its value
      while(i<j){zv[i]&=itemmask; ++i;}  // the item numbers are guaranteed right after this sort
      i=j-1;  // pick up after the batch
     }

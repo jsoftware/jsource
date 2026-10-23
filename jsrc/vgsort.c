@@ -269,22 +269,23 @@ static SF(jtsorti1){F12JT;A x,y,z;I*wv;I i,*xv,*zv;void *yv;
 #define SORTQULOAD _mm256_loadu_si256
 #define SORTQULOADTYPE __m256i*
 #include "vgsortq.h"
-// scaf
-void vvsortqs8ao(IL *z,IL *w,I n){ memcpy(z,w,8*n); vvsortqs8ai(z,n); }
-void vvsortqs4ao(I4 *z,I4 *w,I n){ memcpy(z,w,4*n); vvsortqs4ai(z,n); }
+// obsolete void vvsortqs8ao(IL *z,IL *w,I n){ memcpy(z,w,8*n); vvsortqs8ai(z,n); }
+// obsolete void vvsortqs4ao(I4 *z,I4 *w,I n){ memcpy(z,w,4*n); vvsortqs4ai(z,n); }
 #endif
 
 
 // JTDESCEND set in jt
 static SF(jtsortiq){F12JT;  // m=#sorts, n=#items in each sort, w is block
  A z;I inplace=ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX),w); //inplace sort?
- if(inplace)z=w;
- else GA(z,AT(w),AN(w),AR(w),AS(w));
- I *zv=IAV(z),*wv=IAV(w);
+ if(inplace)z=w;else RZ(z=ca(w))   // always inplace, so copy if needed
+// obsolete  else GA(z,AT(w),AN(w),AR(w),AS(w));
+ I *zv=IAV(z);
+// obsolete ,*wv=IAV(w);
  DQ(m,
-  if(inplace)vvsortqiai(zv,n);
-  else vvsortqiao(zv,wv,n),wv+=n;
-  if((I)jtfg&JTDESCEND){I *zv1=zv; I *zv2=zv+n; DQ(n>>1, I t=*zv1; *zv1++=*--zv2; *zv2=t;)} //scaf strawman reverse if desc
+// obsolete   if(inplace)
+  vvsortqs8ai(zv,n,0,IMAX);  // sort the cell
+// obsolete   else vvsortqiao(zv,wv,n),wv+=n;
+  if((I)jtfg&JTDESCEND){I *zv1=zv; I *zv2=zv+n; DQ(n>>1, I t=*zv1; *zv1++=*--zv2; *zv2=t;)} // reverse if desc
   zv+=n;)
  RETF(z);}
 
@@ -397,7 +398,7 @@ static SF(jtsortu1){F12JT;A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
 static SF(jtsortdq){F12JT;  // m=#sorts, n=#items in each sort, w is block
  A z; 
  if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX),w))z=w; else RZ(z=ca(w));   // output area, possibly the same as the input
- D *zv=DAV(z); DQ(m, sortdq1(zv,n); if((I)jtfg&JTDESCEND){D *zv1=zv; D *zv2=zv+n; DQ(n>>1, D t=*zv1; *zv1++=*--zv2; *zv2=t;)} zv+=n;)  // sort each list (ascending); reverse if descending
+ D *zv=DAV(z); DQ(m, sortdq1(zv,n,0,IMAX); if((I)jtfg&JTDESCEND){D *zv1=zv; D *zv2=zv+n; DQ(n>>1, D t=*zv1; *zv1++=*--zv2; *zv2=t;)} zv+=n;)  // sort each list (ascending); reverse if descending
  RETF(z);
 }
 

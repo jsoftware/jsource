@@ -33,6 +33,7 @@ a=. ('Wasm'-.@-:UNAME)#(<testpath),each 'glapack.ijs';'glapackcb.ijs'
 a=. a, (<testpath),each <'gregex.ijs'
 ddall=: ~. ddall ,~ a
 blacklist=: blacklist -. a
+4!:55 <'a'
 blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each <'gstack.ijs' NB. temporarily disable
 blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each 'gtdot.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs' NB. temporarily disable
 blacklist=: blacklist, ((*9!:56'auditexecresults')*.'OpenBSD'-:UNAME)#(<testpath),each 'gtdot1.ijs';'gtdot2.ijs';'g128x19.ijs' NB. temporarily disable

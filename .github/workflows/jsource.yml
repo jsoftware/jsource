@@ -952,8 +952,16 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v6
 
+   - name: Setup Node.js (wasm)
+     uses: actions/setup-node@v4
+     with:
+       node-version: '22'
+
    - name: Setup Environment (wasm)
-     uses: mymindstorm/setup-emsdk@v14
+     uses: emscripten-core/setup-emsdk@v16
+     with:
+       version: 4.0.10
+       actions-cache-folder: emsdk-cache
 
    - name: Build, Test JE (wasm)
      env:

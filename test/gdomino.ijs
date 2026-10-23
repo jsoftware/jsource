@@ -2,6 +2,7 @@ prolog './gdomino.ijs'
 NB. Tests for verbs defined in vd.c: %. 128!:0 128!:1
 
 cblas =: 9!:56 'cblas'
+techo 'cblas: ', ":(9!:56) 'cblas'
 
 NB. utils
 X =: +/ .*
@@ -436,6 +437,7 @@ cells ''
 big ''
 nans ''
 cblas (9!:56) 'cblas'
+techo 'cblas: ', ":(9!:56) 'cblas'
 shapes ''
 qrshapes ''
 vals ''

@@ -55,6 +55,7 @@ if. m0 do.
 end.
 if. c0 do.
   1(9!:56)'cblas'
+  techo 'cblas: ', ":(9!:56) 'cblas'
   t1=. 6!:2'c2=. A+/ .*B'
   techo 'always cblas ',' GFlop ',~ 0j3": 2*(N^3)%(t1)*1e9
   assert. c1-:c2

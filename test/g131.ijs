@@ -5,6 +5,7 @@ delth''  NB. make sure we start with an empty system
 maketh 4  NB. create 4 threads
 
 cblas=: 9!:56'cblas'
+techo 'cblas: ', ":(9!:56) 'cblas'
 0 (9!:56) 'cblas'
 thr=: (9!:58)"0 i.3
 _1 (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
@@ -203,6 +204,7 @@ assert. 1.03e_8>e
 9!:19 ct
 
 cblas (9!:56) 'cblas'
+techo 'cblas: ', ":(9!:56) 'cblas'
 empty thr (9!:58)"0 i.3
 
 epilog''

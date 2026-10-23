@@ -5,6 +5,49 @@
 
 #include "j.h"
 
+#ifdef IMPORTCBLASLIB
+#undef jcblas_dtrsm
+#undef jcblas_ztrsm
+
+#undef jdgecon_
+#undef jdgels_
+#undef jdgeqrf_
+#undef jdgetrf_
+#undef jdgetri_
+#undef jdgetrs_
+#undef jdorgqr_
+#undef jdtrcon_
+
+#undef jzgecon_
+#undef jzgels_
+#undef jzgeqrf_
+#undef jzgetrf_
+#undef jzgetri_
+#undef jzgetrs_
+#undef jztrcon_
+#undef jzungqr_
+
+#define jcblas_dtrsm cblas_dtrsm
+#define jcblas_ztrsm cblas_ztrsm
+
+#define jdgecon_ dgecon_
+#define jdgels_ dgels_
+#define jdgeqrf_ dgeqrf_
+#define jdgetrf_ dgetrf_
+#define jdgetri_ dgetri_
+#define jdgetrs_ dgetrs_
+#define jdorgqr_ dorgqr_
+#define jdtrcon_ dtrcon_
+
+#define jzgecon_ zgecon_
+#define jzgels_ zgels_
+#define jzgeqrf_ zgeqrf_
+#define jzgetrf_ zgetrf_
+#define jzgetri_ zgetri_
+#define jzgetrs_ zgetrs_
+#define jztrcon_ ztrcon_
+#define jzungqr_ zungqr_
+#else
 #define jcblas_dtrsm(...) EXTERNCALL((jcblas_dtrsm)(__VA_ARGS__))
 #define jcblas_ztrsm(...) EXTERNCALL((jcblas_ztrsm)(__VA_ARGS__))
 
@@ -25,6 +68,7 @@
 #define jzgetrs_(...) EXTERNCALL((jzgetrs_)(__VA_ARGS__))
 #define jztrcon_(...) EXTERNCALL((jztrcon_)(__VA_ARGS__))
 #define jzungqr_(...) EXTERNCALL((jzungqr_)(__VA_ARGS__))
+#endif
 
 static F1(jtnorm){F12IP;R sqroot(pdt(w,conjug(w)));}
 

@@ -69,6 +69,10 @@ void cblasinit(C*libpath) {
 #else
  hasopenmp= 0;
 #endif
+#ifdef IMPORTCBLASLIB
+ strcpy(cblasfile,"libopenblas");
+ libcblas= 1;
+#else
 #if defined(__APPLE__)
  libcblas= dlopen(strcpy(cblasfile,LIBCBLASNAME), RTLD_LAZY);
 #elif defined(__wasm__)
@@ -303,5 +307,7 @@ void cblasinit(C*libpath) {
  }else{
   *cblasfile=0;
  }
+#endif // IMPORTCBLASLIB
+
  hascblas= !!libcblas;
 }

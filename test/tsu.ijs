@@ -132,7 +132,7 @@ EMPTY
 )
 delth=: {{ if. 9!:56'pyxes' do. while. 1 T. '' do. 55 T. '' end. end. EMPTY }}  NB. delete all worker threads
 NB. prolog is run after the optional typing of testcase name.  y is './testcasename.ijs'
-prolog=: {{ 1: xyziniloc__ =: x [ delth'' [ (dbr bind Debug)@:(9!:19)2^_44[techo^:ECHOFILENAME RUNFILE=:y[RUNTIME=:6!:1'' }}~ currlocals_p38s4jf7_
+prolog=: {{ 1: 1 (9!:56) 'cblas' [ xyziniloc__ =: x [ delth'' [ (dbr bind Debug)@:(9!:19)2^_44[techo^:ECHOFILENAME RUNFILE=:y[RUNTIME=:6!:1'' }}~ currlocals_p38s4jf7_
 NB. epilog'' is run as the last line of each testcase
 epilog=: 3 :  0 @: (4!:55) @: (currlocals_p38s4jf7_ -. ".@'xyziniloc__')  NB. Erase locals defined since prolog
 delth''

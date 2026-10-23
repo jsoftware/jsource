@@ -59,7 +59,7 @@ if. c0 do.
   techo 'always cblas ',' GFlop ',~ 0j3": 2*(N^3)%(t1)*1e9
   assert. c1-:c2
 end.
-if. (0;'') -.@e.~ <f=. 9!:56'cblasfile' do.
+if. ((<UNAME) e. 'Wasm';'OpenBSD') < (0;'') -.@e.~ <f=. 9!:56'cblasfile' do.
   t1=. 6!:2'c3=. A mm B'
   techo '      lapack ',' GFlop ',~ 0j3": 2*(N^3)%(t1)*1e9
   assert. c1-:c2

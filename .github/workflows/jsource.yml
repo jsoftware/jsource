@@ -522,8 +522,7 @@ jobs:
 # rpi64 ----------------------------------------------------------------
  jerpi64:
   name: JE (Raspberry)
-#  needs: [all, deprecated]
-  needs: [all]
+  needs: [all, deprecated]
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -592,8 +591,7 @@ jobs:
 # rpi32 ----------------------------------------------------------------
  jerpi32:
   name: JE (Raspberry32)
-#  needs: [all, deprecated]
-  needs: [all]
+  needs: [all, deprecated]
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -683,13 +681,6 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake nasm pcre2 gdb lldb
        /sbin/ldconfig -r
-       # ls -al ~/
-       # ls -al ~/.ssh
-       # sudo echo "Host *" >>~/.ssh/config || true
-       # sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       # sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       # echo "client ssh config"
-       # sudo cat ~/.ssh/config || true
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
@@ -751,13 +742,6 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake gmp pcre2 gdb lldb
        /sbin/ldconfig -r
-       # ls -al ~/
-       # ls -al ~/.ssh
-       # sudo echo "Host *" >>~/.ssh/config || true
-       # sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       # sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       # echo "client ssh config"
-       # sudo cat ~/.ssh/config || true
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
@@ -816,17 +800,8 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       # sudo pkg search openblas 1>&2
-       sudo pkg install -y curl zip gmake nasm pcre2 gdb # openblas
-       # sudo find / -type f -name 'libopenblas.so*' 1>&2
-       # /sbin/ldconfig -r
-       # ls -al ~/
-       # ls -al ~/.ssh
-       # sudo echo "Host *" >>~/.ssh/config || true
-       # sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       # sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       # echo "client ssh config"
-       # sudo cat ~/.ssh/config || true
+       sudo pkg install -y curl zip gmake nasm pcre2 gdb
+       /sbin/ldconfig -r
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
@@ -886,18 +861,8 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       sudo pkg search openblas 1>&2
-       sudo pkg install -y curl zip gmake nasm pcre2 gdb openblas
-       sudo find / -type f -name 'liblapack.so*' 1>&2
-       sudo find / -type f -name 'libopenblas.so*' 1>&2
+       sudo pkg install -y curl zip gmake nasm pcre2 gdb
        /sbin/ldconfig -r
-       # ls -al ~/
-       # ls -al ~/.ssh
-       # sudo echo "Host *" >>~/.ssh/config || true
-       # sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       # sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       # echo "client ssh config"
-       # sudo cat ~/.ssh/config || true
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
@@ -987,8 +952,16 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v6
 
+   - name: Setup Node.js (wasm)
+     uses: actions/setup-node@v4
+     with:
+       node-version: '22'
+
    - name: Setup Environment (wasm)
-     uses: mymindstorm/setup-emsdk@v14
+     uses: emscripten-core/setup-emsdk@v16
+     with:
+       version: 4.0.10
+       actions-cache-folder: emsdk-cache
 
    - name: Build, Test JE (wasm)
      env:

@@ -152,6 +152,7 @@ else
 fi
 echo "compiler=$compiler"
 echo "$($CC --version)"
+ldd --version || true
 
 USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ]; then

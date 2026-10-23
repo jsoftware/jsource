@@ -83,21 +83,21 @@ if [ "$1" = "linux" ]; then
  if [ $m64 -eq 1 ]; then
   cp mpir/linux/x86_64/libgmp.so $B
   cp pcre2/linux/x86_64/libjpcre2.so $A/tools/regex/.
-  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/linux/x86_64/libopenblas.so"
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/linux/x86_64/libopenblas.so" || true
  else
   cp mpir/linux/i386/libgmpd.so $C/libgmp32.so
   cp pcre2/linux/i386/libjpcre2.so $A/tools/regex/libjpcre2_32.so
-  curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/linux/i386/libopenblas.so"
+  curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/linux/i386/libopenblas.so" || true
  fi
 elif [ "$1" = "raspberry" ]; then
  if [ $m64 -eq 1 ]; then
   cp mpir/linux/aarch64/libgmp.so $B
   cp pcre2/linux/aarch64/libjpcre2.so $A/tools/regex/.
-  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/linux/aarch64/libopenblas.so"
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/linux/aarch64/libopenblas.so" || true
  else
   cp mpir/linux/arm/libgmp.so $C/libgmp32.so
   cp pcre2/linux/arm/libjpcre2.so $A/tools/regex/libjpcre2_32.so
-  curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/linux/arm/libopenblas.so"
+  curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/linux/arm/libopenblas.so" || true
  fi
 elif [ "$1" = "darwin" ]; then
  brew install libomp
@@ -108,39 +108,39 @@ elif [ "$1" = "openbsd" ]; then
  if [ "$2" = "x86_64" ]; then
   cp mpir/openbsd/x86_64/libgmp.so $B
   cp pcre2/openbsd/x86_64/libjpcre2.so $A/tools/regex/.
-  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/openbsd/x86_64/libopenblas.so"
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/openbsd/x86_64/libopenblas.so" || true
  else
   cp mpir/openbsd/aarch64/libgmp.so $B
   cp pcre2/openbsd/aarch64/libjpcre2.so $A/tools/regex/.
-  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/openbsd/arm_64/libopenblas.so"
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/openbsd/arm64/libopenblas.so" || true
  fi
 elif [ "$1" = "freebsd" ]; then
  # cp /usr/local/lib/libgmp.so.10 $B/libgmp.so
  if [ "$2" = "x86_64" ]; then
   cp mpir/freebsd/x86_64/libgmp.so $B
   cp pcre2/freebsd/x86_64/libjpcre2.so $A/tools/regex/.
-  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/freebsd/x86_64/libopenblas.so"
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/freebsd/x86_64/libopenblas.so" || true
  else
   cp mpir/freebsd/aarch64/libgmp.so $B
   cp pcre2/freebsd/aarch64/libjpcre2.so $A/tools/regex/.
-  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/freebsd/arm_64/libopenblas.so"
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/freebsd/arm64/libopenblas.so" || true
  fi
 elif [ "$1" = "windows" ]; then
  export NASM=$GITHUB_WORKSPACE/openssl-asm/nasm
  if [ "$2" = "x86_64" ]; then
   cp mpir/windows/x64/mpir.dll $B
-  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/x64/bin/libomp.dll" $B
-  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/x64/lib/libomp.lib" $B
+  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/x64/bin/libomp.dll" $B || true
+  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/x64/lib/libomp.lib" $B || true
   cp pcre2/windows/x64/jpcre2.dll $A/tools/regex/.
   # cp pthreads4w/x64/pthreadVC3.dll $B
-  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/windows/x64/libopenblas.dll"
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/windows/x64/libopenblas.dll" || true
  elif [ "$2" = "i386" ]; then
   cp mpir/windows/x86/mpir.dll $C/mpir32.dll
-  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/bin/libomp.dll" $C
-  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/lib/libomp.lib" $C
+  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/bin/libomp.dll" $C || true
+  cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/lib/libomp.lib" $C || true
   cp pcre2/windows/x86/jpcre2.dll $A/tools/regex/jpcre2_32.dll
   # cp pthreads4w/x86/pthreadVC3.dll $C
-  curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/windows/x86/libopenblas.dll"
+  curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/windows/x86/libopenblas.dll" || true
  else
   cp mpir/windows/arm64/mpir.dll $B
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/ARM64/bin/libomp.dll" $B || true
@@ -149,7 +149,7 @@ elif [ "$1" = "windows" ]; then
   cp "/c/Program Files/Microsoft Visual Studio/18/Enterprise/VC/Tools/Llvm/ARM64/lib/libomp.lib" $B || true
   cp pcre2/windows/arm64/jpcre2.dll $A/tools/regex/jpcre2_arm64.dll
   # cp pthreads4w/arm64/pthreadVC3.dll $B
-  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/windows/arm64/libopenblas.dll"
+  curl --output-dir "$B" -O "https://www.jsoftware.com/download/lapackbin/windows/arm64/libopenblas.dll" || true
  fi
 fi
 

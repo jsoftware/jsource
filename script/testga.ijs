@@ -29,7 +29,10 @@ stdout LF ,~ 9!:14''
 echo '_DEBUG: ',": 2!:5'_DEBUG'
 echo 'RUNNER_ARCH: ',": 2!:5'RUNNER_ARCH'
 
-ddall=: ~. ddall ,~ (<testpath),each 'glapack.ijs';'glapackcb.ijs';'gregex.ijs'
+a=. ('Wasm'-.@-:UNAME)#(<testpath),each 'glapack.ijs';'glapackcb.ijs'
+a=. a, (<testpath),each <'gregex.ijs'
+ddall=: ~. ddall ,~ a
+blacklist=: blacklist -. a
 blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each <'gstack.ijs' NB. temporarily disable
 blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each 'gtdot.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs' NB. temporarily disable
 blacklist=: blacklist, ((*9!:56'auditexecresults')*.'OpenBSD'-:UNAME)#(<testpath),each 'gtdot1.ijs';'gtdot2.ijs';'g128x19.ijs' NB. temporarily disable

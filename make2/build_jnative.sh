@@ -122,6 +122,7 @@ else
 fi
 echo "compiler=$compiler"
 echo "$($CC --version)"
+ldd --version || true
 
 if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  # gcc

@@ -133,6 +133,7 @@ else
 fi
 echo "compiler=$compiler"
 echo "$($CC --version)"
+ldd --version || true
 
 USE_OPENMP="${USE_OPENMP:=0}"
 if [ $USE_OPENMP -eq 1 ]; then
@@ -905,7 +906,7 @@ case "$jplatform/$j64x" in
  wasm/j32*) # webassembly
   TARGET_a=libj.a
   # 948KB stack on v8
-  CFLAGS="$common -m32 -D IMPORTGMPLIB -D CSTACKSIZE=1007616 -D CSTACKRESERVE=100000 -Wno-cast-function-type-mismatch "
+  CFLAGS="$common -m32 -D IMPORTGMPLIB -D IMPORTCBLASLIB -D CSTACKSIZE=1007616 -D CSTACKRESERVE=100000 -Wno-cast-function-type-mismatch "
   # these flags do not work on iOS
   # -msse2 -msimd128
   # EMSCRIPTEN_KEEPALIVE instead of -s LINKABLE=1 -s EXPORT_ALL=1

@@ -603,6 +603,151 @@ void cblas_xerbla(int p, const char *rout, const char *form, ...);
  #define CBLASEXTERN extern
 #endif
 
+#ifdef IMPORTCBLASLIB
+#define jcblas_sdsdot cblas_sdsdot
+#define jcblas_dsdot cblas_dsdot
+#define jcblas_sdot cblas_sdot
+#define jcblas_ddot cblas_ddot
+#define jcblas_cdotu_sub cblas_cdotu_sub
+#define jcblas_cdotc_sub cblas_cdotc_sub
+#define jcblas_zdotu_sub cblas_zdotu_sub
+#define jcblas_zdotc_sub cblas_zdotc_sub
+#define jcblas_snrm2 cblas_snrm2
+#define jcblas_sasum cblas_sasum
+#define jcblas_dnrm2 cblas_dnrm2
+#define jcblas_dasum cblas_dasum
+#define jcblas_scnrm2 cblas_scnrm2
+#define jcblas_scasum cblas_scasum
+#define jcblas_dznrm2 cblas_dznrm2
+#define jcblas_dzasum cblas_dzasum
+#define jcblas_isamax cblas_isamax
+#define jcblas_idamax cblas_idamax
+#define jcblas_icamax cblas_icamax
+#define jcblas_izamax cblas_izamax
+#define jcblas_sswap cblas_sswap
+#define jcblas_scopy cblas_scopy
+#define jcblas_saxpy cblas_saxpy
+#define jcblas_dswap cblas_dswap
+#define jcblas_dcopy cblas_dcopy
+#define jcblas_daxpy cblas_daxpy
+#define jcblas_cswap cblas_cswap
+#define jcblas_ccopy cblas_ccopy
+#define jcblas_caxpy cblas_caxpy
+#define jcblas_zswap cblas_zswap
+#define jcblas_zcopy cblas_zcopy
+#define jcblas_zaxpy cblas_zaxpy
+#define jcblas_srotg cblas_srotg
+#define jcblas_srotmg cblas_srotmg
+#define jcblas_srot cblas_srot
+#define jcblas_srotm cblas_srotm
+#define jcblas_drotg cblas_drotg
+#define jcblas_drotmg cblas_drotmg
+#define jcblas_drot cblas_drot
+#define jcblas_drotm cblas_drotm
+#define jcblas_sscal cblas_sscal
+#define jcblas_dscal cblas_dscal
+#define jcblas_cscal cblas_cscal
+#define jcblas_zscal cblas_zscal
+#define jcblas_csscal cblas_csscal
+#define jcblas_zdscal cblas_zdscal
+#define jcblas_sgemv cblas_sgemv
+#define jcblas_sgbmv cblas_sgbmv
+#define jcblas_strmv cblas_strmv
+#define jcblas_stbmv cblas_stbmv
+#define jcblas_stpmv cblas_stpmv
+#define jcblas_strsv cblas_strsv
+#define jcblas_stbsv cblas_stbsv
+#define jcblas_stpsv cblas_stpsv
+#define jcblas_dgemv cblas_dgemv
+#define jcblas_dgbmv cblas_dgbmv
+#define jcblas_dtrmv cblas_dtrmv
+#define jcblas_dtbmv cblas_dtbmv
+#define jcblas_dtpmv cblas_dtpmv
+#define jcblas_dtrsv cblas_dtrsv
+#define jcblas_dtbsv cblas_dtbsv
+#define jcblas_dtpsv cblas_dtpsv
+#define jcblas_cgemv cblas_cgemv
+#define jcblas_cgbmv cblas_cgbmv
+#define jcblas_ctrmv cblas_ctrmv
+#define jcblas_ctbmv cblas_ctbmv
+#define jcblas_ctpmv cblas_ctpmv
+#define jcblas_ctrsv cblas_ctrsv
+#define jcblas_ctbsv cblas_ctbsv
+#define jcblas_ctpsv cblas_ctpsv
+#define jcblas_zgemv cblas_zgemv
+#define jcblas_zgbmv cblas_zgbmv
+#define jcblas_ztrmv cblas_ztrmv
+#define jcblas_ztbmv cblas_ztbmv
+#define jcblas_ztpmv cblas_ztpmv
+#define jcblas_ztrsv cblas_ztrsv
+#define jcblas_ztbsv cblas_ztbsv
+#define jcblas_ztpsv cblas_ztpsv
+#define jcblas_ssymv cblas_ssymv
+#define jcblas_ssbmv cblas_ssbmv
+#define jcblas_sspmv cblas_sspmv
+#define jcblas_sger cblas_sger
+#define jcblas_ssyr cblas_ssyr
+#define jcblas_sspr cblas_sspr
+#define jcblas_ssyr2 cblas_ssyr2
+#define jcblas_sspr2 cblas_sspr2
+#define jcblas_dsymv cblas_dsymv
+#define jcblas_dsbmv cblas_dsbmv
+#define jcblas_dspmv cblas_dspmv
+#define jcblas_dger cblas_dger
+#define jcblas_dsyr cblas_dsyr
+#define jcblas_dspr cblas_dspr
+#define jcblas_dsyr2 cblas_dsyr2
+#define jcblas_dspr2 cblas_dspr2
+#define jcblas_chemv cblas_chemv
+#define jcblas_chbmv cblas_chbmv
+#define jcblas_chpmv cblas_chpmv
+#define jcblas_cgeru cblas_cgeru
+#define jcblas_cgerc cblas_cgerc
+#define jcblas_cher cblas_cher
+#define jcblas_chpr cblas_chpr
+#define jcblas_cher2 cblas_cher2
+#define jcblas_chpr2 cblas_chpr2
+#define jcblas_zhemv cblas_zhemv
+#define jcblas_zhbmv cblas_zhbmv
+#define jcblas_zhpmv cblas_zhpmv
+#define jcblas_zgeru cblas_zgeru
+#define jcblas_zgerc cblas_zgerc
+#define jcblas_zher cblas_zher
+#define jcblas_zhpr cblas_zhpr
+#define jcblas_zher2 cblas_zher2
+#define jcblas_zhpr2 cblas_zhpr2
+#define jcblas_sgemm cblas_sgemm
+#define jcblas_ssymm cblas_ssymm
+#define jcblas_ssyrk cblas_ssyrk
+#define jcblas_ssyr2k cblas_ssyr2k
+#define jcblas_strmm cblas_strmm
+#define jcblas_strsm cblas_strsm
+#define jcblas_dgemm cblas_dgemm
+#define jcblas_dsymm cblas_dsymm
+#define jcblas_dsyrk cblas_dsyrk
+#define jcblas_dsyr2k cblas_dsyr2k
+#define jcblas_dtrmm cblas_dtrmm
+#define jcblas_dtrsm cblas_dtrsm
+#define jcblas_cgemm cblas_cgemm
+#define jcblas_csymm cblas_csymm
+#define jcblas_csyrk cblas_csyrk
+#define jcblas_csyr2k cblas_csyr2k
+#define jcblas_ctrmm cblas_ctrmm
+#define jcblas_ctrsm cblas_ctrsm
+#define jcblas_zgemm cblas_zgemm
+#define jcblas_zsymm cblas_zsymm
+#define jcblas_zsyrk cblas_zsyrk
+#define jcblas_zsyr2k cblas_zsyr2k
+#define jcblas_ztrmm cblas_ztrmm
+#define jcblas_ztrsm cblas_ztrsm
+#define jcblas_chemm cblas_chemm
+#define jcblas_cherk cblas_cherk
+#define jcblas_cher2k cblas_cher2k
+#define jcblas_zhemm cblas_zhemm
+#define jcblas_zherk cblas_zherk
+#define jcblas_zher2k cblas_zher2k
+#define jcblas_xerbla cblas_xerbla
+#else
 CBLASEXTERN float (*jcblas_sdsdot)(const int N, const float alpha, const float *X, const int incX, const float *Y, const int incY);
 CBLASEXTERN double (*jcblas_dsdot)(const int N, const float *X, const int incX, const float *Y, const int incY);
 CBLASEXTERN float (*jcblas_sdot)(const int N, const float *X, const int incX, const float *Y, const int incY);
@@ -746,6 +891,7 @@ CBLASEXTERN void (*jcblas_zhemm)(const enum CBLAS_ORDER Order, const enum CBLAS_
 CBLASEXTERN void (*jcblas_zherk)(const enum CBLAS_ORDER Order, const enum CBLAS_UPLO Uplo, const enum CBLAS_TRANSPOSE Trans, const int N, const int K, const double alpha, const void *A, const int lda, const double beta, void *C, const int ldc);
 CBLASEXTERN void (*jcblas_zher2k)(const enum CBLAS_ORDER Order, const enum CBLAS_UPLO Uplo, const enum CBLAS_TRANSPOSE Trans, const int N, const int K, const void *alpha, const void *A, const int lda, const void *B, const int ldb, const double beta, void *C, const int ldc);
 CBLASEXTERN void (*jcblas_xerbla)(int p, const char *rout, const char *form, ...);
+#endif
 
 #ifndef _DEFINED_SCOMPLEX
 #define _DEFINED_SCOMPLEX

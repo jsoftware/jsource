@@ -235,5 +235,5 @@ echo^:(*@#RES) RES
 )
 
 9!:27'FINISH RES=: RUN4 ddall'
-NB. 9!:29]1
+9!:29]1
 NB. exit *@#RES

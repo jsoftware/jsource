@@ -1036,7 +1036,7 @@ extern void     spellit(C,C*);
 extern I        smmallosize(A);
 extern void     smmfrr(A);
 extern I        sqrtE(J,I,E*,E*);
-extern void     vvsortqs8ai(IL*,I,I,I);
+extern void     vvsortqs8ai(I*,I,I,I);
 // obsolete extern void     vvsortqs8ao(IL*,IL*,I);
 extern void     vvsortqs4ai(I4*,I,I,I);
 extern void     vvsortqs4ao(I4*,I4*,I);

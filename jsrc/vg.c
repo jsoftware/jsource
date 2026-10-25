@@ -738,6 +738,7 @@ DFI1(jtdgrade1){IARG1 DF12IP;A z; jtfg=(J)(((I)jtfg&~JTFLAGMSK)+JTDESCEND); if(l
 FI2(jtgrade2){IARG2 F12IP;A z; if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jtfg&~JTDESCEND),afg,wfg)); RETF(jtgrd2sp((J)((I)jtfg&~JTDESCEND),afg,wfg));}
 FI2(jtdgrade2){IARG2 F12IP;A z; if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jtfg+JTDESCEND),afg,wfg)); RETF(jtgrd2sp((J)((I)jtfg+JTDESCEND),afg,wfg));}
 
+#if 0 // obsolete
 // the rest of this file handles order statistics
 
 #define OSGT(i,j) (u[i]>u[j])
@@ -758,7 +759,7 @@ FI2(jtdgrade2){IARG2 F12IP;A z; if(likely(!ISSPARSE(AT(w))))RETF(jtgr2((J)((I)jt
 
 #define NRANDS 36  // must be even
 // Partitioning function for order statistics
-// j is the order desired, w is the data .  t is a temp buffer we allocate to hold the shrinking partition  scaf use fast partitioner?
+// j is the order desired, w is the data .  t is a temp buffer we allocate to hold the shrinking partition
 #define OSLOOP(T,ATOMF)  \
 {T p0,p1,q,*tv,*u,ui,uj,uk,*v,*wv;                                                     \
   tv=wv=(T*)AV(w);                                                                     \
@@ -797,5 +798,6 @@ DF2(jtordstati){DF12IP;A t;I n,wt;
  if(wt&FL){D p=DAV(t)[0],*v=DAV(w); DO(n, if(p==*v++){j=i; break;});}  // get index for the value we found  scaf use faster search
  else     {I p=AV(t)[0],*v= AV(w); DO(n, if(p==*v++){j=i; break;});}
  R sc(j);
-}    /* a {/:w */  // scaf support a ({. /:)
+}    /* a {/:w */  //)
 
+#endif

@@ -1221,7 +1221,11 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define F1(f)           A f(JJ jtfg,    A w)  // whether in an interface routine or not, these must use the internal parameter type
 #define F2(f)           A f(JJ jtfg,A a,A w)
 #define JTFROMJTFG(T) jt=(T)(intptr_t)((I)jtfg&~JTFLAGMSK)
+#if SY_64
 #define JTFGFROMJTFGFG jtfg=(J)(intptr_t)((I)jtfgfg&(BIT(48)-1))   // jt if flagged first in the low bits, and then in the top 16 bits.  This peels off the top flags, leaving jtfg with the bottom flags
+#else
+#define JTFGFROMJTFGFG jtfg=jtfgfg
+#endif
 #define F12IP JJ JTFROMJTFG(JJ)
 #define F12JT JJ JTFROMJTFG(JJ)  // for documentation, when flags are not IP flags
 #define DF12IP JJ JTFROMJTFG(JJ)

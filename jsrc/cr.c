@@ -328,7 +328,7 @@ A jtrank2ex(J jtfg,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){F12
  fauxblock(virtwfaux); fauxblock(virtafaux); A virta,virtw;
  if(likely((mn|(state&STATEANOTEMPTY))!=0)){
   // OK to inplace an arg if it's not the same as the other, not repeated, correct type (unless &.>), inplaceable usecount
-  state |= SGNTO0((outerrptct-2)&SGNIF(jtfg,JTINPLACEAX)&AC(a)&~(((AT(a)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATAX)))<<ZZFLAGVIRTAINPLACEX;   // requires JTINPLACEWX==0.  Single flag bit  sign=0 if (VIPOK or &.>) 
+  state |= SGNTO0((outerrptct-2)&SGNIF(jtfg,JTINPLACEAX)&AC(a)&~(((AT(a)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATAX)))<<ZZFLAGVIRTAINPLACEX;   // Single flag bit  sign=0 if (VIPOK or &.>) 
   fauxvirtual(virta,virtafaux,a,(UI)lrrr>>RANKTX,ACUC1) MCISH(AS(virta),AS(a)+(afwf>>RANKTX),(UI)lrrr>>RANKTX); AN(virta)=acn;
   // Init the inplaceability of virta.  We do this here because in the loop we handle it only for low rank (i. e. virt[aw]faux) so as to avoid inplacing fill.
   // Thus, for higher rank we set it only this once.  It will stay right unless it gets virtualed
@@ -336,7 +336,7 @@ A jtrank2ex(J jtfg,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){F12
  }else{RZ(virta=jtfiller(jt,AT(a),(UI)lrrr>>RANKTX,AS(a)+(afwf>>RANKTX)));}
 
  if(likely((mn|(state&STATEWNOTEMPTY))!=0)){  // repeat for w
-  state |= SGNTO0((outerrptct-2)&SGNIF(jtfg,JTINPLACEWX)&AC(w)&~(((AT(w)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATWX)))<<ZZFLAGVIRTWINPLACEX;   // requires JTINPLACEWX==0.  Single flag bit  sign=0 if (VIPOK or &.>) 
+  state |= SGNTO0((outerrptct-2)&SGNIF(jtfg,JTINPLACEWX)&AC(w)&~(((AT(w)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATWX)))<<ZZFLAGVIRTWINPLACEX;   // Single flag bit  sign=0 if (VIPOK or &.>) 
   fauxvirtual(virtw,virtwfaux,w,lrrr&RANKTMSK,ACUC1) MCISH(AS(virtw),AS(w)+(afwf&RANKTMSK),lrrr&RANKTMSK); AN(virtw)=wcn;
   ACRESET(virtw,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX))
  }else{RZ(virtw=jtfiller(jt,AT(w),lrrr&RANKTMSK,AS(w)+(afwf&RANKTMSK)));}

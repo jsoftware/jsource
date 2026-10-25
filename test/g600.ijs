@@ -1006,7 +1006,12 @@ b -: a {"{"1 i. 4  NB. No IRS
 a =: 2 3 $ 0.3 0.7 1.1 0.5
 1: _1 *:@]"1 a
 a -:  2 3 $ 0.3 0.7 1.1 0.5  NB. Should not change
-
+1: _1 *:@|:"1 a
+a -:  2 3 $ 0.3 0.7 1.1 0.5  NB. Should not change
+1: _1 >:@|:"1 a
+a -:  2 3 $ 0.3 0.7 1.1 0.5  NB. Should not change
+1: _2 >:@:+"1 a
+a -:  2 3 $ 0.3 0.7 1.1 0.5  NB. Should not change
 
 
 randfini''

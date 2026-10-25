@@ -328,7 +328,7 @@ A jtrank2ex(J jtfg,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){F12
  fauxblock(virtwfaux); fauxblock(virtafaux); A virta,virtw;
  if(likely((mn|(state&STATEANOTEMPTY))!=0)){
   // OK to inplace an arg if it's not the same as the other, not repeated, correct type (unless &.>), inplaceable usecount
-  state |= (UI)((outerrptct-2)&SGNIF(jtfg,JTINPLACEAX)&AC(a)&~(((AT(a)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATAX)))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit  sign=0 if (VIPOK or &.>) 
+  state |= SGNTO0((outerrptct-2)&SGNIF(jtfg,JTINPLACEAX)&AC(a)&~(((AT(a)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATAX)))<<ZZFLAGVIRTAINPLACEX;   // requires JTINPLACEWX==0.  Single flag bit  sign=0 if (VIPOK or &.>) 
   fauxvirtual(virta,virtafaux,a,(UI)lrrr>>RANKTX,ACUC1) MCISH(AS(virta),AS(a)+(afwf>>RANKTX),(UI)lrrr>>RANKTX); AN(virta)=acn;
   // Init the inplaceability of virta.  We do this here because in the loop we handle it only for low rank (i. e. virt[aw]faux) so as to avoid inplacing fill.
   // Thus, for higher rank we set it only this once.  It will stay right unless it gets virtualed
@@ -336,7 +336,7 @@ A jtrank2ex(J jtfg,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){F12
  }else{RZ(virta=jtfiller(jt,AT(a),(UI)lrrr>>RANKTX,AS(a)+(afwf>>RANKTX)));}
 
  if(likely((mn|(state&STATEWNOTEMPTY))!=0)){  // repeat for w
-  state |= (UI)((outerrptct-2)&SGNIF(jtfg,JTINPLACEWX)&AC(w)&~(((AT(w)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATWX)))>>(BW-1-ZZFLAGVIRTWINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit  sign=0 if (VIPOK or &.>) 
+  state |= SGNTO0((outerrptct-2)&SGNIF(jtfg,JTINPLACEWX)&AC(w)&~(((AT(w)&TYPEVIPOK)-(f2!=jtevery2self))|SGNIF(state,STATEINNERREPEATWX)))<<ZZFLAGVIRTWINPLACEX;   // requires JTINPLACEWX==0.  Single flag bit  sign=0 if (VIPOK or &.>) 
   fauxvirtual(virtw,virtwfaux,w,lrrr&RANKTMSK,ACUC1) MCISH(AS(virtw),AS(w)+(afwf&RANKTMSK),lrrr&RANKTMSK); AN(virtw)=wcn;
   ACRESET(virtw,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX))
  }else{RZ(virtw=jtfiller(jt,AT(w),lrrr&RANKTMSK,AS(w)+(afwf&RANKTMSK)));}
@@ -703,7 +703,7 @@ static DF1(jtrank10){DF12IP;RETF(jtrank1ex0(jtfg,w,self,jtrank10atom))}  // pass
 // For the dyads, rank2ex does a quadruply-nested loop over two rank-pairs, which are the n in u"n (stored in h) and the rank of u itself (fetched from u).
 // We don't do this now because fill between the loops might change the result
 
-static DF2(rank2){DF12IP;A fs=FAV(self)->fgh[0]; 
+DF2(rank2){DF12IP;A fs=FAV(self)->fgh[0]; 
  ARGCHK2(a,w);
  I l=FAV(self)->localuse.lu1.srank[1], r=FAV(self)->localuse.lu1.srank[2], ul=FAV(fs)->lrr>>RANKTX, ur=FAV(fs)->lrr&RANKTMSK;   // ranks (possibly neg) of self and u
  if(unlikely(FAV(fs)->id==CQQ)){ul=FAV(fs)->localuse.lu1.srank[1]; ur=FAV(fs)->localuse.lu1.srank[2];}   // if u is u"r, get its possibly neg r
@@ -790,12 +790,12 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   if(av->flag&VFUSEDOK2){if(unlikely((hv[1]|hv[2])==0))hv[1]=hv[2]=RMAX; f2=(hv[1]|hv[2])>=0?rank2atomic:rank2atomicneg; lc=av->lu2.lc;}  // transfer the fn-address and fn-code from the atomic to the fused block
   else if(av->flag&VIRS2){f2=rank2i;}else{f2=(hv[1]|hv[2])?rank2:jtrank20;flag2|=VF2RANKONLY2;}
   // Test for special cases
-  if(av->valencefns[1]==jtfslashatg && r[1]==1 && r[2]==1){  // f/@:g"1 1 where f and g are known atomic
+  if(unlikely(av->valencefns[1]==jtfslashatg) && r[1]==1 && r[2]==1){  // f/@:g"1 1 where f and g are known atomic
    if(FAV(FAV(av->fgh[0])->fgh[0])->id==CPLUS && FAV(av->fgh[1])->id==CSTAR) {
     // +/@:*"1 1 or ([: +/ *)"1 1 .  Use special rank-1 routine.  It supports IRS, but not inplacing (fslashatg didn't inplace either)
     f2=jtsumattymes1; vf |= VIRS2; flag2 &= ~VF2RANKONLY2;  // switch to new routine, which supports IRS but not inplacing
    }
-  }
+  }else if(unlikely(av->valencefns[1]==jtordstatqsort) && av->id==CHOOK && hv[2]==1 && hv[1]>=av->localuse.lu1.linkvb)f2=jtordstatqsort;  // (u /:~)"_ 1 or equivalent is handled by ord stats
  }
 
  // Create the derived verb.  The derived verb (u"n) inplaces if the action verb u supports inplacing; it supports IRS only for monadic rank 0

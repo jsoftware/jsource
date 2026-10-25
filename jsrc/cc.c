@@ -99,7 +99,7 @@ static DF2(jtcut02){DF12IP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PRO
    AN(virtw)=e*wcellsize;  // install # atoms
    z = virtw;  // use the virtual block for the computation
   }else{I axislen;
-   // general selection: multiple axes, or reversal.  We do not look for the case of one reversed axis (could avoid boxing input to {) on grounds of rarity
+   // general selection: multiple axes, or reversal.  We do not look for the case of one reversed axis (could avoid boxing input to {) on grounds of rarity   scaf! this is awful for high rank
    do{
     if(q){  // if we have already allocated the input area to {, fill it in
      // For each axis, create a boxed vector of indexes to fetch, in the correct order

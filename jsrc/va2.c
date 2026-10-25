@@ -1917,8 +1917,9 @@ forcess:;  // branch point for rank-0 singletons from above, always with atomic 
  }
 }
 
-DFI2(jtexpn2  ){IARG2 DF12IP; if(unlikely(((((I)AR(w)-1)&SGNIF(AT(w),FLX))<0)))if(unlikely(0.5==DAV(w)[0]))R sqroot(a);  R jtatomic2(jtfg,afg,wfg,self);}  // use sqrt hardware for sqrt.  Only for atomic w. 
-DFI2(jtresidue){IARG2 DF12IP; I intmod; if(!((AT(a)|AT(w))&((NOUN|SPARSE)&~INT)|AR(a))&&(intmod=IAV(a)[0], (intmod&-intmod)+(intmod<=0)==0))R intmod2(w,intmod); R jtatomic2(jtfg,afg,wfg,self);}  // special case for x an atom power of 2 
+DFIA2(jtexpn2  ){IARG2 J JTFGFROMJTFGFG; DF12IP; if(unlikely(((((I)AR(w)-1)&SGNIF(AT(w),FLX))<0)))if(unlikely(0.5==DAV(w)[0]))R sqroot(a);  R jtatomic2(jtfgfg,afg,wfg,self);}  // use sqrt hardware for sqrt.  Only for atomic w. 
+DFIA2(jtresidue){IARG2 J JTFGFROMJTFGFG; DF12IP; I intmod; if(!((AT(a)|AT(w))&((NOUN|SPARSE)&~INT)|AR(a))&&(intmod=IAV(a)[0], (intmod&-intmod)+(intmod<=0)==0))R intmod2(w,intmod); R jtatomic2(jtfgfg,afg,wfg,self);}  // special case for x an atom power of 2 
+// obsolete DFI2(jtresidue){IARG2 DF12IP; I intmod; if(!((AT(a)|AT(w))&((NOUN|SPARSE)&~INT)|AR(a))&&(intmod=IAV(a)[0], (intmod&-intmod)+(intmod<=0)==0))R intmod2(w,intmod); R jtatomic2(jtfg,afg,wfg,self);}  // special case for x an atom power of 2 
 
 
 // These are the unary ops that are implemented using a canned argument

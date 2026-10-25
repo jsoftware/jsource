@@ -33,7 +33,7 @@
 // next flag must be spaced from ZZFLAGBOXATOP by the same distance as the spacing in VF2 flags of BOXATOP1 to ATOPOPEN1
 #define ZZFLAGATOPOPEN1X 8 // set if v is f@>
 #define ZZFLAGATOPOPEN1 (((I)1)<<ZZFLAGATOPOPEN1X)
-// next 2 flags must be spaced from ZZFLAGBOXATOP by the same distance as the spacing in VF2 flags of BOXATOP2W to ATOPOPEN2W.  This means the dyad and monad flags overlap
+// next 2 flags must be spaced from ZZFLAGBOXATOP by the same distance as the spacing in VF2 flags of BOXATOP2 to ATOPOPEN2W.  This means the dyad and monad flags overlap
 #define ZZFLAGATOPOPEN2WX 8 // set if v is f@> for w
 #define ZZFLAGATOPOPEN2W (((I)1)<<ZZFLAGATOPOPEN2WX)
 #define ZZFLAGATOPOPEN2AX 9 // set if v is f@> for a

@@ -272,10 +272,15 @@ static SF(jtsorti1){F12JT;A x,y,z;I*wv;I i,*xv,*zv;void *yv;
 // obsolete void vvsortqs8ao(IL *z,IL *w,I n){ memcpy(z,w,8*n); vvsortqs8ai(z,n); }
 // obsolete void vvsortqs4ao(I4 *z,I4 *w,I n){ memcpy(z,w,4*n); vvsortqs4ai(z,n); }
 #endif
+#if SY_64
+#define vvsortqsai vvsortqs8ai
+#else
+#define vvsortqsai vvsortqs4ai
+#endif
 
 
 // JTDESCEND set in jt
-static SF(jtsortiq){F12JT;  // m=#sorts, n=#items in each sort, w is block
+static A jtsortiq(J jtfg, I m, I n, A w, I rmin, I rmax){F12JT;  // m=#sorts, n=#items in each sort, w is block
  A z;I inplace=ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX),w); //inplace sort?
  if(inplace)z=w;else RZ(z=ca(w))   // always inplace, so copy if needed
 // obsolete  else GA(z,AT(w),AN(w),AR(w),AS(w));
@@ -283,7 +288,7 @@ static SF(jtsortiq){F12JT;  // m=#sorts, n=#items in each sort, w is block
 // obsolete ,*wv=IAV(w);
  DQ(m,
 // obsolete   if(inplace)
-  vvsortqs8ai(zv,n,0,IMAX);  // sort the cell
+  vvsortqsai(zv,n,rmin,rmax);  // sort the cell
 // obsolete   else vvsortqiao(zv,wv,n),wv+=n;
   if((I)jtfg&JTDESCEND){I *zv1=zv; I *zv2=zv+n; DQ(n>>1, I t=*zv1; *zv1++=*--zv2; *zv2=t;)} // reverse if desc
   zv+=n;)
@@ -303,14 +308,14 @@ static SF(jtsorti){F12JT;A y,z;I i;UI4 *yv;I j,s,*wv,*zv;
  CR rng = condrange(wv,AN(w),IMAX,IMIN,n*nrange); // see if smallrange allowed
  // smallrange always wins if applicable
  if(!rng.range){  // range was too large
-  R jtsortiq(jtfg,m,n,w);  // qsort always wins as of 2/2023 Alder Lake
+  R jtsortiq(jtfg,m,n,w,0,IMAX);  // qsort always wins as of 2/2023 Alder Lake
 //  if(n<100000)R jtsortdirect(jtfg,m,1,n,w);  // 800-99999, mergesort   TUNE
 //  R sorti1(m,n,w);  // 100000+, radix  TUNE
  }
 #else
   CR rng = condrange(wv,AN(w),IMAX,IMIN,n*50); // testing on Alder Lake 2/2023
   if(!rng.range){  // range was too large
-   if((n&3)==0b00)R jtsortiq(jtfg,m,n,w);  // qsort  TUNE
+   if((n&3)==0b00)R jtsortiq(jtfg,m,n,w,0,IMAX);  // qsort  TUNE
    if((n&3)==0b01)R jtsortdirect(jtfg,m,1,n,w);  //  mergesort   TUNE
    if((n&2)==0b10)R sorti1(m,n,w);  // radix  TUNE
 // {{y , 0 _3 _2 {{ 6!:2 '/:~ nn' [ nn =. x }. y }}"0 _  y ?@$ 1e9}}"0 <.&.(%&4) 10000 * 10 ^ 10 %~ i. 41  NB. tuning not including smallrange: qsort merge radix.  range up to 1e9
@@ -395,10 +400,10 @@ static SF(jtsortu1){F12JT;A x,y,z;C4 *xu,*wv,*zu;I i;void *yv;
 #define SORTQULOADTYPE D*
 #include "vgsortq.h"
 
-static SF(jtsortdq){F12JT;  // m=#sorts, n=#items in each sort, w is block
+static A jtsortdq(J jtfg, I m, I n, A w, I rmin, I rmax){F12JT;  // m=#sorts, n=#items in each sort, w is block
  A z; 
  if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX),w))z=w; else RZ(z=ca(w));   // output area, possibly the same as the input
- D *zv=DAV(z); DQ(m, sortdq1(zv,n,0,IMAX); if((I)jtfg&JTDESCEND){D *zv1=zv; D *zv2=zv+n; DQ(n>>1, D t=*zv1; *zv1++=*--zv2; *zv2=t;)} zv+=n;)  // sort each list (ascending); reverse if descending
+ D *zv=DAV(z); DQ(m, sortdq1(zv,n,rmin,rmax); if((I)jtfg&JTDESCEND){D *zv1=zv; D *zv2=zv+n; DQ(n>>1, D t=*zv1; *zv1++=*--zv2; *zv2=t;)} zv+=n;)  // sort each list (ascending); reverse if descending
  RETF(z);
 }
 
@@ -406,12 +411,11 @@ static SF(jtsortdq){F12JT;  // m=#sorts, n=#items in each sort, w is block
 static SF(jtsortd){F12JT;A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
 #if 1  // normal case
  // Use quicksort always
- R jtsortdq(jtfg,m,n,w);  // TUNE
+ R jtsortdq(jtfg,m,n,w,0,IMAX);  // TUNE
 #else
- if((n&3)==0b00)R jtsortdq(jtfg,m,n,w);
+ if((n&3)==0b00)R jtsortdq(jtfg,m,n,w,0,IMAX);
  if((n&3)==0b01)R jtsortdirect(jtfg,m,1,n,w);  // TUNE
 // {{y , 0 _3 _2 {{ 6!:2 '/:~ nn' [ nn =. x }. y }}"0 _  (1.e8) * y ?@$ 0}}"0 <.&.(%&4) 100 * 10 ^ 10 %~ i. 41  NB. tuning not including smallrange: qsort merge radix.  range up to 1e9
-#endif
  // falling through for radix sort
  I zr=AR(w); GA(z,AT(w),AN(w),zr,AS(w)); zu=DAVn(zr,z);
  wv=DAV(w);
@@ -434,8 +438,40 @@ static SF(jtsortd){F12JT;A x,y,z;B b;D*g,*h,*xu,*wv,*zu;I i,nneg;void *yv;
   wv+=n; zu+=n;
  }
  R z;
+#endif
 }    /* w grade"1 w on real w */
 
+// x (u /:[~])["r] y where u is one of { {. ];.0 and y is INT/FL, by quicksort.  x must be shared among all sorts
+// self->lc1.linkvb has type flags:
+//   bits0-1=selector type 0={. 1={ 2=];.0
+//   bit4=0 for /:, 1 for /:~
+//   bit5 if the proper rank ("1 or "2 1) was given
+DF2(jtordstatqsort){F12IP;
+ ARGCHK2(a,w);
+ A flgself=FAV(self)->fgh[0]; flgself=FAV(self)->id==CQQ?flgself:self; I varno=FAV(flgself)->localuse.lu1.linkvb;  // step over verb rank if given, fetch verb flags
+ if(unlikely(!ISDENSETYPE(AT(w),INT+FL))){revert: R((FAV(self)->id==CQQ?rank2:jthook2cell)(jtfg,a,w,self));}  // if y is not INT/FL, revert, to where depending on presence of "
+ if(!(BETWEENC(AR(w),1,self==flgself?1:RMAX)))goto revert;  // revert if operation is not at rank 1 (i. e. no verb rank and w rank!=1
+ if(unlikely(AT(a)&INT))RZ(a=ccvt(INT,a,0))  // if x not INT, error
+ I rmin,rmax;  // range of values to be found
+ I *av=IAV(a), an=AN(a), ar=AR(a), wr=AR(w), wl=AS(w)[wr-1];  // pointer to selectors, their number and rank; rank of w, number of atoms per sort
+ switch(varno&3){
+ case 0:  // {.
+  if(unlikely(an!=1)||unlikely(ar>1))goto revert; rmin=(wl+an-1)&REPSGN(an); rmax=an>=0?an:wl-1;  // first x or last x values in y
+  break;
+ case 1: if(unlikely(an==0)||unlikely(ar>1))goto revert; rmin=rmax=av[0]; DO(an-1, I j=av[i+1]; if(j<0)j+=wl; ASSERT((UI)j<(UI)wl,EVINDEX) rmin=MIN(rmin,j); rmax=MAX(rmax,j);) // {
+  break;
+ case 2:  // ];.0
+  if(unlikely(ar!=2)||unlikely(AS(a)[1]!=1)||unlikely(an!=2)||unlikely(av[1]<0))goto revert; rmin=av[0]; if(rmin<0)rmin+=wl; rmax=rmin+av[1]-1;   // 1{x values starting at 0{x
+  break;
+ }
+ if(unlikely(rmin<0)||unlikely((UI)rmax>=(UI)wl))goto revert;   // if selector goes outside the array, revert
+ A z;
+ if(varno&0x10){ I m; PROD(m,wr-1,AS(w)) RZ(z=(AT(a)&FL?jtsortdq:jtsortiq)(jtfg,m,wl,w,rmin,rmax))} // do the sort(s)
+ else{RZ(z=jtgr1(jt,(A)((I)w+(1^RMAX)),0,rmin,rmax));}  // do the grade(s), rank 1 using IRS
+ A sel=FAV(flgself)->fgh[0];   //  extract selector fn from hook:
+ if(varno!=2)R IRS2(FAV(sel)->valencefns[1],jt,a,ar,z,1,sel);    //  call it, rank _ 1, giving the result.  Here we can use IRS...
+ R rank2ex(a,z,(A)sel,ar,1,ar,1,FAV(sel)->valencefns[1]);   // ...here not (];.0)
+}
 
 // x /:"r y, not sparse
 // jt has the JTDESCEND flag, plus inplaceability
@@ -465,7 +501,7 @@ FI2(jtgr2){A z=0;I api,d,f,m,n,*s,t;
    // for direct, we move the data around until we get the final sort.  Direct is better for short items, for which the copy is cheap;
    // and the cutoff rises with the length of the sort, as the indirect sort flags when the items themselves start to fall out of cache.
    // Empirically (Ivy Bridge) we find that the length of the item above which indirect is better depends on sortlength:
-   // for 1e6 items - 80 bytes; 1e5 - 64 bytes; 1e4 - 40 bytes - 1e3 - 48 bytes
+   // for 1e6 items - 80 bytes; 1e5 - 64 bytes; 1e4 - 40 bytes; 1e3 - 48 bytes
    // We roughly approximate this curve
   if(!z){  // not a special case
    UI4 lgn=CTLZI(n);

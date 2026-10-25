@@ -1143,6 +1143,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 #define FI2(f) A f(JJ jtfg,A afg,A wfg)
 #define DFI1(f) A f(JJ jtfg,A wfg,A self)
 #define DFI2(f) A f(JJ jtfg,A afg,A wfg,A self)
+#define DFIA2(f) A f(JJ jtfgfg,A afg,A wfg,A self)  // when this function has linkage for ATOMIC, which has flags in upper jtfg
 // receive args
 #define IARG2C w=wfg; a=afg; wcr=(I)wfg; acr=(I)afg; if(unlikely((w=(A)((I)w&~(ABDY-1)))==0))R0 if(unlikely((a=(A)((I)a&~(ABDY-1)))==0))R0 wcr&=RMAX; acr&=RMAX;  // no decls here - multiuse
 #define IARG2D AD * RESTRICT w; AD * RESTRICT a; I wcr, acr;

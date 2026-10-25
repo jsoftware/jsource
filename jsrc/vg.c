@@ -110,13 +110,14 @@ void msort(SORT *sortblok, I n, void **zv, void **xv, I sortparm){
 
 // m: #cells in w (# sorts to do)   n: #items in a cell of w   ai: #atoms in an item of a cell of w
 // JTDESCEND in jt is set for descending
-#define GF(f)         B f(J jt,I m,I ai,I n,A w,I* RESTRICT zv)
+#define GF(f)         B f(J jt,I m,I ai,I n,A w,I* RESTRICT zv,I rmin,I rmax)
 
 /* m  - # cells (# individual grades to do) */
 /* c  - # atoms in a cell                   */
 /* n  - length of sort axis                 */
 /* w  - array to be graded                  */
 /* zv - result values                       */
+// rmin, rmax the range of indexes for which results are needed
 
 static struct {
  CMP comproutine;   // 0 if comparison bundled w/sort
@@ -314,7 +315,7 @@ static GF(jtgrdq){F1PREFJT;
 
 static GF(jtgrd){F1PREFJT;A x,y;int b;D*v,*wv;I *g,*h,nneg,*xv;US*u;void *yv;I c=ai*n;
 #if BW==64
- if(ai==1){R jtgrdq(jtfg,m,ai,n,w,zv);}  // if fast list code is available, always use it
+ if(ai==1){R jtgrdq(jtfg,m,ai,n,w,zv,rmin,rmax);}  // if fast list code is available, always use it
 #endif
   // if not large and 1 atom per key, go do general grade
  if(!(ai==1&&n>3300))R grx(m,ai,n,w,zv);  // Empirically derived crossover   TUNE
@@ -436,7 +437,7 @@ static GF(jtgriq){F1PREFJT;
   DO(n, I v=wv[i]^gradedown; if(siglost|=itemsigmsk&((v&-itemmsb)+itemmsb))break; zv[i]=(v<<hbit)+i;)
   // If there was no loss of significance, just sort the values and return the indexes
   if(!siglost){
-   vvsortqs8ai(zv,n,0,IMAX);  // sort em (in place), ascending
+   vvsortqs8ai(zv,n,rmin,rmax);  // sort em (in place), ascending
    DO(n, zv[i]&=itemmask;)   // the indexes are right
   }else{
    // We encountered significance when we tried to shift the values to make room for the indexes.  We will have to sort
@@ -444,7 +445,7 @@ static GF(jtgriq){F1PREFJT;
    // First, install the item number in the LSBs
    DO(n, I v=wv[i]^gradedown; zv[i]=(v&~itemmask)+i;)
    // sort the result area in place
-   vvsortqs8ai(zv,n,0,IMAX);
+   vvsortqs8ai(zv,n,rmin,rmax);
    // pass through the result area, removing the upper bits.  If consecutive values have the same upper bits, go through them,
    // replacing the upper bits with the actual bits from the input (after honoring sign/direction bits), and then re-sort the result in place.
    // remove the upper bits from that sorted result
@@ -456,7 +457,7 @@ static GF(jtgriq){F1PREFJT;
      I j=i;do{
       I v=wv[zv[j]&itemmask]^gradedown; zv[j]=((v&itemmask)<<hbit)+(zv[j]&itemmask); // fetch original v, reconstitute; get itemmask in upper bits 
      }while(!(++j==n || (((nextv=zv[j])^currv)&~itemmask)));
-     vvsortqs8ai(zv+i,j-i,0,IMAX);  // sort the collision area in place.  j points to first item beyond the collision area, and nextv is its value
+     vvsortqs8ai(zv+i,j-i,rmin-i,rmax-i);  // sort the collision area in place.  j points to first item beyond the collision area, and nextv is its value
      while(i<j){zv[i]&=itemmask; ++i;}  // the item numbers are guaranteed right after this sort
      i=j-1;  // pick up after the batch
     }
@@ -536,14 +537,14 @@ static GF(jtgri){F1PREFJT;A x,y;B up;I e,i,* RESTRICT v,*wv,*xv;UI4 * RESTRICT y
 #else
 #if SY_64  // no quickgrade unless INTs are 64 bits
  if(ai==1){  // for atoms, usually use smallrange or quicksort
-  if(n<10)R jtgriq(jtfg,m,ai,n,w,zv);  // for short lists just use qsort
+  if(n<10)R jtgriq(jtfg,m,ai,n,w,zv,rmin,rmax);  // for short lists just use qsort
   UI4 lgn3=CTLZI(n); lgn3 = (UI4)((lgn3*8) - 8 + (n>>(lgn3-3)));  // approx lg(n)<<3
   rng = condrange(wv,AN(w),IMAX,IMIN,MIN((L2CACHESIZE>>LGSZI),(n*lgn3)>>(3-1)));  // let range go up to 2n lgn, but never more than L2 size
   if(!rng.range){
-   if(!BETWEENC(n,5500,500000))R jtgriq(jtfg,m,ai,n,w,zv);  // quicksort except for 5500-500000
+   if(!BETWEENC(n,5500,500000))R jtgriq(jtfg,m,ai,n,w,zv,rmin,rmax);  // quicksort except for 5500-500000
    // in the middle range, we still use quicksort if the atoms have more than 2 bytes of significance.  We just spot-check rather than running condrange,
    // because the main appl is sorting timestamps, which are ALL big
-   DO(10, if(0xffffffff00000000 & (0x0000000080000000+wv[i<<9]))R jtgriq(jtfg,m,ai,n,w,zv);)  // quicksort if more than 2 bytes of significance, sampling the input
+   DO(10, if(0xffffffff00000000 & (0x0000000080000000+wv[i<<9]))R jtgriq(jtfg,m,ai,n,w,zv,rmin,rmax);)  // quicksort if more than 2 bytes of significance, sampling the input
    R gri1(m,ai,n,w,zv);  // moderate-range middle lengths use radix sort
   }
   // fall through to small-range
@@ -705,11 +706,11 @@ F2(jtgrade1p){F12IP;PROLOG(0074);A x,z;I n,*s,*xv,*zv;
 /* w  - array to be graded                  */
 /* zv - result values                       */
 
-static B (*grroutine[])(J,I,I,I,A,I*) = {  // index is [bitx]
+static B (*grroutine[])(J,I,I,I,A,I*,I,I) = {  // index is [bitx]
 [B01X]=jtgrc, [LITX]=jtgrc, [INTX]=jtgri, [FLX]=jtgrd, [CMPXX]=jtgrx,[BOXX]=jtgrx, [XNUMX]=jtgrx, [RATX]=jtgrx, [QPX]=jtgrx,[C2TX]=jtgrc, [C4TX]=jtgru, [INT2X]=jtgrx, [INT4X]=jtgrx};
 
 // /: and \: with IRS support
-DFI1(jtgr1){A z;I f,ai,m,n,*s,t,wn,zn;
+A jtgr1(JJ jtfg,A wfg,A self,I rmin,I rmax){A z;I f,ai,m,n,*s,t,wn,zn;   // like DFI1
  IARG1CR F12IP;PROLOG(0075);
  t=AT(w);
  f=wr-wcr; s=AS(w);
@@ -726,7 +727,7 @@ DFI1(jtgr1){A z;I f,ai,m,n,*s,t,wn,zn;
  // if there are no atoms, or we are grading things with 0-1 item, return an index vector of the appropriate shape 
  if(((wn-1)|(n-2))<0)R reshape(shape(z),IX(n));
  // do the grade, using a special-case routine if possible
- RZ((t&B01&&0==(ai&3)?jtgrb:grroutine[CTTZ(t)])(jtfg,m,ai,n,w,AV(z)))
+ RZ((t&B01&&0==(ai&3)?jtgrb:grroutine[CTTZ(t)])(jtfg,m,ai,n,w,AV(z),0,IMAX))
  EPILOG(z);
 }    /*   grade"r w main control for dense w */
 

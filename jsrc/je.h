@@ -143,7 +143,7 @@ extern F1(jtgemmtune);
 extern DF1(jtemsglevel);
 extern F1(jtgh15);
 extern DF1(jtgrade1);
-extern DF1(jtgr1);
+extern A jtgr1(JJ,A,A,I,I);
 extern F1(jtgsignal);
 extern A jtkeyct(J,A,A,A,D);
 extern DF2(jtkeybox);
@@ -675,6 +675,7 @@ extern DF2(jteachr);
 extern DF2(jtfslashatg);
 extern DF2(jtimplocref);
 extern DF2(jtnum2);
+extern DF2(jtordstatqsort);
 extern DF2(jtpolymult);
 extern DF2(jtpowop);
 extern DF2(jtrazecut0);
@@ -686,6 +687,7 @@ extern DF2(jtrollkx);
 extern DF2(jtsumattymes1);
 extern DF2(jtxop2);
 extern DF2(jtxxhash2);
+extern DF2(rank2);
 #if AUDITEXECRESULTS
 extern void auditblock (J jt,A w, I nonrecurok, I virtok);
 #endif

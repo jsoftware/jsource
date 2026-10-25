@@ -1179,18 +1179,18 @@ typedef struct {
     VARPSA *redfn;  // for reductions (u/ u/\ u/\.) address of rps block (may be dummy block)
     US uavandx[2];   // offset from start of va/va1tbl to VA/UA block for adocv/psa [monad then dyad].  Not used for atomics dyad
     A wvb;  // for u&.[:]v, the verb whose inverse is needed
-    I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function; for (compare[!.n] |), indicates which compare function
+    I linkvb;  // for dyads ; (,<) ,&[:]<  indicates which function; for (compare[!.n] |), indicates which compare function  For (u /:~) etc, flags about u and v
     A cachedlkp;  //  for namerefs ('name'~), the cached value, or 0 if not cached.   No QC semantics
     AF fork2hfn;   // for dyad fork that is NOT a comparison combination or jtintersect, the function to call to process h (might be in h@][)
     I forcetask;  // for t., the flags extracted from n.  Bits 0-7=thread pool; bit 8=worker thread only 32+=locales given
     I fittype;  // for u!.t where t is a code, its value is stored here in the CFIT block; for $!.v, 0 if the ultimate routine is ($,), 1 if $
-    I1 srank[4];   // for RANK conj, the signed ranks.  srank[3] is nonzero if the given rank was floating-point - means 'don't combine'
+    I1 srank[4];   // for RANK conj ", the signed ranks.  srank[3] is nonzero if the given rank was floating-point - means 'don't combine'
     UI mrecip;  // for u m. n  m&|@^ and m&|@(n&^), the reciprocal of m, with binary point above 2^BW
     S foreignmn[4];  // in m!:n, the arguments; in 3!:8, [2] is the m argument
     I poweratom;  // for u^:atom or u^:<any, the encoded arg status: bit0=multiple (i. e. boxed n) bit1=nonneg power bits2-31=|power|
     AF bondfn;  // for m&v u&n, the dyad entry point for u/v
     I sundern;  // for u&.v structural under, form of u: 0=, 1=m&{ 2=m&(];.0)
-    I varno;  // verb variant index.  For 16!:_2 and _12, 0 for 16!:_2
+    I varno;  // verb variant index.  For 16!:_2 and _12, 0 for 16!:_2.
    } lu1;  // this is the high-use stuff in the second cacheline
   };
  } localuse;  // always 16 bytes, 4 I4s

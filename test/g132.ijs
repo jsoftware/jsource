@@ -37,6 +37,8 @@ NB. x%:y ----------------------------------------------------------------
 'length error' -: 3 4 %: etx i.4 3
 'length error' -: 3 4 %:~etx i.4 3
 
+1 2 -: *: 0.5 ^~"0 ] 1 2  NB. crashed from bad linkage
+0 1 0 1 0 -: 2 |"0 1 i. 5   NB. Didn't crash, but same flaw
 
 
 

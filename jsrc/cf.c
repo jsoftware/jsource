@@ -312,7 +312,7 @@ static struct {
  };
 
 // This handles all bident/tridents except N/V V V forks.  If h is CAVN, we have a trident; omitted h is 0
-A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V*u,*v;
+A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,id;I flag=VFLAGNONE,linktype=0;V*u,*v;
  ARGCHK2(a,w);
  A z; fdefallo(z)
  if(likely(h==0)){
@@ -320,7 +320,8 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
   if(AT(a)&AT(w)&VERB){
    // This is the (V V) case, producing a verb
    u=FAV(a); c=u->id; f1=jthook1cell; f2=jthook2cell;
-   v=FAV(w); d=v->id; e=ID(v->fgh[0]);
+   v=FAV(w); d=v->id;   // c=id of u, d=id of v
+   C e=ID(v->fgh[0]); // e=id of left side of v if any, eg in f/
    // Set flag to use: NOLOCCHG if both operands are safe; and FLGOK init to OK as for hook, but change as needed to match f1,f2
    flag=((u->flag&v->flag)&VNOLOCCHG+VNONAME+VNOSELF);  // start with in-place enabled, as befits hook1/hook2
    if(d==CCOMMA){   // all forms except for ($,) is handled by virtual blocks
@@ -334,7 +335,9 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
     if(comptype){flag|=comptype; f2=jthklvl2;}
    }else if(d==CSTILE){   // (compare |) and (compare!.n |)
     if(BETWEENC(c,CEQ,CGT)){f2=jthkcmpabs; linktype=c-CEQ;}  // (compare |) - go to routine handling it; linktype is compare routine#
-    else if(u->valencefns[1]==jtfitcteq){f2=jthkcmpfitabs; linktype=FAV(u->fgh[0])->id-CEQ;}  // (compare!.n |) - go 
+    else if(u->valencefns[1]==jtfitcteq){f2=jthkcmpfitabs; linktype=FAV(u->fgh[0])->id-CEQ;}  // (compare!.n |)
+   }else if((d==CTILDE?e:d)==CGRADE){   //  (u /:[~])
+    if(c==CFROM||c==CTAKE||u->valencefns[1]==jtrightcut0){f2=jtordstatqsort; linktype=2; linktype=c==CTAKE?0:linktype; linktype=c==CFROM?1:linktype; linktype+=(d==CTILDE)*0x10;}  // if u is {. { ];.0 it's order stats; remember fn type &  sort/grade
    }else{
     switch(c){
     case CSLDOT:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==IDD(v->fgh[1])){  // (f/. i.@#)  or @: & &:
@@ -344,8 +347,9 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,e,id;I flag=VFLAGNONE,linktype=0;V
     case CPOUND:  if(COMPOSE(d)&&e==CIOTA&&CPOUND==IDD(v->fgh[1])){f1=jthkiota;} break;  // (# i.@#))
     case CABASE:  if(COMPOSE(d)&&e==CIOTA&&CSLASH==IDD(v->fgh[1])&&CSTAR==IDD(FAV(v->fgh[1])->fgh[0])){f1=jthkodom;} break;  // (#: i.@(*/))
     case CIOTA:   
-    case CICO:    if(BOTHEQ8(d,(e&~1),CSLASH,CMIN)){f1=jthkindexofmaxmin;} break;  // >./ <./
-    case CFROM:   if(d==CGRADE){f2=jtordstati;} else if(d==CTILDE&&e==CGRADE){f2=jtordstat;}
+    case CICO:    if(BOTHEQ8(d,(e&~1),CSLASH,CMIN)){f1=jthkindexofmaxmin;} break;  // (i[.:]  [><]./)
+// obsolete     case CFROM:   if(d==CGRADE){f2=jtordstati;} break;
+// obsolete  else if(d==CTILDE&&e==CGRADE){f2=jtordstat;}
     }
    }
 

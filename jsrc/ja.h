@@ -505,7 +505,7 @@ AT(fffz)=(ffft); AFLAGINIT(fffz,(ffft)&RECURSIBLE); /* install actual type.  Wai
 #define gjoin(x,y,z)                jtgjoin(jt,(x),(y),(z))   
 extern void jfree4gmp(void*,size_t);
 #define gmpmfree(x)                 if(!(ACISPERM(AC(x)))){I allocsize = AN(x)+AKXR(1); jt->bytes-=allocsize; jt->malloctotal-=allocsize; jt->mfreegenallo-=allocsize; /*free(x);*/ jfree4gmp(CAV1(x),AN(x));}
-#define gr1(x)                      jtgr1(jtfg,(x),0)
+#define gr1(x)                      jtgr1(jtfg,(x),0,0,IMAX)
 #define gr2(x,y)                    jtgr2(jtfg,(x),(y))
 #define grade1(x)                   jtgrade1(jt,(x),0)
 #define grade1p(x,y)                jtgrade1p(jt,(x),(y))
@@ -524,11 +524,11 @@ extern void jfree4gmp(void*,size_t);
 #define grd2spsd(x,y,z)             jtgrd2spsd(jtfg,(x),(y),(z))
 #define grd2spss(x,y,z)             jtgrd2spss(jtfg,(x),(y),(z))
 #define gri(x0,x1,x2,x3,x4)         jtgri(jtfg,(x0),(x1),(x2),(x3),(x4))
-#define gri1(x0,x1,x2,x3,x4)        jtgri1(jtfg,(x0),(x1),(x2),(x3),(x4))
+#define gri1(x0,x1,x2,x3,x4)        jtgri1(jtfg,(x0),(x1),(x2),(x3),(x4),0,IMAX)
 #define gru(x0,x1,x2,x3,x4)         jtgru(jt,(x0),(x1),(x2),(x3),(x4))
-#define gru1(x0,x1,x2,x3,x4)        jtgru1(jtfg,(x0),(x1),(x2),(x3),(x4))
+#define gru1(x0,x1,x2,x3,x4)        jtgru1(jtfg,(x0),(x1),(x2),(x3),(x4),0,IMAX)
 #define grs(x0,x1,x2,x3,x4)         jtgrs(jt,(x0),(x1),(x2),(x3),(x4))
-#define grx(x0,x1,x2,x3,x4)         jtgrx(jtfg,(x0),(x1),(x2),(x3),(x4))
+#define grx(x0,x1,x2,x3,x4)         jtgrx(jtfg,(x0),(x1),(x2),(x3),(x4),0,IMAX)
 #define gt(x,y)                     jtatomic2(jt,(x),(y),ds(CGT))     
 #define halve(x)                    jthalve(jt,(x))
 #define head(x)                     jthead(jt,(x),0)

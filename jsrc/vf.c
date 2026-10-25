@@ -313,7 +313,7 @@ DFI2(jtreshape){A z;B filling;C*wv,*zv;I c,k,m,n,p,q,r,*s,t,* RESTRICT u,wf,* RE
   if((c^1)<(wr!=0)) {  // if there is exactly 1 cell of w, and w is not an atom... (don't bother creating a virtual for an atom)
    // If no fill required, we can probably use a virtual result, or maybe even an inplace one.  Check for inplace first.  Mustn't inplace an indirect that shortens the data,
    // because then who would free the blocks?  (Actually it would be OK if nonrecursive, but we are trying to exterminate those).  Since it must be DIRECT, there's no question about PRISTINE, but that would be OK to transfer if inplaceable
-   if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&(r-(wcr+1))&((n-(m+1))|-(t&DIRECT)),w)){  //  inplace allowed, just one cell, result rank (an) <= current rank (so rank fits), usecount is right, equal atom count if not DIRECT
+   if(ASGNINPLACESGN(SGNIF(jtfg,JTINPLACEWX)&(r-(wcr+1))&((n-(m+1))|-(t&DIRECT)),w)&&!(AFLAG(w)&AFUNINCORPABLE)){  //  inplace allowed, just one cell, result rank (an) <= current rank (so rank fits), usecount is right, equal atom count if not DIRECT.  But never change shape/rank/type of UNINCORPABLE
     // operation is loosely inplaceable.  Copy in the rank, shape, and atom count.
     AR(w)=(RANKT)(r+wf); AN(w)=m; ws+=wf; MCISH(ws,u,r) RETF(w);   // Start the copy after the (unchanged) frame
    }

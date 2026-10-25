@@ -713,10 +713,11 @@ DF2(rank2){DF12IP;A fs=FAV(self)->fgh[0];
  I eul=efr(ar,ul), eur=efr(wr,ur);  // left & right ranks of u when if applied directly to input
  I anug=GEMIN0(el,ar,eul), wnug=GEMIN0(er,wr,eur);  // anug>=0 if l>=ar (must be =) or l>=lr of u; wnug similarly.  Indicates rank of self has no effect
  if((anug&wnug)>=0){
-  // at least one of the ranks is nugatory, that is, is can affect the result only in the case of weird fill
-  if(unlikely((l^ul)+(r^ur)+REPSGN(l|r)==0))if(unlikely(!FAV(self)->localuse.lu1.srank[3]))  // ranks positive and equal
+  // here at least one of the ranks is nugatory, that is, is can affect the result only in the case of weird fill
+  if(unlikely(((l^ul)|(r^ur)|REPSGN(l|r))==0))if(unlikely(!FAV(self)->localuse.lu1.srank[3]))  // ranks positive and equal
    {RZ(jtdeprecmsg(jt,10,"(010) u\"n where n = rank of u, can be omitted.  To silence this message make n floating-point\n")); goto duprank;}  // totally superfluous rank operator.  Always a message, and omit the second copy
-  if((el^ar)+(er^wr)==0){ duprank: RETF(CALL2IP(f2,a,w,fs))}  // only one cell here, run u directly.  rank2ex would catch this quickly but why wait?
+  if(((el^ar)+(er^wr))==0){
+    duprank: RETF(CALL2IP(f2,a,w,fs))}  // only one cell here, run u directly.  rank2ex would catch this quickly but why wait?
   if(unlikely(((LEMIN0(ar,el,eul)|wnug)&(LEMIN0(wr,er,eur)|anug))>=0)                   )  // one arg is nugatory (except possibly for fill) and the other does not modify its arg all the way into u.  Tell the user
    if(unlikely(!FAV(self)->localuse.lu1.srank[3]))  // float suppresses msg.  Too bad _ is float
     RZ(jtdeprecmsg(jt,9,"(009) u\"n where n >= rank of u, usually needless.  To silence this message make n floating-point\n"));

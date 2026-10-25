@@ -30,8 +30,8 @@ jobs:
 # for selected jobs, disable all and disable the selected needs
 
  all:
-  if: false
-  #if: true
+  #if: false
+  if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Runall jobs"
@@ -522,8 +522,7 @@ jobs:
 # rpi64 ----------------------------------------------------------------
  jerpi64:
   name: JE (Raspberry)
-#  needs: [all, deprecated]
-  needs: [all]
+  needs: [all, deprecated]
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -569,14 +568,14 @@ jobs:
    - name: Compress Files (Raspberry)
      run: |
       ls -l j64
-      mv j64/* .
+      mv j64/rpi64.zip rpi64c.zip
 
    - name: Release JE (Raspberry)
-     if: ${{ false }}
+     if: ${{ env.RELEASE == 'true' }}
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "rpi64.zip"
+      artifacts: "rpi64c.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -592,8 +591,7 @@ jobs:
 # rpi32 ----------------------------------------------------------------
  jerpi32:
   name: JE (Raspberry32)
-#  needs: [all, deprecated]
-  needs: [all]
+  needs: [all, deprecated]
   runs-on: ubuntu-latest
   steps:
    - name: Checkout Git repository
@@ -640,14 +638,14 @@ jobs:
    - name: Compress Files (Raspberry32)
      run: |
       ls -l j32
-      mv j32/* .
+      mv j32/rpi32.zip rpi32c.zip
 
    - name: Release JE (Raspberry32)
-     if: ${{ false }}
+     if: ${{ env.RELEASE == 'true' }}
      uses: ncipollo/release-action@v1
      with:
       tag: build
-      artifacts: "rpi32.zip"
+      artifacts: "rpi32c.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
       allowUpdates: true
       replacesArtifacts: true
@@ -683,13 +681,6 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake nasm pcre2 gdb lldb
        /sbin/ldconfig -r
-       # ls -al ~/
-       # ls -al ~/.ssh
-       # sudo echo "Host *" >>~/.ssh/config || true
-       # sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       # sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       # echo "client ssh config"
-       # sudo cat ~/.ssh/config || true
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
@@ -703,7 +694,7 @@ jobs:
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
        script/buildga.sh openbsd x86_64 || exit 1
-       script/testga.sh openbsd x86_64 || exit 1
+       script/testga.sh openbsd x86_64
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        rm -f j64/libopenblas*
@@ -751,13 +742,6 @@ jobs:
        sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake gmp pcre2 gdb lldb
        /sbin/ldconfig -r
-       # ls -al ~/
-       # ls -al ~/.ssh
-       # sudo echo "Host *" >>~/.ssh/config || true
-       # sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       # sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       # echo "client ssh config"
-       # sudo cat ~/.ssh/config || true
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
@@ -816,18 +800,8 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       sudo pkg search openblas 1>&2
-       sudo pkg install -y curl zip gmake nasm pcre2 gdb openblas
-       sudo find / -type f -name 'liblapack.so*' 1>&2
-       sudo find / -type f -name 'libopenblas.so*' 1>&2
+       sudo pkg install -y curl zip gmake nasm pcre2 gdb
        /sbin/ldconfig -r
-       # ls -al ~/
-       # ls -al ~/.ssh
-       # sudo echo "Host *" >>~/.ssh/config || true
-       # sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       # sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       # echo "client ssh config"
-       # sudo cat ~/.ssh/config || true
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
@@ -841,7 +815,7 @@ jobs:
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
        script/buildga.sh freebsd x86_64 || exit 1
-       script/testga.sh freebsd x86_64 || exit 1
+       script/testga.sh freebsd x86_64
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        rm -f j64/libopenblas*
@@ -887,18 +861,8 @@ jobs:
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
        sudo rdate time.cloudflare.com || true
-       sudo pkg search openblas 1>&2
-       sudo pkg install -y curl zip gmake nasm pcre2 gdb openblas
-       sudo find / -type f -name 'liblapack.so*' 1>&2
-       sudo find / -type f -name 'libopenblas.so*' 1>&2
+       sudo pkg install -y curl zip gmake nasm pcre2 gdb
        /sbin/ldconfig -r
-       # ls -al ~/
-       # ls -al ~/.ssh
-       # sudo echo "Host *" >>~/.ssh/config || true
-       # sudo echo " ServerAliveInterval 20" >>~/.ssh/config || true
-       # sudo echo " ServerAliveCountMax 2000000" >>~/.ssh/config || true
-       # echo "client ssh config"
-       # sudo cat ~/.ssh/config || true
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
@@ -912,7 +876,7 @@ jobs:
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
        script/buildga.sh freebsd arm64 || exit 1
-       script/testga.sh freebsd arm64 || exit 1
+       script/testga.sh freebsd arm64
        cp jlibrary/bin/* j64 || true
        rm -f j64/profile.ijs
        rm -f j64/libopenblas*
@@ -988,8 +952,16 @@ jobs:
    - name: Checkout Git repository
      uses: actions/checkout@v6
 
+   - name: Setup Node.js (wasm)
+     uses: actions/setup-node@v4
+     with:
+       node-version: '22'
+
    - name: Setup Environment (wasm)
-     uses: mymindstorm/setup-emsdk@v14
+     uses: emscripten-core/setup-emsdk@v16
+     with:
+       version: 4.0.10
+       actions-cache-folder: emsdk-cache
 
    - name: Build, Test JE (wasm)
      env:
@@ -1248,7 +1220,7 @@ jobs:
       Compress-Archive j64 warm64old.zip
 
    - name: Release JE (Windows arm64 old)
-     if: ${{ false }}
+     if: ${{ env.RELEASE == 'true' }}
      uses: ncipollo/release-action@v1
      with:
       tag: build

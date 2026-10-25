@@ -231,8 +231,9 @@ end.
 msg fappends testres
 '' (1!:2 ::empty)^:(-.@*@#RES) <'jobdone'
 echo^:(*@#RES) RES
+2!:55[*@#RES
 )
 
 9!:27'FINISH RES=: RUN4 ddall'
 9!:29]1
-exit *@#RES
+NB. exit *@#RES

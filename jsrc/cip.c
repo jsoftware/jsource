@@ -712,7 +712,7 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT+1)*CAC
    }
   }
  }
- R 1;
+ R 0==NANTEST;
 }
 
 #endif

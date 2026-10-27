@@ -171,7 +171,7 @@ static F1(jtltqip){F12IP;PROLOG(0067);A l0,l1,y,z;
   // handle case of 2 rows
  if(rw<=2) {
 // this condition must be the same as that in cip.c
-#if C_AVX2 || EMU_AVX2
+#if (C_AVX2 || EMU_AVX2) && PYXES
   if(rw==2 && AT(w)&FL){
    // We calculate the 2-row case rather than recurring to handle the rows individually, because we can keep the multipliers busy
    // Let Pij be the inner product of row i and row j.  Then
@@ -215,7 +215,7 @@ static F1(jtltqip){F12IP;PROLOG(0067);A l0,l1,y,z;
  fauxblock(virtwq1); A q1; fauxvirtual(q1,virtwq1,w,2,ACUC1|ACINPLACE); AK(q1)+=(m*cl)<<bplg(AT(w)); AS(q1)[0]=rw-m; AS(q1)[1]=cl; AN(q1)=(rw-m)*cl;
  // calculate w1 - (w1 q0*) q0
 // this condition must be the same as that in cip.c
-#if C_AVX2 || EMU_AVX2
+#if (C_AVX2 || EMU_AVX2) && PYXES
  if(AT(w)&FL && (m<50 || m*m*cl<(64*64*64))){
   // floating-point w that isn't larger than L2 cache.  (1) use inner-products to calculate w1 q0* (2) use blockedmmult to calculate final product
   if((m*(rw-m))>(int)(sizeof(ipa)/sizeof(ipa[0]))){

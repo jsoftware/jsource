@@ -1,6 +1,7 @@
 prolog './g131cb.ijs'
 NB. %. ------------------------------------------------------------------
 
+1 (9!:56) 'cblas'
 thr=: (9!:58)"0 i.3
 0 (9!:58)"0 i.3       NB.  +/ .*  always use blas
 
@@ -165,10 +166,9 @@ if. -. 1.2e_8>e do.
  techo '|pinv(a) a - I| ', ": >./ , | (=i.{:$a) - c X a
  'q r' =: 128!:0 a
  techo 'QR: |a - q r| ', (": >./ , | a - q X r), '  |q''q - I| ', ": >./ , | (=i.{:$a) - (|:q) X q
- cb =. 9!:56 'cblas'
  0 (9!:56) 'cblas'
  c0 =: %. a
- cb (9!:56) 'cblas'
+ 1 (9!:56) 'cblas'
  techo 'e ', ": >./ , | a - (a X c0) X a
  techo 'X check ', ": >./ , | (a X c) - a (+/@:*"1)"1 _ |: c
  qrerr =: {{

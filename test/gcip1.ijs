@@ -29,8 +29,8 @@ elseif. do.
 end.
 techo 'threads ', ": 1 T. ''
 techo 'OMP_NUM_THREADS=', (''"_)^:(0&-:) (2!:5)'OMP_NUM_THREADS'
-techo 'openmp ',":m0=. 9!:56'openmp'
-techo 'cblas  ',":c0=. 9!:56'cblas'
+techo 'openmp ',":m0=. 9!:56 'openmp'
+techo 'cblas  ',":c0=. 9!:56 'cblas'
 techo 'cblasfile ',":9!:56'cblasfile'
 techo 'gemm threshold ', ": (9!:58)"0 i.3
 
@@ -42,7 +42,7 @@ _1 (9!:58)"0 i.3       NB.  +/ .*  never use blas if pyxes
 t1=. 6!:2'c1=. A+/ .*B'
 techo ' never  blas ',' GFlop ',~ 0j3": 2*(N^3)%(t1)*1e9
 0 (9!:58)"0 i.3        NB.  +/ .*  alwasy use blas
-if. c0 do. 0(9!:56)'cblas' end.
+if. c0 do. 0 (9!:56) 'cblas' end.
 if. m0 do. 0(9!:56)'openmp' end.
 t1=. 6!:2'c2=. A+/ .*B'
 techo 'always  blas ',' GFlop ',~ 0j3": 2*(N^3)%(t1)*1e9
@@ -54,7 +54,7 @@ if. m0 do.
   assert. c1-:c2
 end.
 if. c0 do.
-  1(9!:56)'cblas'
+  1 (9!:56) 'cblas'
   t1=. 6!:2'c2=. A+/ .*B'
   techo 'always cblas ',' GFlop ',~ 0j3": 2*(N^3)%(t1)*1e9
   assert. c1-:c2

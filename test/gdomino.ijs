@@ -1,8 +1,6 @@
 prolog './gdomino.ijs'
 NB. Tests for verbs defined in vd.c: %. 128!:0 128!:1
 
-cblas =: 9!:56 'cblas'
-
 NB. utils
 X =: +/ .*
 ct =: +@|: NB. conjugate transpose
@@ -310,14 +308,13 @@ exact =: {{
 
 NB. well-conditioned data
 agree =: {{
- c =. 9!:56 'cblas'
  for_t. ;: 'FL CMPX INT' do. t =. > t
   S =. t rnd 30 30 [ U =. t rnd 90 30 [ V =. t rnd 30 90 [ a =. t rnd 30 2 [ b =. t rnd 90 2
   Tr =. (30 * =i.30) + S * <:/~ i.30
   r1 =. (%. S) ; (a %. S) ; (%. U) ; (b %. U) ; (a %. V) ; (%. V) ; (a %. Tr) ; (a %. |: Tr) ; 128!:0 U
   0 (9!:56) 'cblas'
   r0 =. (%. S) ; (a %. S) ; (%. U) ; (b %. U) ; (a %. V) ; (%. V) ; (a %. Tr) ; (a %. |: Tr) ; 128!:0 U
-  c (9!:56) 'cblas'
+  1 (9!:56) 'cblas'
   assert. r0 -:&($&.>) r1
   assert. *./ 1e_8 > r0 (nrm@:- % 1 >. nrm@])&> r1
  end.
@@ -435,7 +432,7 @@ inplace ''
 cells ''
 big ''
 nans ''
-cblas (9!:56) 'cblas'
+1 (9!:56) 'cblas'
 shapes ''
 qrshapes ''
 vals ''
@@ -445,7 +442,7 @@ cells ''
 big ''
 nans ''
 agree ''
-lapackonly^:cblas ''
-illcond^:cblas ''
+lapackonly^:(9!:56 'cblas') ''
+illcond^:(9!:56 'cblas') ''
 
 epilog''

@@ -65,7 +65,7 @@ static F2(jtpdtby){F12IP;A z;B b,*u,*v,*wv;C er=0;I at,m,n,p,t,wt,zk;
      DQ(nn, if(*u++){vi=(UI*)v; d=ti; DQ(nw, *d+++=*vi++;);} v+=n;);  \
      x=zv; c=tc; DQ(n, *x+++=*c++;);
 
-#if C_AVX2 || EMU_AVX2
+#if (C_AVX2 || EMU_AVX2) && PYXES
 // blocked multiply, processing vertical mx16 strips of y.  Good when y has few rows
 // *av is mxp, *wv is pxn, *zv is mxn
 // flgs is 0 for float, 1 for complex, i. e. lg2(# values per atom), 2 for upper-tri, 4 for INT.  If FLGCMP is set, n and p are even, and give the lengths of the arguments in values
@@ -712,7 +712,7 @@ I cachedmmult(J jt,D* av,D* wv,D* zv,I m,I n,I p,I flgs){D c[(CACHEHEIGHT+1)*CAC
    }
   }
  }
- R 1;
+ R 0==NANTEST;
 }
 
 #endif

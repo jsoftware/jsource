@@ -1114,7 +1114,7 @@ jobs:
       script\buildga.cmd x86
 
    - name: Setup Environment (Windows MSYS2 x86)
-     #if: ${{ false }}
+     if: ${{ false }}
      uses: msys2/setup-msys2@v2
      with:
       msystem: MINGW32
@@ -1124,7 +1124,7 @@ jobs:
         mingw-w64-i686-gdb
 
    - name: Test JE (Windows MSYS2 x86)
-     #if: ${{ false }}
+     if: ${{ false }}
      shell: msys2 {0}
      env:
       DEBUGCMD: gdb
@@ -1135,7 +1135,7 @@ jobs:
       script/testga.sh windows i386 || exit 1
 
    - name: Test JE (Windows 32)
-     if: ${{ false }}
+     #if: ${{ false }}
      shell: cmd
      env:
       DEBUGCMD: lldb
@@ -1496,7 +1496,6 @@ jobs:
       # Install necessary packages (e.g., your build tools, gcc, make)
       install: >-
         mingw-w64-i686-gcc
-        mingw-w64-i686-gdb
         make
 
    - name: Build JE (Windows MSYS2 x86)
@@ -1528,7 +1527,7 @@ jobs:
       DEBUGCMD: gdb
       USE_PYXES: 0
       USE_EMU_AVX: 0
-      _DEBUG: ${{ env.DEBUGLEVEL }}
+      _DEBUG: 0
      run: |
       script/testga.sh windows i386 || exit 1
 

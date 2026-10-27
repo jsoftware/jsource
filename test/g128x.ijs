@@ -109,16 +109,16 @@ N=. y
 a=. (N,N) ?@$ 1000 1000
 techo^:PRINTMSG '$a ',":$a
 t1=. 6!:2'c1=. 128!:10 a'
-techo^:PRINTMSG 'double  ',(' GFlop ',~ 0j3": (N^3)%(t1)*1e9),((N>:(9!:56'fma'){10,500)*.9!:56'cblas')#' cblas'
-if. IF64 +. 9!:56'cblas' do.
+techo^:PRINTMSG 'double  ',(' GFlop ',~ 0j3": (N^3)%(t1)*1e9),((N>:(9!:56'fma'){10,500)*.9!:56 'cblas')#' cblas'
+if. IF64 +. 9!:56  'cblas' do.
   techo^:PRINTMSG b=. >./ | ,a - (0&{:: /:~ lrtoa@(1&{::)) c1
   assert. 1e_4 >  b
 end.
 
 a=. a j. (N,N) ?@$ 1000 1000
 t1=. 6!:2'c1=. 128!:10 a'
-techo^:PRINTMSG 'complex ',(' GFlop ',~ 0j3": 4*(N^3)%(t1)*1e9),((9!:56'cblas')#' cblas')
-if. 9!:56'cblas' do.
+techo^:PRINTMSG 'complex ',(' GFlop ',~ 0j3": 4*(N^3)%(t1)*1e9),((9!:56 'cblas')#' cblas')
+if. 9!:56 'cblas' do.
   techo^:PRINTMSG b=. >./ | ,a - (0&{:: /:~ lrtoa@(1&{::)) c1
   assert. 1e_4 >  b
 end.

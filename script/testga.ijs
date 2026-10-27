@@ -116,6 +116,17 @@ echo 3!:0 (2&^.) _.
 assert. 16=3!:0 (2&^.) _.
 )
 
+NB. test (+/ .*) NaN
+3 : 0''
+f=. +/ @ (*"1 _)
+x=. 11 22 $ _ 0 1 0 0 1 0 0
+y=. 22 13 $ 0 0 1 0 0 _ 1 0
+echo x f y
+echo x (+/ .*) y
+assert. x (f -: (+/ .*)) y
+''
+)
+
 NB. this sometimes failed on linux O2
 exformat_j_=: eformat_j_ f.
 4!:55<'eformat_j_'

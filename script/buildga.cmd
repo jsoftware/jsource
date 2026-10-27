@@ -35,7 +35,7 @@ IF "%~1" NEQ "x64" EXIT /b 1
 mkdir j64
 mkdir bin\windows\j64
 mkdir bin\windows\j64avx2
-mkdir bin\windows\j64avx512
+@rem mkdir bin\windows\j64avx512
 @rem copy pthreads4w\x64\pthreadVC3.dll %B%
 copy mpir\windows\x64\mpir.dll %B%
 @rem copy openmp\obj\windows\x64\libomp.dll %B%
@@ -120,9 +120,9 @@ IF "%~1"=="arm64" GOTO L03B
 IF "%~1" NEQ "x64" EXIT /b 1
 IF "%USE_EMU_AVX%"=="0" GOTO L03F
 IF "%USE_PYXES%"=="0" GOTO L03F
-nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx512 clean
-nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx512
-IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
+@rem nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx512 clean
+@rem nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx512
+@rem IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx2 clean
 nmake -f ..\makemsvc\jdll\makefile.win jplatform=windows j64x=j64avx2
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
@@ -171,7 +171,7 @@ copy bin\windows\j64\*.dll %B%
 @rem copy bin\windows\j64\jamalgam.exe %B%
 IF "%USE_EMU_AVX%"=="0" GOTO L06C
 IF "%USE_PYXES%"=="0" GOTO L06C
-copy bin\windows\j64avx512\j.dll %B%\javx512.dll
+@rem copy bin\windows\j64avx512\j.dll %B%\javx512.dll
 copy bin\windows\j64avx2\j.dll %B%\javx2.dll
 GOTO L06C
 :L06A

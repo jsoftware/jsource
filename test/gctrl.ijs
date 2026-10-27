@@ -615,6 +615,11 @@ g1__numloc2''
 5 -: vb__numloc2 ''
 18!:55 numloc1,numloc2
 
+vb_z_ =: *:
+f0 =: 'vb_z_' 4!:8   NB. Create cached nameref of locative
+9 = f0 3
+4!:55 ;:'vb_z_'
+
 NB. Combining attributes are cached, making the second execution faster
 9!:5 (2)
 vb__ =: +
@@ -643,7 +648,15 @@ b =: ('a_',(>numloc1),'_')~
 18!:55 numloc1
 'locale error' -: b etx 2
 
-
+   g =: *:
+   h =: +/@:g
+   f =: {{
+a =. h y
+g =. +:
+a + h y
+}}
+39 = f 3 4
+39 = f 3 4  NB. second call should update the cache
 
 fp=: ([ C."1 C.) :. ([ C.^:_1"1 C.^:_1)
 

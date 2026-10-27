@@ -410,6 +410,7 @@ F1(jtcreatecachedref){F12IP;A z;
  ASSERT(!(AT(val)&NOUN),EVDOMAIN)
  z=fdef(VF2CACHED+VF2CACHEABLE,CTILDE,AT(val), jtunquote,jtunquote, nm,0L,0L, (FAV(val)->flag&VNOLOCCHG)+VNOSELF, FAV(val)->mr,lrv(FAV(val)),rrv(FAV(val)));  // create reference - always NOSELF since we stack $: in unquote
  FAV(z)->localuse.lu1.cachedlkp=val;  // install cached address of value, no QC
+ if((NAV(nm)->flag&NMLOC)!=0)RZ(FAV(z)->localuse.lu0.cachedloc=sybaseloc(nm))  // the reference must be fully filled in.  For locatives, this includes locale addr
  ACSETPERM(val);  // now that the value is cached, it lives forever
  RETF(z);
 }

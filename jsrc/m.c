@@ -682,6 +682,7 @@ F2(jtauditpyx){F12IP;I mindepth;
 
 // Free all symbols pointed to by the SYMB block w, including PERMANENT ones.  But don't return CACHED values to the symbol pool
 void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
+
  LX freeroot=0; L *freetailchn=(L*)((I)jt->shapesink-offsetof(L,next));  // sym index of first freed ele; addr of chain field in last freed ele
  L *jtsympv=SYMORIGIN;  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
   // because when we free a locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
@@ -697,7 +698,7 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     k=SYMNEXT(k);
     ++nfreed;  // k is a valid free; count it
     LX nextk=jtsympv[k].next;  // unroll loop 1 time
-    if(jtsympv[k].name!=0)fatype(jtsympv[k].name,NAME);jtsympv[k].name=0;  // always release name
+    if(jtsympv[k].name!=0)fatype(jtsympv[k].name,NAME); jtsympv[k].name=0;  // always fa name
     SYMVALFA(jtsympv[k]);    // free value
     jtsympv[k].fval=0;jtsympv[k].sn=0;jtsympv[k].flag=0;  // clear symbol fields for next time (that's Roger's way)
     lastk=k;  // remember end-of-chain
@@ -708,6 +709,7 @@ void freesymb(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
   }
  }
  if(likely(freeroot!=0)){jtsymreturn(jt,freeroot,lastk,nfreed);}  // put all blocks freed here onto the free chain
+ // It is not necessary to advance the cache timestamp here, because as a SYMB is a non-noun the timestamp will be advanced by its deletion
 }
 
 // free the symbol table (i. e. locale) w.  AR(w) has been loaded.  We return w so caller doesn't have to save it
@@ -726,7 +728,7 @@ NOINLINE A jtfreesymtab(J jt,A w,I arw){  // don't make this static - it will be
    if(likely(!(arw&ARNAMED))){
     // For numbered locale, find the locale in the list of numbered locales, wipe it out, free the locale, and decrease the number of those locales
     jterasenl(jt,LOCNUM(w));  // remove the locale from the hash table.
-   } else {
+   }else{
     // For named locale, find the entry for this locale in the locales symbol table, and free the locale and the entry for it
     ACINIT(w,2) WRITELOCK(ALOCK(JT(jt,stloc))) jtprobedel((J)((I)jt+locname->m),locname->s,locname->hash,JT(jt,stloc)); WRITEUNLOCK(ALOCK(JT(jt,stloc)))   // free the L block for the locale.  Protect the locale itself so it is not freed, as we are just about to do that
    }

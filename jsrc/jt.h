@@ -403,12 +403,13 @@ typedef struct JSTstruct {
  A dbstops;          /* stops set by the user                           */
  A dbtrap;           // trap sentence, execute when going into suspension
  UI fnasgnct;        // number of assignments to ACV, change to locale path, etc.  Lookups of ACVs are cached and
-                     // reused as long as one of these cache-invalidating actions has not happened.  Low 16 bits are a lock
+                     // reused as long as one of these cache-invalidating actions has not happened.
  S dblock;           // lock on dbstops/dbtrap
+ S asgnctlock;
  // rest of cacheline is essentially read-only
- // 6 bytes free
+ // 4 bytes free
  A evm;              // message text for the EVxxx codes
- I (*emptylocale)[MAXTHREADS][16];      // locale with no symbols, used when not running explicits, or to avoid searching the local syms.  Aligned on odd word boundary, must never be freed.  One per task, because they are modified
+ I (*emptylocale)[MAXTHREADS][16];      // locale with no symbols, used when not running explicits, or to avoid searching the local syms.  Aligned on odd word boundary, must never be freed.  One per thread, because they are modified
  I filler6[2];
 // end of cacheline 6
 

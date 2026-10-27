@@ -1441,12 +1441,14 @@ if(likely(!((I)jtfg&JTWILLBEOPENED)))z=EPILOGNORET(z); RETF(z); \
 #define BUCKETXLOC(len,s) ((*(s)<='9')?strtoI10s((len),(s)):(I)nmhash((len),(s)))
 // the cache counter/lock is 48 bits of counter and 16 bits of lock (8 bits each read/write).  Write unlock increments the counter
 #if PYXES
-#define ACVCACHEREAD (__atomic_load_n(&JT(jt,fnasgnct),__ATOMIC_ACQUIRE)>>16)  // read the current cache counter
-#define ACVCACHEREADLOCK ({UI prev; if(unlikely(((prev=__atomic_fetch_add(&JT(jt,fnasgnct),1,__ATOMIC_ACQ_REL))&(US)-WLOCKBIT)!=0)){readlock((S*)&JT(jt,fnasgnct),(S)prev); prev=__atomic_load_n(&JT(jt,fnasgnct),__ATOMIC_ACQUIRE);} prev>>16;})
-#define ACVCACHEREADUNLOCK __atomic_fetch_sub(&JT(jt,fnasgnct),1,__ATOMIC_ACQ_REL);  // decrement the read bits
-#define ACVCACHEWRITELOCK  WRITELOCK(*(S*)&JT(jt,fnasgnct))  // take the lock, ignoring data value
-#define ACVCACHECLEAR __atomic_fetch_add(&JT(jt,fnasgnct),0x10000, __ATOMIC_ACQ_REL);  // increment cache count - used when we aren't freeing the only reference to the acv
-#define ACVCACHEWRITEUNLOCK ACVCACHECLEAR __atomic_fetch_and(&JT(jt,fnasgnct),(UI)~(0xffff&-WLOCKBIT), __ATOMIC_ACQ_REL);  // decrement write lock and increment the upper bits
+#define ACVCACHEREAD (__atomic_load_n(&JT(jt,fnasgnct),__ATOMIC_ACQUIRE))  // read the current cache counter
+// obsolete #define ACVCACHEREADLOCK ({UI prev; if(unlikely(((prev=__atomic_fetch_add(&JT(jt,fnasgnct),1,__ATOMIC_ACQ_REL))&(US)-WLOCKBIT)!=0)){readlock((S*)&JT(jt,fnasgnct),(S)prev); prev=__atomic_load_n(&JT(jt,fnasgnct),__ATOMIC_ACQUIRE);} prev>>16;})
+#define ACVCACHEREADLOCK ({READLOCK(JT(jt,asgnctlock)) __atomic_load_n(&JT(jt,fnasgnct),__ATOMIC_ACQUIRE);})
+#define ACVCACHEREADUNLOCK READUNLOCK(JT(jt,asgnctlock))  // decrement the read bits
+#define ACVCACHEWRITELOCK  WRITELOCK(JT(jt,asgnctlock))  // take the lock, ignoring data value
+#define ACVCACHECLEAR __atomic_fetch_add(&JT(jt,fnasgnct),1, __ATOMIC_ACQ_REL);  // increment cache count - used when we aren't freeing the only reference to the acv
+// obsolete #define ACVCACHEWRITEUNLOCK ACVCACHECLEAR __atomic_fetch_and(&JT(jt,fnasgnct),(UI)~(0xffff&-WLOCKBIT), __ATOMIC_ACQ_REL);  // decrement write lock and increment the upper bits
+#define ACVCACHEWRITEUNLOCK {ACVCACHECLEAR WRITEUNLOCK(JT(jt,asgnctlock))}  // decrement write lock and increment the upper bits
 #else
 #define ACVCACHEREAD JT(jt,fnasgnct)  // read the current cache counter
 #define ACVCACHEREADLOCK ACVCACHEREAD

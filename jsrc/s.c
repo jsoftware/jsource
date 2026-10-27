@@ -136,7 +136,7 @@ L* jtsymnew(J jt,LX*hv, LX tailx){LX j;L*u,*v;
 // Reset the fields in the deleted blocks.
 // This is used only for freeing local symbol tables, thus does not need to clear the name/path or worry about CACHED values
 extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
- I isprimary=AR(w)&ARLSYMINUSE;  // remember if this table is primary.  It is except during cleanup from PM debug
+ I arlflags=AR(w)&ARLSYMINUSE+ARHASACV;  // remember if this table is primary.  It is except during cleanup from PM debug
  LX freeroot=0; L *freetailchn=(L*)((I)jt->shapesink-offsetof(L,next));  // sym index of first freed ele; addr of chain field in last freed ele
  L *jtsympv=SYMORIGIN;  // Move base of symbol block to a register.  Block 0 is the base of the free chain.  MUST NOT move the base of the free queue to a register,
   // because when we free an explicit locale it frees its symbols here, and one of them might be a verb that contains a nested SYMB, giving recursion.  It is safe to move sympv to a register because
@@ -154,11 +154,12 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     I nextk=jtsympv[k].next;  // unroll loop 1 time
     aprev=&jtsympv[k].next;  // save last item we processed here
     if(jtsympv[k].fval){
+     if(unlikely(arlflags&ARHASACV)&&likely(jtsympv[k].name!=0)&&unlikely(!((I)jtsympv[k].fval&QCNOUN))&&likely(!(AT(jtsympv[k].name)&NAMEBYVALUE)))arlflags|=0x100;  // remember if we are freeing an ACV that is not u/v/u./v.
      // if the value was abandoned to an explicit definition, we took usecount 8..1  -> 1 ; revert that.  Can't change an ACPERMANENT!
      // otherwise decrement the usecount
      SYMVALFA(jtsympv[k]);
      jtsympv[k].fval=0;  // clear value - don't clear name
-     if(likely(isprimary))jtsympv[k].name->mback.lookaside=0;  // if this name has a lookaside, clear it too
+     if(likely(arlflags&ARLSYMINUSE))jtsympv[k].name->mback.lookaside=0;  // if this name has a lookaside, clear it too
     }
     k=nextk;
    }while(k);
@@ -171,7 +172,10 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
     NOUNROLL do{
      k=SYMNEXT(k);  // remove address flagging
      I nextk=jtsympv[k].next;  // unroll loop once
-     if(jtsympv[k].name!=0)fa(jtsympv[k].name);if(jtsympv[k].fval!=0)fa(QCWORD(jtsympv[k].fval));jtsympv[k].name=0;jtsympv[k].fval=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
+     if(jtsympv[k].name!=0){
+      if(unlikely(arlflags&ARHASACV)&&unlikely(!((I)jtsympv[k].fval&QCNOUN))&&likely(!(AT(jtsympv[k].name)&NAMEBYVALUE)))arlflags|=0x100;  // remember if we are freeing an ACV that is not u/v/u./v.
+      fa(jtsympv[k].name);if(jtsympv[k].fval!=0)fa(QCWORD(jtsympv[k].fval));jtsympv[k].name=0;jtsympv[k].fval=0;jtsympv[k].sn=0;jtsympv[k].flag=0;
+     }
      lastk=k;  // remember index of last block
      ++nfreed;  // ince count of block in chain-to-free
      k=nextk;
@@ -183,6 +187,7 @@ extern void jtsymfreeha(J jt, A w){I j,wn=AN(w); LX k,* RESTRICT wv=LXAV0(w);
  }
  if(likely(freeroot!=0)){jtsymreturn(jt,freeroot,lastk,nfreed);}  // put all blocks freed here onto the free chain
  __atomic_store_n(&AR(w),ARLOCALTABLE,__ATOMIC_RELEASE);  // reset table to available (LOCALTABLE is the init value).  Immaterial if not primary - table will be deleted soon
+ if(unlikely(arlflags&0x100)){ACVCACHEWRITELOCK ACVCACHEWRITEUNLOCK}  // if we freed an ACV, it might unmask a verb at a higher level, so invalidate all caching.  We take the trouble not to include u/v/u./v. because they are fetched by value and cannot themselves invalidate anything
 }
 
 static SYMWALK(jtsympoola, I,INT,100,1, 1, *zv++=j;)
@@ -777,7 +782,7 @@ I jtsymbis(J jtfg,A a,A w,A g){F12JT;
 
  // If we are assigning the same data block that's already there, don't bother with changing use counts or anything else.  This is assignment in place, but most cases are detected in our caller
  if(likely(QCWORD((I)x^(I)w)!=0)){
-  // if we are debugging, we have to make sure that the value being replaced is not in execution on the stack.  Of course, it would have to have an executable type
+  // Assigning new data block.  If we are debugging, we have to make sure that the value being replaced is not in execution on the stack.  Of course, it would have to have an executable type
   if(unlikely(jt->uflags.trace&TRACEDB))if(x!=0&&(((I)x&QCNOUN)==0))RZ(x=redef(QCWORD(w),x))  // check for SI damage (handled later).  could move outside of lock, but it's only for debug
   I xtype=(I)x;  // remember the type of x, if it exists; QCNOUN if not
   x=QCWORD(x);  // we have no further need for the type that has been reassigned

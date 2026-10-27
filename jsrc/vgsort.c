@@ -456,7 +456,7 @@ DF2(jtordstatqsort){F12IP;
  I *av=IAV(a), an=AN(a), ar=AR(a), wr=AR(w), wl=AS(w)[wr-1];  // pointer to selectors, their number and rank; rank of w, number of atoms per sort
  switch(varno&3){
  case 0:  // {.
-  if(unlikely(an!=1)||unlikely(ar>1))goto revert; rmin=(wl+an-1)&REPSGN(an); rmax=an>=0?an:wl-1;  // first x or last x values in y
+  if(unlikely(an!=1)||unlikely(ar>1))goto revert; rmin=(wl+av[0])&REPSGN(av[0]); rmax=(av[0]>=0?av[0]:wl)-1;  // first x or last x values in y
   break;
  case 1: if(unlikely(an==0)||unlikely(ar>1))goto revert; rmin=rmax=av[0]; DO(an-1, I j=av[i+1]; if(j<0)j+=wl; ASSERT((UI)j<(UI)wl,EVINDEX) rmin=MIN(rmin,j); rmax=MAX(rmax,j);) // {
   break;
@@ -466,7 +466,7 @@ DF2(jtordstatqsort){F12IP;
  }
  if(unlikely(rmin<0)||unlikely((UI)rmax>=(UI)wl))goto revert;   // if selector goes outside the array, revert
  A z;
- if(varno&0x10){ I m; PROD(m,wr-1,AS(w)) RZ(z=(AT(a)&FL?jtsortdq:jtsortiq)(jtfg,m,wl,w,rmin,rmax))} // do the sort(s)
+ if(varno&0x10){ I m; PROD(m,wr-1,AS(w)) RZ(z=(AT(w)&FL?jtsortdq:jtsortiq)(jtfg,m,wl,w,rmin,rmax))} // do the sort(s)
  else{RZ(z=jtgr1(jt,(A)((I)w+(1^RMAX)),0,rmin,rmax));}  // do the grade(s), rank 1 using IRS
  A sel=FAV(flgself)->fgh[0];   //  extract selector fn from hook:
  if(varno!=2)R IRS2(FAV(sel)->valencefns[1],jt,a,ar,z,1,sel);    //  call it, rank _ 1, giving the result.  Here we can use IRS...

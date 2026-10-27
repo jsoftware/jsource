@@ -1058,7 +1058,7 @@ DF2(jtfold){DF12IP;
  R derivvb;
 }
 
-// [x] Z: y, bivalent
+// [x] Z: y, bivalent.  Must use ASSERTGOTO/RZGOTO everywhere
 DF2(jtfoldZ){DF12IP;
  ASSERT(jt->foldrunning,EVSYNTAX);  // If fold not running, fail.  Should be a semantic error rather than syntax
  // The name FoldZ_j_ should have been loaded at startup.  If not, fail
@@ -1111,7 +1111,7 @@ static DF2(jtfold12){DF12IP;A z,vz;
     ++foldinfo.exestats[1]; foldinfo.zstatus=0; dfv1(z,dmfr&STATEDYAD?a:head(w),uself);
    }else{
     // 0 items (necessarily monadic).  Error if fold multiple.  Create a neutral for v from an item of y, and apply u to it
-    ASSERT(!(dmfr&STATEMULT),EVDOMAIN)  // empty multiple fold is < 0 applications of v, error
+    ASSERTGOTO(!(dmfr&STATEMULT),EVDOMAIN,exitpop)  // empty multiple fold is < 0 applications of v, error
     A fillcell=jtred0(jt,w,vself);  // a neutral with the shape of an item of y
     ASSERTGOTO(fillcell!=0,EVDOMAIN,exitpop)   // error if v has no neutral
     ++foldinfo.exestats[1]; foldinfo.zstatus=0; dfv1(z,fillcell,uself);
@@ -1135,7 +1135,7 @@ static DF2(jtfold12){DF12IP;A z,vz;
    AK(virtw)+=(item0nofst<<wk)+(dmfr&STATEDYAD?0:wstride);  // point to first item (if dyad) or second (if monad) as the first x arg
    // Mark the virtual block (coming into v as a) as inplaceable only if input y is fully inplaceable.  We have to turn off inplaceability in the virtual block so that
    // a non-inplaceable value might cause PRISTINE to be set.  We also require the type to be right, with some allowances for &.>
-   dmfr |= (UI)(SGNIF(jtfg,JTINPLACEWX)&(-(AT(w)&TYPEVIPOK)&AC(w)))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
+   dmfr|=(UI)(SGNIF(jtfg,JTINPLACEWX)&(-(AT(w)&TYPEVIPOK)&AC(w)))>>(BW-1-ZZFLAGVIRTAINPLACEX);   // requires JTINPLACEWX==0.  Single flag bit
 
    // vz will be the previous full result of v, usually inplaceable; init to x or first item of y
    if(dmfr&STATEDYAD){vz=a; dmfr|=((I)jtfg&JTINPLACEA)<<(ZZFLAGVIRTWINPLACEX-JTINPLACEAX); // x given, use it as first input and use its inplaceability
@@ -1146,13 +1146,13 @@ static DF2(jtfold12){DF12IP;A z,vz;
 
    // Install initial inplaceability.  Since the inplaceability of v was used for F., we can assume that any inplaceability shown is allowed for v.
    // Remove WILLOPEN status which we are ignoring.  Values were calculated above
-   jtfg = (J)(((I)jtfg & ~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEW+JTINPLACEA))|PEXT0(dmfr,ZZFLAGVIRTWINPLACEX,JTINPLACEW+JTINPLACEA));
+   jtfg=(J)(((I)jtfg & ~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEW+JTINPLACEA))|PEXT0(dmfr,ZZFLAGVIRTWINPLACEX,JTINPLACEW+JTINPLACEA));
 
    --nitems;  // convert #items to # executions of loop
   }
  }else{  // here for unlimited fold
   nitems=0;  // convert to infinite loop
-  jtfg = (J)((I)jtfg & ~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA));  // never inplace x, which repeats if given; pass along original inplaceability of y
+  jtfg=(J)((I)jtfg & ~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEA));  // never inplace x, which repeats if given; pass along original inplaceability of y
   virtw=a; vz=w;  // v starts on w and then reapplies to the result; save a reg by moving a to virtw
  }
  A *_old=jt->tnextpushp;  // pop back to here to clear everything except the result & any early allocation.  We make sure each new result allocation uses the same tstack location

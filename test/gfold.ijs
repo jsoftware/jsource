@@ -99,6 +99,11 @@ NB. empty result
 'no result' -: ([   _2 Z: 51 = {:) F: (, -:`(1 3&p.)@.(2&|)@{:) etx 102
 'no result' -: ([   _2 Z: 51 = {:) F. (, -:`(1 3&p.)@.(2&|)@{:) etx 102
 
+'untimely request' -: Z: etx 0
+'domain error' -: ]F:.+ etx ''
+'untimely request' -: Z: etx 0
+
+
 NB. x Z: y
 a =: 3 : 0
 t =: t + 1

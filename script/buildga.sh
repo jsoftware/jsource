@@ -255,12 +255,12 @@ if [ $m64 -eq 1 ]; then
    j64x=j64arm ./build_jconsole.sh
    j64x=j64arm ./build_tsdll.sh
    j64x=j64arm ./build_libj.sh
-   j64x=j64arm ./build_jamalgam.sh
+#   j64x=j64arm ./build_jamalgam.sh
   else
    j64x=j64 ./build_jconsole.sh
    j64x=j64 ./build_tsdll.sh
    j64x=j64 ./build_libj.sh
-   j64x=j64 ./build_jamalgam.sh
+#   j64x=j64 ./build_jamalgam.sh
   fi
   ./clean.sh
   j64x=j64iphoneos _DEBUG=0 ./build_jconsole.sh
@@ -276,14 +276,12 @@ if [ $m64 -eq 1 ]; then
   j64x=j64arm ./build_jconsole.sh
   j64x=j64arm ./build_tsdll.sh
   j64x=j64arm ./build_libj.sh
-  j64x=j64arm ./build_jamalgam.sh
+#  j64x=j64arm ./build_jamalgam.sh
  else
   j64x=j64 ./build_jconsole.sh
   j64x=j64 ./build_tsdll.sh
   j64x=j64 ./build_libj.sh
-  if [ "$1" != "openbsd" ] && [ "$1" != "freebsd" ]; then
-   j64x=j64 ./build_jamalgam.sh
-  fi
+#  j64x=j64 ./build_jamalgam.sh
  fi
 
  if [ "$USE_PYXES" = "1" ] && [ "$USE_EMU_AVX" = "1" ] && ([ "$2" = "x86_64" ] || [ "$1" = "darwin" ]); then
@@ -328,7 +326,7 @@ if [ "$1" = "darwin" ] && [ -f "bin/$dest/j64arm/${libj}.${ext}" ]; then
  lipo bin/$dest/j64/jconsole bin/$dest/j64arm/jconsole -create -output $B/jconsole
  lipo bin/$dest/j64/libtsdll.${ext} bin/$dest/j64arm/libtsdll.${ext} -create -output $B/libtsdll.${ext}
  lipo bin/$dest/j64/${libj}.${ext} bin/$dest/j64arm/${libj}.${ext} -create -output $B/${libj}.${ext}
- lipo bin/$dest/j64/jamalgam bin/$dest/j64arm/jamalgam -create -output $B/jamalgam || true
+# lipo bin/$dest/j64/jamalgam bin/$dest/j64arm/jamalgam -create -output $B/jamalgam || true
 fi
 
 if [ -d "bin/$dest/j64iphoneos" ]; then

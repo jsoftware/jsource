@@ -103,6 +103,10 @@ NB. empty result
 'domain error' -: ]F:.+ etx ''
 'untimely request' -: Z: etx 0
 
+324 785 -: ]F.:(+ *:) memu i. 3 2  NB. there was a premature free of vz in fold
+
+
+
 
 NB. x Z: y
 a =: 3 : 0

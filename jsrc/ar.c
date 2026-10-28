@@ -1140,13 +1140,15 @@ static DF2(jtfold12){DF12IP;A z,vz;
    // vz will be the previous full result of v, usually inplaceable; init to x or first item of y
    if(dmfr&STATEDYAD){vz=a; dmfr|=((I)jtfg&JTINPLACEA)<<(ZZFLAGVIRTWINPLACEX-JTINPLACEAX); // x given, use it as first input and use its inplaceability
    }else{
-    vz=virtualip(w,item0nofst,wcr); if(unlikely(vz==0))goto exitpop; AN(vz)=wcn; MCISH(AS(vz),AS(w)+1,wcr);  // create a virtual block to the first item, possibly self-virtual, fill in
+    vz=virtual(w,item0nofst,wcr); if(unlikely(vz==0))goto exitpop; AN(vz)=wcn; MCISH(AS(vz),AS(w)+1,wcr);  // create a virtual block to the first item, possibly self-virtual, fill in
+       // virtualip here would have consequences.  If w is abandoned, virtual-in-place would leave vz=w, also abandoned.  Then if vz is passed into a hook/fork as an abandoned argument, it could be freed, which would be freeing
+       // w which holds all the other items of y.  To avoid this early free, we would have to turn OFF inplacing of vz if w was virtual-in-placed; we choose to allocate vz always and keep the inplacing.
     if(dmfr&ZZFLAGVIRTAINPLACE){ACRESET(vz,ACUC1+ACINPLACE); dmfr|=ZZFLAGVIRTWINPLACE;} // inplaceability of w might have changed: if it was originally inplaceable, make this virtual inplaceable
    }
 
    // Install initial inplaceability.  Since the inplaceability of v was used for F., we can assume that any inplaceability shown is allowed for v.
-   // Remove WILLOPEN status which we are ignoring.  Values were calculated above
-   jtfg=(J)(((I)jtfg & ~(JTWILLBEOPENED+JTCOUNTITEMS+JTINPLACEW+JTINPLACEA))|PEXT0(dmfr,ZZFLAGVIRTWINPLACEX,JTINPLACEW+JTINPLACEA));
+   // Remove WILLOPEN/WILLREALIZE status which we are ignoring.  Values were calculated above
+   jtfg=(J)(((I)jtfg & ~(JTWILLBEOPENED+JTWILLBEREALIZED+JTCOUNTITEMS+JTINPLACEW+JTINPLACEA))|PEXT0(dmfr,ZZFLAGVIRTWINPLACEX,JTINPLACEW+JTINPLACEA));
 
    --nitems;  // convert #items to # executions of loop
   }

@@ -776,8 +776,7 @@ A jtincorpra(J jt, A w) {ARGCHK1(w); INCORPNC(w); ra(w); R w;}
 // result is PRISTINE iff the backer is
 // This is inplaceable, and we inplace the w block.  'Inplaceable' here includes being the target of jt->zombieval
 // We fill in everything but AN and AS, which are done in the caller
-// You should be wary of calling a virtual block NJA, because with a usecount of 1 it might be inplaced by the code for x,y or x u}y
-// If this code is called with inplacing turned on (* w inplaceable), we assume that w is going to be replaced by the virtual result,
+// If this code is called with inplacing turned on (in jtfg), we assume that w is going to be replaced by the virtual result,
 // and we make the virtual block inplaceable if w was
 RESTRICTF A jtvirtual(J jtfg, AD *RESTRICT w, I offset, I r){F12IP;AD* RESTRICT z;
 ASSERT(RMAX>=r,EVLIMIT);

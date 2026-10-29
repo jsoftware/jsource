@@ -37,7 +37,7 @@ blacklist=: blacklist -. a
 blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each 'gstack.ijs';'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs';'g128x19.ijs';'g431.ijs' NB. temporarily disable
 blacklist=: blacklist, (((,'1')-:2!:5'__MSYS__')*.(*9!:56'auditexecresults')*.('x86_64'-:9!:56'cpu')*.IFWIN)#(<testpath),each <'g128x19.ijs' NB. temporarily disable
 blacklist=: blacklist, ((1 -.@e. '/gcc-' E. 9!:14'')+.('0'={.":2!:5'_DEBUG')+.IF64+.UNAME-.@-:'linux')#(<testpath),each 'glapack.ijs';'glapackcb.ijs'  NB. linux32 gcc lapack issue running under gdb
-blacklist=: blacklist, ('Win'-.@-:UNAME)#(<testpath),each 'g128x14.ijs';'gt128x19.ijs'
+blacklist=: blacklist, ('Win'-.@-:UNAME)#(<testpath),each 'g128x14.ijs';'g128x19.ijs'
 ddall=: ddall -. blacklist=: ~. blacklist
 
 NB. smoke test

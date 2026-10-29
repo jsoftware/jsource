@@ -803,19 +803,31 @@ y=: y, 1 1 1 1 1 1 1 1 1 1 1 1
 y=: y, 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
 5 5 5 5 5 5 5 5 5 5 5 5 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -: (<<<I.1=y){y  NB. incorrectly gave a virtual
 
-{{for. i. y do.
+{{for_i. i. y do.
 dels =. shp ?@$~ ndels =. ? shp =. 1 >. ? 73  NB. deal the array and the comp indexes
-assert. (2 ! shp) = (+/~.dels) + +/ (<<<dels) { i. shp
+if. (2 ! shp) ~: (+/~.dels) + +/ t=. (<<<dels) { i. shp do.
+  techo i
+  techo dels
+  techo ((i.shp) -. dels) -. t
+  techo ((i.shp) -. dels) -.~ t
+  assert. 0
+end.
 end.
 1
-}} QKTEST{50000 10000  NB. Verify that random deletions work
+}} 0{50000 10000  NB. Verify that random deletions work
 
-{{for. i. y do.
+{{for_i. i. y do.
 dels =. shp ?@$~ ndels =. ? shp =. 1 >. ? 4e4  NB. deal the array and the comp indexes
-assert. (2 ! shp) = (+/~.dels) + +/ (<<<dels) { i. shp
+if. (2 ! shp) ~: (+/~.dels) + +/ t=. (<<<dels) { i. shp do.
+  techo i
+  techo dels
+  techo ((i.shp) -. dels) -. t
+  techo ((i.shp) -. dels) -.~ t
+  assert. 0
+end.
 end.
 1
-}} QKTEST{100 20  NB. Verify that random deletions work
+}} 0{100 20  NB. Verify that random deletions work
 
 NB. (<"1 x){y -----------------------------------------------------------
 

@@ -396,7 +396,7 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,id;I flag=VFLAGNONE,linktype=0;V*u
    // unexecutable trident.  Fail as a syntax error and call eformat as a pre-exec error with a holding an INT
    // list of the parts of speech of the unexecutable fragment
    jsignal(EVSYNTAX);
-   GAT0(z,INT,2,1); IAV1(z)[0]=rtnx&3; IAV1(z)[1]=PEXT0(rtnx,2,3); IAV1(z)[2]=rtnx>>4;  // install parts of speech in order
+   GAT0(z,INT,3,1); IAV1(z)[0]=rtnx&3; IAV1(z)[1]=PEXT0(rtnx,2,3); IAV1(z)[2]=rtnx>>4;  // install parts of speech in order
    jteformat(jt,ds(CENQUEUE),z,zeroionei(1),0); R0;
   }
   if(t==MARK)R folk(a,w,h);  // the one way to create a fork

@@ -527,8 +527,6 @@ F1(jtcpufeature){F12IP;
 #else
   R num(0);
 #endif
- } else if(!strcasecmp(CAV(w),"FORCEVIRTUALINPUTS")) {
-  R sc(FORCEVIRTUALINPUTS);
  } else if(!strcasecmp(CAV(w),"NORMAH")) {
 #ifdef NORMAH
   R sc(NORMAH);

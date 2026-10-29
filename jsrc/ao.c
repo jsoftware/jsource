@@ -857,7 +857,7 @@ F1(jtsldotdot){F12IP;A h=0;
 // NOTE: u/. is processed using the code for u;.1 and passing the self for /. into the cut verb.  So, the self produced
 // by /. and ;.1 must be the same as far as flags etc.
  ARGCHK1(w);
- I flag; if(NOUN&AT(w)){RZ(h=fxeachv(1L,w)); flag=gflg(h)+VGERL;}else flag=(FAV(w)->flag&VNONAME+VNOSELF);  // pass through rollup flags
+ I flag; if(NOUN&AT(w)){RZ(h=fxeachv(1L,w)); flag=gflg(h)+VGERL;}else flag=(FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF);  // pass through rollup flags
  R fdef(0,CSLDOTDOT,VERB,jtvalenceerr,jtkey, flag&VGERL?h:w,0L,0, flag, RMAX,RMAX,RMAX);
 }
 

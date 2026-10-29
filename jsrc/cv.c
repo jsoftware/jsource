@@ -133,7 +133,7 @@ fillreshape:;
 #if 0  // unimplemented
   case CTILDE:   // noun~!.n - what in the world is that?
    ASSERT(NOUN&AT(FAV(a)->fgh[0]),EVDOMAIN);
-   fdeffill(z,0L,CFIT,VERB,jtfitf1,jtfitf2,a,w,0L,VNONAME+VNOSELF,m,l,r) RETF(z);
+   fdeffill(z,0L,CFIT,VERB,jtfitf1,jtfitf2,a,w,0L,VNOLOCCHG+VNONAME+VNOSELF,m,l,r) RETF(z);
 #endif
   // other cases continue on to error
   }

@@ -741,7 +741,7 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   r[0]=hv[0]=mr(w);
   r[1]=hv[1]=lr(w);
   r[2]=hv[2]=rr(w);
-  vf=FAV(w)->flag&VNONAME+VNOSELF;  // set FIX if verb not named
+  vf=FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF;  // set FIX if verb not named
   isfloat=1;  // suppress messages that come through the verb path
  }else{A t;
   // Noun v. Extract and turn into 3 values, stored in h
@@ -752,7 +752,7 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   hv[0]=v[2==n]; hv[0]=hv[0]>RMAX?RMAX:hv[0]; hv[0]=hv[0]<-RMAX?-RMAX:hv[0]; r[0]=DR(hv[0]);
   hv[1]=v[3==n]; hv[1]=hv[1]>RMAX?RMAX:hv[1]; hv[1]=hv[1]<-RMAX?-RMAX:hv[1]; r[1]=DR(hv[1]);
   hv[2]=v[n-1];  hv[2]=hv[2]>RMAX?RMAX:hv[2]; hv[2]=hv[2]<-RMAX?-RMAX:hv[2]; r[2]=DR(hv[2]);
-  vf=VNONAME+VNOSELF;  // noun is always VNONAME+VNOSELF
+  vf=VNOLOCCHG+VNONAME+VNOSELF;  // noun is always VNOLOCCHG+VNONAME+VNOSELF
  }
  // r is the actual verb ranks, i. e. _ if given ranks are negative.  h may be negative
 
@@ -767,7 +767,7 @@ F2(jtqq){F12IP;AF f1,f2;I hv[3],n,r[3],vf,flag2=0,*v;A ger=0;C lc=0;
   }else{   // gerund failed (quietly), use the noun value itself
    f1=cons1; f2=cons2;    // use the constant routines for nouns
    ACIPNO(a);   // Mark the noun as non-inplaceable.  If the derived verb is used in another sentence, it must first be assigned to a name, which will protects values inside it.
-   vf|=VNOLOCCHG;    // the noun can't mess up assignment, and does not support IRS or inplacing
+   vf|=VNOLOCCHG+VNONAME+VNOSELF;    // the noun can't mess up assignment, and does not support IRS or inplacing
   }
  }else{   // normal case where u is a verb
   V* av=FAV(a);   // point to verb info

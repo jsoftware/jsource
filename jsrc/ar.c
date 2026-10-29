@@ -1243,7 +1243,7 @@ exitpop:;   // here to abort on error, after popping stack
 DF2(jtfold){DF12IP;
  ASSERTVV(a,w);  // must be verb ops
  A z; fdefallo(z);   // allocate verb result
- fdeffillall(z,0,FAV(self)->id,VERB, jtfold12,jtfold12, a,w,0L, FAV(a)->flag&FAV(w)->flag&VNONAME+VNOSELF, RMAX,RMAX,RMAX,FAV(z)->lu2.lc=FAV(self)->id,);
+ fdeffillall(z,0,FAV(self)->id,VERB, jtfold12,jtfold12, a,w,0L, FAV(a)->flag&FAV(w)->flag&VNOLOCCHG+VNONAME+VNOSELF, RMAX,RMAX,RMAX,FAV(z)->lu2.lc=FAV(self)->id,);
  R z;
 }
 

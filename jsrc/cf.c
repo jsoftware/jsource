@@ -381,7 +381,7 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,id;I flag=VFLAGNONE,linktype=0;V*u
   if(BOX&AT(w)&&AT(a)&CONJ&&(FAV(a)->id==CGRAVE||FAV(a)->id==CPOWOP&&1<AN(w))){A r; WITHJTJERROFF(r=fxeachv(1-(RMAX+1),w);) if(likely(r!=0)){flag+=VGERR; w=r;}}  // detect `gerund and ^:gerund  and mark the compound
   // if the unexecutable bident is all nouns or primitive ACVs, mark the derived modifier as NAMELESS.  This is aimed mostly at each and every
 
-  I flag2=VF2NAMELESS, ffix=VNONAME+VNOSELF; A ta=a; ta=AT(a)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX)); ffix&=FAV(ta)->flag;  // CPLUS to make nouns look primitive
+  I flag2=VF2NAMELESS, ffix=VNOLOCCHG+VNONAME+VNOSELF; A ta=a; ta=AT(a)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX)); ffix&=FAV(ta)->flag;  // CPLUS to make nouns look primitive
                          ta=w; ta=AT(w)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX)); ffix&=FAV(ta)->flag;
   fdeffill(z,flag2,CADVF, t, rtn,rtn, a,w,0, flag+ffix, 0L,0L,0L) R z;  // only one of the rtns is ever used.  h=0 to indicate bident
 
@@ -402,7 +402,7 @@ A jthook(J jt,A a,A w,A h){AF f1=0,f2=0;C c,d,id;I flag=VFLAGNONE,linktype=0;V*u
   if(t==MARK)R folk(a,w,h);  // the one way to create a fork
   if(rtn==0)R df2(z,a,h,w);  // N V N, N/V C N/V: we must execute immediately rather than returning a modifier for the trident
   // if the unexecutable trident is all nouns or primitive ACVs, mark the derived modifier as NAMELESS.
-  flag=VNONAME+VNOSELF;  // we will set VNONAME+VNOSELF if all branches are set
+  flag=VNOLOCCHG+VNONAME+VNOSELF;  // we will set VNONAME+VNOSELF if all branches are set
   I flag2=VF2NAMELESS; A ta=a; ta=AT(a)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX)); flag&=FAV(ta)->flag;  // CPLUS to make nouns look primitive
                          ta=w; ta=AT(w)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX)); flag&=FAV(ta)->flag;
                          ta=h; ta=AT(h)&NOUN?ds(CPLUS):ta; flag2&=(FAV(ta)->flag2<<(VF2NAMELESSX-VF2PRIMX)); flag&=FAV(ta)->flag;

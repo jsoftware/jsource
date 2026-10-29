@@ -160,11 +160,11 @@ xco:
   if(nf&&CXCO==FAV(FAV(g)->fgh[0])->id) goto xco; // m&(x:!.n)^:_1 is (-m)&(x:!.n)
   ASSERT(nf&&CPOUND==FAV(FAV(g)->fgh[0])->id,EVDOMAIN);  // otherwise must be m&(#!.n)^:_1
   ASSERT(1==AR(x),EVRANK);
-  R fdef(0,CPOWOP,VERB, jtexpandg,jtvalenceerr, fampg?fampg:amp(f,g),num(-1),0L, VNONAME+VNOSELF, RMAX,0L,0L);
+  R fdef(0,CPOWOP,VERB, jtexpandg,jtvalenceerr, fampg?fampg:amp(f,g),num(-1),0L, VNOLOCCHG+VNONAME+VNOSELF, RMAX,0L,0L);
  case CPOUND:   // #
   ASSERT(nf!=0,EVDOMAIN);  // (m&#)^:_1
   ASSERT(1>=AR(x),EVRANK);
-  R fdef(0,CPOWOP,VERB, jtexpandf,jtvalenceerr, fampg?fampg:amp(f,g),num(-1),0L, VNONAME+VNOSELF, RMAX,0L,0L);
+  R fdef(0,CPOWOP,VERB, jtexpandf,jtvalenceerr, fampg?fampg:amp(f,g),num(-1),0L, VNOLOCCHG+VNONAME+VNOSELF, RMAX,0L,0L);
   break;
  case CPOWOP:  // ^:
   if(u->valencefns[0]==jtinvh1)R invamp(nf?f:u->fgh[2],nf?u->fgh[2]:g,0);  // m&(#.^:_1) : try new inverse after moving to old
@@ -229,7 +229,7 @@ xco:
   }
   break;
  case CCUT:;   // <;.[12]
-  if(nf&&FAV(FAV(g)->fgh[0])->id==CBOX&&BETWEENC(IAV(FAV(g)->fgh[1])[0],1,2))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, fampg,num(-1), 0L,VNONAME+VNOSELF, RMAX,RMAX,RMAX);
+  if(nf&&FAV(FAV(g)->fgh[0])->id==CBOX&&BETWEENC(IAV(FAV(g)->fgh[1])[0],1,2))R fdef(0,CPOWOP,VERB, jtbminv,jtvalenceerr, fampg,num(-1), 0L,VNOLOCCHG+VNONAME+VNOSELF, RMAX,RMAX,RMAX);
   break;
  }
  ASSERT(0,EVDOMAIN);
@@ -282,9 +282,9 @@ A jtinv(J jt, A w, I recur){A f,ff,g;B b,nf,ng,vf,vg;C id;I p,q;V*v;
  case CBANG:    R eval("3 : '(-(y -~ !)%0.001&* (0.001%~[:-/[:! 0.001 0 +/ ]) ])^:_<.&170^:(-:+)^.y' :. !");
 xco:
  case CXCO:     R amp(num(-1),w);
- case CSPARSE:  R fdef(0,CPOWOP,VERB,jtdenseit,jtvalenceerr, w,num(-1),0L, VNONAME+VNOSELF, RMAX,RMAX,RMAX);
- case CICAP:    R fdef(0,CPOWOP,VERB,jticapdotinv,jtvalenceerr, w,num(-1),0L, VNONAME+VNOSELF, RMAX,RMAX,RMAX);
- case CPCO:     R fdef(0,CPOWOP,VERB,jtplt,    jtvalenceerr, w,num(-1),0L, VNONAME+VNOSELF, 0L,  0L,  0L  );
+ case CSPARSE:  R fdef(0,CPOWOP,VERB,jtdenseit,jtvalenceerr, w,num(-1),0L, VNOLOCCHG+VNONAME+VNOSELF, RMAX,RMAX,RMAX);
+ case CICAP:    R fdef(0,CPOWOP,VERB,jticapdotinv,jtvalenceerr, w,num(-1),0L, VNOLOCCHG+VNONAME+VNOSELF, RMAX,RMAX,RMAX);
+ case CPCO:     R fdef(0,CPOWOP,VERB,jtplt,    jtvalenceerr, w,num(-1),0L, VNOLOCCHG+VNONAME+VNOSELF, 0L,  0L,  0L  );
  case CQCO:     R eval("*/\"1");   // primes, inverse is prime factors
  case CUCO:     R amp(num(3),w);
  case CUNDER:   R under(invrecur(f),g);

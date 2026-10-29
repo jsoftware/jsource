@@ -331,7 +331,7 @@ DF2(jtpowop){DF12IP;B b;V*v;
    if(!AR(w)&&(x=C(AAV(w)[0]),!AR(x)&&NUMERIC&AT(x)||1==AR(x)&&!AN(x))){  // scalar box whose contents are numeric atom or empty list   <numatom or a:
     // here for <numatom or a: .  That will be handled as an integer power with multiple results, usually
     n=AN(x)?rei0(x):IMAX;  // get power, using _ for <''
-    flag=FAV(a)->flag&VNONAME+VNOSELF;  // No inplacing allowed for multiple-result types
+    flag=FAV(a)->flag&VNOLOCCHG+VNONAME+VNOSELF;  // No inplacing allowed for multiple-result types
     ASSERT(n!=0,EVDOMAIN);  // <0 arg not allowed: would be nothing
     f1=f2=jtpowatom12; v=FAV(a);   // use atomic-power handler
     // if u is {&n or {~, and n is <_ or <'', do the tclosure trick
@@ -365,7 +365,7 @@ DF2(jtpowop){DF12IP;B b;V*v;
       // if there are no names, calculate the monadic inverse and save it in h.  Inverse of the dyad, or the monad if there are names
       // must wait until we get arguments.  We can't trust the inverse to be NOLOCCHG.  nameless means no name, no locchg.  If there is a locchg there can't be an inverse anyway
       f2=jtinv2; f1=jtinv1; if(nameless(a)){WITHJTJERROFF(if(h=inv(a)){f1=jtinvh1;flag=FAV(h)->flag&VNOLOCCHG+VNONAME+VNOSELF;}else{f1=jtinverr;})} // h must be valid A block for free.  If no names in w, take the inverse.  If it doesn't exist, fail the monad but keep the dyad going
-     }else flag=FAV(a)->flag&VNONAME+VNOSELF;     // if u^:_, never allow inplace assignment since we are converging
+     }else flag=FAV(a)->flag&VNOLOCCHG+VNONAME+VNOSELF;     // if u^:_, never allow inplace assignment since we are converging
      // Note: negative powers other than _1 are resolved in the action routine
     }
 #if C_VIAVX
@@ -379,7 +379,7 @@ DF2(jtpowop){DF12IP;B b;V*v;
     }
 #endif
     encn=(ABS(n)<<POWERABSX)+(n<0?POWERANEG:0); encn=n==IMIN?((I)-1*POWERABS)+POWERADOWHILE:encn;  // save the power, in flagged form, for powatom12
-   }else{f1=f2=jtply12; flag=FAV(a)->flag&VNONAME+VNOSELF;}  // non-atomic power: handle general case, which does not support inplacing (since it might converge)
+   }else{f1=f2=jtply12; flag=FAV(a)->flag&VNOLOCCHG+VNONAME+VNOSELF;}  // non-atomic power: handle general case, which does not support inplacing (since it might converge)
    // fall through to create result
   }  // end of 'u^:numeric'
  }  // end of 'u^:n'

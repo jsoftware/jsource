@@ -838,7 +838,7 @@ static A jtgadv(J jt,A w){A hs;I n;
  // The derived verb is NOLOCCHG if all the components are; it has gerund left-operand; and it supports inplace operation on the dyad
  I alr=atoplr(AAV(hs)[0]);   // Also set the LSB flags to indicate whether v0 is u@[ or u@]
  I flag=VNOLOCCHG+VNONAME+VNOSELF;  // where we will build verb flags, inited as if wn<3
- if(wn==3){flag=FAV(AAV(hs)[2])->flag|VNONAME+VNOSELF;}  // if 3 gerunds, init from v2
+ if(wn==3){flag=FAV(AAV(hs)[2])->flag|VNOLOCCHG+VNONAME+VNOSELF;}  // if 3 gerunds, init from v2
  flag=(flag&FAV(AAV(hs)[0])->flag&FAV(AAV(hs)[1])->flag&VNOLOCCHG+VNONAME+VNOSELF)+(VGERL)+(alr-2>0?alr-2:alr);  // wn may be 2 or 3
  R fdef(0,CRBRACE,VERB, jtgav1,jtgav2, hs,0L,0,flag, RMAX,RMAX,RMAX);  // create the derived verb, using verbified gerund
 }

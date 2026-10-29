@@ -137,6 +137,7 @@ eformat_j_=: exformat_j_ f.
 echo '>>> testing g520.ijs'
 RES=: RUN4 (<testpath),each <'g520.ijs'
 exit^:(*@#RES) *@#RES
+RES=: ''
 
 0!:_1 '$'   NB. temp skip to allow running full test suite
 

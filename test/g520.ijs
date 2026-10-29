@@ -805,8 +805,9 @@ y=: y, 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
 
 {{for_i. i. y do.
 dels =. shp ?@$~ ndels =. ? shp =. 1 >. ? 73  NB. deal the array and the comp indexes
+techo shp,ndels
 if. (2 ! shp) ~: (+/~.dels) + +/ t=. (<<<dels) { i. shp do.
-  techo i
+  techo i,shp,ndels
   techo dels
   techo ((i.shp) -. dels) -. t
   techo ((i.shp) -. dels) -.~ t
@@ -818,8 +819,9 @@ end.
 
 {{for_i. i. y do.
 dels =. shp ?@$~ ndels =. ? shp =. 1 >. ? 4e4  NB. deal the array and the comp indexes
+techo shp,ndels
 if. (2 ! shp) ~: (+/~.dels) + +/ t=. (<<<dels) { i. shp do.
-  techo i
+  techo i,shp,ndels
   techo dels
   techo ((i.shp) -. dels) -. t
   techo ((i.shp) -. dels) -.~ t

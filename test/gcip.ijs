@@ -37,6 +37,7 @@ NB. Test small sizes, should break into blockedmmults
     assert. (a +/@(*"1 _) b) -: a X b
   end. 1 }} ''
 
+  if. 9!:56'pyxes' do.
   techo 'Test multithreading'
   a=: (((*9!:56'debug')+.QKTEST+.-.IF64){::1024 1024;128 128) ?@$ 0
   b=: (((*9!:56'debug')+.QKTEST+.-.IF64){::1024 1024;128 128) ?@$ 0
@@ -47,6 +48,7 @@ NB. Test small sizes, should break into blockedmmults
   assert. *./c=e
 
   if. (1<{:8&T.'') *. N > 1 T. '' do. 0 T. '' end.  NB. Create another worker thread for next loop
+  end.
 end.
 1
 }} ''

@@ -805,31 +805,25 @@ y=: y, 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
 
 {{for_i. i. y do.
 dels =. shp ?@$~ ndels =. ? shp =. 1 >. ? 73  NB. deal the array and the comp indexes
-techo shp,ndels
-if. (2 ! shp) ~: (+/~.dels) + +/ t=. (<<<dels) { i. shp do.
-  techo i,shp,ndels
-  techo dels
-  techo ((i.shp) -. dels) -. t
-  techo ((i.shp) -. dels) -.~ t
-  assert. 0
+t=. (<<<dels)&{ etx i. shp
+if. 2=3!:0 t do.
+ techo t
+ techo i,shp,ndels
+ techo dels
+ assert. 0
+else.
+ assert. (2 ! shp) = (+/~.dels) + +/ t
 end.
 end.
 1
 }} 0{50000 10000  NB. Verify that random deletions work
 
-{{for_i. i. y do.
+{{for. i. y do.
 dels =. shp ?@$~ ndels =. ? shp =. 1 >. ? 4e4  NB. deal the array and the comp indexes
-techo shp,ndels
-if. (2 ! shp) ~: (+/~.dels) + +/ t=. (<<<dels) { i. shp do.
-  techo i,shp,ndels
-  techo dels
-  techo ((i.shp) -. dels) -. t
-  techo ((i.shp) -. dels) -.~ t
-  assert. 0
-end.
+assert. (2 ! shp) = (+/~.dels) + +/ (<<<dels) { i. shp do.
 end.
 1
-}} 0{100 20  NB. Verify that random deletions work
+}} QKTEST{100 20  NB. Verify that random deletions work
 
 NB. (<"1 x){y -----------------------------------------------------------
 

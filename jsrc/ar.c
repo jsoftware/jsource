@@ -996,16 +996,16 @@ F1(jtslash){F12IP;A h;AF f1;C c;V*v;
  // falling through w is a verb
  A z; fdefallo(z)
  v=FAV(w); 
- I flag=v->flag&VNOLOCCHG+VNONAME+VNOSELF;  // if u is asgsafe, so is u/
+ I flag=(v->flag&VNOLOCCHG+VNONAME+VNOSELF)|(FAV(ds(CSLASH))->flag&~(VNOLOCCHG+VNONAME+VNOSELF));  // if u is asgsafe, so is u/ - this sets VIRS1
  switch(v->id){  // select the monadic case
  case CCOMMA:  f1=jtredcat;  break;   // ,/
  case CCOMDOT: f1=jtredstitch; break;    // ,./
  case CSEMICO: f1=jtredsemi; break;    // ;/
- case CUNDER:  f1=jtreduce; if(COPE==IDD(v->fgh[1])){c=FAV(v->fgh[0])->id; if(c==CCOMMA)f1=jtredcateach; else if(c==CCOMDOT)f1=jtredstiteach;} break;   // ,&.>/
+ case CUNDER:  f1=jtreduce; if(COPE==IDD(v->fgh[1])){c=FAV(v->fgh[0])->id; if(c==CCOMMA)f1=jtredcateach; else if(c==CCOMDOT){f1=jtredstiteach; flag&=~VIRS1;} } break;   // ,&.>/  ,.&>/
  default: f1=jtreduce; break;  // monad is inplaceable if the dyad for u is
  }
  RZ(h=qq(w,v2(lr(w),RMAX)));  // create the rank compound to use if dyad
- fdeffillall(z,0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag|(FAV(ds(CSLASH))->flag&~(VNONAME+VNOSELF)), RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->flag&VFUSEDOK2?va[v->lu2.lc&0x7f].rps:&rpsnull);
+ fdeffillall(z,0,CSLASH,VERB, f1,jtoprod, w,0L,h, flag, RMAX,RMAX,RMAX,fffv->localuse.lu0.cachedloc=0,FAV(z)->localuse.lu1.redfn=v->flag&VFUSEDOK2?va[v->lu2.lc&0x7f].rps:&rpsnull);
  // set localuse to point to the VARPSA block for w if w is primitive atomic dyad; otherwise to the null VARPSA block.  This localuse is valid only in CSLASH block
  R z;
 }

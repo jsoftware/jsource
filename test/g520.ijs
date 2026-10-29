@@ -804,11 +804,16 @@ y=: y, 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
 5 5 5 5 5 5 5 5 5 5 5 5 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -: (<<<I.1=y){y  NB. incorrectly gave a virtual
 
 {{for_i. i. y do.
+try.
 dels =. shp ?@$~ ndels =. ? shp =. 1 >. ? 73  NB. deal the array and the comp indexes
+catch.
+techo 13!:12''
+assert. 0
+end.
 try.
 t=. ((<<<dels)&{) i. shp
 catch.
-techo 13!:11''
+techo 13!:12''
 techo 'shp ndels ',":shp,ndels
 techo 'dels ',":dels
 techo '/:~ ~.dels ',":/:~ ~.dels

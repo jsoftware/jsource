@@ -153,7 +153,7 @@ JST* jeload(void* callbacks)
 // WIN arg is 0, Unix arg is argv[0]
 void jepath(char* arg,char* lib)
 {
-#if defined(__wasm__) || defined(TARGET_IOS) || defined(JAMALGAM)
+#if defined(__wasm__) || defined(TARGET_IOS)
  *pathdll = *libpathj = *path = 0;  /* libj is static library */
  return;
 #else

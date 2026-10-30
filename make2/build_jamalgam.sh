@@ -623,7 +623,7 @@ case "$jplatform/$j64x" in
  linux/j32) # linux x86
   TARGET=jamalgam
   CFLAGS="$common -march=i686 -m32 -msse2 -mfpmath=sse "
-  LDFLAGS=" -m32 -lm -ldl $LDOPENMP32 $LDTHREAD -Wl,-z,noexecstack "
+  LDFLAGS=" -m32 -Wl,-stack_size,0xc00000 -lm -ldl $LDOPENMP32 $LDTHREAD -Wl,-z,noexecstack "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX32}"
   GASM_FLAGS="-m32"
@@ -633,7 +633,7 @@ case "$jplatform/$j64x" in
  linux/j64avx512*) # linux intel 64bit avx512
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX2=1 -DC_AVX512=1 "
-  LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm -ldl $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -647,7 +647,7 @@ case "$jplatform/$j64x" in
  linux/j64avx2*) # linux intel 64bit avx2
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX2=1 "
-  LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm -ldl $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   CFLAGS_SIMD=" -march=skylake -mtune=skylake -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -659,7 +659,7 @@ case "$jplatform/$j64x" in
  linux/j64*) # linux intel 64bit nonavx
   TARGET=jamalgam
   CFLAGS="$common -msse3 "
-  LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm -ldl $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX}"
   GASM_FLAGS=""
@@ -678,7 +678,7 @@ case "$jplatform/$j64x" in
  raspberry/j64*) # linux arm64
   TARGET=jamalgam
   CFLAGS="$common -march=armv8-a+crc -DRASPI -fwrapv " # mno-outline-atomics unavailable on clang-7
-  LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm -ldl $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
   GASM_FLAGS=""
@@ -688,7 +688,7 @@ case "$jplatform/$j64x" in
  openbsd/j64arm) # openbsd arm64
   TARGET=jamalgam
   CFLAGS="$common -march=armv8-a+crc " # mno-outline-atomics unavailable on clang-7
-  LDFLAGS=" -lm -lkvm $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm -lkvm $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
   GASM_FLAGS=""
@@ -698,7 +698,7 @@ case "$jplatform/$j64x" in
  openbsd/j64avx512*) # openbsd intel 64bit avx512
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX2=1 -DC_AVX512=1 "
-  LDFLAGS=" -lm -lkvm $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm -lkvm $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -712,7 +712,7 @@ case "$jplatform/$j64x" in
  openbsd/j64avx2*) # openbsd intel 64bit avx2
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX2=1 "
-  LDFLAGS=" -lm -lkvm $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm -lkvm $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   CFLAGS_SIMD=" -march=skylake -mtune=skylake -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -724,7 +724,7 @@ case "$jplatform/$j64x" in
  openbsd/j64*) # openbsd intel 64bit nonavx
   TARGET=jamalgam
   CFLAGS="$common -msse3 "
-  LDFLAGS=" -lm -lkvm $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm -lkvm $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX}"
   GASM_FLAGS=""
@@ -734,7 +734,7 @@ case "$jplatform/$j64x" in
  freebsd/j64arm) # freebsd arm64
   TARGET=jamalgam
   CFLAGS="$common -march=armv8-a+crc " # mno-outline-atomics unavailable on clang-7
-  LDFLAGS=" -lm $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_RASPI}"
   GASM_FLAGS=""
@@ -744,7 +744,7 @@ case "$jplatform/$j64x" in
  freebsd/j64avx512*) # freebsd intel 64bit avx512
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX2=1 -DC_AVX512=1 "
-  LDFLAGS=" -lm $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -758,7 +758,7 @@ case "$jplatform/$j64x" in
  freebsd/j64avx2*) # freebsd intel 64bit avx2
   TARGET=jamalgam
   CFLAGS="$common -DC_AVX2=1 "
-  LDFLAGS=" -lm $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   CFLAGS_SIMD=" -march=skylake -mtune=skylake -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -770,7 +770,7 @@ case "$jplatform/$j64x" in
  freebsd/j64*) # freebsd intel 64bit nonavx
   TARGET=jamalgam
   CFLAGS="$common -msse3 "
-  LDFLAGS=" -lm $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm $LDTHREAD $LDOPENMP -Wl,-z,noexecstack "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_LINUX}"
   GASM_FLAGS=""
@@ -780,7 +780,7 @@ case "$jplatform/$j64x" in
  darwin/j64avx512*) # darwin intel 64bit
   TARGET=jamalgam
   CFLAGS="$common $macmin -DC_AVX2=1 -DC_AVX512=1 "
-  LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm -ldl $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
   CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -794,7 +794,7 @@ case "$jplatform/$j64x" in
  darwin/j64avx2*) # darwin intel 64bit
   TARGET=jamalgam
   CFLAGS="$common $macmin -DC_AVX2=1 "
-  LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm -ldl $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
   CFLAGS_SIMD=" -march=skylake -mtune=skylake -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   OBJS_FMA=" blis/gemm_int-fma.o "
   OBJS_AESNI=" aes-ni.o "
@@ -806,7 +806,7 @@ case "$jplatform/$j64x" in
  darwin/j64arm*) # darwin arm
   TARGET=jamalgam
   CFLAGS="$common $macmin -march=armv8-a+crc -mno-outline-atomics -fwrapv "
-  LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm -ldl $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_IOS}"
   GASM_FLAGS="$macmin"
@@ -816,7 +816,7 @@ case "$jplatform/$j64x" in
  darwin/j64iphoneos) # iphone
   TARGET=jamalgam
   CFLAGS="$common $macmin -D IMPORTGMPLIB -march=armv8-a+crc -mno-outline-atomics "
-  LDFLAGS=" -lm $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
   OBJS_AESARM=" aes-arm.o "
   SRC_ASM="${SRC_ASM_IOS}"
   GASM_FLAGS="$macmin"
@@ -826,7 +826,7 @@ case "$jplatform/$j64x" in
  darwin/j64iphonesimulator) # iphone simulator
   TARGET=jamalgam
   CFLAGS="$common $macmin -D IMPORTGMPLIB -msse4.1 -msse4.2 "
-  LDFLAGS=" -lm $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
@@ -836,7 +836,7 @@ case "$jplatform/$j64x" in
  darwin/j64*) # darwin intel 64bit nonavx
   TARGET=jamalgam
   CFLAGS="$common $macmin -msse3 "
-  LDFLAGS=" -lm -ldl $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
+  LDFLAGS=" -Wl,-stack_size,0xc00000 -lm -ldl $LDTHREAD $LDOPENMP $macmin -framework Accelerate "
   OBJS_AESNI=" aes-ni.o "
   SRC_ASM="${SRC_ASM_MAC}"
   GASM_FLAGS="$macmin"
@@ -852,7 +852,7 @@ case "$jplatform/$j64x" in
   TARGET=jamalgam
   CFLAGS="$common -Wno-psabi -Wno-incompatible-pointer-types -march=i686 -m32 -msse2 -mfpmath=sse $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 "
   CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden -Wno-psabi $DOLECOM -march=i686 -m32 -msse2 -mfpmath=sse -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 "
-  LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -Wl,-Bstatic -Wl,-Bdynamic -lole32 -ladvapi32 -loleaut32 -lsynchronization -lpsapi -luuid $LDTHREAD $LDOPENMP "
+  LDFLAGS=" -Wl,--stack=0xc00000,--subsystem,console -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -Wl,-Bstatic -Wl,-Bdynamic -lole32 -ladvapi32 -loleaut32 -lsynchronization -lpsapi -luuid $LDTHREAD $LDOPENMP "
   if [ $jolecom -eq 1 ]; then
    DLLOBJS=" ../dllsrc/jdll.o ../dllsrc/jdllcomx.o "
    LIBJDEF=" ../dllsrc/jdll.def "
@@ -878,7 +878,7 @@ case "$jplatform/$j64x" in
   TARGET=jamalgam
   CFLAGS="$common -march=armv8-a+crc -Wno-incompatible-pointer-types -DNO_SHA_ASM $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
-  LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -Wl,-Bstatic -Wl,-Bdynamic -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
+  LDFLAGS=" -Wl,--stack=0xc00000,--subsystem,console -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -Wl,-Bstatic -Wl,-Bdynamic -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
   if [ $jolecom -eq 1 ]; then
    DLLOBJS=" ../dllsrc/jdll.o ../dllsrc/jdllcomx.o "
    LIBJDEF=" ../dllsrc/jdll.def "
@@ -903,7 +903,7 @@ case "$jplatform/$j64x" in
   TARGET=jamalgam
   CFLAGS="$common -Wno-incompatible-pointer-types $DOLECOM -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -DC_AVX2=1 -DC_AVX512=1 -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
-  LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -Wl,-Bstatic -Wl,-Bdynamic -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
+  LDFLAGS=" -Wl,--stack=0xc00000,--subsystem,console -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -Wl,-Bstatic -Wl,-Bdynamic -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
   CFLAGS_SIMD=" -march=skylake-avx512 -mtune=skylake-avx512 -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   if [ $jolecom -eq 1 ]; then
    DLLOBJS=" ../dllsrc/jdll.o ../dllsrc/jdllcomx.o "
@@ -932,7 +932,7 @@ case "$jplatform/$j64x" in
   TARGET=jamalgam
   CFLAGS="$common -Wno-incompatible-pointer-types $DOLECOM -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -DC_AVX2=1 -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
-  LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -Wl,-Bstatic -Wl,-Bdynamic -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
+  LDFLAGS=" -Wl,--stack=0xc00000,--subsystem,console -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -Wl,-Bstatic -Wl,-Bdynamic -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
   CFLAGS_SIMD=" -march=skylake -mtune=skylake -msse4.1 -msse4.2 -mavx2 -mfma -mbmi -mbmi2 -mlzcnt -mmovbe -mpopcnt -mno-vzeroupper "
   if [ $jolecom -eq 1 ]; then
    DLLOBJS=" ../dllsrc/jdll.o ../dllsrc/jdllcomx.o "
@@ -960,7 +960,7 @@ case "$jplatform/$j64x" in
   TARGET=jamalgam
   CFLAGS="$common -Wno-incompatible-pointer-types -msse3 $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
   CPPFLAGS="-fPIC $OPTLEVEL -falign-functions=4 -fvisibility=hidden $DOLECOM -D_FILE_OFFSET_BITS=64 -D_JDLL -D_WIN32 -D_WIN64 "
-  LDFLAGS=" -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -Wl,-Bstatic -Wl,-Bdynamic -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
+  LDFLAGS=" -Wl,--stack=0xc00000,--subsystem,console -Wl,--enable-stdcall-fixup -lm -static-libgcc -static-libstdc++ -Wl,-Bstatic -Wl,-Bdynamic -lole32 -ladvapi32 -loleaut32 -lsynchronization -luuid $LDTHREAD $LDOPENMP "
   if [ $jolecom -eq 1 ]; then
    DLLOBJS=" ../dllsrc/jdll.o ../dllsrc/jdllcomx.o "
    LIBJDEF=" ../dllsrc/jdll.def "

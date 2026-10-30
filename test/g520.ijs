@@ -804,25 +804,11 @@ y=: y, 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
 5 5 5 5 5 5 5 5 5 5 5 5 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -: (<<<I.1=y){y  NB. incorrectly gave a virtual
 
 {{for_i. i. y do.
-try.
 dels =. shp ?@$~ ndels =. ? shp =. 1 >. ? 73  NB. deal the array and the comp indexes
-catch.
-techo 13!:12''
-assert. 0
-end.
-try.
-t=. ((<<<dels)&{) i. shp
-catch.
-techo 13!:12''
-techo 'shp ndels ',":shp,ndels
-techo 'dels ',":dels
-techo '/:~ ~.dels ',":/:~ ~.dels
-assert. 0
-end.
-assert. (2 ! shp) = (+/~.dels) + +/ t
+assert. (2 ! shp) = (+/~.dels) + +/ (<<<dels) { i. shp
 end.
 1
-}} 0{50000 10000  NB. Verify that random deletions work
+}} QKTEST{50000 30000  NB. Verify that random deletions work
 
 {{for. i. y do.
 dels =. shp ?@$~ ndels =. ? shp =. 1 >. ? 4e4  NB. deal the array and the comp indexes

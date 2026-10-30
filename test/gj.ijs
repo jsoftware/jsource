@@ -365,6 +365,7 @@ vbs f/~ args   NB. Run most of the dyads on all pairs of types
 NB.? end of skip
 
 
+0!:_1`1:@.(1 e. 'gcc-4-' E. 9!:14'') '?'   NB. skip if gcc-4
 
 NB. int2 and int4
 'fixed-precision overflow' -: 10000 + etx 6 c. 30000
@@ -384,6 +385,8 @@ NB. int2 and int4
 'fixed-precision overflow' -: | etx 7 c. _2147483648
 
 100100 = (6 c. 100) + (7 c. 100000)
+
+NB.?  end of skip if gcc-4
 
 {{
 xx =: y ?@$ 100

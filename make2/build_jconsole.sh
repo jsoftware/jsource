@@ -171,6 +171,14 @@ if [ -z "${compiler##*gcc*}" ] || [ -z "${CC##*gcc*}" ]; then
  -Wno-unused-value \
  $CFLAGS"
 
+ GNUC_MAJOR=$(echo __GNUC__ | $CC -E -x c - | tail -n 1)
+ GNUC_MINOR=$(echo __GNUC_MINOR__ | $CC -E -x c - | tail -n 1)
+ if [ $GNUC_MAJOR -ge 5 ]; then
+  common="$common -std=gnu17 -Wno-error=stringop-overflow"
+ else
+  common="$common -std=gnu99 -DC_NOMULTINTRINSIC"
+ fi
+
 else
  # clang
  common="$OPENMP -fPIC $OPTLEVEL -fvisibility=hidden -fno-strict-aliasing \
@@ -295,7 +303,7 @@ case "$jplatform/$j64x" in
   LDFLAGS=" -ldl $LDTHREAD "
   ;;
  raspberry/j32*)
-  CFLAGS="$common -std=gnu99 -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI"
+  CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI"
   LDFLAGS=" -ldl $LDTHREAD "
   ;;
  raspberry/j64*)

@@ -296,11 +296,11 @@ case "$jplatform/$j64x" in
 
  linux/j32)
   CFLAGS="$common -march=i686 -m32 -msse2 -mfpmath=sse "
-  LDFLAGS=" -m32 -Wl,-stack_size,0xc00000 -ldl $LDTHREAD "
+  LDFLAGS=" -m32 -Wl,--stack_size,0xc00000 -ldl $LDTHREAD "
   ;;
  linux/j64*)
   CFLAGS="$common"
-  LDFLAGS=" -Wl,-stack_size,0xc00000 -ldl $LDTHREAD "
+  LDFLAGS=" -Wl,--stack_size,0xc00000 -ldl $LDTHREAD "
   ;;
  raspberry/j32*)
   CFLAGS="$common -marm -march=armv6 -mfloat-abi=hard -mfpu=vfp -DRASPI"
@@ -308,39 +308,39 @@ case "$jplatform/$j64x" in
   ;;
  raspberry/j64*)
   CFLAGS="$common -march=armv8-a+crc -DRASPI"
-  LDFLAGS=" -Wl,-stack_size,0xc00000 -ldl $LDTHREAD "
+  LDFLAGS=" -Wl,--stack_size,0xc00000 -ldl $LDTHREAD "
   ;;
  openbsd/j64arm)
   CFLAGS="$common -march=armv8-a+crc"
-  LDFLAGS=" -Wl,-stack_size,0xc00000 $LDTHREAD "
+  LDFLAGS=" -Wl,--stack_size,0xc00000 $LDTHREAD "
   ;;
  openbsd/j64*)
   CFLAGS="$common"
-  LDFLAGS=" -Wl,-stack_size,0xc00000 $LDTHREAD "
+  LDFLAGS=" -Wl,--stack_size,0xc00000 $LDTHREAD "
   ;;
  freebsd/j64arm)
   CFLAGS="$common -march=armv8-a+crc"
-  LDFLAGS=" -Wl,-stack_size,0xc00000 $LDTHREAD "
+  LDFLAGS=" -Wl,--stack_size,0xc00000 $LDTHREAD "
   ;;
  freebsd/j64*)
   CFLAGS="$common"
-  LDFLAGS=" -Wl,-stack_size,0xc00000 $LDTHREAD "
+  LDFLAGS=" -Wl,--stack_size,0xc00000 $LDTHREAD "
   ;;
  darwin/j64arm) # darwin arm
   CFLAGS="$common $macmin -march=armv8-a+crc "
-  LDFLAGS=" -Wl,-stack_size,0xc00000 -ldl $LDTHREAD $macmin "
+  LDFLAGS=" -Wl,--stack_size,0xc00000 -ldl $LDTHREAD $macmin "
   ;;
  darwin/j64iphoneos) # iphone
   CFLAGS="$common $macmin -march=armv8-a+crc "
-  LDFLAGS=" -Wl,-stack_size,0xc00000 -ldl $LDTHREAD $macmin "
+  LDFLAGS=" -Wl,--stack_size,0xc00000 -ldl $LDTHREAD $macmin "
   ;;
  darwin/j64iphoneimulator) # iphone simulator
   CFLAGS="$common $macmin "
-  LDFLAGS=" -Wl,-stack_size,0xc00000 -ldl $LDTHREAD $macmin "
+  LDFLAGS=" -Wl,--stack_size,0xc00000 -ldl $LDTHREAD $macmin "
   ;;
  darwin/j64*)
   CFLAGS="$common $macmin "
-  LDFLAGS=" -Wl,-stack_size,0xc00000 -ldl $LDTHREAD $macmin "
+  LDFLAGS=" -Wl,--stack_size,0xc00000 -ldl $LDTHREAD $macmin "
   ;;
  windows/j32)
   TARGET=jconsole.exe

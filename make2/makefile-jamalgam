@@ -37,6 +37,7 @@ OBJS=  \
  cblas.o \
  c.o \
  ca.o \
+ cad.o \
  cc.o \
  cd.o \
  cf.o \

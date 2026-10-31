@@ -37,6 +37,7 @@ OBJS=  \
  ../jsrc/cblas.o \
  ../jsrc/c.o \
  ../jsrc/ca.o \
+ ../jsrc/cad.o \
  ../jsrc/cc.o \
  ../jsrc/cd.o \
  ../jsrc/cf.o \

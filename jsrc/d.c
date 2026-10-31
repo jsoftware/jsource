@@ -271,7 +271,9 @@ A jteformat(J jtfg,A self,A a,A w,A m){F12IP;
        if(a&&!ISSPARSE(AT(a))){A a1=a; if(AT(a1)&NOUN){if((a1=a1ah=gahzap(jt,AR(a),a))==0)goto noeformat; MCISH(AS(a1),AS(a),AR(a))} if(!(selft&VERB))if((a1=arep(a1))==0)goto noeformat; if((awm=awm?jlink(a1,awm):box(a1))==0)goto noeformat;}
        // run the analyzer.  Fold the unbalanced-paren info into the error number
        deba(DCJUNK,0,0,0);  // create spacer frame so eformat calls don't overwrite stack
+      {void*oad=jt->adtrace; C oadt=jt->parserstackframe.adtracing; jt->adtrace=0; jt->parserstackframe.adtracing=0; // run eformat_j_ untraced (if D. is running): it is not part of differentiated code
       WITHDEBUGOFF(msg=jtunquote(jt,jlink(sc(e|(pareninfo<<8)),jlink(namestg,jlink(rnk,jlink(selfar,awm)))),val,val););   // run eformat_j_
+      jt->adtrace=oad; jt->parserstackframe.adtracing=oadt;}
        debz();
       }
      }else msg=a;  // self not given, use given message text

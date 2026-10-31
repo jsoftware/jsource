@@ -16,7 +16,7 @@ static C spellintab2[128-0x20][3] = {
 ['`'-0x20]={CGRAVE,CGRDOT,CGRCO}, ['\"'-0x20]={CQQ,CEXEC,CTHORN},        ['&'-0x20]={CAMP,CUNDER,CAMPCO},    ['!'-0x20]={CBANG,CFIT,CIBEAM},      ['?'-0x20]={CQUERY,CQRYDOT,CQRYCO},
 ['('-0x20]={CLPAR,0,0},           [')'-0x20]={CRPAR,0,0},
 
-['a'-0x20]={0,CALP,CACE},         ['A'-0x20]={0,CATOMIC,0},         ['b'-0x20]={0,CBDOT,0},           ['c'-0x20]={0,CCDOT,0},           ['C'-0x20]={0,CCYCLE,0},
+['a'-0x20]={0,CALP,CACE},         ['A'-0x20]={0,CATOMIC,0},         ['b'-0x20]={0,CBDOT,0},           ['c'-0x20]={0,CCDOT,0},           ['C'-0x20]={0,CCYCLE,0},         ['D'-0x20]={0,CDCAPDOT,0},
 ['e'-0x20]={0,CEPS,0},            ['E'-0x20]={0,CEBAR,0},           ['f'-0x20]={0,CFIX,CFIXS},        ['H'-0x20]={0,CHGEOM,0},          ['i'-0x20]={0,CIOTA,CICO},        ['I'-0x20]={0,CICAP,0},
 ['j'-0x20]={0,CJDOT,0},           ['L'-0x20]={0,CLDOT,CLCAPCO},     ['m'-0x20]={0,CMDOT,0},           ['M'-0x20]={0,CMCAP,0},           ['o'-0x20]={0,CCIRCLE,0},
 ['p'-0x20]={0,CPOLY,CPCO},        ['q'-0x20]={0,0,CQCO},            ['r'-0x20]={0,CRDOT,0},           ['S'-0x20]={0,0,CSCAPCO},
@@ -77,7 +77,7 @@ static US spellouttab[256] = {
 [CTHORN  ]=(UC)'"'+CO0,       [CGRDOT  ]=(UC)'`'+DOT0,      [CGRCO   ]=(UC)'`'+CO0,       [CATDOT  ]=(UC)'@'+DOT0,       
 [CATCO   ]=(UC)'@'+CO0,       [CAMPCO  ]=(UC)'&'+CO0,       [CUNDER  ]=(UC)'&'+DOT0,
 [CQRYDOT ]=(UC)'?'+DOT0,      [CQRYCO  ]=(UC)'?'+CO0,       [CALP    ]=(UC)'a'+DOT0,      [CATOMIC ]=(UC)'A'+DOT0,       
-[CACE    ]=(UC)'a'+CO0,       [CBDOT   ]=(UC)'b'+DOT0,      [CCDOT   ]=(UC)'c'+DOT0,      [CCYCLE  ]=(UC)'C'+DOT0,       
+[CACE    ]=(UC)'a'+CO0,       [CBDOT   ]=(UC)'b'+DOT0,      [CCDOT   ]=(UC)'c'+DOT0,      [CCYCLE  ]=(UC)'C'+DOT0,      [CDCAPDOT]=(UC)'D'+DOT0,       
 [CEPS    ]=(UC)'e'+DOT0,      [CEBAR   ]=(UC)'E'+DOT0,      [CFIX    ]=(UC)'f'+DOT0,      [CFIXS ]=(UC)'f'+CO0,       
 [CHGEOM  ]=(UC)'H'+DOT0,      [CIOTA   ]=(UC)'i'+DOT0,      [CICO    ]=(UC)'i'+CO0,       [CICAP   ]=(UC)'I'+DOT0,       
 [CICAPCO ]=(UC)'I'+CO0,       [CJDOT   ]=(UC)'j'+DOT0,      [CLDOT   ]=(UC)'L'+DOT0,      [CLCAPCO ]=(UC)'L'+CO0,       

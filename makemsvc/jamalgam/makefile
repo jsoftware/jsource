@@ -185,6 +185,7 @@ OBJS = \
  blis/gemm_vec-ref.o \
  c.o \
  ca.o \
+ cad.o \
  cblas.o \
  cc.o \
  cd.o \

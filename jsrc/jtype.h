@@ -1396,7 +1396,8 @@ typedef struct {
   PSTK* parserstkend1;    // [0}&end+1 of parser stack   [-1]: number of words
   US parseroridetok;  // inited to -1; set to the failing token number+1 to override looking at the exec stack. 0 for no error-line flag.  This is done when pee is detected
                      // or preemptively for calls to syrd which can fail (kludge)
-  C filler[SZI-sizeof(US)];
+  C adtracing;  // nonzero while D. evaluates u: the parser then passes each verb execution to D. which is how explicit definitions are differentiated
+  C filler[SZI-sizeof(US)-1];
   A sf;   // $: stack in the parser (other users of $: have their own stacks) MUST BE LAST because it is part of a block stacked by unquote
  } PFRAME;  // these are stacked en bloc
 

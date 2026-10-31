@@ -21,6 +21,7 @@ static DF2(ad12){DF12IP;A z; A childself=FAV(self)->fgh[0];
  WITHDEBUGOFF(z=CALL2(FAV(childself)->valencefns[dyad],a,w,childself);)
  if(unlikely(jt->jerr==EVTHROW))R 0;  // THROW is caught only by try.
  if(unlikely(jt->jerr==EVEXIT))R 0;  // EXIT is never caught
+ if(unlikely(jt->adtrace!=0)&&jtadrefusal(jt))R 0; // u :: v is part of verb that D. is differentiating and D. signalled a nonce error because it cannot differentiate something in u. In plain execution u wouldn't fail, so :: mustn't run v.  D. would then return the derivative of v instead of refusing.
  if(BETWEENC(jt->jerr,EVATTN,EVBREAK))CLRATTN  // if the error was ATTN/BREAK, clear the source of the error
  RESETERR;
  if(likely(z))RETF(z);  // normal return.  fall through to execute v

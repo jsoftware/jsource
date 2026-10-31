@@ -445,6 +445,7 @@ dobblock:
    }else if(unlikely((NPGpysfmtdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Check for it
     if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
     bic=ic;ic=~CWMAX;goto nextlinedebug;   // Remember the line w/error; fetch continuation line# (but exit if no line# given, should not occur). it is OK to have jerr set if we are in debug mode.  We must go through debug to clear z
+   }else if(unlikely(jt->adtrace!=0)&&jtadrefusal(jt)){ic=OBCW; goto nextline; // D. tracing: its own refusal is not error of the code, so try. does not catch it
    }else if(unlikely(jt->jerr==EVTHROW)){
     // if the error is THROW, and there is a catcht. block, go there, otherwise pass the THROW up the line
     if(NPGpysfmtdl&4){I j; for(j=CWGO(cwsent,CNSTOREDCW,tdv[-1].b);!TEQ5(CWTCESX(cwsent,j),CEND)&&!TEQ6(CWTCESX(cwsent,j),CBBLOCKEND);j=CWGO(cwsent,CNSTOREDCW,j))if(TEQ5(CWTCESX(cwsent,j),CCATCHT)){ic=j-1; RESETERR; z=mtm; POPIFTRYSTK break;}} BASSERT(z!=0,EVTHROW);  // z might not be protected if we hit error
@@ -485,6 +486,7 @@ dobblock:
     }else if(unlikely((NPGpysfmtdl&16)&&(jt->uflags.trace&TRACEDB1))){  // if we get an error return from debug, the user must be branching to a new line.  Do it
      if(jt->jerr==EVCUTSTACK)BZ(0);  // if Cut Stack executed on this line, abort the current definition, leaving the Cut Stack error to cause caller to flush the active sentence
      bic=ic;ic=~CWMAX;goto nextlinedebug;   // Remember the line w/error; fetch continuation line# (but exit if no line# given, should not occur). it is OK to have jerr set if we are in debug mode.  Must go through nextline to set z non0
+    }else if(unlikely(jt->adtrace!=0)&&jtadrefusal(jt)){ic=OBCW; z=0; goto nextline; // D. is differentiating this definition and signalled nonce error on this T-block because it cannot differentiate something in it. Plain execution would not fail here, so try. mustn't catch it. z=0 to signal error, because in T-block z still holds last B-block's value
     }else if(unlikely(EVTHROW==jt->jerr)){if(NPGpysfmtdl&4){I j; for(j=CWGO(cwsent,CNSTOREDCW,tdv[-1].b);!TEQ5(CWTCESX(cwsent,j),CEND)&&!TEQ6(CWTCESX(cwsent,j),CBBLOCKEND);j=CWGO(cwsent,CNSTOREDCW,j))if(TEQ5(CWTCESX(cwsent,j),CCATCHT)){ic=j-1; RESETERR; t=mtm; POPIFTRYSTK break;}} BASSERT(t!=0,EVTHROW);  // if throw., and there is a catch., do so
     }else{bic=ic; ic=CWGO(cwsent,CNSTOREDCW,ic); IFNOTOB(){RESETERR; z=mtm; cv=forpopgoto(jt,cv,ic,1); POPIFTRYSTK}else z=0;}  // nondebug error: if we take error exit, we might not have protected z, which is not needed anyway; so clear it to prevent invalid use.  Pop try. stack always, for. stack if needed
       // if we are not taking the error exit, we still need to set z to a safe value since we might not have protected it.
@@ -587,6 +589,16 @@ dobblock:
      if(unlikely(QCWORD(itemsym->fval)!=cv->item)){  // user reassigned the loop item variable
       // discard & free incumbent, switch to virtual, raise it
       A val=itemsym->fval; fa(QCWORD(val)) val=cv->item; ra(val) SETFVAL(SETNAMED(MAKEFVAL(val,ATYPETOVALTYPE(INT))),itemsym) 
+     }
+     if(unlikely(jt->adtrace!=0)){ // D. is running: xyz must carry the derivative of its item
+      A titem=jtaditemtraced(jt,cv->t,cv->j); // item j of t, entered in D.'s trace if t is traced or 0 if t is not traced
+      if(titem){ // t is traced: make xyz this block instead of virtual item, which D. does not know
+       A val=itemsym->fval; fa(QCWORD(val)) // release xyz's current value (virtual item, QCWORD removes flag bits of fval)
+       ra(titem) // xyz now refers to the new block: count that reference
+       SETFVAL(SETNAMED(MAKEFVAL(titem,ATYPETOVALTYPE(AT(titem)))),itemsym) // store it as xyz's value
+      }else{ // t not traced (xyz keeps virtual item) or an error in jtaditemtraced
+       BZ(jt->jerr==0); // stop only on error (it ends the definition with that error)
+      }
      }
      --ic; goto elseifasdo;   // advance to next line and process it; if flagged, we know it's bblock
     }

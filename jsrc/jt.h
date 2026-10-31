@@ -240,7 +240,8 @@ struct __attribute__((aligned(JTFLAGMSK+1))) JTTstruct {
 // seldom-used fields
  I bytes;            // bytes currently in use - used only during 7!:1  6 bytes would be enoungh
  I bytesmax;         // high-water mark of "bytes" - used only during 7!:1   6 bytes would be enough
- I filler5[2];
+ void *adtrace;      // trace of D. or 0 when no D. is running
+ C admodes[sizeof(I)]; // testing switch for D. (9!:_10 and 9!:_11)
 // end of cacheline 5
 
  C _cl6[0];

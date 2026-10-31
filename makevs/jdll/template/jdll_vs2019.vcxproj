@@ -837,6 +837,7 @@
     <ClCompile Include="..\..\jsrc\blis\gemm_vec-ref.c" />
     <ClCompile Include="..\..\jsrc\c.c" />
     <ClCompile Include="..\..\jsrc\ca.c" />
+    <ClCompile Include="..\..\jsrc\cad.c" />
     <ClCompile Include="..\..\jsrc\cc.c" />
     <ClCompile Include="..\..\jsrc\cd.c" />
     <ClCompile Include="..\..\jsrc\cf.c" />

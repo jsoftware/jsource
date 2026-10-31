@@ -211,7 +211,8 @@
 #define CTCAPDOT   (C)0xd4  // T.
 #define CMDOT      (C)0xd9       /* 217 331 d9 m.                           */
 #define CSCAPCO    (C)0xda       /* 218 332 da S:                           */
-// db-e8 free
+#define CDCAPDOT   (C)0xdb       /* 219 333 db D.  derivative               */
+// dc-e8 free
 
 #define CAMIP      (C)0xe9       /* 233 351 e9 }   amend in place           */
 #define CCASEV     (C)0xea       /* 234 352 ea }   case in place            */

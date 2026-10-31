@@ -183,7 +183,20 @@ static I NOINLINE jtis(J jtfg,A n,A v,A symtab){F12IP;PSTK* stack=jt->parserstac
    // multiple assignment to fixed names
    ASSERT((-(AR(v))&(-(AN(n)^AS(v)[0])))>=0,EVLENGTH);   // v is atom, or length matches n
    if(likely(((AR(v)^1)+(~AT(v)&BOX))==0)){A *nv=AAV(n), *vv=AAV(v); DO(AN(n), jtsymbis(jtfg,nv[i],C(vv[i]),symtab);)}  // v is boxed list
-   else {A *nv=AAV(n); DO(AN(n), A  vval; RZ(vval=ope(AR(v)?from(sc(i),v):v)); jtsymbis((J)((I)jtfg|JTFINALASGN),nv[i],vval,symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case; always final assignment since value is not passed on
+   else if(likely(jt->adtrace==0)){A *nv=AAV(n); DO(AN(n), A  vval; RZ(vval=ope(AR(v)?from(sc(i),v):v)); jtsymbis((J)((I)jtfg|JTFINALASGN),nv[i],vval,symtab);)}  // repeat atomic v for each name, otherwise select item.  Open in either case; always final assignment since value is not passed on
+   else{ // D. is tracing: the same as the loop above, but name that gets item of traced array gets block D. can follow
+    A *nv=AAV(n); // names
+    RZ(jtadboxasgok(jt,v)); // boxes of rank 2 or more holding a traced value: refused (each name would get an opened row of boxes, a copy without derivative)
+    DO(AN(n),
+     A vval; RZ(vval=ope(AR(v)?from(sc(i),v):v)); // item i of v (v itself if an atom), opened
+     if(AR(v)){ // atom needs nothing: every name gets v itself (the same block which D. finds by address)
+      A titem=jtaditemtraced(jt,v,i); // v traced: item i entered in trace
+      if(titem)vval=titem; // use it instead of vval which is not in trace (no derivative)
+      else RE(0); // v not traced (keep vval), or an error in jtaditemtraced
+     }
+     jtsymbis((J)((I)jtfg|JTFINALASGN),nv[i],vval,symtab); // final assignment since value is not passed on
+    )
+   }
    goto retstack;
   }
  }
@@ -219,6 +232,11 @@ static I NOINLINE jtis(J jtfg,A n,A v,A symtab){F12IP;PSTK* stack=jt->parserstac
    // if it is AR assignment, apply jtfxx to each assignand, to convert AR to internal form
    // if not AR assignment, just open each box of rhs and assign
    ASSERT(1==AR(n),EVRANK); ASSERT(AT(v)&NOUN,EVDOMAIN);
+   if(unlikely(jt->adtrace!=0)&&AT(v)&NUMERIC&&AR(v)&&AS(v)[0]){ // D. tracing, v a numeric array with items
+    A t=jtaditemtraced(jt,v,0); RE(0); // is v traced? (0 if not; 0 with an error set if the test failed)
+    if(t){jtadrefuse(jt); R 0;} // traced: refused (the names would get untraced copies of its items)
+   }
+   if(unlikely(jt->adtrace!=0))RZ(jtadboxasgok(jt,v)); // boxes of rank 2 or more holding a traced value: refused. Each name gets a row of boxes, and opening it copies the values into a new array, which has no derivative. (A list of boxes is fine: each name gets the boxed value itself.)
    // create faux fs to pass args to the multiple-assignment function, in AM and valencefns.  AT must be 0 for eformat, too
    PRIM asgfs; ABACK((A)&asgfs)=symtab; AT((A)&asgfs)=0; FAV((A)&asgfs)->flag2=0; FAV((A)&asgfs)->valencefns[0]=ger?jtfxx:jtope;   // pass in the symtab to assign, and whether w must be converted from AR.  flag2 must be 0 to satisfy rank2ex
    I rr=AR(v)-((UI)AR(v)>0); rank2ex(n,v,(A)&asgfs,0,rr,0,rr,jtisf); 
@@ -877,7 +895,8 @@ anchoredip:;  // here when we have detected that an anchored name is inplaceable
 #else
       jtlsbs+=(SHMSK(pt0ecam,FLGPMSKX+1,2)|1);
 #endif
-      y=(*actionfn)((J)((I)jt+jtlsbs),QCWORD(arg1),QCWORD(arg2),QCWORD(stack->a));   // set inplacing flags  bit 0, and bit 1 if dyadic.  Other flags are clear incl MODX $$$
+      if(likely(jt->parserstackframe.adtracing==0))y=(*actionfn)((J)((I)jt+jtlsbs),QCWORD(arg1),QCWORD(arg2),QCWORD(stack->a));   // set inplacing flags  bit 0, and bit 1 if dyadic.  Other flags are clear incl MODX $$$
+      else y=jtadtracecall(jt,pt0ecam&FLGPLINE2,QCWORD(arg1),QCWORD(arg2),QCWORD(stack->a),actionfn); // D. is tracing an explicit definition: differentiate this verb execution. pt0ecam&FLGPLINE2 nonzero for a dyad.
       // When we don't break we lose time waiting for stack->a to be read and masked, but not much.
       // expect pipeline break.  The tpopw/tpopa calculation will still be waiting in the pipeline.  The important thing is to get the instructions ISSUED so that the
       // indirect branch can mispredict and start fetching from the new address.  That is, minimize total # instructions from loading actionfn until the call, with no concern for latency.  In the normal case the

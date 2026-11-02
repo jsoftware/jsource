@@ -405,11 +405,11 @@ jobs:
 
    - name: Setup Environment (Linux arm64)
      run: |
-      script/install-rpi.sh
+      script/install-lnx.sh
 
    - name: Build JE (Linux arm64)
      env:
-      CC: clang-20
+      CC: clang
       USE_SLEEF: 1
       USE_OPENMP: 0
       USE_PYXES: ${{ env.USE_PYXES }}
@@ -465,7 +465,7 @@ jobs:
 
    - name: Setup Environment (Linux arm32)
      run: |
-      script/install-rpi.sh
+      script/install-lnx.sh
 
    - name: Build JE (Linux arm32)
      env:
@@ -537,7 +537,7 @@ jobs:
       image_additional_mb: 1024
       copy_artifact_path: j64
       commands: |
-       apt-get install --no-install-recommends -y clang zip libomp-dev gdb
+       script/install-lnx.sh
        export DEBUGCMD=gdb
        export CC=clang
        export USE_SLEEF=1
@@ -606,7 +606,7 @@ jobs:
       image_additional_mb: 1024
       copy_artifact_path: j32
       commands: |
-       apt-get install --no-install-recommends -y clang zip libomp-dev gdb
+       script/install-lnx.sh
        export DEBUGCMD=gdb
        export CC=gcc
        export USE_SLEEF=0
@@ -678,7 +678,6 @@ jobs:
 
       run: |
        sudo pkg_add -u
-       sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake nasm pcre2 gdb lldb
        /sbin/ldconfig -r
        export DEBUGCMD=lldb
@@ -739,7 +738,6 @@ jobs:
 
       run: |
        sudo pkg_add -u
-       sudo rdate time.cloudflare.com || true
        sudo pkg_add curl zip gmake gmp pcre2 gdb lldb
        /sbin/ldconfig -r
        export DEBUGCMD=lldb
@@ -799,7 +797,6 @@ jobs:
       run: |
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
-       sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm pcre2 gdb
        /sbin/ldconfig -r
        export DEBUGCMD=lldb
@@ -860,7 +857,6 @@ jobs:
       run: |
        export IGNORE_OSVERSION=yes
        sudo pkg upgrade -y
-       sudo rdate time.cloudflare.com || true
        sudo pkg install -y curl zip gmake nasm pcre2 gdb
        /sbin/ldconfig -r
        export DEBUGCMD=lldb

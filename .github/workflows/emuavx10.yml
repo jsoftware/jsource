@@ -685,7 +685,7 @@ jobs:
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
-       export USE_OPENMP=${{ env.USE_OPENMP }}
+       export USE_OPENMP=0
        export USE_PYXES=${{ env.USE_PYXES }}
        export USE_EMU_AVX=${{ env.USE_EMU_AVX }}
        export _DEBUG=${{ env.DEBUGLEVEL }}
@@ -1120,6 +1120,7 @@ jobs:
       # Install necessary packages (e.g., your build tools, gcc, make)
       install: >-
         mingw-w64-i686-gdb
+        mingw-w64-i686-libgomp
 
    - name: Test JE (Windows MSYS2 x86)
      if: ${{ false }}
@@ -1423,6 +1424,7 @@ jobs:
       install: >-
         mingw-w64-x86_64-gcc
         mingw-w64-x86_64-gdb
+        mingw-w64-x86_64-libgomp
         make
 
    - name: Build JE (Windows MSYS2 x64)
@@ -1494,6 +1496,7 @@ jobs:
       # Install necessary packages (e.g., your build tools, gcc, make)
       install: >-
         mingw-w64-i686-gcc
+        mingw-w64-i686-libgomp
         make
 
    - name: Build JE (Windows MSYS2 x86)

@@ -19,7 +19,7 @@ env:
  NO_UNDEFINED: 1
  _MEMAUDIT: 0
  AUDITEXECRESULTS: 0
- USE_OPENMP: 1
+ USE_OPENMP: 0
  USE_PYXES: 1
  USE_EMU_AVX: 0
  RELEASE: ${{ false }}
@@ -45,8 +45,8 @@ jobs:
     - run: echo "Run slow jobs"
 
  deprecated:
-  #if: false
-  if: true
+  if: false
+  #if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Run deprecated jobs"

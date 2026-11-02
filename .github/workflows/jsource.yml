@@ -523,7 +523,7 @@ jobs:
  jerpi64:
   name: JE (Raspberry)
   needs: [all, deprecated]
-  runs-on: ubuntu-latest
+  runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6
@@ -592,7 +592,7 @@ jobs:
  jerpi32:
   name: JE (Raspberry32)
   needs: [all, deprecated]
-  runs-on: ubuntu-latest
+  runs-on: ubuntu-22.04
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6
@@ -620,6 +620,7 @@ jobs:
        export NO_UNDEFINED=${{ env.NO_UNDEFINED }}
        export _MEMAUDIT=${{ env._MEMAUDIT }}
        export AUDITEXECRESULTS=${{ env.AUDITEXECRESULTS }}
+       export LIBBACKTRACE=0
        script/buildga.sh raspberry armv6l || exit 1
        script/testga.sh raspberry armv6l || exit 1
        find j32 -type d -exec chmod a+rwx {} \;

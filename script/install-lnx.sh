@@ -1,7 +1,7 @@
 #!/bin/sh
 if [ "$(uname -m)" = "arm64" ] || [ "$(uname -m)" = "aarch64" ]; then
 sudo dpkg --add-architecture armhf
-else
+elif [ "$(uname -m)" != "armv6l" ]; then
 sudo dpkg --add-architecture i386
 fi
 sudo apt-get update -y
@@ -13,7 +13,7 @@ if [ "$(uname -m)" = "arm64" ] || [ "$(uname -m)" = "aarch64" ]; then
 sudo apt-get install -y linux-libc-dev-armhf-cross libc6-dev-armhf-cross libc6-armhf-cross gcc-arm-linux-gnueabihf || true
 sudo apt-get install -y libc6:armhf libstdc++6:armhf libc6-dev:armhf
 # sudo apt-get install -y libopenblas0-pthread:armhf
-else
+elif [ "$(uname -m)" != "armv6l" ]; then
 sudo apt-get install -y gcc-multilib g++-multilib libc6-dev-i386-cross g++-mingw-w64-x86-64 g++-mingw-w64-i686
 fi
 echo "fr_FR.UTF-8 UTF-8" | sudo tee -a /etc/locale.gen

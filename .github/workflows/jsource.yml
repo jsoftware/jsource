@@ -685,7 +685,7 @@ jobs:
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
-       export USE_OPENMP=0
+       export USE_OPENMP=${{ env.USE_OPENMP }}
        export USE_PYXES=${{ env.USE_PYXES }}
        export USE_EMU_AVX=${{ env.USE_EMU_AVX }}
        export _DEBUG=${{ env.DEBUGLEVEL }}

@@ -7,11 +7,12 @@ fi
 sudo apt-get update -y
 sudo apt-get upgrade -y
 sudo apt-get install -y build-essential gcc clang libc6-dev autoconf automake libtool gdb gdb-multiarch lldb zip
-sudo apt-get install -y nasm libomp5 libomp-dev
+sudo apt-get install -y nasm libomp5 libomp-dev libgomp1
 # sudo apt-get install -y libopenblas0-pthread
 if [ "$(uname -m)" = "arm64" ] || [ "$(uname -m)" = "aarch64" ]; then
 sudo apt-get install -y linux-libc-dev-armhf-cross libc6-dev-armhf-cross libc6-armhf-cross gcc-arm-linux-gnueabihf || true
 sudo apt-get install -y libc6:armhf libstdc++6:armhf libc6-dev:armhf
+sudo apt-get install -y libgomp1:armhf || true
 sudo apt-get install -y libomp-dev:armhf || true
 # sudo apt-get install -y libopenblas0-pthread:armhf
 elif [ "$(uname -m)" != "armv6l" ]; then

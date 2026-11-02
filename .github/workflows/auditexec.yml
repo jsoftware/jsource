@@ -19,6 +19,7 @@ env:
  NO_UNDEFINED: 1
  _MEMAUDIT: 0
  AUDITEXECRESULTS: 1
+ USE_OPENMP: 1
  USE_PYXES: 1
  USE_EMU_AVX: 1
  RELEASE: ${{ false }}
@@ -30,8 +31,8 @@ jobs:
 # for selected jobs, disable all and disable the selected needs
 
  all:
-  #if: false
-  if: true
+  if: false
+  #if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Runall jobs"
@@ -44,8 +45,8 @@ jobs:
     - run: echo "Run slow jobs"
 
  deprecated:
-  if: false
-  #if: true
+  #if: false
+  if: true
   runs-on: ubuntu-latest
   steps:
     - run: echo "Run deprecated jobs"
@@ -81,7 +82,7 @@ jobs:
      env:
       CC: clang
       USE_SLEEF: 1
-      USE_OPENMP: 0
+      USE_OPENMP: ${{ env.USE_OPENMP }}
       USE_PYXES: ${{ env.USE_PYXES }}
       USE_EMU_AVX: ${{ env.USE_EMU_AVX }}
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -145,7 +146,7 @@ jobs:
      env:
       CC: gcc
       USE_SLEEF: 1
-      USE_OPENMP: 0
+      USE_OPENMP: ${{ env.USE_OPENMP }}
       USE_PYXES: ${{ env.USE_PYXES }}
       USE_EMU_AVX: ${{ env.USE_EMU_AVX }}
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -187,7 +188,7 @@ jobs:
      env:
       CC: clang
       USE_SLEEF: 1
-      USE_OPENMP: 0
+      USE_OPENMP: ${{ env.USE_OPENMP }}
       USE_PYXES: 0
       USE_EMU_AVX: 0
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -251,7 +252,7 @@ jobs:
      env:
       CC: gcc
       USE_SLEEF: 1
-      USE_OPENMP: 0
+      USE_OPENMP: ${{ env.USE_OPENMP }}
       USE_PYXES: 0
       USE_EMU_AVX: 0
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -289,7 +290,7 @@ jobs:
      env:
       CC: clang
       USE_SLEEF: 1
-      USE_OPENMP: 0
+      USE_OPENMP: ${{ env.USE_OPENMP }}
       USE_PYXES: ${{ env.USE_PYXES }}
       USE_EMU_AVX: ${{ env.USE_EMU_AVX }}
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -350,7 +351,7 @@ jobs:
      env:
       CC: clang
       USE_SLEEF: 1
-      USE_OPENMP: 0
+      USE_OPENMP: ${{ env.USE_OPENMP }}
       USE_PYXES: ${{ env.USE_PYXES }}
       USE_EMU_AVX: ${{ env.USE_EMU_AVX }}
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -411,7 +412,7 @@ jobs:
      env:
       CC: clang
       USE_SLEEF: 1
-      USE_OPENMP: 0
+      USE_OPENMP: ${{ env.USE_OPENMP }}
       USE_PYXES: ${{ env.USE_PYXES }}
       USE_EMU_AVX: ${{ env.USE_EMU_AVX }}
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -472,7 +473,7 @@ jobs:
       CC: arm-linux-gnueabihf-gcc
       USE_SLEEF: 0
       USE_SLEEFQUAD: 1
-      USE_OPENMP: 0
+      USE_OPENMP: ${{ env.USE_OPENMP }}
       USE_PYXES: 0
       USE_EMU_AVX: 0
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -490,7 +491,7 @@ jobs:
      env:
       DEBUGCMD: gdb-multiarch
       DEBUGCPU: arm6
-      USE_OPENMP: 0
+      USE_OPENMP: ${{ env.USE_OPENMP }}
       USE_PYXES: 0
       _DEBUG: ${{ env.DEBUGLEVEL }}
 #      _DEBUG: 3
@@ -523,7 +524,7 @@ jobs:
  jerpi64:
   name: JE (Raspberry)
   needs: [all, deprecated]
-  runs-on: ubuntu-22.04
+  runs-on: ubuntu-22.04    # 24.04 failed
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6
@@ -534,14 +535,14 @@ jobs:
       cpu: cortex-a53
       cpu_info: cpuinfo/raspberrypi_zero2_w_arm64
       base_image: raspios_lite_arm64:2023-05-03
-      image_additional_mb: 1024
+      image_additional_mb: 4096
       copy_artifact_path: j64
       commands: |
        script/install-lnx.sh
        export DEBUGCMD=gdb
        export CC=clang
        export USE_SLEEF=1
-       export USE_OPENMP=0
+       export USE_OPENMP=${{ env.USE_OPENMP }}
        export USE_PYXES=${{ env.USE_PYXES }}
        export USE_EMU_AVX=${{ env.USE_EMU_AVX }}
        export _DEBUG=0   # qemu-arm gdb not supported
@@ -592,7 +593,7 @@ jobs:
  jerpi32:
   name: JE (Raspberry32)
   needs: [all, deprecated]
-  runs-on: ubuntu-22.04
+  runs-on: ubuntu-22.04    # 24.04 failed
   steps:
    - name: Checkout Git repository
      uses: actions/checkout@v6
@@ -611,7 +612,7 @@ jobs:
        export CC=gcc
        export USE_SLEEF=0
        export USE_SLEEFQUAD=1
-       export USE_OPENMP=0
+       export USE_OPENMP=${{ env.USE_OPENMP }}
        export USE_PYXES=0
        export USE_EMU_AVX=0
        export _DEBUG=0   # qemu-arm gdb not supported
@@ -684,7 +685,7 @@ jobs:
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
-       export USE_OPENMP=0
+       export USE_OPENMP=${{ env.USE_OPENMP }}
        export USE_PYXES=${{ env.USE_PYXES }}
        export USE_EMU_AVX=${{ env.USE_EMU_AVX }}
        export _DEBUG=${{ env.DEBUGLEVEL }}
@@ -744,7 +745,7 @@ jobs:
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
-       export USE_OPENMP=0
+       export USE_OPENMP=${{ env.USE_OPENMP }}
        export USE_PYXES=${{ env.USE_PYXES }}
        export USE_EMU_AVX=${{ env.USE_EMU_AVX }}
        export _DEBUG=${{ env.DEBUGLEVEL }}
@@ -803,7 +804,7 @@ jobs:
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
-       export USE_OPENMP=0
+       export USE_OPENMP=${{ env.USE_OPENMP }}
        export USE_PYXES=${{ env.USE_PYXES }}
        export USE_EMU_AVX=${{ env.USE_EMU_AVX }}
        export _DEBUG=${{ env.DEBUGLEVEL }}
@@ -863,7 +864,7 @@ jobs:
        export DEBUGCMD=lldb
        export CC=clang
        export USE_SLEEF=1
-       export USE_OPENMP=0
+       export USE_OPENMP=${{ env.USE_OPENMP }}
        export USE_PYXES=${{ env.USE_PYXES }}
        export USE_EMU_AVX=${{ env.USE_EMU_AVX }}
        export _DEBUG=${{ env.DEBUGLEVEL }}
@@ -916,7 +917,7 @@ jobs:
      env:
       CC: clang
       USE_SLEEF: 1
-      USE_OPENMP: 0
+      USE_OPENMP: ${{ env.USE_OPENMP }}
       USE_PYXES: ${{ env.USE_PYXES }}
       USE_EMU_AVX: ${{ env.USE_EMU_AVX }}
       _DEBUG: ${{ env.DEBUGLEVEL }}
@@ -966,7 +967,7 @@ jobs:
       AR: emar
       USE_WASM: 1
       USE_SLEEF: 1
-      USE_OPENMP: 0
+      USE_OPENMP: ${{ env.USE_OPENMP }}
       USE_PYXES: 0
       USE_EMU_AVX: 0
       _DEBUG: 0   # lldb unavailable
@@ -1362,7 +1363,7 @@ jobs:
       __MSYS__: 1
       _SSE4_2: 1
       USE_SLEEF: 1
-      USE_OPENMP: 0
+      USE_OPENMP: ${{ env.USE_OPENMP }}
       USE_PYXES: ${{ env.USE_PYXES }}
       USE_EMU_AVX: ${{ env.USE_EMU_AVX }}
       PTHREADS4WSRC: 1
@@ -1434,7 +1435,7 @@ jobs:
       __MSYS__: 1
       _SSE4_2: 1
       USE_SLEEF: 1
-      USE_OPENMP: 0
+      USE_OPENMP: ${{ env.USE_OPENMP }}
       USE_PYXES: ${{ env.USE_PYXES }}
       USE_EMU_AVX: ${{ env.USE_EMU_AVX }}
       PTHREADS4WSRC: 1
@@ -1504,7 +1505,7 @@ jobs:
       WINDRES: windres
       __MSYS__: 1
       USE_SLEEF: 1
-      USE_OPENMP: 0
+      USE_OPENMP: ${{ env.USE_OPENMP }}
       USE_PYXES: 0
       USE_EMU_AVX: 0
       PTHREADS4WSRC: 1
@@ -1575,7 +1576,7 @@ jobs:
       WINDRES: windres
       __MSYS__: 1
       USE_SLEEF: 1
-      USE_OPENMP: 0
+      USE_OPENMP: ${{ env.USE_OPENMP }}
       USE_PYXES: ${{ env.USE_PYXES }}
       USE_EMU_AVX: ${{ env.USE_EMU_AVX }}
       PTHREADS4WSRC: 1
@@ -1620,7 +1621,7 @@ jobs:
 # get tests ------------------------------------------------------------
  tests:
   name: Test Results
-  runs-on: ubuntu-22.04
+  runs-on: ubuntu-latest
 # the needs definition below is also given later in webhook
 # this allows tests to be run that can be ignored for the webhook
 # AFAIK there is no cleaner way to do this
@@ -1666,7 +1667,7 @@ jobs:
 
  webhook:
   name: Run Webhook
-  runs-on: ubuntu-22.04
+  runs-on: ubuntu-latest
 # this needs is also in tests above
 # comment out any needs not used by the webhook
   needs:

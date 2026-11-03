@@ -1,8 +1,6 @@
 prolog './gstack.ijs'
 NB. stack issues (function call limit) ----------------------------------
 
-0!:_1`1:@.(2 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip slow
-
 NB. f=: 3 : 'f c=:>:y'
 NB. f=: 3 : 'f c=:>:y'
 'stack error' -: (f=: 3 : 'f y'         ) etx 0
@@ -27,10 +25,13 @@ NB. ". t=: '".t [ c=:>:c' [ c=: 0
 'stack error' -: ex '7!:2 t' [ t=: '7!:2 t'
 'stack error' -: ex '0!:0 t' [ t=: '0!:0 t'
 NB. (+/i.1+c) -: (0:`(+ $:@<:)@.*) c=: 370  NB. 400 was failing on 32 bit linux running under gdb (debian bullseye)
-(+/i.1+c) -: (0:`(+ $:@<:)@.*) c=: 268  NB. 370 was failing on arm64 -O0
+(+/i.1+c) -: (0:`(+ $:@<:)@.*) c=: (*9!:56'memaudit'){268 200  NB. 370 was failing on arm64 -O0
 'stack error' -: 0:`([: $: %)@.* etx 5
 
-600 < c=: $:@>: :: <: 0
+((*9!:56'memaudit'){600 490) < c=: $:@>: :: <: 0
+
+0!:_1`1:@.(0= 9!:56'memaudit') '$'   NB. skip slow
+
 'stack error' -: ex '$:@>: 0'
 'stack error' -: ex '$:@,@>: 0'
 'stack error' -: ex '$:@,@,@>: 0'
@@ -42,6 +43,9 @@ NB. (+/i.1+c) -: (0:`(+ $:@<:)@.*) c=: 370  NB. 400 was failing on 32 bit linux 
 'stack error' -: ex '$:@,@,@,@,@,@,@,@,@>: 0'
 'stack error' -: ex '$:@,@,@,@,@,@,@,@,@,@>: 0'
 'stack error' -: ex '$:@,@,@,@,@,@,@,@,@,@,@>: 0'
+
+NB.$  end of skip
+
 'stack error' -: ex '($: + >:) 0'
 'stack error' -: ex '(>: + $:) 0'
 
@@ -81,6 +85,8 @@ catch.
 17=13!:11''  NB. should be stack error
 end.
 }} ''
+
+0!:_1`1:@.(0= 9!:56'memaudit') '$'   NB. skip slow
 
 gerund =: ]F.:('@:' ,:@:<@:(,&<) ,~) (QKTEST{3e5 3e5) # < '+'
 

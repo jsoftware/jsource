@@ -58,8 +58,8 @@ static F2(jttks){F12IP;PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*z
 
 // general take/drop routine.  *u (length n) is the signed take values, w is array, wf is frame of operation.
 // istake is 1 for take, 0 for drop
-// static INLINE A jttk(A w, I *u, I n, I wf, J jtfg, I istake, I wcr, A a, I wt){F12IP;PROLOG(0093);A y,z;C*yv,*zv;I c,dy,dz,e,i,k,m,p,q,r;
-static NOOPTIMIZE A jttk(A w, I *u, I n, I wf, J jtfg, I istake, I wcr, A a, I wt){F12IP;PROLOG(0093);A y,z;C*yv,*zv;I c,dy,dz,e,i,k,m,p,q,r;
+static INLINE A jttk(A w, I *u, I n, I wf, J jtfg, I istake, I wcr, A a, I wt){F12IP;PROLOG(0093);A y,z;C*yv,*zv;I c,dy,dz,e,i,k,m,p,q,r;
+// static NOOPTIMIZE A jttk(A w, I *u, I n, I wf, J jtfg, I istake, I wcr, A a, I wt){F12IP;PROLOG(0093);A y,z;C*yv,*zv;I c,dy,dz,e,i,k,m,p,q,r;
  I wr=AR(w), t=AT(w), *ws=wr==wf?shape1:AS(w);  // ws points to shape of w, or all 1s if cell of w is an atom
  if(unlikely(ISSPARSE(t))){
   // sparse: reconstruct old parameters

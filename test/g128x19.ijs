@@ -1,8 +1,8 @@
 prolog './g128x19.ijs'
 
-0!:_1`1:@.(9!:56'pyxes') '?'   NB. skip if not pyxes
+0!:_1`1:@.((9!:56'pyxes')*.(9!:56'emu_avx2')+.(9!:56'c_avx2')) '?'   NB. skip if not pyxes and avx2
 
-0!:_1`1:@.(2 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip slow
+0!:_1`1:@.(*9!:56'memaudit') '$'   NB. skip slow
 
 CacheLine=: 9!:56'cachelinesize'
 padc=: (CacheLine%16)&{."1
@@ -503,6 +503,8 @@ delth''  NB. make sure we end with an empty system
 
 1
 }} 1    NB. this failed
+
+0!:_1`1:@.(0) '#'   NB. skip deprecated
 
 NB. *** 128!:9  (deprecated)
 
@@ -1198,6 +1200,7 @@ f =: {{
 }}
 f ''
 
+NB.#   end of deprecated
 
 NB. (0;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 bk ------------------------
 NB. normal precision

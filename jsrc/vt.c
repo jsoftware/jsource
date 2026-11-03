@@ -123,7 +123,9 @@ static INLINE A jttk(A w, I *u, I n, I wf, J jtfg, I istake, I wcr, A a, I wt){F
 
  PRODX(zcn,wf,AS(w),zcn)  // include all leading axes taken in full and the frame
  if(istake&&anyfill<0){RZ(w=jtsetfv1(jt,w,AT(w))); t=AT(w);}  // if fill is required, set the fill atom and convert it & w to common type
- GA0(z,t,zcn,MAX(wr,wf+n)); MCISH(AS(z),AS(w),wr) if(unlikely(wf==wr))MCISH(&AS(z)[wr],shape1,n) // allocate result, copy w shape, which includes trailing 1s if atomic cell
+ GA0(z,t,zcn,MAX(wr,wf+n));
+ if(z==w){forcetomemory(w); fprintf(stderr,"z %p w %p equal\n",z,w); DO(PLIML-PMINL+1, fprintf(stderr,"mempool %d %p\n",(int)i,jt->mempool[i]);)}
+ MCISH(AS(z),AS(w),wr) if(unlikely(wf==wr))MCISH(&AS(z)[wr],shape1,n) // allocate result, copy w shape, which includes trailing 1s if atomic cell
  DO(n, I absui=ABS(u[i]); if(istake){if(unlikely((UI)absui>=(UI)IMAX))absui=ws[wf+i];}else{absui=ws[wf+i]-absui;} AS(z)[wf+i]=absui;)   // install the shape given by u.  Final absui must be >0 here
  I klg=bplg(t);
  C *s=CAV(w), *d=CAV(z), *endd=d+(zcn<<klg);  // pointer to source, pointer to start/end of filled area

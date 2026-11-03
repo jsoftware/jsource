@@ -1,6 +1,6 @@
 prolog './g128x14.ijs'
 
-0!:_1`1:@.(9!:56'pyxes') '?'   NB. skip if not pyxes
+0!:_1`1:@.((9!:56'pyxes')*.(9!:56'emu_avx2')+.(9!:56'c_avx2')) '?'   NB. skip if not pyxes and avx2
 
 CacheLine=: 9!:56'cachelinesize'
 

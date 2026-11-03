@@ -133,6 +133,9 @@ echo '(1x&(]F::(++:))) [58#0'
 empty (1x&(]F::(++:))) [58#0
 eformat_j_=: exformat_j_ f.
 
+NB. test mempool leak
+{{)m:y }}1
+{{)d:y }}~1
 
 0!:_1 '$'   NB. temp skip to allow running full test suite
 

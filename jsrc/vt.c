@@ -58,7 +58,8 @@ static F2(jttks){F12IP;PROLOG(0092);A a1,q,x,y,z;B b,c;I an,m,r,*s,*u,*v;P*wp,*z
 
 // general take/drop routine.  *u (length n) is the signed take values, w is array, wf is frame of operation.
 // istake is 1 for take, 0 for drop
-static INLINE A jttk(A w, I *u, I n, I wf, J jtfg, I istake, I wcr, A a, I wt){F12IP;PROLOG(0093);A y,z;C*yv,*zv;I c,dy,dz,e,i,k,m,p,q,r;
+// static INLINE A jttk(A w, I *u, I n, I wf, J jtfg, I istake, I wcr, A a, I wt){F12IP;PROLOG(0093);A y,z;C*yv,*zv;I c,dy,dz,e,i,k,m,p,q,r;
+static NOOPTIMIZE A jttk(A w, I *u, I n, I wf, J jtfg, I istake, I wcr, A a, I wt){F12IP;PROLOG(0093);A y,z;C*yv,*zv;I c,dy,dz,e,i,k,m,p,q,r;
  I wr=AR(w), t=AT(w), *ws=wr==wf?shape1:AS(w);  // ws points to shape of w, or all 1s if cell of w is an atom
  if(unlikely(ISSPARSE(t))){
   // sparse: reconstruct old parameters
@@ -123,8 +124,10 @@ static INLINE A jttk(A w, I *u, I n, I wf, J jtfg, I istake, I wcr, A a, I wt){F
 
  PRODX(zcn,wf,AS(w),zcn)  // include all leading axes taken in full and the frame
  if(istake&&anyfill<0){RZ(w=jtsetfv1(jt,w,AT(w))); t=AT(w);}  // if fill is required, set the fill atom and convert it & w to common type
+ A mempool[PLIML-PMINL+1];
+ DO(PLIML-PMINL+1, mempool[i]=jt->mempool[i];)
  GA0(z,t,zcn,MAX(wr,wf+n));
- if(z==w){forcetomemory(w); fprintf(stderr,"z %p w %p equal\n",z,w); DO(PLIML-PMINL+1, fprintf(stderr,"mempool %d %p\n",(int)i,jt->mempool[i]);)}
+ if(z==w){forcetomemory(w); fprintf(stderr,"z %p w %p equal\n",z,w); DO(PLIML-PMINL+1, fprintf(stderr,"prev mempool %d %p\n",(int)i,mempool[i]);)}
  MCISH(AS(z),AS(w),wr) if(unlikely(wf==wr))MCISH(&AS(z)[wr],shape1,n) // allocate result, copy w shape, which includes trailing 1s if atomic cell
  DO(n, I absui=ABS(u[i]); if(istake){if(unlikely((UI)absui>=(UI)IMAX))absui=ws[wf+i];}else{absui=ws[wf+i]-absui;} AS(z)[wf+i]=absui;)   // install the shape given by u.  Final absui must be >0 here
  I klg=bplg(t);

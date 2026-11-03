@@ -73,6 +73,10 @@ NB. Direct definition {{ }} ----------------------------------------------------
 'syntax error' -: {{ name =. }} etx 5
 'syntax error' -: {{ name =: }} etx a.
 
+NB. test mempool leak
+{{)m:y }}1
+{{)d:y }}~1
+
 NB. Note SP added after {{ and }}
 f0 =: 3 : 0
 NB.

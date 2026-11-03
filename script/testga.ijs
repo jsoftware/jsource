@@ -29,13 +29,7 @@ stdout LF ,~ 9!:14''
 echo '_DEBUG: ',": 2!:5'_DEBUG'
 echo 'RUNNER_ARCH: ',": 2!:5'RUNNER_ARCH'
 
-a=. ('Wasm'-.@-:UNAME)#(<testpath),each 'glapack.ijs';'glapackcb.ijs'
-a=. a, (<testpath),each <'gregex.ijs'
-ddall=: ~. ddall ,~ a
-blacklist=: blacklist -. a
-4!:55 <'a'
 blacklist=: blacklist, ('OpenBSD'-:UNAME)#(<testpath),each 'gstack.ijs';'gtdot.ijs';'gtdot1.ijs';'gtdot2.ijs';'gtdot3.ijs';'gtdot4.ijs';'gtdot5.ijs';'g128x19.ijs';'g431.ijs' NB. temporarily disable
-NB. blacklist=: blacklist, ((1 -.@e. '/gcc-' E. 9!:14'')+.('0'={.":2!:5'_DEBUG')+.IF64+.UNAME-.@-:'linux')#(<testpath),each 'glapack.ijs';'glapackcb.ijs'  NB. linux32 gcc lapack issue running under gdb
 blacklist=: blacklist, ('Win'-.@-:UNAME)#(<testpath),each 'g128x14.ijs';'g128x19.ijs'
 ddall=: ddall -. blacklist=: ~. blacklist
 

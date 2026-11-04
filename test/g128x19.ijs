@@ -2,7 +2,7 @@ prolog './g128x19.ijs'
 
 0!:_1`1:@.((9!:56'pyxes')*.(9!:56'emu_avx2')+.(9!:56'c_avx2')) '?'   NB. skip if not pyxes and avx2
 
-0!:_1`1:@.(*9!:56'memaudit') '$'   NB. skip slow
+0!:_1`1:@.(-.@*9!:56'memaudit') '$'   NB. skip slow
 
 CacheLine=: 9!:56'cachelinesize'
 padc=: (CacheLine%16)&{."1

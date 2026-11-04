@@ -89,6 +89,8 @@ static I jtadfwd2(J,A,A,A,A,A,I,A*,A*);
 #define ISPRIM(f) (FAV(f)->flag2&VF2PRIM)
 // $:
 #define ADISSELF(f) ((f)&&AT(f)&VERB&&ISPRIM(f)&&FAV(f)->id==CSELF)
+// m@.v
+#define ADISAGENDA(v) ((v)->id==CATDOT&&(v)->fgh[0]&&AT((v)->fgh[0])&BOX&&(v)->fgh[1]&&AT((v)->fgh[1])&VERB)
 // A pseudoname: what a modifier called through a locative (adv_loc_) returns, the verb in fgh[2] run in the locale fgh[1]
 #define ADPSEUDO(f) (FAV(f)->id==CCOLONE&&FAV(f)->flag2&VF2PSEUDONAME)
 // An explicit definition (not a pseudoname)
@@ -390,6 +392,10 @@ static B jtadhastracedb(J jt,A f){V*v;
  if(ISPRIM(f))R 0;
  v=FAV(f);
  if(v->id==CCOLONE)R !(v->flag2&VF2PSEUDONAME); // An explicit definition may read a traced value (e.g. global) that its arguments do not show.
+ if(ADISAGENDA(v)){
+  DO(AN(v->fgh[0]), if(jtadhastraced(jt,AAV(v->fgh[0])[i]))R 1;)
+  R jtadhastraced(jt,v->fgh[1]);
+ }
  R jtadhastraced(jt,v->fgh[0])||jtadhastraced(jt,v->fgh[1])||(v->id==CFORK&&jtadhastraced(jt,v->fgh[2])); // Look at the operands recursively.
 }
 ADLOCWRAPS(B,adhastraced,1)
@@ -614,7 +620,13 @@ static B jtadlinear1b(J jt,A f){V*v; A fs,gs,hs;
  }
 }
 
-// monad f processes each atom independently, so applying it to the entire array equals applying it to each atom
+// is f a verb whose result is always the same numeric atom, whatever the argument?
+static B adconstatom(A f){V*v;
+ while(f&&AT(f)&VERB&&FAV(f)->id==CQQ&&AT(FAV(f)->fgh[0])&VERB)f=FAV(f)->fgh[0]; // drop "r (it is safe because it changes only the frame never the values)
+ if(!f||!(AT(f)&VERB))R 0; v=FAV(f);
+ if(v->id==CFCONS)R 1;
+ R v->id==CQQ&&AT(v->fgh[0])&(B01|INT|FL)&&!AR(v->fgh[0]);
+}
 static B jtadatomic1b(J jt,A f){V*v; A fs,gs,hs;
  if(!f||!(AT(f)&VERB))R 0; v=FAV(f); fs=v->fgh[0]; gs=v->fgh[1]; hs=v->fgh[2];
  if(v->flag&VISATOMIC1)R 1;
@@ -627,11 +639,16 @@ static B jtadatomic1b(J jt,A f){V*v; A fs,gs,hs;
   R adatomic1(fs)&&adatomic1(gs);
  case CFORK: if(!hs)R adatomic1(fs)&&adatomic1(gs);
   if(AT(fs)&NOUN)R !AR(fs)&&adatomic2(gs)&&adatomic1(hs);
-  R adatomic1(fs)&&adatomic2(gs)&&adatomic1(hs);
- case CHOOK: R adatomic2(fs)&&adatomic1(gs);
+  {B cf=adconstatom(fs),ch=adconstatom(hs); // one constant at most: the other gives the result its shape
+   R adatomic2(gs)&&(cf?ch?0:adatomic1(hs):adatomic1(fs)&&(ch||adatomic1(hs)));}
+ case CHOOK: R adatomic2(fs)&&(adatomic1(gs)||adconstatom(gs)); // y g h y: y gives the shape
  case CQQ: R AT(fs)&VERB&&adatomic1(fs);
  case CTILDE: R AT(fs)&VERB&&adatomic2(fs);
  case CDCAPDOT: R ISDCAP(f)&&v->mr==0&&adatomic1(DCAPU(f)); // the derivative of an elementwise verb is elementwise
+ case CATDOT: // m@.v with elementwise verbs, v elementwise or constant atom
+  if(!ADISAGENDA(v)||!(adatomic1(gs)||adconstatom(gs)))R 0;
+  DO(AN(fs), if(!adatomic1(AAV(fs)[i]))R 0;)
+  R 1;
  default: R 0;
  }
 }
@@ -648,7 +665,8 @@ static B jtadatomic2b(J jt,A f){V*v; A fs,gs,hs;
  case CAMP: case CAMPCO: R AT(fs)&VERB&&AT(gs)&VERB&&adatomic2(fs)&&adatomic1(gs);
  case CFORK: if(!hs)R adatomic1(fs)&&adatomic2(gs);
   if(AT(fs)&NOUN)R !AR(fs)&&adatomic2(gs)&&adatomic2(hs);
-  R adatomic2(fs)&&adatomic2(gs)&&adatomic2(hs);
+  {B cf=adconstatom(fs),ch=adconstatom(hs);
+   R adatomic2(gs)&&(cf?ch?0:adatomic2(hs):adatomic2(fs)&&(ch||adatomic2(hs)));}
  case CHOOK: R adatomic2(fs)&&adatomic1(gs);
  case CQQ: R AT(fs)&VERB&&adatomic2(fs)&&v->localuse.lu1.srank[1]==0&&v->localuse.lu1.srank[2]==0; // u"r changes agreement unless r is 0
  case CTILDE: R AT(fs)&VERB&&adatomic2(fs);
@@ -764,19 +782,60 @@ static A jtadnegv(J jt,A f,B dyad,ADLOC*ls,I*nls){A g,h; B full;
 }
 // cell loop when f is split at its own ranks: if one is negative the cells run f without it else f itself. T is type of call's result
 #define ADNEGCELLS(T,f,neg,dy,call) {if(!(neg)){A g_=(f); R (call);} ADLOC ls_[ADMAXLOC]; I nls_; A g_; T rc_; RZ(g_=jtadnegv(jt,f,dy,ls_,&nls_)); rc_=(call); jtadlocexitn(jt,ls_,nls_); R rc_;}
+// |x| for x<0 (IMIN has no negative: any length >= n is the same)
+#define ADWINM(x) ((x)==IMIN?IMAX:-(x))
+// how many cells x u\ y or x u\. y has when y has n items (the count is the same for infixes and outfixes)
+static I adwincount(I x,I n){
+ R x>0
+  ?MAX(0,n-x+1) // overlapping infixes of length x
+  :x<0
+   ?(n?1+(n-1)/ADWINM(x):0) // non-overlapping infixes of length |x|
+   :n+1; // n+1 empty infixes
+}
+// For cell i of x u\ y or x u\. y get where the infix starts (*s) and how many items it has (*l). The infix is items s ... s+l-1, the outfix is all the other items.
+static void adwin(I x,I n,I i,I*s,I*l){
+ if(x>0){*s=i; *l=x;
+ }else if(x<0){I m=ADWINM(x); *s=i*m; *l=MIN(m,n-*s);
+ }else{*s=i; *l=0;}
+}
+// item indices of cell i
+static A jtadwincell(J jt,B out,I x,I n,I i){A z; I s,l,*zv;
+ adwin(x,n,i,&s,&l);
+ if(!out)R apv(l,s,1); // infix: s + i. l
+ GATV0(z,INT,n-l,1); zv=IAV(z); // outfix: the rest
+ DO(s, zv[i]=i;) DO(n-s-l, zv[s+i]=s+l+i;) R z;
+}
+// item indices of every cell (a table). 0 when the cells differ in length
+// or when the table and W { y would hold more than ADWINMAX atoms.
+#define ADWINMAX ((I)1<<24)
+static A jtadwinidx(J jt,B out,I x,I n,I a){A W; I s,l,L,*wv;
+ I c=adwincount(x,n); // number of cells
+ if(x<0&&n%ADWINM(x))R 0; // with negative x that doesn't divide n, the last infix is shorter. This goes to cell loop.
+ adwin(x,n,0,&s,&l); L=out?n-l:l;
+ if(L&&c>ADWINMAX/L/MAX(a,1))R 0; // c*L*a <= ADWINMAX
+ GATV0(W,INT,c*L,2); AS(W)[0]=c; AS(W)[1]=L; wv=IAV(W);
+ DO(c,
+  adwin(x,n,i,&s,&l);
+  if(out){DO(s, *wv++=i;) DO(n-s-l, *wv++=s+l+i;)
+  }else{DO(l, *wv++=s+i;)}
+ )
+ R W;
+}
 
 // Rank machinery is run over an array of cell indices; each call differentiates one cell and
 // returns the boxed pair primal;tangent. The pairs are then opened with fill and the
 // direction axis is moved back to the front.
 
-// Monad. Differentiate one cell in forward mode. 0=cell i; 1=prefix i+1 (u\) and 2=suffix i (u\.).
+// Monad. Differentiate one cell in forward mode. 0=cell i (P and T split into cells); 1=prefix i+1 (u\); 2=suffix i (u\.); 3=infix i (x u\ y); 4=outfix i (x u\. y). In 1-4 T is directions first.
 static DF1(jtadcellm){DF12IP;
  V*v=FAV(self); A f=v->fgh[0],*dv=AAV(v->fgh[1]); A p,t,pz,tz;
  I k=IAV(C(dv[2]))[0], mode=IAV(C(dv[2]))[1], i=IAV(w)[0]; A P=C(dv[0]),T=C(dv[1]);
  switch(mode){
  case 0: RZ(p=from(w,P)); if(AT(P)&BOX)t=ADZ; else RZ(t=from(w,T)); break;
  case 1: RZ(p=take(sc(i+1),P)); RZ(t=admap2(ds(CTAKE),sc(i+1),0,T,TR(T))); break;
- default: RZ(p=drop(sc(i),P)); RZ(t=admap2(ds(CDROP),sc(i),0,T,TR(T))); break;
+ case 2: RZ(p=drop(sc(i),P)); RZ(t=admap2(ds(CDROP),sc(i),0,T,TR(T))); break;
+ default: {A ix; RZ(ix=jtadwincell(jt,mode==4,IAV(C(dv[2]))[2],AS(P)[0],i));
+  RZ(p=from(ix,P)); RZ(t=admap2(ds(CFROM),ix,1,T,TR(T))); break;}
  }
  RZ(jtadfwd1(jt,f,p,t,k,&pz,&tz));
  RZ(tz=admat(tz,pz)); RZ(tz=adexpand(tz,pz));
@@ -860,6 +919,7 @@ static B jtadhaspowinfb(J jt,A f){V*v; A g;
  v=FAV(f); g=v->fgh[1];
  if(v->id==CCOLONE)R 0;
  if(v->id==CPOWOP&&g&&AT(g)&FL&&AN(g)==1&&(DAV(g)[0]==inf||DAV(g)[0]==infm||(_isnan(DAV(g)[0])&&g!=ds(CUSDOT))))R 1;
+ if(ADISAGENDA(v)){DO(AN(v->fgh[0]), if(jtadhaspowinf(jt,AAV(v->fgh[0])[i]))R 1;)}
  R jtadhaspowinf(jt,v->fgh[0])||jtadhaspowinf(jt,g)||(v->id==CFORK&&jtadhaspowinf(jt,v->fgh[2]));
 }
 ADLOCWRAPS(B,adhaspowinf,1)
@@ -887,6 +947,78 @@ static I jtadfassemble(J jt,A zb,A*ts,I n,I k,A*pz,A*tz){A z,tb,Tz; A*zv=AAV1(zb
  RZ(*tz=cant2(over(num(1),over(num(0),apv(AR(Tz)-2,2,1))),Tz)); R 1; // direction axis to the front
 }
 
+// Bookkeeping for m@.v
+// Return 0 on error, 1 for an atom s (*ps index), 2 for no cells (no derivative),
+// 3 for groups: *pgb index lists, *pgk the selectors, *pinv inverse of grade of ,s.
+static I jtadagplan(J jt,A f,A x,A y,A*ps,A*pgb,A*pgk,A*pinv){V*v=FAV(f); A s,g,gb,gk,inv; I nar=AN(v->fgh[0]),vr,n,ng,st,b,*gv,*sv,*kv;
+ RZ(s=x?AO2(v->fgh[1],x,y):AO1(v->fgh[1],y)); // s =. [x] v y (integer: no derivative)
+ if(!(AT(s)&INT))RZ(s=cvt(INT,s));
+ vr=AR(s); // rank of selector: frame
+ if(!vr){ // atom: one verb, whole arguments
+  I j=IAV(s)[0]; j+=REPSGN(j)&nar; ASSERT(BETWEENO(j,0,nar),EVINDEX); *ps=sc(j); R 1;
+ }
+ ASSERT(MAX(AR(y),x?AR(x):0)>=vr,EVRANK);
+ ASSERT(TESTAGREE(AS(s),AS(y),MIN(vr,AR(y))),EVLENGTH);
+ if(x){ASSERT(TESTAGREE(AS(s),AS(x),MIN(vr,AR(x))),EVLENGTH);}
+ n=AN(s); if(!n)R 2; // no cells
+ sv=IAV(s); DO(n, ASSERT(sv[i]>=-nar&&sv[i]<nar,EVINDEX);); // every selector in range
+ ADASSERT(!AR(y)||AR(y)>=vr); ADASSERT(!x||!AR(x)||AR(x)>=vr); // shorter frame (not an atom): refused
+ RZ(g=grade1(ravel(s))); gv=IAV(g); // cell numbers sorted by selector (stable sort)
+ ng=1; DO(n-1, ng+=sv[gv[i+1]]!=sv[gv[i]];); // number of groups: one per distinct selector
+ RZ(gb=jtadboxlist(jt,ng)); GATV0(gk,INT,ng,1); kv=IAV(gk); // gb: cell numbers per group; gk: verb per group
+ st=0; b=0; // start of the current group; groups done
+ DO(n, if(i==n-1||sv[gv[i+1]]!=sv[gv[i]]){A ix; I j=sv[gv[i]];
+  GATV0(ix,INT,i+1-st,1); MCISH(IAV(ix),gv+st,i+1-st);
+  adboxset(gb,b,ix); kv[b++]=j+(REPSGN(j)&nar); st=i+1;
+ });
+ GATV0(inv,INT,n,1); DO(n, IAV(inv)[gv[i]]=i;); // restore cell order
+ *ps=s; *pgb=gb; *pgk=gk; *pinv=inv; R 3;
+}
+// New shape for r, a group's result in m@.v (each item raised to rank m-1 by putting 1s in front of its shape)
+static A jtadagraise(J jt,A r,I m){
+ R over(sc(AS(r)[0]),over(reshape(sc(m-AR(r)),num(1)),behead(shape(r)))); // (# r) , ((m - #$r) $ 1) , }. $ r
+}
+static A jtadagcells(J jt,A s,A a){
+ R over(sc(AN(s)),drop(sc(AR(s)),shape(a))); // (#,s) , (#$s) }. $ a
+}
+// forward rule for [x] m@.v y
+static I jtadagendaf(J jt,A f,A x,A Tx,A y,A Ty,I k,A*pz,A*tz){A s,gb,gk,inv,*fv=AAV(FAV(f)->fgh[0]),cx=x,tcx=Tx,cy=y,tcy=Ty,zr=0,zt=ADZ; I c,ng;
+ RZ(c=jtadagplan(jt,f,x,y,&s,&gb,&gk,&inv)); // plan
+ if(c==2){ // no cells
+  RZ(*pz=x?AO2(f,x,y):AO1(f,y)); *tz=ADZ; R 1;
+ }
+ if(c==1){ // atom selector
+  A g=fv[IAV(s)[0]]; R x?jtadfwd2(jt,g,x,Tx,y,Ty,k,pz,tz):jtadfwd1(jt,g,y,Ty,k,pz,tz);
+ }
+ ng=AN(gb); // number of groups
+ if(AR(s)>1){ // selector with two or more axes needs the arguments flattened
+  if(x&&AR(x)){ADF1(ds(CCOMMA),x,Tx,&cx,&tcx); ADF2(ds(CDOLLAR),jtadagcells(jt,s,x),ADZ,cx,tcx,&cx,&tcx);}
+  if(AR(y)){ADF1(ds(CCOMMA),y,Ty,&cy,&tcy); ADF2(ds(CDOLLAR),jtadagcells(jt,s,y),ADZ,cy,tcy,&cy,&tcy);}
+ }
+ A rb,*rs; I rmax=0; GATV0(rb,INT,2*ng,1); rs=(A*)IAV(rb); // each group's result and tangent
+ DO(ng, A ix=AAV1(gb)[i],a=cx,ta=tcx,b=cy,tb=tcy,r,tr,g=fv[IAV(gk)[i]];
+  if(ng>1){ // more than one group (otherwise cells in order)
+   if(x&&AR(x))ADF2(ds(CFROM),ix,ADZ,cx,tcx,&a,&ta);
+   if(AR(y))ADF2(ds(CFROM),ix,ADZ,cy,tcy,&b,&tb);
+  }
+  // differentiate verb on the group's list of cells
+  if(x){ADF2(g,a,ta,b,tb,&r,&tr);
+  }else{ADF1(g,b,tb,&r,&tr);}
+  ASSERT(AR(r)&&AS(r)[0]==AN(ix),EVRANK); // one item per cell
+  rs[2*i]=r; rs[2*i+1]=tr; rmax=MAX(rmax,AR(r)); // keep result and its tangent and updates the largest rank
+ );
+ // join groups in order
+ DO(ng, A r=rs[2*i],tr=rs[2*i+1];
+  if(AR(r)<rmax){ // result of lower rank
+   ADF1(ds(CCOMMA),r,tr,&r,&tr); ADF2(ds(CDOLLAR),jtadagraise(jt,rs[2*i],rmax),ADZ,r,tr,&r,&tr);
+  }
+  if(zr){ADF2(ds(CCOMMA),zr,zt,r,tr,&zr,&zt); // append this group's items to what has been joined so far
+  }else{zr=r; zt=tr;}
+ );
+ if(ng>1)ADF2(ds(CFROM),inv,ADZ,zr,zt,&zr,&zt); // back in cell order
+ if(AR(s)>1)R jtadfwd2(jt,ds(CDOLLAR),shape(s),ADZ,zr,zt,k,pz,tz); // selector of two or more axes
+ *pz=zr; *tz=zt; R 1;
+}
 // u\ y (mode 1) and u\. y (mode 2) for nonlinear u: apply u to each prefix/suffix (the cell loop, jtadcellm)
 static I jtadscan(J jt,A f,I mode,A P,A T,I k,A*pz,A*tz){A d,cv,z,g; I n;
  RZ(T=admat(T,P));
@@ -900,6 +1032,30 @@ static I jtadscan(J jt,A f,I mode,A P,A T,I k,A*pz,A*tz){A d,cv,z,g; I n;
  cv=fdef(0,CDCAPDOT,VERB,jtadcellm,jtvalenceerr,f,d,0,VFLAGNONE,RMAX,RMAX,RMAX);
  RZ(g=qq(cv,sc(0))); RZ(df1(z,apv(n,0,1),g));
  R jtadjoin(jt,z,pz,tz);
+}
+// forward rule for x u\ y (infixes) and x u\. y (outfixes, when out is set). It returns u on each cell (assembled) and tangent of that.
+static I jtadinfixf(J jt,A f,B out,A x,A P,A T,I k,A zg,A*pz,A*tz){A z,W,b,tb; I m,n,c;
+ if(ISZ(T)){
+  RZ(z=zg?zg:(AO2(out?bsdot(f):bslash(f),x,P)));
+  *pz=z; *tz=ADZ; R 1;
+ }
+ RE(m=i0(x)); // an integer x
+ if(!AR(P)){ // atom y
+  RZ(P=ravel(P)); RZ(T=reshape(over(sc(k),sc(1)),T));
+ }
+ n=AS(P)[0]; c=adwincount(m,n);
+ if(!c){ // no cells
+  RZ(z=zg?zg:(AO2(out?bsdot(f):bslash(f),x,P)));
+  *pz=z; *tz=ADZ; R 1;
+ }
+ if((W=jtadwinidx(jt,out,m,n,n?AN(P)/n:1))){ // gather path
+  ADF2(ds(CFROM),W,ADZ,P,T,&b,&tb); ADF1(qq(f,sc(-1)),b,tb,&b,&tb);
+ }else{A d,cv,g,zc; I pv[3]={k,out?4:3,m}; RE(0); // cell loop for unequal cells or table too big
+  RZ(d=jlink(P,jlink(T,vec(INT,3,pv))));
+  cv=fdef(0,CDCAPDOT,VERB,jtadcellm,jtvalenceerr,f,d,0,VFLAGNONE,RMAX,RMAX,RMAX);
+  RZ(g=qq(cv,sc(0))); RZ(df1(zc,apv(c,0,1),g)); RZ(jtadjoin(jt,zc,&b,&tb));
+ }
+ *pz=zg&&AR(zg)==AR(b)&&!memcmp(AS(zg),AS(b),AR(b)*SZI)?zg:b; *tz=tb; R 1;
 }
 // true when f is g/ with a verb g, used to recognize g/\. y
 #define ADSUFFOLD(f) (AT(f)&VERB&&FAV(f)->id==CSLASH&&FAV(f)->fgh[0]&&AT(FAV(f)->fgh[0])&VERB)
@@ -1047,6 +1203,33 @@ static I jtadscanmmc(J jt,B pre,A P,A z,A*pM,A*pW,A*pGn,A*pGs){A M,W,Ln,Ls,E,Q;
  RZ(*pGs=atop(amp(Ls,ds(CFROM)),ds(CCOMMA))); // Gs = (Ls&{)@,
  R 1;
 }
+// Check whether f (u of u\ or u\.) is */
+#define ADSCANP(f) (AT(f)&VERB&&FAV(f)->id==CSLASH&&AT(FAV(f)->fgh[0])&VERB&&ISPRIM(FAV(f)->fgh[0])&&FAV(FAV(f)->fgh[0])->id==CSTAR)
+// Return Z with Z_0 = X_0, Z_i = X_i + a_i*Z_(i-1) over the n items (pre=0 from the other end) for every direction of X at once. Used by derivatives of */\ and */\.
+static A jtadlinrec(J jt,B pre,A a,A X,I r){I n=AS(a)[0];
+ if(ISZ(X))R ADZ;
+ if(!pre){RZ(a=AO1(ds(CREV),a)); RZ(X=admap1(ds(CREV),X,r));} // suffix recurrence is prefix one reversed
+ A *old=jt->tnextpushp;
+ for(I s=1;s<n;s<<=1){A bk,bt,bh,at,ah; // doubling: each step joins windows of s items into windows of 2s, so after log2 n steps item i holds Z_i
+  RZ(bk=admap1(amp(sc(s),ds(CTAKE)),X,r)); RZ(bt=admap1(amp(sc(s),ds(CDROP)),X,r)); RZ(bh=admap1(amp(sc(-s),ds(CDROP)),X,r));
+  RZ(at=AO2(ds(CDROP),sc(s),a)); RZ(ah=AO2(ds(CDROP),sc(-s),a));
+  RZ(X=admap2(ds(CCOMMA),bk,r,plus(bt,adscale(at,bh)),r)); // first s items final. For i>=s: X_i + a_i * X_(i-s)
+  if(2*s<n)RZ(a=AO2(ds(CCOMMA),AO2(ds(CTAKE),sc(s),a),tymes(at,ah))); // a_i * a_(i-s), for next steps
+  RZ(gc3(&X,&a,0,old)); // free this step's temporaries
+ }
+ if(!pre)RZ(X=admap1(ds(CREV),X,r)); // reverse suffix case back
+ R X; // X holds Z
+}
+// Forward rule for */\ y and */\. y
+static I jtadfwdscanp(J jt,A f,B pre,A P,A T,A zg,A*pz,A*tz){A z,c;
+ RZ(z=zg?zg:(AO1(f,P))); *pz=z;
+ if(ISZ(T)){*tz=ADZ; R 1;}
+ RZ(T=jtadexpand(jt,T,P));
+ RZ(c=pre
+  ?AO2(ds(CCOMMA),num(1),AO1(ds(CCTAIL),z))
+  :AO2(ds(CCOMMA),AO1(ds(CBEHEAD),z),num(1)));
+ RZ(*tz=jtadlinrec(jt,pre,P,adscale(c,T),AR(P))); R 1;
+}
 // Forward rule for the scans.
 static I jtadfwdscanmm(J jt,A f,B pre,A P,A T,A zg,A*pz,A*tz){A z,M,W,Gn,Gs,Q;
  I r=AR(P);
@@ -1119,7 +1302,8 @@ static B jtadrunsown(J,A);
 static B adboxwalk(A f){
  switch(FAV(f)->id){
  case CAT: case CATCO: case CAMP: case CAMPCO: case CFORK: case CHOOK: case CTILDE: case CQQ:
- case CUNDER: case CUNDCO: case CPOWOP: R 1;
+ case CUNDER: case CUNDCO: case CPOWOP: case CSLASH: R 1;
+ case CATDOT: R ADISAGENDA(FAV(f));
  default: R 0;
  }
 }
@@ -1560,14 +1744,16 @@ boxwalk:
  case COBVERSE: R jtadfwd1(jt,fs,P,T,k,pz,tz); // u :. v y is u y
  case CBSLASH: case CBSDOT: // u\ y  u\. y (non-linear u)
   ADASSERT(AT(fs)&VERB);
-  if(ADSCANMM(fs)&&AR(P)&&AS(P)[0])R jtadfwdscanmm(jt,f,v->id==CBSLASH,P,T,zg,pz,tz);   // >./\ <./\ >./\. <./\.
-  if(v->id==CBSDOT&&AR(P)&&AS(P)[0]&&!zg&&ADSUFFOLD(fs))R jtadsuffold(jt,fs,P,T,k,pz,tz);   // g/\. y
+  if(ADSCANMM(fs)&&AR(P)&&AS(P)[0])R jtadfwdscanmm(jt,f,v->id==CBSLASH,P,T,zg,pz,tz); // >./\ <./\ >./\. <./\.
+  if(ADSCANP(fs)&&AR(P)&&AS(P)[0])R jtadfwdscanp(jt,f,v->id==CBSLASH,P,T,zg,pz,tz); // */\ */\.
+  if(v->id==CBSDOT&&AR(P)&&AS(P)[0]&&!zg&&ADSUFFOLD(fs))R jtadsuffold(jt,fs,P,T,k,pz,tz); // g/\. y
   R jtadscan(jt,fs,v->id==CBSLASH?1:2,P,T,k,pz,tz);
+ case CATDOT: ADASSERT(ADISAGENDA(v)); R jtadagendaf(jt,f,0,ADZ,P,T,k,pz,tz); // m@.v y
  case CSLASH: {I n; // u/ y (non-linear u)
   if(!AR(P)){*pz=P; *tz=T; R 1;} // u/ of an atom is the atom itself
   n=AS(P)[0];
   if(!n){RZ(z=zg?zg:(AO1(f,P))); *pz=z; *tz=ADZ; R 1;} // u/ '' is u's identity element
-  if(adfoldfast(f)){A G; // fast path if f is one of */ >./ <./
+  if(!bx&&adfoldfast(f)){A G; // fast path if f is one of */ >./ <./ (not for single boxed item)
    RZ(z=zg?zg:(AO1(f,P))); // u/ P
    RZ(G=jtadfoldw(jt,f,P,z)); // the weights G, shape $P, one weight per atom of P.
    *pz=z;
@@ -1751,6 +1937,17 @@ static I jtadfwd2(J jt,A f,A x,A Tx,A y,A Ty,I k,A*pz,A*tz){B rp=ADT&&ADT->zgive
  if(!ISZ(*tz)&&((*pz==x&&ISZ(Tx)&&ISZ(adtget(x)))||(*pz==y&&ISZ(Ty)&&ISZ(adtget(y)))))RZ(*pz=ca(*pz));
  R 1;
 }
+// x #. y for lists or atoms x and y with x traced (and possibly y): +/ y * }. */\. x , 1
+static I jtadbasefx(J jt,A x,A Tx,A y,A Ty,I k,A zg,A*pz,A*tz){A z,a,ta,b,tb; I n=AR(y)?AS(y)[0]:1;
+ RZ(z=zg?zg:(AO2(ds(CBASE),x,y)));
+ // a is bases as list: x itself or n $ x for atom base.
+ if(AR(x)){a=x; ta=Tx;
+ }else ADF2(ds(CDOLLAR),sc(n),ADZ,x,Tx,&a,&ta);
+ // weights
+ ADF2(ds(CCOMMA),a,ta,num(1),ADZ,&a,&ta); ADF1(bsdot(slash(ds(CSTAR))),a,ta,&a,&ta); ADF1(ds(CBEHEAD),a,ta,&a,&ta); // }. */\. x , 1
+ ADF2(ds(CSTAR),y,Ty,a,ta,&b,&tb); ADF1(slash(ds(CPLUS)),b,tb,&b,&tb); // +/ y * weights
+ *pz=z; *tz=tb; R 1;
+}
 static I jtadfwd2x(J jt,A f,A x,A Tx,A y,A Ty,I k,A*pz,A*tz){A z,F,a,b,c,ta,tb,tc; V*v; A fs,gs,hs; I lrk,rrk;
  A zg=0; if(ADT&&ADT->zgiven){zg=ADT->zgiven; ADT->zgiven=0;}
  ASSERT(AT(f)&VERB,EVDOMAIN);
@@ -1864,9 +2061,16 @@ boxwalk2:
  case CFROM: case CTAKE: case CDROP: case CPOUND: case CDOLLAR: case CROT: case CCANT: // { {. }. # $ |. |:
   RZ(z=zg?zg:(AO2(f,x,y))); *pz=z;
   *tz=ISZ(Ty)?ADZ:admap2(f,x,AR(x),Ty,TR(Ty)); RZ(*tz); R 1;
- case CBASE: // x #. y (linear in y)
-  ADASSERT(ISZ(Tx));
-  RZ(z=zg?zg:(AO2(f,x,y))); *pz=z; RZ(*tz=admap2(f,x,AR(x),Ty,TR(Ty))); R 1;
+ case CBASE: // x #. y: linear in y
+  if(!ISZ(Tx)){ // x traced
+   if(!AR(x)){A z; RZ(z=zg?zg:(AO2(f,x,y))); // atom base: the polynomial (|."1 y) p. x
+    ADF1(qq(ds(CREV),sc(1)),y,Ty,&a,&ta); ADF2(ds(CPOLY),a,ta,x,Tx,&b,&tb);
+    *pz=z; *tz=tb; R 1;
+   }
+   if(AR(x)>1||AR(y)>1)R jtadcells2(jt,f,1,MIN(1,AR(y)),x,Tx,y,Ty,k,pz,tz); // cell loop, but cell of y may be an atom
+   R jtadbasefx(jt,x,Tx,y,Ty,k,zg,pz,tz); // lists or a list and an atom
+  }
+  RZ(z=zg?zg:(AO2(f,x,y))); *pz=z; RZ(*tz=admap2(f,x,AR(x),Ty,TR(Ty))); R 1; // only y traced
  // structural: linear in x, y selects
  case CGRADE: case CDGRADE: // x /: y  x \: y  permute x
   RZ(z=zg?zg:(AO2(f,x,y))); *pz=z;
@@ -1969,7 +2173,11 @@ boxwalk2:
  case CCOLON: // x u : v y
   ADASSERT(AT(fs)&VERB&&AT(gs)&VERB);
   R jtadfwd2(jt,gs,x,Tx,y,Ty,k,pz,tz);
- case CMCAP: case COBVERSE: R jtadfwd2(jt,fs,x,Tx,y,Ty,k,pz,tz); // x u M. y, x u :. v y: u
+ case CMCAP: case COBVERSE: R jtadfwd2(jt,fs,x,Tx,y,Ty,k,pz,tz); // x u M. y  x u :. v y
+ case CBSLASH: case CBSDOT: // x u\ y  x u\. y
+  ADASSERT(AT(fs)&VERB);
+  R jtadinfixf(jt,fs,v->id==CBSDOT,x,y,Ty,k,zg,pz,tz);
+ case CATDOT: ADASSERT(ADISAGENDA(v)); R jtadagendaf(jt,f,x,Tx,y,Ty,k,pz,tz); // x m@.v y
  case CSLASH: {A g; // x u/ y = x u"(lu,_) y
   RZ(g=qq(fs,v2(lr(fs),RMAX))); // g = u"(lu,_)
   R jtadfwd2(jt,g,x,Tx,y,Ty,k,pz,tz);}
@@ -2072,12 +2280,13 @@ ADLOCWRAP(B,adstructj)
 ADLOCWRAPS(B,adstructm,0)
 
 // cell loops
-// mode 0=cell 1=prefix (u\) 2=suffix (u\.)
+// Monad. Differentiate one cell in reverse mode. 0=cell i; 1=prefix i+1 (u\); 2=suffix i (u\.); 3=infix i (x u\ y); 4=outfix i (x u\. y).
 static DF1(jtadrcellm){DF12IP;V*v=FAV(self); A f=v->fgh[0],*dv=AAV(v->fgh[1]); A P=C(dv[1]),c,r; I mode=IAV(C(dv[2]))[0], i=IAV(w)[0];
  switch(mode){
  case 0: RZ(c=REC2(ds(CFROM),w,P)); break;
  case 1: RZ(c=REC2(ds(CTAKE),sc(i+1),P)); break;
- default: RZ(c=REC2(ds(CDROP),sc(i),P));
+ case 2: RZ(c=REC2(ds(CDROP),sc(i),P)); break;
+ default: {A ix; RZ(ix=jtadwincell(jt,mode==4,IAV(C(dv[2]))[1],AS(P)[0],i)); RZ(c=REC2(ds(CFROM),ix,P));}
  }
  RZ(r=REC1(f,c)); R box(r);
 }
@@ -2124,6 +2333,46 @@ static A jtadrscan(J jt,A f,I mode,A P){A cv,zb,g; I n;
  cv=fdef(0,CDCAPDOT,VERB,jtadrcellm,jtvalenceerr,f,jlink(mtv,jlink(P,sc(mode))),0,VFLAGNONE,RMAX,RMAX,RMAX);
  RZ(g=qq(cv,sc(0))); RZ(df1(zb,apv(n,0,1),g));
  R jtadrassemble(jt,zb);
+}
+// m@.v recorded
+static A jtadagendar(J jt,A f,A x,A y){A s,gb,gk,inv,*fv=AAV(FAV(f)->fgh[0]),cx=x,cy=y,zr=0; I c,ng;
+ RZ(c=jtadagplan(jt,f,x,y,&s,&gb,&gk,&inv));
+ if(c==2)R UNTR((_z=x?AO2(f,x,y):AO1(f,y)));
+ if(c==1){A g=fv[IAV(s)[0]]; R x?REC2(g,x,y):REC1(g,y);}
+ ng=AN(gb);
+ if(AR(s)>1){
+  if(x&&AR(x)){RZ(cx=REC1(ds(CCOMMA),x)); RZ(cx=REC2(ds(CDOLLAR),jtadagcells(jt,s,x),cx));}
+  if(AR(y)){RZ(cy=REC1(ds(CCOMMA),y)); RZ(cy=REC2(ds(CDOLLAR),jtadagcells(jt,s,y),cy));}
+ }
+ A rb,*rs; I rmax=0; GATV0(rb,INT,ng,1); rs=(A*)IAV(rb);
+ DO(ng, A ix=AAV1(gb)[i],a=cx,b=cy,r,g=fv[IAV(gk)[i]];
+  if(ng>1){if(x&&AR(x))RZ(a=REC2(ds(CFROM),ix,cx)); if(AR(y))RZ(b=REC2(ds(CFROM),ix,cy));}
+  RZ(r=x?REC2(g,a,b):REC1(g,b));
+  ASSERT(AR(r)&&AS(r)[0]==AN(ix),EVRANK);
+  rs[i]=r; rmax=MAX(rmax,AR(r));
+ );
+ DO(ng, A r=rs[i];
+  if(AR(r)<rmax){RZ(r=REC1(ds(CCOMMA),r)); RZ(r=REC2(ds(CDOLLAR),jtadagraise(jt,rs[i],rmax),r));}
+  RZ(zr=zr?REC2(ds(CCOMMA),zr,r):r);
+ );
+ if(ng>1)RZ(zr=REC2(ds(CFROM),inv,zr));
+ if(AR(s)>1)RZ(zr=REC2(ds(CDOLLAR),shape(s),zr));
+ R zr;
+}
+// x u\ y and x u\. y (out) recorded
+static A jtadinfixr(J jt,A f,B out,A x,A P){A W,c; I m,n,cn;
+ RE(m=i0(x)); // an integer x
+ if(!AR(P))RZ(P=REC1(ds(CCOMMA),P)); // atom y is one-item list
+ n=AS(P)[0]; cn=adwincount(m,n);
+ if(!cn)R UNTR((_z=AO2(out?bsdot(f):bslash(f),x,P))); // no cells
+ if((W=jtadwinidx(jt,out,m,n,n?AN(P)/n:1))){ // gather path
+  RZ(c=REC2(ds(CFROM),W,P)); R REC1(qq(f,sc(-1)),c);
+ }
+ RE(0); // error making the table
+ // cell loop
+ {A cv,zb,g; cv=fdef(0,CDCAPDOT,VERB,jtadrcellm,jtvalenceerr,f,jlink(mtv,jlink(P,v2(out?4:3,m))),0,VFLAGNONE,RMAX,RMAX,RMAX);
+  RZ(g=qq(cv,sc(0))); RZ(df1(zb,apv(cn,0,1),g));
+  R jtadrassemble(jt,zb);}
 }
 static B jtadisplusb(J jt,A f){R f&&AT(f)&VERB&&ISPRIM(f)&&FAV(f)->id==CPLUS;} // +
 ADLOCWRAP(B,adisplus)
@@ -2236,14 +2485,19 @@ boxwalkr1:
   ADASSERT(AT(fs)&VERB);
   if(adisplusslash(fs)){RZ((z=AO1(f,P))); R PRIM1(z);} // +/\ +/\. linear, with a rule
   if(ADSCANMM(fs)&&AR(P)&&AS(P)[0]){RZ((z=AO1(f,P))); R PRIM1(z);} // >./\ and the like: one entry
+  if(ADSCANP(fs)&&AR(P)&&AS(P)[0]){RZ((z=AO1(f,P))); R PRIM1(z);} // */\ */\. one entry
   if(v->id==CBSDOT&&AR(P)&&AS(P)[0]&&ADSUFFOLD(fs))R jtadrsuffold(jt,fs,P); // g/\. y
   R jtadrscan(jt,fs,v->id==CBSLASH?1:2,P);
+ case CATDOT: ADASSERT(ADISAGENDA(v)); R jtadagendar(jt,f,0,P);
  case CSLASH: {I n;
-  if(AT(fs)&VERB&&ISPRIM(fs)&&(FAV(fs)->id==CPLUS||FAV(fs)->id==CMINUS)){if(!AR(P))R P; RZ((z=AO1(f,P))); R PRIM1(z);} // +/ -/
+  if(!bx&&AT(fs)&VERB&&ISPRIM(fs)&&(FAV(fs)->id==CPLUS||FAV(fs)->id==CMINUS)){ // +/ -/
+   if(!AR(P))R P;
+   RZ((z=AO1(f,P))); R PRIM1(z);
+  }
   if(!AR(P))R P;
   n=AS(P)[0];
   if(!n)R UNTR((_z=AO1(f,P)));
-  if(adfoldfast(f)){RZ((z=AO1(f,P))); R PRIM1(z);} // */ >./ <./ one entry
+  if(!bx&&adfoldfast(f)){RZ((z=AO1(f,P))); R PRIM1(z);} // */ >./ <./ one entry
   RZ(a=REC2(ds(CFROM),sc(n-1),P));
   DQ(n-1, RZ(b=REC2(ds(CFROM),sc(i),P)); RZ(a=REC2(fs,b,a));)
   R a;}
@@ -2268,6 +2522,15 @@ boxwalkr1:
 }
 
 // recording, dyad
+// x #. y recorded for lists or atoms x and y with x traced (and possibly y)
+static A jtadbaserx(J jt,A x,A y){A zj,a,b; I n=AR(y)?AS(y)[0]:1;
+ RZ(zj=AO2(ds(CBASE),x,y));
+ if(AR(x))a=x; else RZ(a=REC2(ds(CDOLLAR),sc(n),x));
+ RZ(a=REC2(ds(CCOMMA),a,num(1)));
+ RZ(a=REC1(bsdot(slash(ds(CSTAR))),a)); RZ(a=REC1(ds(CBEHEAD),a)); // weights
+ RZ(b=REC2(ds(CSTAR),y,a));
+ R jtadrecsame(jt,REC1(slash(ds(CPLUS)),b),zj);
+}
 static A jtadrec2x(J jt,A f,A x,A y){A z,a,b,c; V*v; A fs,gs,hs; B tx,ty,tr,bx=0;
  ASSERT(AT(f)&VERB,EVDOMAIN);
  tx=TRC(x); ty=TRC(y); tr=jtadhastraced(jt,f);
@@ -2323,7 +2586,14 @@ boxwalkr2:
  case CFROM: case CTAKE: case CDROP: case CPOUND: case CDOLLAR: case CROT: case CCANT: // x selects
   if(!ty)R UNTR((_z=AO2(f,x,y)));
   RZ((z=AO2(f,x,y))); R PRIM2(z);
- case CBASE: ADASSERT(!tx);
+ case CBASE: // x #. y
+  if(tx){
+   if(!AR(x)){ // atom base: (|."1 y) p. x
+    RZ(z=AO2(f,x,y)); RZ(a=REC1(qq(ds(CREV),sc(1)),y)); R jtadrecsame(jt,REC2(ds(CPOLY),a,x),z);
+   }
+   if(AR(x)>1||AR(y)>1)R jtadrcells2(jt,f,1,MIN(1,AR(y)),x,y);
+   R jtadbaserx(jt,x,y);
+  }
   if(AR(x)>1)R jtadrcells2(jt,f,1,MIN(1,AR(y)),x,y);
   RZ((z=AO2(f,x,y))); R PRIM2(z);
  case CGRADE: case CDGRADE: case CLESS: // y selects
@@ -2386,6 +2656,8 @@ boxwalkr2:
   jtadtapecut(jt,nt); R AT(gs)&NOUN?gs:REC2(gs,x,y);}
  case CCOLON: ADASSERT(AT(fs)&VERB&&AT(gs)&VERB); R REC2(gs,x,y);
  case CMCAP: case COBVERSE: R REC2(fs,x,y); // x u M. y  or  x u :. v y
+ case CBSLASH: case CBSDOT: ADASSERT(AT(fs)&VERB); R jtadinfixr(jt,fs,v->id==CBSDOT,x,y); // x u\ y  x u\. y
+ case CATDOT: ADASSERT(ADISAGENDA(v)); R jtadagendar(jt,f,x,y); // x m@.v y
  case CSLASH: {A g; RZ(g=qq(fs,v2(lr(fs),RMAX))); R REC2(g,x,y);}
  case CPOWOP: {I n;
   ADASSERT(AT(gs)&NOUN);
@@ -2561,6 +2833,17 @@ static I jtadvjpscanmm(J jt,A f,B pre,A x,A z,A Ct){A M,W,Gn,Gs,S; I r=AR(x);
  R jtadacc(jt,x,adscale(M,minus(S,G)));
 }
 
+// backward step for */\ y and */\. y
+static I jtadvjpscanp(J jt,B pre,A x,A z,A Ct){A a,c,G;
+ RZ(Ct=jtadexpand(jt,Ct,z));
+ if(pre){
+  RZ(a=AO2(ds(CCOMMA),AO1(ds(CBEHEAD),x),num(1))); RZ(c=AO2(ds(CCOMMA),num(1),AO1(ds(CCTAIL),z)));
+ }else{
+  RZ(a=AO2(ds(CCOMMA),num(1),AO1(ds(CCTAIL),x))); RZ(c=AO2(ds(CCOMMA),AO1(ds(CBEHEAD),z),num(1)));
+ }
+ RZ(G=jtadlinrec(jt,!pre,a,Ct,AR(x)));
+ R jtadacc(jt,x,adscale(c,G));
+}
 // backward step for a monad primitive
 static I jtadvjp1(J jt,A f,A x,A z,A Ct){V*v=FAV(f); A F,G,mp,a;
  if(v->valencefns[0]==jtadscatv){A*dv=AAV(v->fgh[1]); A ix=C(dv[0]),ixp,R2; I nt=1; // scatter-add: its transpose gathers
@@ -2611,6 +2894,7 @@ static I jtadvjp1(J jt,A f,A x,A z,A Ct){V*v=FAV(f); A F,G,mp,a;
   R jtadacc(jt,x,G);}
  case CBSLASH: case CBSDOT: {A g; // u\ y (prefix scan) and u\. y
   if(ADSCANMM(v->fgh[0]))R jtadvjpscanmm(jt,v->fgh[0],v->id==CBSLASH,x,z,Ct); // >./\ and the like
+  if(ADSCANP(v->fgh[0]))R jtadvjpscanp(jt,v->id==CBSLASH,x,z,Ct); // */\ */\.
   RZ(g=(AO1(ds(v->id==CBSLASH?CBSDOT:CBSLASH),slash(ds(CPLUS)))));
   RZ(G=admap1(g,Ct,AR(x))); R jtadacc(jt,x,G);}
  case CBASE: {I n; A w; // #. y
@@ -2782,14 +3066,14 @@ static I jtadvjp2(J jt,A f,A x,A y,A z,A Ct){V*v=FAV(f); A F,c,mp,a; B tx=TRC(x)
  case CCOMDOT: case CLAMIN: case CRBRACE: // both move
   R jtadscatter(jt,(a=AO2(f,jtadidx(jt,x,1),jtadidx(jt,y,AN(x)+1))),Ct,x,y);
  // linear and bilinear
- case CBASE: {I n; A w,id; // x #. y
+ case CBASE: {I n; A w; // x #. y
   if(!AR(y)){
    RZ(w=(AO2(ds(CBASE),x,num(1))));
    R jtadaccf(jt,y,w,Ct,z);
   }
   n=AS(y)[AR(y)-1];
-  RZ(id=reshape(v2(n,n),take(sc(n+1),num(1)))); // identity matrix: (n,n) $ (n+1) {. 1
-  RZ(w=(AO2(ds(CBASE),x,id))); // the weight of each position
+  RZ(w=AR(x)?x:reshape(sc(n),x)); RZ(w=AO2(ds(CCOMMA),w,num(1))); // weights
+  RZ(w=AO1(bsdot(slash(ds(CSTAR))),w)); RZ(w=AO1(ds(CBEHEAD),w));
   R jtadacc(jt,y,admap2(ds(CSTAR),Ct,0,w,1));}
  case CDOT: {I m=ADT->k,k=AS(x)[AR(x)-1],na,nb; A Cr,X,Y; // z = x +/ . * y contracts the last axis of x with the first of y
   na=k?AN(x)/k:0; nb=k?AN(y)/k:0;
@@ -3048,6 +3332,9 @@ static B jtadhasexplb(J jt,A f){V*v;
  if(ISPRIM(f))R 0;
  v=FAV(f);
  if(v->id==CCOLONE)R 1;
+ if(ADISAGENDA(v)){
+  DO(AN(v->fgh[0]), if(jtadhasexpl(jt,AAV(v->fgh[0])[i]))R 1;)
+ }
  R jtadhasexpl(jt,v->fgh[0])||jtadhasexpl(jt,v->fgh[1])||(v->id==CFORK&&jtadhasexpl(jt,v->fgh[2]));
 }
 ADLOCWRAPS(B,adhasexpl,1)

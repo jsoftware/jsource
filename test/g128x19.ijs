@@ -24,6 +24,8 @@ N=: <: 1 { 8 T. ''  NB. max # worker threads
 NB. create all available threads
 1: 0&T."1^:(0 < #) ''$~ (0 >. N-1 T. ''),0
 
+epdefuzzsub =: {{ ([: (*"_1 _   u <!.0 |@{.) epsub) }}
+
 NB. **** 128!:19
 
 e128x19 =: {{
@@ -1073,7 +1075,6 @@ NB. **** 128!:12  (deprecated)
 
 NB. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:12 Qk ------------------------
 
-epdefuzzsub =: {{ ([: (*"_1 _   u <!.0 |@{.) epsub) }}
 NB. normal precision
 f =: {{
  while. 1 T. '' do. 55 T. '' end.
@@ -1249,7 +1250,6 @@ f i. 65
 NB. **** 128!:22
 NB. (prx;pcx;pivotcolnon0;newrownon0;absfuzz) 128!:22 Qkt ------------------------
 
-epdefuzzsub =: {{ ([: (*"_1 _   u <!.0 |@{.) epsub) }}
 e128x22 =: [: ((] ,: 8 c. -) 8&c.)   ((2&{.) , (11 c. +/@:(11&c.))&.>@(2 3&{) , {:)@[ 128!:22 (11) c. (15!:18)@:memu@:(+/@:(11&c.))@]
 
 NB. quad precision everything

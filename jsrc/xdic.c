@@ -324,7 +324,7 @@ static DF1(jtcreatedic1){DF12IP;A box,box1;  // temp for box contents
  if(likely((t=((DIC*)z)->bloc.vtype)!=0)){   // if normal non-symbols case...
   sa=((DIC*)z)->bloc.vshape;   // value type & shape
   GA0(box,t,maxeles*((DIC*)z)->bloc.vaii,AN(sa)+1) AFLAG(box)=(t&RECURSIBLE); INCORPNV(box) AN(box)=AS(box)[0]=0; MCISH(AS(box)+1,IAV1(sa),AN(sa)) ((DIC*)z)->bloc.vals=box;   // allocate array of vals, recursive
- }else ((DIC*)z)->bloc.vals=0;  // if symbols, there is no values block (even though we set the shape/type of INT for the value)
+ }else ((DIC*)z)->bloc.vals=mtv;  // if symbols, there is no values block (even though we set the shape/type of INT for the value).
  ((DIC*)z)->bloc.cardinality=0;  // init the dic is empty
  ra0(z); INCORP(z); AM(z)=0;  // make z recursive, protecting descendants; INCORP and clear the lock
  RETF(z)
@@ -491,7 +491,7 @@ A dicresize(DIC *dic,J jt){
   &&((val&&LOWESTBIT(AT(val))&VERB))),EVVALUE, exit)   // make sure the result is a verb
  A newdica; RZ(newdica=jtunquote(jt,(A)dic,val,val)); DIC *newdic=(DIC*)newdica;  // execute resize on the dic, returning new dic
  struct Dic t=dic->bloc; dic->bloc=newdic->bloc; newdic->bloc=t;  // Exchange the parms and data areas from the new dic to the old.  Since they are recursive, this exchanges ownership and will cause the old blocks to be freed when the new dic is.
- AN(newdic->bloc.keys)=newdic->bloc.maxeles*newdic->bloc.kaii; if(newdic->bloc.vals)AN(newdic->bloc.vals)=newdic->bloc.maxeles*newdic->bloc.vaii;  // newdic is going away - restore its AN values for the free.  AS immaterial 
+ AN(newdic->bloc.keys)=newdic->bloc.maxeles*newdic->bloc.kaii; if(newdic->bloc.vtype)AN(newdic->bloc.vals)=newdic->bloc.maxeles*newdic->bloc.vaii;  // newdic is going away - restore its AN values for the free.  AS immaterial 
  // NOTE: we keep the old blocks hanging around until the new have been allocated.  This seems unnecessary for the hashtable, but we do it because other threads still have the old pointers and may prefetch from
  //  the old hash.  This won't crash, but it might be slow if the old hash is no longer in mapped memory
  if(dic->bloc.flags&DICFRB){
@@ -625,7 +625,7 @@ static INLINE B jtgetslots(DIC *dic,void *k,I n,I8 *s,void *zv,J jt,A a, VIRT vi
 
  UI8 hsz=dic->bloc.hashsiz; C *hashtbl=CAV1(dic->bloc.hash);  // elesiz/hashsiz  prototype required to get arg converted to I
  C *kbase=CAV(dic->bloc.keys);  // address of first stored key.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the key array
- C *vbase=unlikely(dic->bloc.vtype==0)?0:CAV(dic->bloc.vals);  // address of first stored value.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the value array if symbols, set vbase=0
+ C *vbase=unlikely(dic->bloc.vtype==0)?0:CAV(dic->bloc.vals);  // address of first stored value.  Hashvalues 0-3 are empty/tombstone/birthstone and do not take space in the value array. if symbols, set vbase=0
 
  if(unlikely(!(hsz&(DICFICF<<DICFBASE))))biasforcomp
 
@@ -889,7 +889,7 @@ found:;  // hval is the kv slot we compared with, or a new empty kv slot
  if(!(hsz&(DICFRESIZE<<DICFBASE))){DICLKWRWTV(dic,lv) DICLKWRRELK(dic,lv)}    // wait for values to be free (at which point we automatically own them), then allow gets to look at hashtable & keys.  We still have a write lock.  But if we are resizing, leave the full lock
 
  // we have updated the keys and hash.  Now move the (non-new) values, indexed by s[i] (unbiased).  Every value gets moved once.  We move the old then the conflicts, knowing that any old must precede any conflict that maps to the same slot
- if(likely(vb!=0)&&likely(vbase!=0)){   // Skip all value moves if values empty
+ if(likely(vb!=0)&&likely(vbase!=0)){   // Skip all value moves if values empty, or symbols dic
   ((I4*)(&s[otail]))[1]=croot; oroot=oroot<0?croot:oroot;  // append conflict chain to old chain (if old chain is empty otail=0, which is OK to store into because ele 0 can never be a conflict); start on combined chain
   for(cur=oroot;cur>=0;){I8 nxtkv=s[cur]; if(likely((UI4)nxtkv!=(UI4)~0))PUTKVOLD(vbase+(UI4)nxtkv*vb,(void*)((I)v+(likely(cur<vn)?cur:cur%vn)*vb),vb,hsz&(DICFVINDIR<<DICFBASE)); cur=nxtkv>>32;} // chase the old keys, copying the value (except the last during resize)
  }
@@ -1955,14 +1955,14 @@ DF2(jtdicempties){DF12IP;
  if(x==1){
   // 'destroy' request.  Clear chain to mark destroyed, and reinstate the AN fields
   dic->bloc.emptyn=-1;  // set chain invalid if we have deleted it.  The noun is still undisplayable.
-  AN(dic->bloc.keys)=dic->bloc.maxeles*dic->bloc.kaii; if(dic->bloc.vals!=0)AN(dic->bloc.vals)=dic->bloc.maxeles*dic->bloc.vaii;  // dic is going away - restore its AN values for the destroy.  AS immaterial
+  AN(dic->bloc.keys)=dic->bloc.maxeles*dic->bloc.kaii; if(dic->bloc.vtype!=0)AN(dic->bloc.vals)=dic->bloc.maxeles*dic->bloc.vaii;  // dic is going away - restore its AN values for the destroy.  AS immaterial
  }else if(x==2){   // 'clear' request
   if(dic->bloc.flags&DICFKINDIR){A *av=AAV(dic->bloc.keys); DO((dic->bloc.kbytelen*=dic->bloc.maxeles*dic->bloc.kaii)>>LGSZI, if(av[i]!=0){fa(av[i]); av[i]=0;})}   // delete keys...
-  if(dic->bloc.vals!=0&&(dic->bloc.flags&DICFVINDIR)){A *av=AAV(dic->bloc.vals); DO((dic->bloc.vbytelen*dic->bloc.maxeles*dic->bloc.vaii)>>LGSZI, if(av[i]!=0){fa(av[i]); av[i]=0;})}   // ...and values
+  if(dic->bloc.vtype!=0&&(dic->bloc.flags&DICFVINDIR)){A *av=AAV(dic->bloc.vals); DO((dic->bloc.vbytelen*dic->bloc.maxeles*dic->bloc.vaii)>>LGSZI, if(av[i]!=0){fa(av[i]); av[i]=0;})}   // ...and values
   // go back and reinitialize everything as if after create.  Why not just destroy/recreate?  Doing it this way keeps the dic in place, needed for symbols.  Start with the hash:
   if(dic->bloc.flags&DICFRB){  // red/black: allocate n2nxh block for tree
    IAVn(3,dic->bloc.hash)[0]=2*0+0; IAVn(3,dic->bloc.hash)[1]=2*0+0;  // empty tree.  parent of root is red NULL (with only one child) regardless of elesiz.  empty list is not biased.  First key points to root
-  }else{  // hash: allocate hashtable, as a LIT list
+  }else{  // symbol/hash: allocate hashtable, as a LIT list
    mvc(dic->bloc.hashsiz*dic->bloc.hashelesiz,voidAV1(dic->bloc.hash),MEMSET00LEN,MEMSET00);   // allocate hash table & fill with empties
   }
   // keys
@@ -1984,7 +1984,7 @@ DF2(jtdicstats){DF12IP;A z;I r;
  switch(type){
  case 0: GAT0(z,INT,4,1) IAV1(z)[0]=dic->bloc.cardinality; IAV1(z)[1]=(I)1<<dic->bloc.lgminsiz; IAV1(z)[2]=dic->bloc.maxeles; IAV1(z)[3]=(I)(dic->bloc.hashsiz&0xffffffffff); break; // nkeys
  case 1: r=AR(dic->bloc.keys); RZ(z=virtual(dic->bloc.keys,0,r)) AN(z)=dic->bloc.maxeles*dic->bloc.kaii; AS(z)[0]=dic->bloc.maxeles; MCISH(AS(z)+1,AS(dic->bloc.keys)+1,r-1) if(AUDITEXECRESULTS)AFLAGORLOCAL(z,AFUNAUDITABLE) break;  // virtual for all keys.  block has gaps and cannot be audited
- case 2: ASSERT(dic->bloc.vals!=0,EVDOMAIN) r=AR(dic->bloc.vals); RZ(z=virtual(dic->bloc.vals,0,r)) AN(z)=dic->bloc.maxeles*dic->bloc.vaii; AS(z)[0]=dic->bloc.maxeles; MCISH(AS(z)+1,AS(dic->bloc.vals)+1,r-1) if(AUDITEXECRESULTS)AFLAGORLOCAL(z,AFUNAUDITABLE) break;  // virtual for all vals
+ case 2: ASSERT(dic->bloc.vtype!=0,EVDOMAIN) r=AR(dic->bloc.vals); RZ(z=virtual(dic->bloc.vals,0,r)) AN(z)=dic->bloc.maxeles*dic->bloc.vaii; AS(z)[0]=dic->bloc.maxeles; MCISH(AS(z)+1,AS(dic->bloc.vals)+1,r-1) if(AUDITEXECRESULTS)AFLAGORLOCAL(z,AFUNAUDITABLE) break;  // virtual for all vals
  default: ASSERT(0,EVDOMAIN)
  }
  RETF(z);

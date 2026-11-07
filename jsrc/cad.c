@@ -118,7 +118,11 @@ static A jtadres(J jt,A f){A x,nm;
   ASSERTN(x!=0,EVVALUE,nm); ASSERTN(AT(x)&VERB,EVDOMAIN,nm);
   R ADPLAINV(x)?x:f;
  }
- ASSERTN(QCWORD(x=syrd(nm,jt->locsyms))!=0,EVVALUE,nm); // ordinary lookup
+ // ordinary lookup (unquote in sc.c)
+ if(!(NAV(nm)->flag&(NMLOC|NMILOC))&&!(AR(jt->locsyms)&ARHASACV)){
+  if((x=jtsyrd1((J)((I)jt+NAV(nm)->m),NAV(nm)->s,NAV(nm)->hash,jt->global))!=0)x=SETNAMEDFAOWED(x);
+ }else x=syrd(nm,jt->locsyms);
+ ASSERTN(QCWORD(x)!=0,EVVALUE,nm);
  if(ISFAOWED(x))tpush(QCWORD(x)); x=QCWORD(x);
  ASSERTN(AT(x)&VERB,EVDOMAIN,nm); // the name's part of speech changed since the reference was made
  R ADPLAINV(x)?x:f;
@@ -719,15 +723,15 @@ static C jtadinneridb(J jt,A f){V*v; A g,h,t; C c=0; ADLOC s1[ADMAXLOC],s2[ADMAX
 // get verb's signed ranks, for the monad and for the left and right arguments of the dyad.
 static I jtadrankmb(J jt,A f){V*v=FAV(f);
  if(ISDCAP(f))R jtadrankm(jt,DCAPU(f));
- R v->id==CQQ?(I)v->localuse.lu1.srank[0]:(I)v->mr;
+ R v->id==CQQ&&!(v->flag&VGERL)?(I)v->localuse.lu1.srank[0]:(I)v->mr; // gerund"n has rank _
 }
 static I jtadranklb(J jt,A f){V*v=FAV(f);
  if(ISDCAP(f))R jtadrankl(jt,DCAPU(f));
- R v->id==CQQ?(I)v->localuse.lu1.srank[1]:lr(f);
+ R v->id==CQQ&&!(v->flag&VGERL)?(I)v->localuse.lu1.srank[1]:lr(f);
 }
 static I jtadrankrb(J jt,A f){V*v=FAV(f);
  if(ISDCAP(f))R jtadrankr(jt,DCAPU(f));
- R v->id==CQQ?(I)v->localuse.lu1.srank[2]:rr(f);
+ R v->id==CQQ&&!(v->flag&VGERL)?(I)v->localuse.lu1.srank[2]:rr(f);
 }
 
 // classifying predicates see through names in the right locale
@@ -830,12 +834,13 @@ static A jtadwinidx(J jt,B out,I x,I n,I a){A W; I s,l,L,*wv;
 static DF1(jtadcellm){DF12IP;
  V*v=FAV(self); A f=v->fgh[0],*dv=AAV(v->fgh[1]); A p,t,pz,tz;
  I k=IAV(C(dv[2]))[0], mode=IAV(C(dv[2]))[1], i=IAV(w)[0]; A P=C(dv[0]),T=C(dv[1]);
+ B b=!!(AT(P)&BOX); t=ADZ; // boxes have no tangent (their contents carry it)
  switch(mode){
- case 0: RZ(p=from(w,P)); if(AT(P)&BOX)t=ADZ; else RZ(t=from(w,T)); break;
- case 1: RZ(p=take(sc(i+1),P)); RZ(t=admap2(ds(CTAKE),sc(i+1),0,T,TR(T))); break;
- case 2: RZ(p=drop(sc(i),P)); RZ(t=admap2(ds(CDROP),sc(i),0,T,TR(T))); break;
+ case 0: RZ(p=from(w,P)); if(!b)RZ(t=from(w,T)); break;
+ case 1: RZ(p=take(sc(i+1),P)); if(!b)RZ(t=admap2(ds(CTAKE),sc(i+1),0,T,TR(T))); break;
+ case 2: RZ(p=drop(sc(i),P)); if(!b)RZ(t=admap2(ds(CDROP),sc(i),0,T,TR(T))); break;
  default: {A ix; RZ(ix=jtadwincell(jt,mode==4,IAV(C(dv[2]))[2],AS(P)[0],i));
-  RZ(p=from(ix,P)); RZ(t=admap2(ds(CFROM),ix,1,T,TR(T))); break;}
+  RZ(p=from(ix,P)); if(!b)RZ(t=admap2(ds(CFROM),ix,1,T,TR(T))); break;}
  }
  RZ(jtadfwd1(jt,f,p,t,k,&pz,&tz));
  RZ(tz=admat(tz,pz)); RZ(tz=adexpand(tz,pz));
@@ -1021,8 +1026,9 @@ static I jtadagendaf(J jt,A f,A x,A Tx,A y,A Ty,I k,A*pz,A*tz){A s,gb,gk,inv,*fv
 }
 // u\ y (mode 1) and u\. y (mode 2) for nonlinear u: apply u to each prefix/suffix (the cell loop, jtadcellm)
 static I jtadscan(J jt,A f,I mode,A P,A T,I k,A*pz,A*tz){A d,cv,z,g; I n;
- RZ(T=admat(T,P));
- if(!AR(P)){RZ(P=ravel(P)); RZ(T=reshape(over(sc(k),sc(1)),T));}
+ B b=!!(AT(P)&BOX); // boxes: no tangent
+ if(!b)RZ(T=admat(T,P));
+ if(!AR(P)){RZ(P=ravel(P)); if(!b)RZ(T=reshape(over(sc(k),sc(1)),T));}
  n=AS(P)[0];
  if(!n){
   RZ((z=AO1(mode==1?bslash(f):bsdot(f),P)));
@@ -1061,7 +1067,7 @@ static I jtadinfixf(J jt,A f,B out,A x,A P,A T,I k,A zg,A*pz,A*tz){A z,W,b,tb; I
 #define ADSUFFOLD(f) (AT(f)&VERB&&FAV(f)->id==CSLASH&&FAV(f)->fgh[0]&&AT(FAV(f)->fgh[0])&VERB)
 // computee g/\. y and its tangent in forward mode
 static I jtadsuffold(J jt,A f,A P,A T,I k,A*pz,A*tz){A g=FAV(f)->fgh[0],zb,a,ta; I n=AS(P)[0];
- RZ(T=admat(T,P));
+ if(!(AT(P)&BOX))RZ(T=admat(T,P)); // boxes have no tangent
  A tsb,*ts; RZ(zb=jtadboxlist(jt,n));
  GATV0(tsb,INT,n,1); ts=(A*)IAV(tsb); // the tangents of the steps, until they are boxed
  RZ(a=from(sc(n-1),P)); RZ(ta=jtaditem(jt,T,n-1)); adboxset(zb,n-1,a); ts[n-1]=ta;
@@ -1147,7 +1153,7 @@ static I jtadfoldx(J jt,struct foldstatus*fi,A f,A x,A Tx,A y,A Ty,I k,B rec,A*p
   if(zs&0b10000)break; // 1 Z: the last step
   if(cnt>0&&!--cnt)break;
  }
- if(0){zstop: if(zs&0b00001)R 0; RESETERR;}   // _3 Z: (the fold limit) is an error  _2 Z: ends the fold with the results so far
+ if(0){zstop: if(zs&0b00001)R 0; RESETERR;} // _3 Z: (the fold limit) is an error  _2 Z: ends the fold with the results so far
  ASSERT(nz,EVNORESULT);
  if(!mult){*pz=z; *tz=tzz; R 1;}
  AN(zb)=AS(zb)[0]=nz;
@@ -1303,6 +1309,8 @@ static B adboxwalk(A f){
  switch(FAV(f)->id){
  case CAT: case CATCO: case CAMP: case CAMPCO: case CFORK: case CHOOK: case CTILDE: case CQQ:
  case CUNDER: case CUNDCO: case CPOWOP: case CSLASH: R 1;
+ ADFOLDCASES: R 1;
+ case CADVERSE: case CCOLON: case CMCAP: case COBVERSE: R 1;
  case CATDOT: R ADISAGENDA(FAV(f));
  default: R 0;
  }
@@ -1833,11 +1841,10 @@ static A jtadsolvek(J jt,A c,A y,A z){A t; I n=AS(y)[0],k=AS(c)[0];
 static A jtadselx(J jt,C id,A x,A y){A c,d;
  PUSHCCT(1.0) c=AO2(ds(id==CMIN?CLE:CGE),x,y); d=c?AO2(ds(id==CMIN?CLT:CGT),x,y):0; POPCCT
  RZ(d);
- if(AT(c)&AT(d)&B01&&AN(c)==AN(d)){A z; B*cv=BAV(c),*dv=BAV(d);
+  B*cv=BAV(c),*dv=BAV(d);
   if(!memcmp(cv,dv,AN(c)))R c; // no tie: c, boolean
-  GATV(z,FL,AN(c),AR(c),AS(c)); D*zv=DAV(z); DO(AN(c), zv[i]=0.5*(cv[i]+dv[i]);) R z; // a constant: one pass
- }
- R tymes(scf(0.5),plus(c,d));
+  A z; GATV(z,FL,AN(c),AR(c),AS(c)); D*zv=DAV(z);
+  DO(AN(c), zv[i]=0.5*(cv[i]+dv[i]);) R z;
 }
 
 // x -. y
@@ -3585,9 +3592,9 @@ static B adpsethas(ADPSET*s,A x){I lo=0,hi=s->n-1;
 static I jtadboxchk(J jt,A z,ADPSET*s){
  STACKCHKOFL
  DO(AN(z), A c=C(ADBOXE(z,i));
-  if(!c||adpsethas(s,c)||!ISZ(adtget(c))||ACISPERM(AC(c)))continue;
+  if(!c||adpsethas(s,c)||ACISPERM(AC(c)))continue; // held in the arguments (traced or not) or a constant
   if(AT(c)&BOX){RZ(jtadboxchk(jt,c,s)); continue;}
-  if(AT(c)&NUMERIC&&AN(c)){jtadrefusefinal(jt); R 0;} // number copied from traced data into a box: not supported
+  if(AT(c)&NUMERIC&&AN(c)){jtadrefusefinal(jt); R 0;} // number made while f ran is refused
  )
  R 1;
 }
@@ -3596,7 +3603,7 @@ static I jtadboxchk(J jt,A z,ADPSET*s){
 static A jtadnorule(J jt,A f,A z,A x,A y){ADPSET s={0,0,0}; I r;
  if(!z)R 0;
  if(z==x||z==y)R z;
- if(AT(z)&BOX?0:!(AT(z)&NUMERIC)||!AN(z)||!ISZ(adtget(z)))R z; // text (not followed), empty or traced (passed through)
+ if(AT(z)&BOX?0:!(AT(z)&NUMERIC)||!AN(z))R z; // text (not followed) or empty
  if((x&&!jtadpsetadd(jt,&s,x))||!jtadpsetadd(jt,&s,y)||!jtadpsetverb(jt,&s,f)){free(s.v); RE(0); ASSERT(0,EVWSFULL);}
  qsort(s.v,s.n,sizeof(A),adpcmp);
  if(AT(z)&BOX)r=jtadboxchk(jt,z,&s);
@@ -3756,8 +3763,74 @@ static A jtadnegcellv(J jt,A self,B dyad,ADLOC*ls,I*nls){A f,v; I n=IAV(FAV(self
  R fdef(0,CDCAPDOT,VERB,jtdcap1cell,jtdcap2cell,v,0,0,VFLAGNONE,RMAX,RMAX,RMAX);
 }
 
+// u D.n where y is array of boxes. Each box holds array of numbers (any shape, empty of any type allowed).
+// The result gives one block per box:
+// for n=1 it has the shape of y and box i holds ($u y),$>i{y
+// for n=2 it has shape ($y),$y and box (i,j) holds ($u y),($>i{y),$>j{y (Hessian in blocks) and so on.
+// D. is called from C, so an error from u or D.'s refusal is reported at the user's sentence as for unboxed y.
+static const C adboxpos[]="(((+/\\ - ])&.,)@:(*/&>) +&.> i.&.>)@:($&.>)"; // positions
+static const C adboxpack[]="; ,&.> , y"; // list
+static const C adboxunp[]="[ {&.> <@]"; // boxes rebuilt
+static const C adboxcut[]=":\n({\"(_,m)&y)@<&.> { m # < x"; // blocks
+// Check the contents of boxed y
+static I jtadboxychk(J jt,A w){A*wv=AAV(w);
+ DO(AN(w), A c=C(wv[i]);
+  if(!AN(c))continue; // empty (nothing to differentiate)
+  ASSERT(!(AT(c)&BOX),EVNONCE);
+  ASSERT(AT(c)&NUMERIC,EVDOMAIN);
+ )
+ R 1;
+}
+// The boxes of y with their contents in floating point, as an unboxed y is converted.
+static A jtadboxyfl(J jt,A w){A*wv=AAV(w),z; I n=AN(w); B any=0;
+ DO(n, if(!(AT(C(wv[i]))&FL))any=1;);
+ if(!any)R w;
+ RZ(z=jtadboxlist(jt,n));
+ DO(n, A c=C(wv[i]);
+  if(!(AT(c)&FL))RZ(c=cvt(FL,c));
+  adboxset(z,i,c);
+ );
+ R reshape(shape(w),z);
+}
+// One cell of [x] u D.n y with y boxed. self is per-cell verb made in jtadboxed: fgh[0] is u, fgh[1] is n,
+// fgh[2] a list of boxes holding verbs.
+static A jtadboxcell(J jt,A a,A w,A self,B dyad){A u=FAV(self)->fgh[0],n=FAV(self)->fgh[1],*hv=AAV(FAV(self)->fgh[2]),p,f,d,dv,z;
+ df1(p,w,hv[0]); RZ(p); // positions
+ df1(f,w,hv[1]); RZ(f); // list
+ RZ(d=jtadmkdcap(jt,atop(dyad?amp(a,u):u,hv[2]),n)); // monad u@unpack D.n or dyad x&u@unpack D.n
+ df2(dv,p,f,d); RZ(dv); // derivative: shape ($u y),n#N
+ df2(z,p,dv,hv[3]); // blocks
+ R z;
+}
+static DF1(jtadbox1){DF12IP;PROLOG(0);A z; RZ(z=jtadboxcell(jt,0,w,self,0)); EPILOG(z);}
+static DF2(jtadbox2){DF12IP;PROLOG(0);A z; RZ(z=jtadboxcell(jt,a,w,self,1)); EPILOG(z);}
+// [x] u D.n y with y boxed. self is u D.n. Cells of y are taken at u's rank, as for unboxed y.
+static A jtadboxed(J jt,A self,A a,A w,B dyad){A u=FAV(self)->fgh[0],n=FAV(self)->fgh[1],hv,v,b=0,z=0; I lc=0,rc; B neg; ADLOC ls[ADMAXLOC]; I nls=0;
+ RZ(jtadboxychk(jt,w)); RZ(w=jtadboxyfl(jt,w));
+ if(dyad){
+  I sl=adrankl(u),sr=adrankr(u); lc=efr(AR(a),sl); rc=efr(AR(w),sr); neg=sl<0||sr<0;
+ }else{
+  I sr=adrankm(u); rc=efr(AR(w),sr); neg=sr<0;
+ }
+ if(neg)RZ(u=jtadnegv(jt,u,dyad,ls,&nls)); // rank is applied below, so cells run u without its negative rank
+ if((hv=jtadboxlist(jt,4))){ // J verbs, made once
+  if((v=eval((C*)adboxpos)))adboxset(hv,0,v);
+  if(v&&(v=colon(num(3),cstr((C*)adboxpack))))adboxset(hv,1,v);
+  if(v&&(v=eval((C*)adboxunp)))adboxset(hv,2,v);
+  if(v&&(v=colon(num(1),cstr((C*)adboxcut)))&&(df1(v,n,v),v))adboxset(hv,3,v);
+  if(v)b=fdef(0,CDCAPDOT,VERB,jtadbox1,jtadbox2,u,n,hv,VFLAGNONE,RMAX,RMAX,RMAX); // one cell
+ }
+ if(b&&(dyad?lc<AR(a)||rc<AR(w):rc<AR(w)))b=qq(b,dyad?v2(lc,rc):sc(rc)); // several cells: b at u's rank
+ if(b){ // run b
+  if(dyad)df2(z,a,w,b);
+  else df1(z,w,b);
+ }
+ jtadlocexitn(jt,ls,nls);
+ R z;
+}
 static DF1(jtdcap1){DF12IP;PROLOG(0);A u,z;
  if(ISSPARSE(AT(w)))RZ(w=denseit(w));
+ if(AT(w)&BOX){RZ(z=jtadboxed(jt,self,0,w,0)); EPILOG(z);} // y boxed: one block per box
  u=DCAPU(self); // u for n=1, u D.(n-1) for n>1
  I s=adrankm(u), c=efr(AR(w),s); // effective (cell) rank
  if(adatomic1(u)){ // u provably works atom by atom
@@ -3776,6 +3849,7 @@ static DF1(jtdcap1){DF12IP;PROLOG(0);A u,z;
 }
 static DF2(jtdcap2){DF12IP;PROLOG(0);A u,z;
  if(ISSPARSE(AT(a)))RZ(a=denseit(a)); if(ISSPARSE(AT(w)))RZ(w=denseit(w));
+ if(AT(w)&BOX){RZ(z=jtadboxed(jt,self,a,w,1)); EPILOG(z);} // y boxed: one block per box
  u=DCAPU(self);
  I sl=adrankl(u), sr=adrankr(u);
  I lc=efr(AR(a),sl), rc=efr(AR(w),sr); // effective (cell) ranks

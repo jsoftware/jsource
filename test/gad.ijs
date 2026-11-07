@@ -13,6 +13,16 @@ _ _ _ -: 1&o. D.1 b. 0
 1 1 1 -: 1&o."1 D.2 b. 0
 0 0 0 -: o. D.2 b. 0
 
+NB. arguments
+'domain error' -: ". etx '3 D. 1'
+'domain error' -: ". etx '*: D. +'
+'rank error' -: ". etx '*: D. 1 2'
+'domain error' -: ". etx '*: D. _1'
+'limit error' -: ". etx '*: D. 101'
+'rank error' -: 9!:_11 etx 2 2 $ 0
+'length error' -: 9!:_11 etx 9 $ 0
+'domain error' -: 9!:_11 etx 2
+
 NB. utils
 NB. u Md n y runs u y with modes n forced.
 Md =: {{
@@ -196,6 +206,7 @@ NB. reductions, scans, powers
 (,: *:) cm a1
 +/\ cm a1
 */\ cm a1
+-/\ cm a2
 +/"1 cm a2
 (% +/)"1 cm a2
 *:"1 cm a2
@@ -964,6 +975,7 @@ NB. multiple assignment of boxes
  , p }} D.1 etx 1.5 2.5
 (2 * =/~ i.2) -: {{ ('a';'b') =. y;y
  a+b }} D.1 ] 1.5 2.5
+'nonce error' -: {{ a + b [ ('a';'b') =. y }} D.1 etx 0.3 0.7
 (2 2 $ 2 0 1 1) -: {{ y + > {. {{ < y }}"0 y }} D.1 F ] 1.5 2.5
 (2 2 $ 2 0 1 1) -: {{ y + > {. {{ < y }}"0 y }} D.1 R ] 1.5 2.5
 
@@ -1058,6 +1070,9 @@ NB. -.  ::  u.  locale switch
 +/@:(5&{ :: *:) cm a1
 ad1 =: {{ u. D.1 y }}
 (*: ad1 a1) -: *: D.1 a1
+ad1_adlocC_ =: {{ u. D.1 y }}
+GQ =: *:
+(*: D.1 a1) -: GQ ad1_adlocC_ a1
 cocurrent 'adlocC'
 kc =: 3
 cocurrent 'base'
@@ -1132,6 +1147,9 @@ t_adlocP_ =: @:*:
 ^ a_adlocP_ cm 0.5 0.7
 ^ c_adlocP_ *: cm 0.5 0.7
 ^ t_adlocP_ cm 0.5 0.7
+sqP_adlocP_ =: *:
+b_adlocP_ =: {{ u@:sqP }}
+^ b_adlocP_ cm 0.5 0.7
 NB. cached reference (4!:8)
 g =: *:
 h =: 'g' 4!:8
@@ -1172,8 +1190,19 @@ NB. o.
 'domain error' -: (_11 o. ]) D.1 etx 0.3 0.4
 'domain error' -: (_11 o. ]) D.1 R etx 0.3 0.4
 'domain error' -: (_12 o. ]) D.1 F etx 0.3 0.4
+NB. what D. does not differentiate: refused in forward and in reverse mode
+('nonce error' -: *:^:_1 D.1 etx 4) , ('nonce error' -: *:^:(<2) D.1 etx 4) , 'nonce error' -: *:^:(,2) D.1 etx 0.5
+('nonce error' -: {{ (1 + 0 * y) o. 0.5 }} D.1 F etx 0.3) , 'nonce error' -: {{ (1 + 0 * y) o. 0.5 }} D.1 R etx 0.3
+('nonce error' -: (<1 2) p. D.1 F etx 0.5) , 'nonce error' -: (<1 2) p. D.1 R etx 0.5
+('nonce error' -: 1 2 3 >./ . * D.1 F etx 0.5 1 2) , 'nonce error' -: 1 2 3 >./ . * D.1 R etx 0.5 1 2
+('nonce error' -: >./ . * D.1 F etx 2 2 $ 0.5 1 2 3) , 'nonce error' -: >./ . * D.1 R etx 2 2 $ 0.5 1 2 3
+('nonce error' -: 0.5 (1:}) D.1 F etx 1 2 3) , 'nonce error' -: 0.5 (1:}) D.1 R etx 1 2 3
+'nonce error' -: #: D.1 F etx 2.5
+'nonce error' -: (2 2 $ 1 2 3 4) +`*@.(0&<@[) D.1 etx 0.5 0.7
+('nonce error' -: (+`*:)"0 D.1 F etx 0.5 1.5 2) , ('nonce error' -: (+`*:)"0 D.1 R etx 0.5 1.5 2) , ('nonce error' -: 1 2 3 (]`*)"0 D.1 F etx 0.5) , 'nonce error' -: 2 (]`*)"0 D.1 R etx 0.5 1.5 2
 NB. x u :: v y and x u^:n y (also x traced, second order)
 5 { :: * cdy a1
+2 * :: + cdy a1
 2 *^:2 cdy a1
 0.5 +^:3 cdy a1
 1.5 %~^:3 cdy a1
@@ -1190,6 +1219,9 @@ NB. det: singular 6 by 6 of rank 5
 M15 =: 0.0 + (6 5 $ 1 2 0 _1 3 0 1 2 1 _1 2 0 1 1 0 _1 3 0 2 1 1 1 _2 0 2 0 2 1 1 _1) +/ . * 5 6 $ 2 _1 0 1 1 3 0 1 2 _1 1 0 1 0 1 2 0 _1 3 1 0 0 2 1 _1 2 1 1 0 0
 0 < >./ , | cof M15
 *./ (<cof M15) ok&> -/ . * D3 M15
+(3 $ <cof M15) -: -/ . * D3 <. M15
+(3 $ <1 1 $ 1) -: -/ . * D3 ] 1 1 $ 3
+-/ . * cm 4 4 $ 2 1 0.5 0.3 0.2 3 1 0.4 0.1 0.4 4 0.2 0.3 0.1 0.2 5
 NB. ~.
 (3 $ <1 1 0) -: +/@~. D3 ] 0.3 0.7 0.3
 (3 $ <2 3 $ 1 0 0 0 1 0) -: ~. D3 ] 0.3 0.7 0.3
@@ -1350,6 +1382,10 @@ NB. 0: 1: _: m"r keep a fork or hook elementwise: one pass, not a pass per atom
 (3"0 - ^) cm a1
 (*: + _1:) ce a1
 (1: + *:) c2 a1
+(3 $ < 2 2 $ 1) -: {{ s =. +/ y
+ (s"0) 1 2 }} D3 ] 0.5 1
+(3 $ < 2 2 $ 1) -: {{ s =. +/ y
+ 3 (s"0) 1 2 }} D3 ] 0.5 1
 (^ % 2"_) c3 a1
 (+ 1:) cm a1
 (* 2"_) cm a1
@@ -1475,6 +1511,12 @@ NB. boxes as items
 {{ +/ ; 2 ]\ <"0 y }} cm V
 {{ +/ ; _4 ]\ <"0 y }} cm V
 {{ +/ , > 2 ]\. <"0 y }} cm V
+NB. an explicit u on each prefix or suffix of boxes holding traced values
+{{ +/ {{ *: +/ ; y }}\ <"0 y }} cm V
+{{ +/ {{ *: +/ ; y }}\. <"0 y }} cm V
+{{ +/ {{ +/ *: ; y }}\ < y }} cm V
+{{ +/ ; {{ < (>x) * >y }}/\. <"0 y }} cm V
+{{ +/ {{ *: +/ ; y }}\ <"0 y }} c2 V
 
 NB. u/ on boxes holding traced values: item by item, each step on boxed items
 V =: 0.3 0.7 1.1 1.9 0.5 1.3
@@ -1741,12 +1783,259 @@ DX =: 2 3 $ 0
 {{ +/ DX */@((] #~ 0.5&<)@(+"1))"1 y }} cm DY
 {{ +/ DX */@((] #~ 0.5&<)@])"1 y }} cm DY
 NB. no memory kept
-rep =: {{ ". y }}"1
+rep =: {{ 0 [ ". y }}"1
 noleak =: {{ 1e4 > s0 -~ 7!:0 '' [ rep 20 # ,: y [ s0 =. 7!:0 '' [ ". y }}
 noleak '*: cm a2'
 noleak '([: , (+/~)"1) cm a2'
 noleak '2&o. c2 a1'
 noleak '(3 2 2 $ 0 0 1 1 1 1 2 _2 2 1 2 3)&(,;.0) cm b2'
 
-coerase ;:'adloc adlocA adlocB adlocC adlocP'
+NB. boxed y
+
+NB. u bat y
+NB. u with box BI of BY replaced by y
+bat =: {{ u ($BY) $ (<y) BI} , BY }}
+NB. u bnj y
+NB. Numerical Jacobian with respect to each box of y
+bnj =: {{
+ BY =: y
+ r =. 0 $ a:
+ for_i. i. */ $ y do.
+  BI =: i
+  r =. r , < (u bat) NJ > i { , y
+ end.
+ ($ y) $ r
+}}
+
+NB. boxes match: same shape and each pair of boxes ok
+bok =: {{ (x -:&$ y) *. *./ , x ok&> y }}
+
+NB. u bm y
+NB. Monad, compared in automatic, forward and reverse mode
+bm =: {{
+ rk =. {. u D.1 b. 0
+ ref =. u bnj"rk y
+ (ref bok u D.1 y) , (ref bok u D.1 F y) , ref bok u D.1 R y
+}}
+NB. x u bd y
+bd =: {{
+ rk =. }. u D.1 b. 0
+ ref =. x u {{ x&u bnj y }}"rk y
+ (ref bok x u D.1 y) , (ref bok x u D.1 F y) , ref bok x u D.1 R y
+}}
+
+NB. u b2 y
+NB. second derivative, block (i,j) against the numerical Jacobian of box i of u D.1 with respect to box j.
+bx =: {{ > BJ { , u D.1 y }}
+b2 =: {{
+ r =. 0 $ a:
+ for_j. i. */ $ y do.
+  BJ =: j
+  r =. r , u bx bnj y
+ end.
+ ref =. (($ y) , $ y) $ r
+ b =. ref bok u D.2 y
+ for_out. 0 1 _1 do.
+  for_in. 0 1 _1 do.
+   b =. b , ref bok u D.2 Md (out , in) y
+  end.
+ end.
+ *./ b
+}}
+
+NB. test arguments
+BA =: (0.3 0.7 1.1) ; 0.4 _0.9
+BB =: (2 3 $ 0.1 0.5 _0.3 0.8 _0.6 0.2) ; (0.7 _0.2) ; 1.3
+f1 =: {{ 'a b' =. y
+ (+/ *: a) * +/ b }}
+f2 =: {{ 'W b c' =. y
+ c * +/ *: b + 1 o. W +/ .* 0.5 _1 0.2 }}
+
+NB. gradients
+f1 bm BA
+f2 bm BB
+NB. exact values
+((2 * 0.3 0.7 1.1 * _0.5) ; 2 $ +/ *: 0.3 0.7 1.1) -: f1 D.1 BA
+NB. result that is not a scalar: box i is ($u y),$>i{y
+{{ 'a b' =. y
+ a * {. b }} bm BA
+{{ 'a b' =. y
+ (a */ b) + 2 }} bm BA
+{{ (*: 0 {:: y) , 1 {:: y }} bm BA
+{{ +/ *: ; y }} bm BA
+{{ +/ ; *:&.> y }} bm BA
+{{ (>{. y) +/ .* *: > {: y }} bm (1 2 $ 0.3 0.7) ; 0.4 _0.9
+{{ +/ , > y }} bm 0.3 0.7 ; 0.4 _0.9
+{{ +/ ; (2 * >{. y) ; {: y }} bm BA
+{{ +/ , y {{ y * x }}&> 1 2 }} bm 0.3 ; 0.7
+{{ +/ *: > y }} bm < 0.3 0.7
+(0.6 1.4 ; 0 $ 0) -: {{ +/ *: ; y }} D.1 ] 0.3 0.7 ; ''
+{{ (*: > {. y) , > {: y }} bm < 0.5
+{{ +/ , > ([: *: >) y }} bm 2 2 $ 0.1 ; 0.2 0.3 ; (2 2 $ 0.4 0.5 0.6 0.7) ; 0.8
+(0 $ a:) -: {{ 2 + # y }} D.1 ] 0 $ a:
+{{ +/ *: ; y }} bm 1 2 ; 3
+(4 ; 6) -: {{ +/ *: ; y }} D.1 ] 2x ; 3r1
+((,2) ; ,0) -: $&.> {{ +/ ; y }} D.1 ] 1 1 ; 0 $ a:
+NB. 2- and 4-byte integers and quad precision
+I2 =: 6 c. 3 4
+I4 =: 7 c. 3 4
+Q4 =: 11 c. 3.5 4.5
+(6 8 -: +/@:*: D.1 I2) *. (6 8 -: +/@:*: D.1 I4) *. 7 9 -: +/@:*: D.1 Q4
+((1 ; 6 8 ; 6 8) -: {{ +/ *: ; y }} D.1 ] 0.5 ; I2 ; I4) *. (7 9 ; 1) -: {{ +/ *: ; y }} D.1 Q4 ; 0.5
+NB. complex with no imaginary part
+(6 8 -: (+/@:*:) D.1 ] 3j0 4j0) *. (6 8 ; 1) -: {{ +/ *: ; y }} D.1 ] 3j0 4j0 ; 0.5
+NB. contents that are not real numbers
+'domain error' -: {{ +/ > {. y }} D.1 etx 1 2 ; 'ab'
+'domain error' -: {{ +/ > {. y }} D.1 etx 1 2 ; 1j1
+'nonce error' -: {{ +/ > {. y }} D.1 etx 1 2 ; < < 3
+'nonce error' -: {{ +/ > {. y }} D.1 etx (<1 2) ; 3
+NB. u's result must be real
+'domain error' -: ] D.1 etx 1 2 ; 3
+'domain error' -: f1 D.1 D.1 etx BA
+
+NB. errors
+emsg =: {{ try. ". y catch. 13!:12 '' end. }}
+EM1 =: emsg '*: D.1 ] 2 ; 3'
+(1 e. 'executing monad *:' E. EM1) *. (1 e. 'y is boxed' E. EM1) *. -. 1 e. 'D.n' E. EM1
+EM2 =: emsg '0&(+/\) D.1 <1 2'
+(1 e. 'nonce error' E. EM2) *. (1 e. '0&(+/\)D.1' E. EM2) *. -. 1 e. 'D.n' E. EM2
+EM3 =: emsg '{{ 1 + ''a'' }} D.1 <1 2'
+(1 e. 'domain error' E. EM3) *. (1 e. '+''a''' E. EM3) *. -. 1 e. 'D.n' E. EM3
+EM4 =: emsg '2 {{ x + ''a'' }} D.1 <1 2'
+(1 e. 'domain error' E. EM4) *. -. 1 e. 'D.n' E. EM4
+NB. dyad: x constant, boxed or not
+0.5 {{ x * f1 y }} bd BA
+(1 2 ; 3) {{ +/ ; x *&.> *:&.> y }} bd 0.5 0.7 ; 0.2
+(2 3 $ 1 2 3 4 5 6) {{ +/ , x +/ .* > {. y }} bd (3 2 $ 0.1 0.2 0.3 0.4 0.5 0.6) ; 1
+0 -: # 3 {{ x * # y }} D.1 ] 0 $ a:
+1 2 3 {{ x * +/ *: ; y }}"0 1 bd BA
+
+NB. rank
+{{ +/ *: > y }}"0 bm 0.3 0.7 ; 1.1 _0.2 ; 0.5
+{{ +/ ; *:&.> y }}"1 bm 2 2 $ 0.3 ; 0.7 0.5 ; 1.1 ; _0.2 0.4 0.1
+NB. a negative rank
+VR =: 2 2 $ 0.3 ; 0.7 0.5 ; 1.1 ; _0.2 0.4 0.1
+GR =: {{ +/ ; *:&.> y }}"1 D.1 VR
+(GR -: {{ +/ ; *:&.> y }}"_1 D.1 VR) , (GR -: {{ +/ ; *:&.> y }}"_1 D.1 F VR) , GR -: {{ +/ ; *:&.> y }}"_1 D.1 R VR
+T22 =: 2 2 $ 0.3 ; 0.7 0.5 ; 1.1 0.2 ; _0.4
+1 2 3 {{ +/ x * ; *:&.> y }}"1 bd T22
+(2 3 $ 1 2 3 4 5 6) {{ +/ x * ; *:&.> y }}"1 1 bd T22
+G2 =: (2 3 $ 1 2 3 4 5 6) {{ +/ x * ; *:&.> y }}"1 D.1 T22
+(G2 -: (2 3 $ 1 2 3 4 5 6) {{ +/ x * ; *:&.> y }}"_1 1 D.1 T22) *. G2 -: (2 3 $ 1 2 3 4 5 6) {{ +/ x * ; *:&.> y }}"1 _1 D.1 T22
+
+NB. second derivative
+f1 b2 BA
+f2 b2 BB
+NB. Hessian is symmetric: block (j,i) is block (i,j) transposed
+(-: |:) ; ,.&.>/"1 (<"1 ,"0/~ */@$&> BB) ($ ,)&.> f2 D.2 BB
+{{ 'a b' =. y
+ a * {. b }} b2 BA
+NB. third derivative
+bx3 =: {{ > (<BI3 , BJ3) { u D.2 y }}
+b3 =: {{
+ r =. 0 $ a:
+ for_i. i. */ $ y do. BI3 =: i
+  for_j. i. */ $ y do. BJ3 =: j
+   r =. r , u bx3 bnj y
+  end.
+ end.
+ ref =. (3 # $ y) $ r
+ (ref bok u D.3 y) , (ref bok u D.3 Md 1 y) , ref bok u D.3 Md _1 y
+}}
+f3 =: {{ 'a b' =. y
+ (+/ ^ a) * +/ *: b }}
+f1 b3 BA
+f3 b3 BA
+f3 b3 (2 2 $ 0.1 0.3 _0.2 0.5) ; 0.7
+(> (<0 1 1) { f3 D.3 BA) -: 1 0 2 |: > (<1 0 1) { f3 D.3 BA
+
+NB. nested
+{{ +/ > {. f1 D.1 y ; 0.4 _0.9 }} cm 0.3 0.7 1.1
+{{ +/ ; ,&.> f2 D.1 (2 3 $ y) ; (y {~ 0 2) ; 1.3 }} cm 0.1 0.5 _0.3 0.8 _0.6 0.2
+{{ > {: f1 D.1 (0.3 0.7 1.1) ; y }} cm 0.4 _0.9
+{{ +/ ; , {{ +/ *: > y }}"0 D.1 (<y) , < 2 * y }} cm 0.3 0.7
+{{ +/ , > , {{ (+/ *: > {. y) * > {: y }}"1 D.1 ] 2 2 $ (<y) , (<0.5) , (<2 * y) , <1.5 }} cm 0.3 0.7
+{{ +/ ; , 1 2 3 {{ +/ x * ; *:&.> y }}"1 D.1 ] 2 2 $ (<y) , (<0.5) , (<2 * y) , <1.5 }} cm 0.3 0.7
+{{ +/ ; y {{ x * ; *:&.> y }} D.1 (0.3 ; 0.5 0.7) }} cm 1.5 2 2.5
+{{ +/ , > {. (y , 2) {{ (x +/ .* > {. y) * > {: y }} D.1 (0.3 0.5 0.7) ; 0.9 }} cm 1.5 2
+{{ 'a b' =. y
+ +/ , (*:@((+/b)&*) D.1) a }} bm BA
+
+NB. small network: layers in gerund, one box of parameters per layer
+dense =: {{ (y ,. 1) +/ .* x }}
+relu =: 0 >. ]
+NET =: dense`relu`dense
+fwd =: {{ for_i. i. # NET do. y =. (i {:: x) NET@.i y end. y }}
+mse =: {{ 'X T' =. x
+ (+/ % #) , *: (y fwd X) - T }}
+XN =: 5 2 $ 0.1 0.9 _0.4 0.3 0.8 _0.7 0.2 0.5 _0.6 _0.1
+TN =: 5 1 $ 0.3 _0.2 0.7 0.1 _0.5
+PN =: (3 4 $ 0.2 _0.3 0.5 0.1 _0.4 0.6 _0.2 0.3 0.1 0.1 0 0) ; (i. 0) ; 5 1 $ 0.4 _0.5 0.3 0.6 0.05
+(XN ; TN) mse bd PN
+NB. the same parameters as one list
+mseflat =: {{ x mse (3 4 $ 12 {. y) ; (i. 0) ; 5 1 $ 12 }. y }}
+((XN;TN) mseflat D.1 ; , &.> PN) -: ; , &.> (XN;TN) mse D.1 PN
+NB. residual block with shared weights
+res =: {{
+ 'Wi Wa Wo' =. y
+ h =. relu Wi dense x
+ h =. h + Wa dense relu Wa dense h
+ +/ , *: Wo dense h
+}}
+XN res bd (3 3 $ 0.2 _0.3 0.5 0.1 _0.4 0.6 _0.2 0.3 0.1) ; (4 3 $ 0.1 0.2 _0.1 0.3 _0.2 0.1 0.2 0.1 _0.3 0 0.1 0) ; 4 1 $ 0.5 _0.4 0.3 0.1
+NB. the layers folded tacitly: each layer gets the row (index ; parameters)
+denseR =: {{ (y ,. 1) +/ .* 1 {:: x }}
+NETR =: denseR`relu`denseR
+fwdR =: ] ]F..(NETR@.(0 {:: [)) (<"0 i. # NETR) ,. [
+mseR =: {{ 'X T' =. x
+ (+/ % #) , *: (y fwdR X) - T }}
+(XN ; TN) mseR bd PN
+((XN;TN) mse D.1 PN) -: (XN;TN) mseR D.1 PN
+NB. fold over boxes holding traced values
+FI =: {{ (<"0 ] 0 1 0) ,. <"0 y }}
+FM =: {{ y * 1 {:: x }}
+(3 # < 3 0 1) -: {{ 1 ]F..((FM`(0 >. ]))@.(0 {:: [)) FI y }} D3 ] 1 2 3
+(3 # < 6 3 2) -: {{ 1 ]F..(([ FM 0 >. ]) :: 0:) (<"0 ] 0 0 0) ,. <"0 y }} D3 ] 1 2 3
+
+'nonce error' -: {{ +/ ; ((0 >. ]) {{ x + y }} ])L:0 <"0 y }} D.1 etx 1 2 3
+
+NB. name lookups
+NS =: *:
+NT =: +/@:NS
+14 2 4 6 -: {{ NS =. 5
+ (NT y) , NT D.1 y }} 1 2 3
+_6 _1 _1 _1 -: {{ NS =. -
+ (NT y) , NT D.1 y }} 1 2 3
+(2 2 $ 2 0 0 2) -: {{ NS =. 5
+ NT D.2 y }} 0.3 0.7
+2 4 6 -: {{ +/ NT y [ NS =. 5 }} D.1 ] 1 2 3
+_1 _1 _1 -: {{ NS =. -
+ +/ NT y }} D.1 ] 1 2 3
+n =: *:
+u =: 3&*
+m =: -
+v =: ^
+((< 2 * 0.3 0.7 1.1) , < 2 * 0.4 0.9) -: +/@:n@:; D.1 (0.3 0.7 1.1) ; 0.4 0.9
+((< 3 3 3) , < 3 3) -: +/@:u@:; D.1 (0.3 0.7 1.1) ; 0.4 0.9
+((< _1 _1 _1) , < _1 _1) -: +/@:m@:; D.1 (0.3 0.7 1.1) ; 0.4 0.9
+((< ^ 0.3 0.7 1.1) , < ^ 0.4 0.9) -: +/@:v@:; D.1 (0.3 0.7 1.1) ; 0.4 0.9
+((< 2 * 0.3 0.7 1.1) , < 2 * 0.4 0.9) -: 2 +/@:n@:;@] D.1 (0.3 0.7 1.1) ; 0.4 0.9
+4!:55 ;:'n u m v'
+NB. locales
+sq_adlocBX_ =: *:
+sq =: -
+f1_adlocBX_ =: {{ 'a b' =. y
+ (+/ sq a) * +/ b }}
+(f1 D.1 BA) -: f1_adlocBX_ D.1 BA
+(f1 D.2 BA) -: f1_adlocBX_ D.2 BA
+NG_adlocBX_ =: {{ +/ *: > y }}"_1
+((< 2 * 0.3 0.7 1.1) , < 2 * 0.4 _0.9) -: NG_adlocBX_ D.1 BA
+(<'base') -: coname ''
+4!:55 <'sq'
+NB. memory
+noleak 'f2 D.1 BB'
+noleak 'f1 D.2 BA'
+noleak '(XN ; TN) mse D.1 PN'
+
+coerase ;:'adloc adlocA adlocB adlocC adlocP adlocBX'
 epilog''

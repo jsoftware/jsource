@@ -1262,7 +1262,7 @@ struct jtimespec jmtfclk(void); //'fast clock'; maybe less inaccurate; intended 
 DF1(name){DF12IP;PROLOG(0000); PUSHZOMB; ARGCHK1D(w) \
 AF fghfn; A fs, gs, hs; \
 if(opt&0x100){ \
- chkmpool(jt,w); \
+/* for testing chkmpool(jt,w); scaf */ \
  /* h is omitted.  Fetch from g and f, and ignore @][ for hs purposes.  hfn is dyad for @: only */ \
  hs=FAV(self)->fgh[1]; fghfn=FAVV(hs)->valencefns[0]; \
  gs=FAV(self)->fgh[0]; \

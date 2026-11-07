@@ -117,8 +117,8 @@ typedef struct ADic {
   I (*compfn)();  // key-comparison function, user's or selected internal
    // *** start of area pointed by AK, which is the value of dic as a J noun
   A hash;  // the hash/tree table, rank 1  Note: This pointer may be stale.  MUST use voidAV1 to point to hash, and use only PREFETCH until you get a lock
-  A keys;  // array of keys    nondisplayable if indirect
-  A vals;   // array of values    nondisplayable if indirect
+  A keys;  // array of keys    marked with AN=AS[0]=0 to avoid display
+  A vals;   // array of values    marked with AN=AS[0]=0 to avoid display
   // end of first cacheline.  Following are unchanging
   A kshape;   // shape of a key, always accessed by AAV1
   A vshape;  // shape of a value, always accessed by AAV1

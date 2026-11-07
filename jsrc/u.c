@@ -700,7 +700,6 @@ A jtfindnameinscript(J jt,C *script, C *name, I pos){
 }
 
 void chkmpool(J jt, A w){
- R;   // disable check
  if(!w)R;
  I i; for(i=0; i<PLIML-PMINL+1; i++){
   A w1=jt->mempool[i]; I j=0;
@@ -709,6 +708,6 @@ void chkmpool(J jt, A w){
    w1=AFCHAIN(w1);
    j++;
   }
- if(AN(w)&&(AT(w)&BOX)){A* wv=AAV(w); DO(AN(w), chkmpool(jt,wv[i]);)}
+ if(AN(w)&&(AT(w)&BOX)){A* wv=AAV(w); DO(AN(w), chkmpool(jt,QCWORD(wv[i]));)}  // remove flag bits from child address
  }
 }

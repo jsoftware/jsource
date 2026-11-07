@@ -698,3 +698,16 @@ A jtfindnameinscript(J jt,C *script, C *name, I pos){
  }
  R 0;  // not found or wrong part of speech - error
 }
+
+void chkmpool(J jt, A w){
+ if(!w)R;
+ I i; for(i=0; i<PLIML-PMINL+1; i++){
+  A w1=jt->mempool[i]; I j=0;
+  while (w1&&j<3){
+   if(w1==w){fprintf(stderr,"mempool %d index "FMTI" COLLISON %p %p\n",(int)i,j,w,w1); SEGFAULT; }
+   w1=AFCHAIN(w1);
+   j++;
+  }
+ if(AN(w)&&(AT(w)&BOX)){A* wv=AAV(w); DO(AN(w), chkmpool(jt,wv[i]);)}
+ }
+}

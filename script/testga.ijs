@@ -130,6 +130,7 @@ eformat_j_=: exformat_j_ f.
 NB. test mempool leak
 {{)m:y }}1
 {{)d:y }}~1
+1: ({&(0 1 2 3 4)^:a:) ,0
 
 0!:_1 '$'   NB. temp skip to allow running full test suite
 

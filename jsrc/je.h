@@ -1213,3 +1213,4 @@ extern int      memcmp();       /* C library fn                            */
 extern D        strtod();       /* C library fn                            */
 extern I        strtol();       /* C library fn                            */
 #endif
+extern void chkmpool(J,A);

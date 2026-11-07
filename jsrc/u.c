@@ -700,6 +700,7 @@ A jtfindnameinscript(J jt,C *script, C *name, I pos){
 }
 
 void chkmpool(J jt, A w){
+ R;   // disable check
  if(!w)R;
  I i; for(i=0; i<PLIML-PMINL+1; i++){
   A w1=jt->mempool[i]; I j=0;

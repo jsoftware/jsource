@@ -258,7 +258,7 @@ iswreck:;
    ASSERT(!ISSPARSE(AT(z)),EVNONCE);
    // If z is DIRECT inplaceable, it must be unique and we can inherit them into a pristine result.  Otherwise clear pristinity
    ZZFLAGWORD&=((AC(z)>>(BW-AFPRISTINEX))&(-(AT(z)&DIRECT)))|~ZZFLAGPRISTINE;
-   if(likely(ZZWILLBEOPENEDNEVER||!(ZZFLAGWORD&ZZFLAGWILLBEOPENED))) {
+   if(likely(ZZWILLBEOPENEDNEVER||!(ZZFLAGWORD&ZZFLAGWILLBEOPENED))){
     // normal case where we are creating the result box.  Must incorp the result.  Can't see an advantage is storing the virtual temporarily, and that would require testing for UNINCORP block
     if(unlikely(AFLAG(z)&AFANCHORED)){RZ(z=ca(z)) ACINITZAP(z);}  // user shouldn't box a ANCHORED, but if so we clone it
     else{realizeifvirtual(z); razaptstackend(z);}   // Since we are moving the result into a recursive box, we must ra() it.  This plus rifv plus pristine flagging (above) =INCORPRA.  We trouble to see if we can shorten tstack, since that is likely
@@ -274,7 +274,7 @@ iswreck:;
     // non-inplaceable, because the next thing to open it might be each: each will set the inplaceable flag if the parent is abandoned, so as to allow
     // pristinity of lower results; thus we may not relax the rule that all contents must be non-inplaceable
     // box code all over assumes that contents are never inplaceable, and since we go through here only when we are going through box code next, we honor that
-    ACIPNO(z); *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box when force-boxed result
+    ACIPNO(z); *zzboxp=z;  // install the new box.  zzboxp is ALWAYS a pointer to a box-pointer when force-boxed result
     if(unlikely((ZZFLAGWORD&ZZFLAGCOUNTITEMS)!=0)){
      // the result will be razed next.  We will count the items and store that in AM.  We will also ensure that the result boxes' contents have the same type
      // and item-shape.  If one does not, we turn off special raze processing.  It is safe to take over the AM field in this case, because we know this is WILLBEOPENED and

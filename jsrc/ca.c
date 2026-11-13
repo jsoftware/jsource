@@ -311,7 +311,7 @@ F2(jtatop){F12IP;A f,g,h=0,x;AF f1=on1,f2=jtupon2;B b=0,j;C c,d,e;I flag, flag2=
   // We must copy forwarded flags from f to f@][.  These are WILLOPEN/WILLREALIZE/USESITEMCOUNT.  They are copied from the monad into the monad and (A if @[, W if @])
   // BOXATOP is set if a is <
   flag2|=(c==CBOX)*(VF2BOXATOP2+VF2BOXATOP1)+(av->flag2&VF2WILLOPEN1+VF2WILLOPEN1PROP+VF2WILLREALIZE1+VF2WILLREALIZE1PROP+VF2USESITEMCOUNT1)*(1+((d&1)?VF2WILLOPEN2WX/VF2WILLOPEN1:VF2WILLOPEN2AX/VF2WILLOPEN1));
-  fdeffill(z,flag2,CAT,VERB, jtonright12,d&1?jtonright12:onleft2, a,0,0, (av->flag&VNOLOCCHG+VNONAME+VNOSELF), RMAX,RMAX,RMAX); FAV(z)->fgh[1]=w; R z;  // ra not needed on w
+  fdeffill(z,flag2,CAT,VERB, jtonright12,d&1?jtonright12:onleft2, a,0,0, (av->flag&VNOLOCCHG+VNONAME+VNOSELF), RMAX,RMAX,RMAX); FAV(z)->fgh[1]=ds(d); R z;  // use permanent w so ra not needed on it (display only)
  }
  // Set flag with NOLOCCHG status from f/g; keep INPLACE? in sync with f1,f2.  But we can turn off inplacing that is not supported by v, which may
  // save a few tests during execution and is vital for handling <@v, where we may execute v directly without going through @ and therefore mustn't inplace

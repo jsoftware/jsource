@@ -149,7 +149,7 @@ A jtunDD(J jtfg, A w){F12JT;
  I shortres=(I)jtfg&JTINPLACEA;  // set for short, one-line result
  C *wv=CAV(w);  // start of word string
  // quick scan for 9, :, '; if not, return the input
- I scan; I qc9=0; for(scan=0;scan<AN(w);++scan){I t=0; t=wv[scan]=='\''?4:t; t=wv[scan]==':'?2:t; t=wv[scan]=='9'?1:t; qc9|=t;}  // check for ' : 9 chars
+ I scan; I qc9=0; for(scan=0;scan<AN(w);++scan){I t=0; t=wv[scan]=='\''?4:t; t=wv[scan]==':'?2:t; t=wv[scan]=='9'?1:t; if((qc9|=t)==7)break;}  // check for ' : 9 chars
  if(qc9==7){  // if there is possibly a DD...
   // make input writable if it is not recursive; find words
   if(!((I)jtfg&JTINPLACEW))RZ(w=ca(w)); wv=CAV(w); A wil; RZ(wil=wordil(w)); ASSERT(AM(wil)>=0,EVOPENQ)
@@ -164,18 +164,18 @@ A jtunDD(J jtfg, A w){F12JT;
     if(wilv[wilx+2][1]-wilv[wilx+2][0]>1)wilx+=3;  // : too big, skip it
     else if(wv[wilv[wilx+2][0]]!=':')wilx+=1;  // not :, skip it
     else if(wilv[wilx+1][1]-wilv[wilx+1][0]>1)wilx+=2;  // 9 too big, skip it
-    else if(wv[wilv[wilx+1][0]]!='9')wilx+=1;  // not :, skip it
+    else if(wv[wilv[wilx+1][0]]!='9')wilx+=1;  // not 9, skip it
     // the rest of the test is a formality
     else if(wilv[wilx][1]-wilv[wilx][0]>1)wilx+=1;  // ( too big, skip it
     else if(wv[wilv[wilx][0]]!='(')wilx+=1;  // not (, skip it
     else if(wilv[wilx+3][1]-wilv[wilx+3][0]<2)wilx+=1;  // '' too small, skip it
     else if(wv[wilv[wilx+3][0]]!='\'')wilx+=1;  // not ', skip it
     else if(wilv[wilx+4][1]-wilv[wilx+4][0]>1)wilx+=1;  // ) too big, skip it
-    else if(wv[wilv[wilx+4][0]]!=')')wilx+=1;  // not ', skip it
+    else if(wv[wilv[wilx+4][0]]!=')')wilx+=1;  // not ), skip it
     else break;  // if we matched, go handle it
    }
    wilx=wilx>AS(wil)[0]-5?AS(wil)[0]:wilx;  // if no more DDs possible, pick entire rest of input
-   // pack everything before the ( 9 : string ) down into the result.  We include space after
+   // pack everything before the ( 9 : string ) if any down into the result.  We include space after
    // the last token in case it is needed for inflections
    // the ending index is the start pos of the new first word, but total length if we copy everything
    I endx=wilx==AS(wil)[0]?AN(w):wilv[wilx][0];
@@ -188,10 +188,11 @@ A jtunDD(J jtfg, A w){F12JT;
     inx=outx=endx;
    }
    if(wilx==AS(wil)[0])break;  // break if no more DDs
+   // Here we have a DD to move
    if(shortres&&currc==CLF){wv[outx++]='.'; wv[outx++]='.'; wv[outx++]='.'; break;}  // stop if we exceeded single line
    // install leading DD delimiter
    inx=wilv[wilx+3][0]+1; endx=wilv[wilx+3][1]-1;   // start/end+1 of string (skipping enclosing quotes)
-   wv[outx++]='{'; wv[outx++]='{'; if(!shortres&&wv[inx]!=')')wv[outx++]=' ';  // add {{, and a space if it's short display and there is no )
+   wv[outx++]='{'; wv[outx++]='{'; if(!shortres&&wv[inx]!=')')wv[outx++]=' ';  // add {{, and a space if it's not short display and there is no {{)n
    I startddx=outx;  // remember where the DD starts, because its length may be reduced
    NOUNROLL while(inx<endx){if(wv[inx]=='\'')++inx; wv[outx++]=wv[inx++];}   // dequote the string and move it down into the result
    inx=wilv[wilx+4][1];  // next input character will pick up after the final )
@@ -200,7 +201,7 @@ A jtunDD(J jtfg, A w){F12JT;
    RZ(jtunDD((J)((I)jt+(JTINPLACEW|shortres)),z));
    // the recursion leaves the DD in place, but it may have become shorter if it too contained DDs (the {{ }}
    // overhead is always less than the ( 9 : '' ) overhead)
-   // We are going to install a trailing blank.  To prevent accumulation of blanks, discard any trailing blanks in the definition
+   // We are going to install a trailing blank before the }}.  To prevent accumulation of blanks, discard any trailing blanks in the definition
    for(outx=startddx+AN(z);outx>startddx&&wv[outx-1]==' ';--outx);
    // install trailing DD delimiter
    if(!shortres)wv[outx++]=' '; wv[outx++]='}'; wv[outx++]='}';

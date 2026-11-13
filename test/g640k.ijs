@@ -363,6 +363,8 @@ testf=: 4 : 0
 2 testf 5x
 )
 
+9!:43 ] 2
+(((9!:44)@''[(9!:1)) -: ((9!:44)@''[(9!:1)))@> i.&.> i. 5  NB. proper reset, including empty
 
 
 

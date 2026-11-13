@@ -423,6 +423,7 @@ nextlinedebug:;
   // the names cwsent, ic, NPGpysfmtdl, tcesx, t, z, jt, and old fit into the 8 nonvolatile non-SP registers
   // **************** switch by line type ********************
 
+// scaf avoid switch first time with branch to dobblock?
   switch(PEXT08(tcesx,TCESXTYPEX,31)){  // highest cw is 33, but it aliases to 1 & there is no 32.  32 is used as a multipurpose flag
   // The top cases handle the case of if. T do. B B B... end B B...      without looping back to the switch except for the if.
   // if there is nothing but if./while/end. most of the branches are internal
@@ -1089,7 +1090,7 @@ A jtcrelocalsyms(J jt, A l, A c,I type, I dyad, I flags){A actst,*lv,pfst,t,wds;
 }
 
 // l is the A block for all the words/queues used in the definition (modified in place and must be nonrecursive)
-// c is the table of control-word info used in the definition
+// c is the table of control-word info used in the definition (last of which is a sentinel, modified)
 // We preparse what we can in the definition: (...with no exec on nouns), ((... including nouns), m!:n pure fn, (m : n) which causes {{ }} to be preparsed
 // Return 0 if error
 I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(fragbuf)/sizeof(fragbuf[0])-1;  // leave 1 pad word before frag to allow for overfetch in parsea
@@ -1098,8 +1099,8 @@ I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(frag
  A *lv=AAV(l);  // address of words in sentences
  I outsent=0;
  for(j=0;j<cn;++j) {   // look at each control word
-  I endx=(cwv[j+1].tcesx-cwv[j].tcesx)&TCESXSXMSK;   // # words in sentence
-  if(((BIT(BW-CBBLOCK-1)|BIT(BW-CTBLOCK-1))<<PEXT0(cwv[j].tcesx,TCESXTYPEX,31))<0){  // BBLOCK[END] or TBLOCK
+  I endx=(cwv[j+1].tcesx-cwv[j].tcesx)&TCESXSXMSK;   // # words in sentence j
+  if(((BIT(BW-CBBLOCK-1)|BIT(BW-CTBLOCK-1))<<PEXT0(cwv[j].tcesx,TCESXTYPEX,31))<0){  // BBLOCK[END] or TBLOCK   scaf!
    // scan the sentence for PPPP.  If found, parse the PPPP and replace the sequence in the sentence; reduce the length
    A *lvv=lv+(cwv[j].tcesx&TCESXSXMSK);  // pointer to sentence words
    I startx=0;   // start and end+1 index of sentence
@@ -1108,19 +1109,19 @@ I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(frag
     // Look forward for )
     while(startx<endx && QCSENTTYPE(lvv[startx])!=QCRPAR)++startx; if(startx==endx)break;  // find ), exit loop if none, finished
     // Scan backward looking for (, to get length, and checking for disqualifying entities
-    I rparx=startx; I sflags=0;  // remember where the ) is; flags: 1=there is an unsafe verb 2=we hit m : or !:, which might create anything
+    I rparx=startx; I sflags=0;  // remember where the ) is; flags: 1=there is an unsafe verb 2=we hit m : which might create anything 4=we hit !:, which might create anything
     while(--startx>=0 && !(AT(QCWORD(lvv[startx]))==LPAR)){  // look for matching (   use = because LPAR can be a NAMELESS flag
      if(AT(QCWORD(lvv[startx]))&RPAR+ASGN+NAME)break;  // =. not allowed; ) indicates previous disqualified block; NAME is unknowable
      if(AT(QCWORD(lvv[startx]))&VERB && FAV(QCWORD(lvv[startx]))->flag2&VF2IMPLOC)break;  // u. v. not allowed: they are half-names
      if(AT(QCWORD(lvv[startx]))&VERB+ADV+CONJ && (FAV(QCWORD(lvv[startx]))->flag&VNOLOCCHG+VNONAME)!=VNOLOCCHG+VNONAME){if(AT(QCWORD(lvv[startx]))&ADV+CONJ)break; sflags|=1;}  // if unsafe adv/conj, abort - we can't even try the fragment.  If unsafe verb, mark so we suppress (( ))
-     if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CIBEAM)sflags|=2;  // remember if we hit !: ...
+     if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CIBEAM)sflags|=4;  // remember if we hit !: ...
      if(AT(QCWORD(lvv[startx]))&CONJ && FAV(QCWORD(lvv[startx]))->id==CCOLON && !(QCSENTTYPE(lvv[startx-1])==QCVERB))sflags|=2;  // ... or m :
     }
     if(startx>=0 && (startx+2<rparx) && (QCSENTTYPE(lvv[startx])==QCLPAR)){  // ( ... ) but not () or ( word )
      // The ) was matched and the () can be processed.
      // !: and m : are special in that they can return any part of speech.  Thus, we can't let them loose in a sentence that is not supposed to execute any verbs.
-     // We process them only when they are (m!:n) or (m : noun), 5 words.   This has the salutary effect of preparsing DDs
-     if((sflags&2) && !(startx+4==rparx && (QCSENTTYPE(lvv[startx+1])==QCNOUN) && (QCSENTTYPE(lvv[startx+3])==QCNOUN)))goto parseerr;
+     // We process them only when they are (m!:n) or (m : string), 5 words.   This has the salutary effect of preparsing DDs
+     if((sflags&6) && !(startx+4==rparx && (QCSENTTYPE(lvv[startx+1])==QCNOUN) && (QCSENTTYPE(lvv[startx+3])==QCNOUN) && ((sflags&4)||(AT(QCWORD(lvv[startx+3]))&LIT))))goto parseerr;  // noun w, and string unless !:
      // See if the () block was a (( )) block.  If it is, we will execute it even if it contains verbs, as long as none is unsafe
      I doublep = ~sflags & ((rparx+1<endx) && (QCSENTTYPE(lvv[rparx+1])==QCRPAR) && (startx>0) && (QCSENTTYPE(lvv[startx-1])==QCLPAR));  // is (( ))?  but only if no unsafe verbs
      I parseok=doublep;  // indic OK to run parse
@@ -1156,7 +1157,7 @@ I pppp(J jt, A l, A c){I j; A fragbuf[20], *fragv=fragbuf+1; I fragl=sizeof(frag
  R 1;
 }
 
-// cw is control words, sw is sentence words for one valence.  Result is in compiled form, one A block with the data preceded by index info
+// cw is control words, sw is sentence words for one valence.  Result is in compiled form, one nonrecursive A block with the data preceded by index info
 static A compiledefn(J jt, A sw, A cw){A z;
  I nsw=AN(sw); I ncw=AN(cw)+1;  // number of sentence words and control words including the extra word with total len
  I alloamtA=nsw+ncw*(sizeof(CW)/sizeof(A));  // number of As needed to hold the sentences plus 8 bytes per cw 
@@ -1471,15 +1472,15 @@ A jtddtokens(J jtfg,A w,I env){F12IP;
    // if the first line is empty (meaning the first word is a linefeed by itself), skip it
    I firstcharx=wilv[ddbgnx+1][0]; if(wv[firstcharx]=='\n')++firstcharx;  // just one skipped line
    A ddqu; RZ(ddqu=strq(wilv[ddendx][0]-firstcharx,wv+firstcharx));
-   // append the string for the start/end of DD
+   // append the string for the start/end of DD.  We don't leave a space after ) because no inflection is possible there - wordil would have applied it to }}
    I bodystart=AN(w), bodylen=AN(ddqu), trailstart=wilv[ddendx][1];  // start/len of body in w, and start of after-DD text
-   RZ(ddqu=jtapip(jtfg,ddqu,str(8,") ( 9 : ")));  // trailer )   then header  which will be followed by body.  This will be 2 words out of order
+   RZ(ddqu=jtapip(jtfg,ddqu,str(7,")( 9 : ")));  // trailer )   then header  which will be followed by body.  This will be 2 words out of order.
    // append the new stuff to w
    RZ(w=jtapip(jtfg,w,ddqu));
    wv=CAV(w);   // refresh data pointer.  Number of words has not changed, nor have indexes
    // Replace ddbgnx and ddendx with the start/end strings.  Fill in the middle, if any, with everything in between
-   wilv[ddbgnx][0]=AN(w)-6; wilv[ddbgnx][1]=AN(w);  //  ( 9 :  
-   wilv[ddbgnx+1][0]=bodystart; I *fillv=&wilv[ddbgnx+1][1]; DQ(2*(ddendx-ddbgnx)-1, *fillv++=bodystart+bodylen+2;)  // everything in between, and trailing )SP
+   wilv[ddbgnx][0]=AN(w)-6; wilv[ddbgnx][1]=AN(w);  //  ( 9 :SP     6 is its length
+   wilv[ddbgnx+1][0]=bodystart; I *fillv=&wilv[ddbgnx+1][1]; DQ(2*(ddendx-ddbgnx)-1, *fillv++=bodystart+bodylen+1;)  // everything in between, and trailing )  1 is len of )
    // continue the search.
    // The characters below ddendx are out of order and there will be trouble if we try to preserve
    // the user's spacing by grouping them.  We must run the ending lines together, to save their spacing, and then

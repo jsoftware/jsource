@@ -110,8 +110,7 @@ A jtrank1ex(J jtfg,AD * RESTRICT w,A fs,I rr,AF f1){F12IP;PROLOG(0041);A z;
   I zr=AR(z); GA00(zz,AT(z),0L,wf+zr); zzs=AS(zz); MCISH(zzs,AS(w),wf); MCISH(zzs+wf,AS(z),zr);
  }
 
-// result is now in zz
-
+ // result is now in zz, and is known to be not WILLBEOPENED.  Safe to EPILOG.
  EPILOG(zz);
 }
 
@@ -223,8 +222,7 @@ A jtrank1ex0(J jtfg,AD * RESTRICT w,A fs,AF f1){F12IP;PROLOG(0041);A z,virtw;
   I zr=AR(z),wr=AR(w); GA00(zz,AT(z),0L,wr+zr); zzs=AS(zz); MCISH(zzs,AS(w),wr); MCISH(zzs+wr,AS(z),zr);
  }
 
-// result is now in zz
-
+ // result is now in zz, and is known to be not WILLBEOPENED.  Safe to EPILOG.
  EPILOG(zz);
 }
 
@@ -418,7 +416,7 @@ A jtrank2ex(J jtfg,AD * RESTRICT a,AD * RESTRICT w,A fs,UI lrrrlcrrcr,AF f2){F12
   MCISH(zzs,los,lof); MCISH(zzs+lof,lis,lif); MCISH(zzs+lof+lif,AS(z),zr);
  }
 
-// result is now in zz
+ // result is now in zz, and is known to be not WILLBEOPENED.  Safe to EPILOG.
  EPILOG(zz);
 }
 
@@ -569,7 +567,7 @@ A jtrank2ex0(J jtfg,AD * RESTRICT a,AD * RESTRICT w,A fs,AF f2){F12IP;PROLOG(004
   I zr=AR(z); GA00(zz,AT(z),0L,ar+zr); zzs=AS(zz); MCISH(zzs,as,ar); MCISH(zzs+ar,AS(z),zr);  // allocate result, copy frame and shape
  }
 
-// result is now in zz
+ // result is now in zz, and is known to be not WILLBEOPENED.  Safe to EPILOG.
  EPILOG(zz);
 }
 

@@ -216,12 +216,13 @@ F1(jtgb_test){F12IP;I j=jt->rngdata->rng;
 /* initializes mt[MTN] with a seed */
 static void jtmt_init(J jt,UI s){I i;UI*mt=jt->rngdata->rngv;
  mt[0]= s;
- for (i=1; i<MTN; i++)
+ for (i=1; i<MTN; i++){
 #if SY_64
   mt[i] = (6364136223846793005ULL * (mt[i-1] ^ (mt[i-1] >> 62)) + i);
 #else
   mt[i] = (1812433253UL           * (mt[i-1] ^ (mt[i-1] >> 30)) + i);
 #endif
+ }
   /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
   /* In the previous versions, MSBs of the seed affect   */
   /* only MSBs of the array mt[].                        */
@@ -231,7 +232,7 @@ static void jtmt_init(J jt,UI s){I i;UI*mt=jt->rngdata->rngv;
 
 static void jtmt_init_by_array(J jt,UI init_key[], I key_length){I i,j,k;UI*mt=jt->rngdata->rngv;
  mt_init((UI)19650218);
- i=1; j=0; k=MTN>key_length?MTN:key_length;
+ i=1; j=0; k=MTN>key_length?MTN:key_length; init_key=key_length==0?(UI*)&iotavec[0-IOTAVECBEGIN]:init_key;  // if len=0, use 0
  for(; k; k--) {
 #if SY_64
   mt[i] = (mt[i] ^ (mt[i-1]^mt[i-1]>>62)*3935559000370003845ULL)+init_key[j]+j; /* non linear */
@@ -582,7 +583,7 @@ F1(jtrngstates){F12IP;A*wv;I k;struct rngparms*vv=jt->rngdata->rngparms;
 // jt->rngdata->rngseed is set, in which case jt->rngdata->rngseed is the vector of seed info
 F1(jtrngseedq){F12IP;ASSERTMTV(w); R jt->rngdata->rngseed&&MTI==jt->rngdata->rng?jt->rngdata->rngseed:sc(jt->rngdata->rngparms[jt->rngdata->rng].rngS);}
 
-// Set the vector of RNG seed info
+// 9!:1  Set the vector of RNG seed info
 F1(jtrngseeds){F12IP;I k,r; 
  // Force w to integer; k=first value; r=rank
  RZ(w=vi(w)); k=AV(w)[0]; r=AR(w);

@@ -1290,6 +1290,12 @@ NB. Dyad 15!:15 ---------------------------------------------------
   1
 }} ''
 
+f =: {{ -@(+].[) y }}  NB. u@.][ had a bug that lost the ][ arg if not PERMANENT
+_6 _5 -: f 6 5
+a =. </.'abcdefgh'
+_6 _5 -: f 6 5
+_6 _5 -: f 6 5
+
 
 
 epilog''

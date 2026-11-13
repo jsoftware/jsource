@@ -1840,10 +1840,10 @@ DF2(jtfslashatg){DF12IP;A fs,gs,y,z;B b;C*av,*wv;I ak,an,ar,*as,at,m,
 #if SY_64
 #define REFG at=AT(a); wt=AT(w); awr=AR(a); wr=AR(w); opcode=FAV(self)->lu2.lc; acr=(UI)jtfgfg>>56; wcr=((UI)jtfgfg>>48)&RMAX; JTFGFROMJTFGFG; JTFROMJTFG(J);
 A jtatomic2(J jtfgfg,A a,A w,A self){  // linkage for 64-bit machines, through jt
+ J JTFGFROMJTFGFG; F12IP;
  UI opcode=FAV(self)->lu2.lc; ARGCHK1(a) I at=AT(a); I awr=AR(a);  // a/w/self are settled.  read from a before w
  ARGCHK1(w) I wt=AT(w); I wr=AR(w);
  I acr=(UI)jtfgfg>>56; I wcr=((UI)jtfgfg>>48)&RMAX;  // extract complemented ranks from jtfgfg which is settling into ?cr
- J JTFGFROMJTFGFG; F12IP;
 #else
 #define REFG opcode=FAV(self)->lu2.lc; a=(A)((I)afg&~(ABDY-1)); w=(A)((I)wfg&~(ABDY-1)); at=AT(a); wt=AT(w); awr=AR(a); wr=AR(w); acr=(I)afg&RMAX; wcr=(I)wfg&RMAX; JTFROMJTFG(J);
 A jtatomic2(J jtfg,A afg,A wfg,A self){  // linkage for 32-bit machines, through a/w just like with IRS

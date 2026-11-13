@@ -836,7 +836,7 @@ NB. sort on numeric lists
 (50000 + 7!:2 'a =: /:~ a') > (7!:2 '/:~ a') [ a =: 10000 ?@$ 0  NB. Not inplaced; block has usecount 2
 (50000 + 7!:2 'a =: /:~ a') < (7!:2 '/:~ a')
 (160 + 7!:2 'a =: /:~ a') > (7!:2 '/:~ a') [ a =: 38 ?@$ 20000  NB. Not inplaced; block has usecount 2
-(*9!:56'normahn') +. (160 + 7!:2 'a =: /:~ a') < (7!:2 '/:~ a')
+(160 + 7!:2 'a =: /:~ a') < (7!:2 '/:~ a')
 
 NB. The following failed when we didn't properly set the inplace flags for the selected verb
 NB. The sentence aborted without performing the assignment

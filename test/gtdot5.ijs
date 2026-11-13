@@ -18,6 +18,8 @@ create_shared_ =: {{ gbl =: >y }}
 destroy_shared_ =: 4!:55@coname
 double_shared =: {{ ({. 3 T. '') , gbl =: +: gbl }}
 
+0!:_1`1:@.(2<9!:56'cores') '#'   NB. skip if not enough cores
+
 1: (0 T. [: < 'coremask';2&^)"0 ] 1 2 3  NB. create 3 threads, tied to 3 worker cores
 locs =: 0&".@>@(conew&'shared')@> locgbls =: 10;20;30;i. 10    NB. Create 4 numbered locales as instances of shared
 (1 2 3 (, 2&+)&.> }. locgbls) -: {{ ({. 3 T. '') , gbl =: gbl + y }} t. (<'locales';<14;locs) 2
@@ -33,6 +35,8 @@ gbl =: 42  NB. for master thread
 (<"0 ] ,3) -: {{ 2 { 3 T. '' [ 6!:3 ? 0 }} t. (<'locales';8) ''
 (<"0 ] 1 3) -: {{ 2 { 3 T. '' [ 6!:3 ? 0 }} t. (<'locales';10) ''
 (<"0 ] 1 2) -: {{ 2 { 3 T. '' [ 6!:3 ? 0 }} t. (<'locales';6) ''
+
+NB.#  end of skip
 
 'length error' -: ". etx {{)n + t. (<'locales' ,&< 7 ; i. 2) }}  NB. not enough locs
 'domain error' -: ". etx {{)n + t. (<<'locales') }}

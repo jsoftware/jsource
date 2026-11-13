@@ -864,7 +864,7 @@ static I jtadsplit(J jt,A P,A T,I fr,I k,A*pr,A*tr){I n=1; A cs;
  RZ(cs=drop(sc(fr),shape(P)));
  RZ(*pr=reshape(over(sc(n),cs),P));
  if(ISZ(T)){*tr=mtv; R 1;}
- RZ(*tr=cant2(over(sc(0),apv(AR(P)-fr,fr+1,1)),T));
+ RZ(*tr=cant2(over(num(0),apv(AR(P)-fr,fr+1,1)),T));
  RZ(*tr=reshape(over(sc(n),over(sc(k),cs)),*tr));
  R 1;
 }
@@ -885,7 +885,7 @@ static I jtadcells1(J jt,A f,I r,A P,A T,I k,A*pz,A*tz){A pr,tr,d,cv,ix,z,g; I f
  RZ(d=jlink(pr,jlink(tr,v2(k,0))));
  cv=fdef(0,CDCAPDOT,VERB,jtadcellm,jtvalenceerr,f,d,0,VFLAGNONE,RMAX,RMAX,RMAX);
  RZ(ix=reshape(take(sc(fr),shape(P)),apv(n,0,1)));
- RZ(g=qq(cv,sc(0))); RZ(df1(z,ix,g));
+ RZ(g=qq(cv,num(0))); RZ(df1(z,ix,g));
  R jtadjoin(jt,z,pz,tz);
 }
 // the same for x f"(lr,rr) y
@@ -1028,7 +1028,7 @@ static I jtadagendaf(J jt,A f,A x,A Tx,A y,A Ty,I k,A*pz,A*tz){A s,gb,gk,inv,*fv
 static I jtadscan(J jt,A f,I mode,A P,A T,I k,A*pz,A*tz){A d,cv,z,g; I n;
  B b=!!(AT(P)&BOX); // boxes: no tangent
  if(!b)RZ(T=admat(T,P));
- if(!AR(P)){RZ(P=ravel(P)); if(!b)RZ(T=reshape(over(sc(k),sc(1)),T));}
+ if(!AR(P)){RZ(P=ravel(P)); if(!b)RZ(T=reshape(over(sc(k),num(1)),T));}
  n=AS(P)[0];
  if(!n){
   RZ((z=AO1(mode==1?bslash(f):bsdot(f),P)));
@@ -1036,7 +1036,7 @@ static I jtadscan(J jt,A f,I mode,A P,A T,I k,A*pz,A*tz){A d,cv,z,g; I n;
  }
  RZ(d=jlink(P,jlink(T,v2(k,mode))));
  cv=fdef(0,CDCAPDOT,VERB,jtadcellm,jtvalenceerr,f,d,0,VFLAGNONE,RMAX,RMAX,RMAX);
- RZ(g=qq(cv,sc(0))); RZ(df1(z,apv(n,0,1),g));
+ RZ(g=qq(cv,num(0))); RZ(df1(z,apv(n,0,1),g));
  R jtadjoin(jt,z,pz,tz);
 }
 // forward rule for x u\ y (infixes) and x u\. y (outfixes, when out is set). It returns u on each cell (assembled) and tangent of that.
@@ -1047,7 +1047,7 @@ static I jtadinfixf(J jt,A f,B out,A x,A P,A T,I k,A zg,A*pz,A*tz){A z,W,b,tb; I
  }
  RE(m=i0(x)); // an integer x
  if(!AR(P)){ // atom y
-  RZ(P=ravel(P)); RZ(T=reshape(over(sc(k),sc(1)),T));
+  RZ(P=ravel(P)); RZ(T=reshape(over(sc(k),num(1)),T));
  }
  n=AS(P)[0]; c=adwincount(m,n);
  if(!c){ // no cells
@@ -1059,7 +1059,7 @@ static I jtadinfixf(J jt,A f,B out,A x,A P,A T,I k,A zg,A*pz,A*tz){A z,W,b,tb; I
  }else{A d,cv,g,zc; I pv[3]={k,out?4:3,m}; RE(0); // cell loop for unequal cells or table too big
   RZ(d=jlink(P,jlink(T,vec(INT,3,pv))));
   cv=fdef(0,CDCAPDOT,VERB,jtadcellm,jtvalenceerr,f,d,0,VFLAGNONE,RMAX,RMAX,RMAX);
-  RZ(g=qq(cv,sc(0))); RZ(df1(zc,apv(c,0,1),g)); RZ(jtadjoin(jt,zc,&b,&tb));
+  RZ(g=qq(cv,num(0))); RZ(df1(zc,apv(c,0,1),g)); RZ(jtadjoin(jt,zc,&b,&tb));
  }
  *pz=zg&&AR(zg)==AR(b)&&!memcmp(AS(zg),AS(b),AR(b)*SZI)?zg:b; *tz=tb; R 1;
 }
@@ -1088,9 +1088,9 @@ static B adcut0(A f){A g;
  g=FAV(f)->fgh[1];
  R g&&AT(g)&(B01|INT)&&!AR(g)&&!BIV0(g)&&AT(FAV(f)->fgh[0])&VERB;
 }
-static A jtadcutsel(J jt){R cut(ds(CRIGHT),sc(0));} // ];.0
+static A jtadcutsel(J jt){R cut(ds(CRIGHT),num(0));} // ];.0
 static B adcutsel(A f){R adcut0(f)&&ISPRIM(FAV(f)->fgh[0])&&FAV(FAV(f)->fgh[0])->id==CRIGHT;} // ];.0 itself
-static A jtadcutrevx(J jt,A y){I r=AR(y); R reshape(v2(2,r),over(reshape(sc(r),sc(0)),negate(shape(y))));} // 0 ,: -$y
+static A jtadcutrevx(J jt,A y){I r=AR(y); R reshape(v2(2,r),over(reshape(sc(r),num(0)),negate(shape(y))));} // 0 ,: -$y
 
 // The folds [x] u F. v y  and  F.. F.: F: F:. F::
 static A jtadrassemble(J,A); static A jtaduntr(J,A);
@@ -2071,7 +2071,7 @@ boxwalk2:
  case CBASE: // x #. y: linear in y
   if(!ISZ(Tx)){ // x traced
    if(!AR(x)){A z; RZ(z=zg?zg:(AO2(f,x,y))); // atom base: the polynomial (|."1 y) p. x
-    ADF1(qq(ds(CREV),sc(1)),y,Ty,&a,&ta); ADF2(ds(CPOLY),a,ta,x,Tx,&b,&tb);
+    ADF1(qq(ds(CREV),num(1)),y,Ty,&a,&ta); ADF2(ds(CPOLY),a,ta,x,Tx,&b,&tb);
     *pz=z; *tz=tb; R 1;
    }
    if(AR(x)>1||AR(y)>1)R jtadcells2(jt,f,1,MIN(1,AR(y)),x,Tx,y,Ty,k,pz,tz); // cell loop, but cell of y may be an atom
@@ -2104,8 +2104,8 @@ boxwalk2:
      RZ(T=cvt(FL,adexpand(Tx,x))); RZ(a=AO2(f,reshape(v2(k*na,n),T),Y)); RZ(a=reshape(over(sc(k),shape(z)),a));
     }
     if(!ISZ(Ty)){
-     RZ(T=cvt(FL,adexpand(Ty,y))); RZ(T=cant2(over(sc(1),v2(0,2)),reshape(over(sc(k),v2(n,nb)),T)));
-     RZ(b=AO2(f,X,reshape(v2(n,k*nb),T))); RZ(b=cant2(over(sc(1),v2(0,2)),reshape(over(sc(na),v2(k,nb)),b)));
+     RZ(T=cvt(FL,adexpand(Ty,y))); RZ(T=cant2(over(num(1),v2(0,2)),reshape(over(sc(k),v2(n,nb)),T)));
+     RZ(b=AO2(f,X,reshape(v2(n,k*nb),T))); RZ(b=cant2(over(num(1),v2(0,2)),reshape(over(sc(na),v2(k,nb)),b)));
      RZ(b=reshape(over(sc(k),shape(z)),b));
     }
     RZ(*tz=adsum(a,b,z)); R 1;}
@@ -2318,16 +2318,16 @@ static A jtadrcells1(J jt,A f,I r,A P){A pr,cv,ix,zb,g; I fr=AR(P)-r,n=1;
  DO(fr, n*=AS(P)[i];);
  if(!n)R UNTR((_z=AO1(qq(f,sc(r)),P)));
  RZ(pr=jtadrsplit(jt,P,fr));
- cv=fdef(0,CDCAPDOT,VERB,jtadrcellm,jtvalenceerr,f,jlink(mtv,jlink(pr,sc(0))),0,VFLAGNONE,RMAX,RMAX,RMAX);
+ cv=fdef(0,CDCAPDOT,VERB,jtadrcellm,jtvalenceerr,f,jlink(mtv,jlink(pr,num(0))),0,VFLAGNONE,RMAX,RMAX,RMAX);
  RZ(ix=reshape(take(sc(fr),shape(P)),apv(n,0,1)));
- RZ(g=qq(cv,sc(0))); RZ(df1(zb,ix,g));
+ RZ(g=qq(cv,num(0))); RZ(df1(zb,ix,g));
  R jtadrassemble(jt,zb);
 }
 static A jtadrcells2(J jt,A f,I lr,I rr,A x,A y){A xr,yr,cv,ix,iy,zb,g; I fx=AR(x)-lr,fy=AR(y)-rr,nx=1,ny=1;
  DO(fx, nx*=AS(x)[i];); DO(fy, ny*=AS(y)[i];);
  if(!nx||!ny)R UNTR((_z=AO2(qq(f,v2(lr,rr)),x,y)));
  RZ(xr=jtadrsplit(jt,x,fx)); RZ(yr=jtadrsplit(jt,y,fy));
- cv=fdef(0,CDCAPDOT,VERB,jtvalenceerr,jtadrcelld,f,jlink(xr,jlink(yr,sc(0))),0,VFLAGNONE,RMAX,RMAX,RMAX);
+ cv=fdef(0,CDCAPDOT,VERB,jtvalenceerr,jtadrcelld,f,jlink(xr,jlink(yr,num(0))),0,VFLAGNONE,RMAX,RMAX,RMAX);
  RZ(ix=reshape(take(sc(fx),shape(x)),apv(nx,0,1)));
  RZ(iy=reshape(take(sc(fy),shape(y)),apv(ny,0,1)));
  RZ(g=qq(cv,v2(0,0))); RZ(df2(zb,ix,iy,g)); // frame agreement here
@@ -2338,7 +2338,7 @@ static A jtadrscan(J jt,A f,I mode,A P){A cv,zb,g; I n;
  n=AS(P)[0];
  if(!n)R UNTR((_z=AO1(mode==1?bslash(f):bsdot(f),P))); // no items
  cv=fdef(0,CDCAPDOT,VERB,jtadrcellm,jtvalenceerr,f,jlink(mtv,jlink(P,sc(mode))),0,VFLAGNONE,RMAX,RMAX,RMAX);
- RZ(g=qq(cv,sc(0))); RZ(df1(zb,apv(n,0,1),g));
+ RZ(g=qq(cv,num(0))); RZ(df1(zb,apv(n,0,1),g));
  R jtadrassemble(jt,zb);
 }
 // m@.v recorded
@@ -2378,7 +2378,7 @@ static A jtadinfixr(J jt,A f,B out,A x,A P){A W,c; I m,n,cn;
  RE(0); // error making the table
  // cell loop
  {A cv,zb,g; cv=fdef(0,CDCAPDOT,VERB,jtadrcellm,jtvalenceerr,f,jlink(mtv,jlink(P,v2(out?4:3,m))),0,VFLAGNONE,RMAX,RMAX,RMAX);
-  RZ(g=qq(cv,sc(0))); RZ(df1(zb,apv(cn,0,1),g));
+  RZ(g=qq(cv,num(0))); RZ(df1(zb,apv(cn,0,1),g));
   R jtadrassemble(jt,zb);}
 }
 static B jtadisplusb(J jt,A f){R f&&AT(f)&VERB&&ISPRIM(f)&&FAV(f)->id==CPLUS;} // +
@@ -2596,7 +2596,7 @@ boxwalkr2:
  case CBASE: // x #. y
   if(tx){
    if(!AR(x)){ // atom base: (|."1 y) p. x
-    RZ(z=AO2(f,x,y)); RZ(a=REC1(qq(ds(CREV),sc(1)),y)); R jtadrecsame(jt,REC2(ds(CPOLY),a,x),z);
+    RZ(z=AO2(f,x,y)); RZ(a=REC1(qq(ds(CREV),num(1)),y)); R jtadrecsame(jt,REC2(ds(CPOLY),a,x),z);
    }
    if(AR(x)>1||AR(y)>1)R jtadrcells2(jt,f,1,MIN(1,AR(y)),x,y);
    R jtadbaserx(jt,x,y);
@@ -2610,7 +2610,7 @@ boxwalkr2:
  case CRIGHT: R y;
  case CDOT: ADASSERT(adinnerid(f));
   if(!AR(x)||!AR(y)){A s=slash(ds(adinnerid(f))); // atom argument: x u/ . * y is u/ x * y (x an atom) or u/"1 x * y (y an atom)
-   R REC1(AR(x)?qq(s,sc(1)):s,REC2(ds(CSTAR),x,y));
+   R REC1(AR(x)?qq(s,num(1)):s,REC2(ds(CSTAR),x,y));
   }
   RZ((z=AO2(f,x,y))); R PRIM2(z);
  case CDOMINO:
@@ -2889,7 +2889,7 @@ static I jtadvjp1(J jt,A f,A x,A z,A Ct){V*v=FAV(f); A F,G,mp,a;
    RZ(G=admap2(qq(ds(CSTAR),v2(r,r)),Ct,r,G,r+1));
    R jtadacc(jt,x,G);
   }
-  if(ADT->k==1){RZ(G=reshape(over(sc(1),shape(x)),Ct));
+  if(ADT->k==1){RZ(G=reshape(over(num(1),shape(x)),Ct));
   }else{
    RZ(t=admap1(ds(CCOMMA),Ct,AR(z)));
    RZ(G=admap2(ds(CDOLLAR),shape(x),1,t,1));
@@ -3099,8 +3099,8 @@ static I jtadvjp2(J jt,A f,A x,A y,A z,A Ct){V*v=FAV(f); A F,c,mp,a; B tx=TRC(x)
    RZ(jtadacc(jt,x,reshape(over(sc(m),shape(x)),G)));}
   if(ty){A G;
    if(!Cm1){
-    RZ(G=AO2(mp,cant1(X),reshape(v2(na,m*nb),cant2(over(sc(1),v2(0,2)),Cr))));
-    RZ(G=cant2(over(sc(1),v2(0,2)),reshape(over(sc(k),v2(m,nb)),G)));
+    RZ(G=AO2(mp,cant1(X),reshape(v2(na,m*nb),cant2(over(num(1),v2(0,2)),Cr))));
+    RZ(G=cant2(over(num(1),v2(0,2)),reshape(over(sc(k),v2(m,nb)),G)));
    }
    else RZ(G=na*k<=na*nb+nb*k?AO2(mp,cant1(X),Cm1):cant1(AO2(mp,cant1(Cm1),X)));
    if(sg)RZ(G=admap2(ds(CSTAR),sg,1,G,2));
@@ -3201,7 +3201,7 @@ static A jtadfwdasm(J jt,A zb,A z){I k=ADT->k,fr=AR(zb),n=AN(zb),nz=AN(z),rr=AR(
 // 0 for a fill). No map: the identity.
 static A jtadfwdstruct(J jt,A m,A T,A z){I k=AS(T)[0],nx=k?AN(T)/k:0; A Tf,G;
  if(!m)R T;
- if(!k)R reshape(over(sc(0),shape(z)),scf(0.0)); // no directions (empty y), so empty tangent
+ if(!k)R reshape(over(num(0),shape(z)),scf(0.0)); // no directions (empty y), so empty tangent
  RZ(Tf=reshape(v2(k,nx),T)); // Tf =. (k,nx) $ T
  RZ(Tf=(AO2(qq(ds(CCOMMA),v2(1,1)),reshape(v2(k,1),scf(0.0)),Tf))); // Tf =. 0 ,"1 Tf
  RZ(G=(AO2(qq(ds(CFROM),v2(1,1)),ravel(m),Tf))); // G =. (,m) {"1 Tf
@@ -3255,7 +3255,7 @@ static A jtadreplay(J jt,A y,A zout){ADTRACE*t=ADT; I n=AN(y),*last; A T,Tz,r=0;
  }
  Tz=jtadtan(jt,zout);
  if(ISZ(Tz))r=reshape(over(shape(zout),shape(y)),scf(0.0));
- else if((Tz=cant2(sc(0),Tz)))r=reshape(over(shape(zout),shape(y)),Tz); // direction axis to the end
+ else if((Tz=cant2(num(0),Tz)))r=reshape(over(shape(zout),shape(y)),Tz); // direction axis to the end
 exit:
  free(last);
  R r;
@@ -3647,7 +3647,7 @@ A jtaditemtraced(J jt,A t,I j){A T,z,Tz;
 // Compute Jacobian of u at y with x held constant using forward mode
 // If u is atomic the Jacobian is diagonal and we return just its diagonal (shape $P), using one seed direction of all 1s.
 static A jtadjacobian(J jt,A u,A x,A y,B dyad,B atomic){A T,P,Tz; I k;
- if(atomic){k=1; RZ(T=reshape(over(sc(1),shape(y)),scf(1.0)));} // seed T is (1,$y) $ 1.0
+ if(atomic){k=1; RZ(T=reshape(over(num(1),shape(y)),scf(1.0)));} // seed T is (1,$y) $ 1.0
  else{k=AN(y); RZ(T=reshape(over(sc(k),shape(y)),take(sc(k+1),num(1))));} // seed T is (k,$y) $ (k+1) {. 1 which is the identity, one seed direction per atom of y
  if(ADT)ADT->k=k; // The number of directions is stored in the trace.
  if(dyad){RZ(jtadfwd2(jt,u,x,ADZ,y,T,k,&P,&Tz));}
@@ -3660,7 +3660,7 @@ static A jtadjacobian(J jt,A u,A x,A y,B dyad,B atomic){A T,P,Tz; I k;
   R head(Tz); // Remove the one direction axis.
  }
  if(ISZ(Tz))R reshape(over(shape(P),shape(y)),scf(0.0)); // A zero tangent gives a zero Jacobian of shape ($P),$y.
- RZ(Tz=cant2(sc(0),Tz)); // Direction axis to the end.
+ RZ(Tz=cant2(num(0),Tz)); // Direction axis to the end.
  R reshape(over(shape(P),shape(y)),Tz); // Split that last axis back into the shape of y, since k is */$y. The result has shape ($P),$y.
 }
 

@@ -699,7 +699,7 @@ bodyend: ;  // we branch to here to exit with z set to result
  }else{
   // No result.  Must be an error, or final exit from suspension
   cv=forpopgoto(jt,cv,~-1,1);   // clear the for/select stack
-  if(unlikely(NPGpysfmtdl&4)){trypopgoto(jt,tdv,-1);}  // pop all try structs, restore original debug state
+  if(unlikely(NPGpysfmtdl&4)){trypopgoto(jt,tdv,~-1);}  // pop all try structs, restore original debug state
  }
 
  if(unlikely(NPGpysfmtdl&16)){debz(); if(jt->sitop->dcnmlev!=0)debz();}   // pair with the deba(s) if we did any.  Unstack debug frames before the EPILOGNORET call to tpop which would free them, but after pee so we show error in this defn

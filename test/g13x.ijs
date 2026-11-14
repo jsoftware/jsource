@@ -574,8 +574,16 @@ NB. The only thing we can test is error, since gconsole doesn't support it
 'interface error' -: 11!:2500 etx 2
 'domain error' -: 11!:2500 etx 2j2
 
-
-
+NB. try. on line 0
+f =: {{ try. throw. catch. 0 end. }}
+bad =: {{ 1 + 'a' }}
+dbr 129
+bad ''
+f ''
+bad ''
+dbret 1
+dbret 1
+dbr 0
 
 epilog''
 

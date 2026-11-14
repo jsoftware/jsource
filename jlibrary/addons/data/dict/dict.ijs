@@ -12,9 +12,10 @@ else.
 end.
 
 NB. Names of params, and defaults
-long_param_names =. ;: 'valuetype valueshape keytype keyshape    keyhash    keycompare   initcapacity name occupancy'
-(long_param_names) =.      4   ;   (i. 0) ;     4  ;  (i. 0)  ; (16!:0`'') ; (16!:0`'') ;       100   ; '' ; 0.5
-short_param_names =. _2 <\ 'vtvsktks'
+long_param_names =. ;: 'keytype keyshape valuetype valueshape    keyhash    keycompare   initcapacity name'
+(long_param_names) =.      4   ; (i. 0) ;    4    ;  (i. 0)  ; (16!:0`'') ; (16!:0`'') ;       100   ; ''
+short_param_names =. _2 <\ 'ktksvtvs'
+occupancy=. 0.5   NB. hash only
 
 if. (-: (index_type {.~ -@#)) 'concurrent' do.
   singlethreaded =. 0
@@ -24,8 +25,8 @@ else.
 end.
 
 if. #creation_parameters do. names =. {."1 creation_parameters [ values =. {:"1 creation_parameters else. names =. values =. 0$a: end.  NB. requests
+if. index_type -: 'hash' do. long_param_names =. long_param_names , <'occupancy' end.  NB. occupancy supported only for hash type
 names =. (((#short_param_names){.long_param_names),names) {~ (short_param_names,names) i. names  NB. xlate short names to long equivs
-long_param_names =. 2 }.^:(issym) }:^:(index_type -.@-: 'hash') long_param_names  NB. disallow value for symbols, and occupancy for tree
 namex =. long_param_names i. names
 if. (#long_param_names) e. namex do.  13!:8&3 'incorrect attribute: ' , ;:^:_1 names #~ (#long_param_names) e. namex end.
 (,names) =. ,values  NB. assign values to local names (, to unbox if singleton)
@@ -80,12 +81,12 @@ else.
   ('items',name) =: dict {{
     (0 0) 16!:_9 m NB. read-lock.
     r =. memu (<<<0 (16!:_5) m) { 1 (16!:_8) m
-    if. y do.
+    if. -. y -: 0 do.
       r =. r ,&< memu (<<<0 (16!:_5) m) { 2 (16!:_8) m
     end.
     (1 0) 16!:_9 m
     r
-  }}@(0~:valueshape)    NB. values only if they are not empty
+  }}@valueshape
 end.
   ('close',name) =: (4!:55@;:@(,&name&.>&.;: clsnms)) , (dict 16!:_5~ 1:)  NB. clear the empty chain in the keys to avoid errors freeing it
 dict  NB. We never use the dict itself, but in case a user wants to, this is a hook that they can use to get to it
@@ -109,7 +110,12 @@ if. hashsiz do.
   NB. for hashing: call (newy 16!:_3) to rehash all the keys.  Limit the number of kvs per install to reduce temp space needed.
   NB. Install the kvs from y into newy to allow the key block to be freed.  Then (<<<e) { keys/vals gives the kvs:
   empties =. (0) 16!:_5 y   NB. get list of empties in y
-  (2 (16!:_8) y) (newy 16!:_3)&((<<<empties)&{) (1 (16!:_8) y)  NB. Install all keys from y into newy
+  try.
+   vvals =. 2 (16!:_8) y  NB. Get block of values (possibly with holes) - but error if symbols
+   vvals (newy 16!:_3)&((<<<empties)&{) (1 (16!:_8) y)  NB. Not symbols.  Put all keys from y into newy, and values too
+  catch.
+   (newy 16!:_3)&((<<<empties)&{) (1 (16!:_8) y)  NB. Symbols table.  Install all keys from y into newy, in order
+  end.
   (1) 16!:_5 y  NB. Delete chains; prevents free error when releasing y
 else.
   newy =. y (16!:_1) 0 , maxsize  NB. allocate new DIC (tree)

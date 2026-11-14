@@ -815,16 +815,16 @@ endname: ;
      // We have fs already.  arg1 will come from position 2 3 1 1 1 depending on stack line; arg2 will come from 1 2 3 2 3
      if(likely(pmask&=7)){  // lines 0 1 2, verb execution
       // Verb execution (in order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and recursion
-      // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
       PSTK *fsa=&stack[2];  // we are at a dead space, and the compiler gets a great notion to do a bunch of arithmetic
          // to calculate fsa.  To prevent this we split the calculation by the label reexec012, so that compiler just uses
          // the mask operation coded.
       pt0ecam+=pmask<<FLGPMSKX;  // save pmask in pt0ecam, which must have been cleared by the stacker
 reexec012:;  // enter here with fs, fs1, and pmask set when we know which line will be used for an execution
+      // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
       L *symorigin=SYMORIGIN;   // while we are waiting for pmask/fs to settle (3+ clocks at least), read something that will be useful if we are on an assignment
       jt->parserstackframe.sf=fs;  // set new recursion point for $:
       PSTK *fsa1=&stack[1]; fsa=pt0ecam&FLGPLINE2+FLGPLINE1?fsa:fsa1;    // pointer to the operator's stack slot  1 2 2
-      AF actionfn=FAV(fs)->valencefns[pmask>>2];  // the routine we will execute.    Stop using pmask $$$
+      AF actionfn=likely(jt->parserstackframe.adtracing==0)?FAV(fs)->valencefns[pmask>>2]:jtadtracecall;  // the routine we will execute, possibly a diversion to derivative tracing.  The branch will predict.   Stop using pmask  $$$
       // If it is an inplaceable assignment to a known name that has a value, remember the value (the name will of necessity be the one thing pointing to the value)
       // We handle =: N V N (line 2), =: V N (line 0) , =: V V N (line 1).  In the last case both Vs must be NOLOCCHG.  When we set jt->zombieval we are warranting
       // that the next assignment will overwrite the value, and that the reassigned value is available for inplacing.  In the V V N case,
@@ -895,8 +895,9 @@ anchoredip:;  // here when we have detected that an anchored name is inplaceable
 #else
       jtlsbs+=(SHMSK(pt0ecam,FLGPMSKX+1,2)|1);
 #endif
-      if(likely(jt->parserstackframe.adtracing==0))y=(*actionfn)((J)((I)jt+jtlsbs),QCWORD(arg1),QCWORD(arg2),QCWORD(stack->a));   // set inplacing flags  bit 0, and bit 1 if dyadic.  Other flags are clear incl MODX $$$
-      else y=jtadtracecall(jt,pt0ecam&FLGPLINE2,QCWORD(arg1),QCWORD(arg2),QCWORD(stack->a),actionfn); // D. is tracing an explicit definition: differentiate this verb execution. pt0ecam&FLGPLINE2 nonzero for a dyad.
+      y=(*actionfn)((J)((I)jt+jtlsbs),QCWORD(arg1),QCWORD(arg2),QCWORD(stack->a));   // set inplacing flags  bit 0, and bit 1 if dyadic.  Other flags are clear incl MODX   $$$
+// obsolete       if(likely(jt->parserstackframe.adtracing==0))y=(*actionfn)((J)((I)jt+jtlsbs),QCWORD(arg1),QCWORD(arg2),QCWORD(stack->a));   // set inplacing flags  bit 0, and bit 1 if dyadic.  Other flags are clear incl MODX
+// obsolete       else y=jtadtracecall((J)((I)jt+jtlsbs),QCWORD(arg1),QCWORD(arg2),QCWORD(stack->a)); // D. is tracing an explicit definition: differentiate this verb execution. pt0ecam&FLGPLINE2 nonzero for a dyad.
       // When we don't break we lose time waiting for stack->a to be read and masked, but not much.
       // expect pipeline break.  The tpopw/tpopa calculation will still be waiting in the pipeline.  The important thing is to get the instructions ISSUED so that the
       // indirect branch can mispredict and start fetching from the new address.  That is, minimize total # instructions from loading actionfn until the call, with no concern for latency.  In the normal case the

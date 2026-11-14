@@ -423,7 +423,6 @@ nextlinedebug:;
   // the names cwsent, ic, NPGpysfmtdl, tcesx, t, z, jt, and old fit into the 8 nonvolatile non-SP registers
   // **************** switch by line type ********************
 
-// scaf avoid switch first time with branch to dobblock?
   switch(PEXT08(tcesx,TCESXTYPEX,31)){  // highest cw is 33, but it aliases to 1 & there is no 32.  32 is used as a multipurpose flag
   // The top cases handle the case of if. T do. B B B... end B B...      without looping back to the switch except for the if.
   // if there is nothing but if./while/end. most of the branches are internal

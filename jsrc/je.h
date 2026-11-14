@@ -717,7 +717,7 @@ extern B        jtadd2(J,F,F,C*);
 extern A        jtaditemtraced(J,A,I);
 extern B        jtadrefusal(J);
 extern void     jtadrefuse(J);
-extern A        jtadtracecall(J,I,A,A,A,AF);
+extern DF2(jtadtracecall);
 extern I        jtaii(J,A);
 extern A        jtaindex(J,A,A,I);
 extern A        jtam1a(J,A,A,A,B);

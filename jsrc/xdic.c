@@ -1975,7 +1975,7 @@ DF2(jtdicempties){DF12IP;
  RETF(z)
 }
 
-// x 16!:_8 dic   return dic info. x=0: cardinality[,occupancy] 1=virtual block for keys 2=virtual block for vals
+// x 16!:_8 dic   return dic info. x=0: cardinality[,occupancy] 1=virtual block for keys 2=virtual block for vals (error if symbols dict)
 DF2(jtdicstats){DF12IP;A z;I r;
  ARGCHK2(a,w)
  DIC *dic=(DIC*)w;

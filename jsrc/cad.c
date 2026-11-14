@@ -3619,12 +3619,13 @@ ADLOCWRAP(B,adisexpl)
 static B jtadrunsownb(J jt,A f){R f&&AT(f)&VERB&&(ADEXPLV(f)||ISDCAP(f));}
 ADLOCWRAP(B,adrunsown)
 
-// Parser calls it instead of the verb when parser flag adtracing is set.
-A jtadtracecall(J jt,I dyad,A a1,A a2,A fs,AF fn){
- if(unlikely(!ADT))R fn(jt,a1,dyad?a2:fs,fs); // flag without trace (cannot happen but if it did then the verb runs without tracing)
+// Parser calls it instead of the verb when parser flag adtracing is set.  Bivalent, called as (jt,a,w,fs) or (jt,w,fs,fs)
+DF2(jtadtracecall){F12IP;
+ I dyad=w!=self; AF fn=FAV(self)->valencefns[dyad];  // monadic calls have w=self; fetch function for the valence used
+ if(unlikely(!ADT))R fn(jt,a,w,self); // flag without trace (cannot happen but if it did then the verb runs without tracing)
  jt->zombieval=0; // no assignment in place while tracing
- if(jtadisexpl(jt,fs))R fn(jt,a1,dyad?a2:fs,fs); // explicit definition: its own sentences are traced. The original call keeps locale handling
- R jtadapply(jt,fs,dyad?a1:0,dyad?a2:a1); // as J: a monad's argument is y
+ if(jtadisexpl(jt,self))R fn(jt,a,w,self); // explicit definition: its own sentences are traced. The original call keeps locale handling.  We turn off inplacing for the call.  Always a verb exec
+ R jtadapply(jt,self,dyad?a:0,dyad?w:a); // as J: a monad's argument is y.  No inplacing.
 }
 
 // Check whether multiple assignment 'a b' =. w or (names) =. w, can keep the derivatives in a boxed w

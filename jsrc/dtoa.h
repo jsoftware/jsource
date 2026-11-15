@@ -13,11 +13,11 @@
 #endif
 
 #ifndef HAVE_BIGINT
-struct dtoa_info {
+struct __attribute__((aligned(16))) dtoa_info {
 	jmp_buf _env;
 };
 #else
-struct dtoa_info {
+struct __attribute__((aligned(16))) dtoa_info {
 	jmp_buf _env;
 	Bigint *_p5s;
 	double *_pmem_next;

@@ -810,25 +810,25 @@ endname: ;
      // we want to pile up as many instructions as we can before the branch, preferably getting out of the way as many loads as possible so that they can finish
      // during the pipeline restart.  The perfect scenario would be that the branch restarts while the loads for the stack arguments are still loading.
      jt->parserstackframe.parserstkend1=stack;    // Save the stackpointer in case there are calls to parse in the names we execute
-     I pmask567=pmask;  // save before we mask high bits
+     C pmask567=pmask;  // save before we mask high bits - should be a MOV
      // Lines 0-4 will be making a bivalent call to the action routine; it will be w,fs,fs for monads and a,w,fs for dyads (with appropriate changes for modifiers).
      // We have fs already.  arg1 will come from position 2 3 1 1 1 depending on stack line; arg2 will come from 1 2 3 2 3
-     if(likely(pmask&=7)){  // lines 0 1 2, verb execution
+     UI pmask012=pmask&7;   // this should be a single AND - stop using pmask $$$
+     if(likely(pmask012)){  // lines 0 1 2, verb execution
       // Verb execution (in order: V N, V V N, N V N).  We must support inplacing, including assignment in place, and recursion
       PSTK *fsa=&stack[2];  // we are at a dead space, and the compiler gets a great notion to do a bunch of arithmetic
          // to calculate fsa.  To prevent this we split the calculation by the label reexec012, so that compiler just uses
          // the mask operation coded.
-      pt0ecam+=pmask<<FLGPMSKX;  // save pmask in pt0ecam, which must have been cleared by the stacker
+      pt0ecam+=(pmask012<<=FLGPMSKX);  // save pmask in pt0ecam, which must have been cleared by the stacker; shift pmask<<
 reexec012:;  // enter here with fs, fs1, and pmask set when we know which line will be used for an execution
       // Get the branch-to address.  It comes from the appropriate valence of the appropriate stack element.  Stack element is 2 except for line 0; valence is monadic for lines 0 1 4
       L *symorigin=SYMORIGIN;   // while we are waiting for pmask/fs to settle (3+ clocks at least), read something that will be useful if we are on an assignment
       jt->parserstackframe.sf=fs;  // set new recursion point for $:
       PSTK *fsa1=&stack[1]; fsa=pt0ecam&FLGPLINE2+FLGPLINE1?fsa:fsa1;    // pointer to the operator's stack slot  1 2 2
-      AF actionfn=likely(jt->parserstackframe.adtracing==0)?FAV(fs)->valencefns[pmask>>2]:jtadtracecall;  // the routine we will execute, possibly a diversion to derivative tracing.  The branch will predict.   Stop using pmask  $$$
-      // If it is an inplaceable assignment to a known name that has a value, remember the value (the name will of necessity be the one thing pointing to the value)
+      AF actionfn=likely(jt->parserstackframe.adtracing==0)?FAV(fs)->valencefns[pmask012>>=FLGPMSKX+2]:jtadtracecall;  // the routine we will execute, possibly a diversion to derivative tracing.  The branch will predict.   Stop using pmask012  $$$
+      // If it is an inplaceable assignment to a known name that has a value, remember the value (the name will of necessity be the sole thing pointing to the value)
       // We handle =: N V N (line 2), =: V N (line 0) , =: V V N (line 1).  In the last case both Vs must be NOLOCCHG.  When we set jt->zombieval we are warranting
-      // that the next assignment will overwrite the value, and that the reassigned value is available for inplacing.  In the V V N case,
-      // this may be over two verbs
+      // that the next assignment will overwrite the value, and that the reassigned value is available for inplacing.  In the V V N case, this may be over two verbs
       // Consider the case name =. name , 3 + +
       // the name =. name , 3 will come to execution.  Can it inplace?  Yes, because the modified value of name will be on the stack after
       // execution.  That will then execute as (name' + +) creating a fork that will assign to name.  So we can inplace any execution, because
@@ -872,7 +872,7 @@ anchoredip:;  // here when we have detected that an anchored name is inplaceable
         jt->zombieval=zval;
        }
        jtlsbs=~(pt0ecam>>(FLGPMSKX+1-JTWILLBEREALIZEDX))&JTWILLBEREALIZED;  // set 'don't realize' on any line-0 or line-2 exec that is to be assigned, since the result would be realized right away
-      }else jtlsbs=0;
+      }else jtlsbs=0;   // if not assignment, no REALIZE flag
       FILLREG(actionfn)  // get function address into a register for the expected pipeline break on the indirect call
       PSTK *arga=fsa; arga=pt0ecam&FLGPLINE2?stack:arga; A arg1=arga[1].a;  // 1st arg, reconstituted 1 1 2->1 2 0; then fetch  monad or left dyad  2 3 1
       arga=pt0ecam&FLGPLINE2?&stack[3]:arga; A arg2=arga[0].a;   // 2nd arg, fs or right dyad  1 2 3 (2 3)
@@ -986,7 +986,7 @@ RECURSIVERESULTSCHECK
       // Each of these tests saves considerable work
       // (*) The abnormal case is where there is a conjunction following the executable part, such as +: 2 &  or (+: 2 & ).  To handle these we branch straight back to reexecute if this is not a final exec.
       // the withprobs below are needed to tip the compiler into keeping queue in a register.  That way the NEXTY is 1 fetch instead of 2.
-      if(withprob(GETSTACK0PT&PEXT0(pt0ecam,FLGPMSKX+1,1),0.1)){fs=fs1=QCWORD(stack[1].a); pt0ecam&=~FLGPMSK; pmask=0; fsa=0; goto reexec012;}  // reexecutable line 1: go do it
+      if(withprob(GETSTACK0PT&PEXT0(pt0ecam,FLGPMSKX+1,1),0.1)){fs=fs1=QCWORD(stack[1].a); pt0ecam&=~FLGPMSK; pmask012=0<<FLGPMSKX; fsa=0; goto reexec012;}  // reexecutable line 1: go do it
       if(unlikely(endstkpt!=(PTRPAR>>16))){jt=(J)(((I)jt+3^2)-1); continue;}   // if not final exec check for reexec
           // On its own the compiler makes a couple of bad optimization decisions, both involving jt, that don't improve the code but hoist some invariants outside the loop.
           // To avoid calculating these invariants we razzle-dazzle the compiler into not relying on constant jt. 
@@ -995,15 +995,15 @@ RECURSIVERESULTSCHECK
       break;   // go back to the stacking phase.  We could check for end here, but end-of-sentence when there is no assignment is predictable: m=0, then final exec, then exit.  We trust the branch predictors with that.
      }else{
       A yy;  // will be the result of the operation, stored after we have freed the args on the stack
-      if(withprob(pmask=pmask567&0x1F,0.7)){
+      if(withprob(pmask567&0x18,0.7)){
        // ***** Lines 3-4, adv/conj execution.  We must get the parsing type of the result, but we don't need to worry about recursion **********************************************************************************************************
-       pmask>>=3; // 1 for adj, 2 for conj   1 2
-       AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask-1],__ATOMIC_RELAXED);  // refetch the routine address early.  This may chain 2 fetches, which finishes about when the indirect branch is executed
+       UI pmask34=pmask567&0x18; pmask34>>=3; // 1 for adj, 2 for conj   1 2
+       AF actionfn=__atomic_load_n(&FAV(fs)->valencefns[pmask34-1],__ATOMIC_RELAXED);  // refetch the routine address early.  This may chain 2 fetches, which finishes about when the indirect branch is executed
        A arg1=stack[1].a;   // 1st arg, monad or left dyad
-       A arg2=stack[pmask+1].a;   // 2nd arg, fs or right dyad
+       A arg2=stack[pmask34+1].a;   // 2nd arg, fs or right dyad
        // We set the MODIFIER flag in the call so that jtxdefn/unquote can know that they are modifiers
        // We mark the inputs inplaceable (the first modifier to support that is u`v) - both always, even for adverbs
-       pt0ecam|=pmask&2?0:(FLGPMONAD|FLGPINCR); // set initial value of loop counter/flag (cleared by stacker)
+       pt0ecam|=pmask34&2?0:(FLGPMONAD|FLGPINCR); // set initial value of loop counter/flag (cleared by stacker)
        yy=(*actionfn)((J)((I)jt+JTXDEFMODIFIER+JTINPLACEA+JTINPLACEW),QCWORD(arg1),QCWORD(arg2),fs);
 RECURSIVERESULTSCHECK
 #if MEMAUDIT&0x10

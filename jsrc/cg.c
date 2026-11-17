@@ -174,7 +174,7 @@ static DF2(jtcasei12){DF12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
  if(unlikely(a==w))jtfg=(J)((I)jtfg&~(JTINPLACEA+JTINPLACEW));  // Don't allow inplacing if a==w dyad
  w=EPMONAD?a:w;  // if monad, a==w
  ASSERT(!ISSPARSE(AT(a)|AT(w)),EVNONCE)   // no support for sparse agenda
- I wr=AR(w); I ar=AR(a); I mr=MAX(wr,ar);    // ranks, and max rank
+ I wr=AR(w); I ar=AR(a); I minr=MIN(wr,ar), maxr=MAX(wr,ar);    // ranks, and max rank
  // Execute v at infinite rank
  vres=FAV(self)->fgh[1];   // temp: verb to execute
  RZ(vres=CALL2(FAV(vres)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX],a,ZZFLAGWORD&ZZFLAGISDYAD?w:vres,vres));  // execute v at infinite rank, not inplace
@@ -186,7 +186,8 @@ static DF2(jtcasei12){DF12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
   // grade the results of v and then sort them into order
   // for each unique value, collect the cells for that value and apply the verb to them (could use f/. code?)
   // reorder the results
-  ASSERTGOTO(mr>=vr,EVRANK,errorwind);  // there must not be more selectors than atoms in the larger arg
+  ASSERTGOTO(maxr>=vr,EVRANK,errorwind);  // there must not be more selectors than atoms in the larger arg
+  ASSERTGOTO(minr>=vr||minr==0,EVRANK,errorwind);  // there must not be more selectors than atoms in the larger arg
   ASSERTGOTO(TESTAGREE(AS(vres),AS(w),MIN(vr,wr)),EVLENGTH,errorwind)  // shapes must match
   if(ZZFLAGWORD&ZZFLAGISDYAD){ASSERTGOTO(TESTAGREE(AS(vres),AS(a),MIN(vr,ar)),EVLENGTH,errorwind)}  // if dyad, check both
   I ncells; PROD(ncells,AR(vres),AS(vres));  // number of result cells
@@ -195,137 +196,140 @@ static DF2(jtcasei12){DF12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
   wr-=vr; wr=wr+vr?wr:IMIN;  // now wr is the rank of a cell of w (negative if repetition required in w), or IMIN if w was an atom
   ar-=vr; ar=ar+vr?ar:IMIN;  // same for a
   A zz=0;  // output area
+  // loop over each value of selector, running the verb on the collected cells
+#if 0 // obsolete
   // We can run our trimmed-down rank loop here if there is no repetition of cells, OR if one atom is repeated over the entire other argument;
   // that is, if each cell-rank is positive, 0 or IMIN.  We also make sure there are enough results to make the processing worthwhile
   // Since the larger cell-rank must not be negative, we can look only at the smaller
-  mr=MIN(ar,wr); // the smaller
-  if(1||((-mr|~mr)&SGNIFDENSE(AT(w))&(2*nar-ncells))<0&&likely(!jt->dissectrunning)){  // if mr is IMIN or nonneg, and there are enough results compared to # gerunds, reduce # verb executions.  Sparse doesn't do this.
-   // Make sure the results are integer or boolean
-   if(!ISDENSETYPE(AT(vres),(B01|INT)))RZ(vres=cvt(INT,vres));
-   // grade the results, as a list
-   A gradepm; RZ(gradepm=grade1(ravel(vres)));
-   // decide how many result boxes to allocate based on min/max result - it's a byte or an int
-   I bmsk=-SHMSK(AT(vres),INTX-1,2)+1;  // mask for getting valid bits from vres
-   I bsiz=AT(vres)&B01?1:SZI;  // size of element of vres
-   I minx=*(I*)(CAV(vres)+IAV(gradepm)[0]*bsiz)&bmsk;   // smallest result
-   I maxx=*(I*)(CAV(vres)+IAV(gradepm)[AN(gradepm)-1]*bsiz)&bmsk;  // largest result
-   ASSERTGOTO(minx>=-nar&&maxx<nar,EVINDEX,errorwind);  // verify that the results are in range
-   I numres= maxx - minx + 1;  // max possible # of selectors
-   // get sorted input order - as long as it wasn't an atom, which we will have to repeat
-   A sortw,sorta;
-   // Now we construe the input as a list of ar/wr-cells.  If rank is neg, the input was an atom: don't reshape
-   // from here on we have w always, and optional a.  But we call a always, with optional w.  That's OK, because we set up
-   // omitted a to point to w and not to modify it.
-   if(wr>=0){
-    RZ(w=jtredcatcell(jtfg,w,wr));  // inplaceability of original w
-    RZ(sortw=from(gradepm,w));
-    // Inplace the virtual block if that is allowed
-    ZZFLAGWORD |= SGNTO0((-(AT(sortw)&TYPEVIPOK))&AC(sortw))<<ZZFLAGVIRTWINPLACEX;
-    ZZFLAGWORD|=ZZFLAGARRAYW;  // indicate that virtw must be updated between iterations
-   }else{
-    sortw=w;
-   }
-   // create a virtual block for the input(s).
-   fauxblock(virtwfaux); fauxblock(virtafaux); A virtw,virta;
-   I virtr=(wr|REPSGN(wr))+1;   // rank of a list of cells, or 0 if original arg was an atom
-   fauxvirtual(virtw,virtwfaux,sortw,virtr,ACUC1) MCISH(AS(virtw),AS(w),virtr); AN(virtw)=1;  // in case atom, set AN to 1
-   // Create the size of a cell in atoms.  If the original argument was an atom (?r=IMAX), use 0 for the cellsize so that the cell is repeated
-   I wck,ack; PROD(wck,virtr-1,AS(sortw)+1);  // number of atoms in a cell of w
-   I ak,wk=bpnoun(AT(w)); wk&=REPSGN(~wr);  // size of atom of w, but 0 if w is an atom (so we don't advance)
+  if(1||((-minr|~minr)&SGNIFDENSE(AT(w))&(2*nar-ncells))<0&&likely(!jt->dissectrunning)){  // if mr is IMIN or nonneg, and there are enough results compared to # gerunds, reduce # verb executions.  Sparse doesn't do this.
+#endif
+  // Make sure the results are integer or boolean
+  if(!ISDENSETYPE(AT(vres),(B01|INT)))RZ(vres=cvt(INT,vres));
+  // grade the results, as a list
+  A gradepm; RZ(gradepm=grade1(ravel(vres)));
+  // decide how many result boxes to allocate based on min/max result - it's a byte or an int
+  I bmsk=-SHMSK(AT(vres),INTX-1,2)+1;  // mask for getting valid bits from vres
+  I bsiz=AT(vres)&B01?1:SZI;  // size of element of vres
+  I minx=*(I*)(CAV(vres)+IAV(gradepm)[0]*bsiz)&bmsk;   // smallest result
+  I maxx=*(I*)(CAV(vres)+IAV(gradepm)[AN(gradepm)-1]*bsiz)&bmsk;  // largest result
+  ASSERTGOTO(minx>=-nar&&maxx<nar,EVINDEX,errorwind);  // verify that the results are in range
+  I numres= maxx - minx + 1;  // max possible # of selectors
+  // get sorted input order - as long as it wasn't an atom, which we will have to repeat
+  A sortw,sorta;
+  // Now we construe the input as a list of ar/wr-cells.  If rank is neg, the input was an atom: don't reshape
+  // from here on we have w always, and optional a.  But we call a always, with optional w.  That's OK, because we set up
+  // omitted a to point to w and not to modify it.
+  if(wr>=0){
+   RZ(w=jtredcatcell(jtfg,w,wr));  // inplaceability of original w
+   RZ(sortw=from(gradepm,w));
+   // Inplace the virtual block if that is allowed
+   ZZFLAGWORD |= SGNTO0((-(AT(sortw)&TYPEVIPOK))&AC(sortw))<<ZZFLAGVIRTWINPLACEX;
+   ZZFLAGWORD|=ZZFLAGARRAYW;  // indicate that virtw must be updated between iterations
+  }else{
+   sortw=w;
+  }
+  // create a virtual block for the input(s).
+  fauxblock(virtwfaux); fauxblock(virtafaux); A virtw,virta;
+  I virtr=(wr|REPSGN(wr))+1;   // rank of a list of cells, or 0 if original arg was an atom
+  fauxvirtual(virtw,virtwfaux,sortw,virtr,ACUC1) MCISH(AS(virtw),AS(w),virtr); AN(virtw)=1;  // in case atom, set AN to 1
+  // Create the size of a cell in atoms.  If the original argument was an atom (?r=IMAX), use 0 for the cellsize so that the cell is repeated
+  I wck,ack; PROD(wck,virtr-1,AS(sortw)+1);  // number of atoms in a cell of w
+  I ak,wk=bpnoun(AT(w)); wk&=REPSGN(~wr);  // size of atom of w, but 0 if w is an atom (so we don't advance)
 
-   if(ZZFLAGWORD&ZZFLAGISDYAD){   // if we need to repeat for a
-    if(ar>=0){
-     RZ(a=jtredcatcell((J)((I)jt+PEXT0((I)jtfg,JTINPLACEAX-JTINPLACEWX,JTINPLACEW)),a,ar));  // move inplaceability of original a to w
-     RZ(sorta=from(gradepm,a));
-     ZZFLAGWORD |= SGNTO0((-(AT(sorta)&TYPEVIPOK))&AC(sorta))<<ZZFLAGVIRTAINPLACEX;
-     ZZFLAGWORD|=ZZFLAGARRAYA;
-    }else{
-     sorta=a;
-    }
-    virtr=(ar|REPSGN(ar))+1;   // rank of a list of cells, or 0 if original arg was an atom
-    fauxvirtual(virta,virtafaux,sorta,virtr,ACUC1) MCISH(AS(virta),AS(a),virtr); AN(virta)=1;
-    PROD(ack,virtr-1,AS(sorta)+1);  // number of atoms in a cell of w
-    ak=bpnoun(AT(a)); ak&=REPSGN(~ar);  // size of atom of a, but 0 if a is an atom (so we don't advance)
-   }else{virta=virtw; ak=0;}  // if monad, set a=w, and make the addition to AK(a) harmless
+  if(ZZFLAGWORD&ZZFLAGISDYAD){   // if we need to repeat for a
+   if(ar>=0){
+    RZ(a=jtredcatcell((J)((I)jt+PEXT0((I)jtfg,JTINPLACEAX-JTINPLACEWX,JTINPLACEW)),a,ar));  // move inplaceability of original a to w
+    RZ(sorta=from(gradepm,a));
+    ZZFLAGWORD |= SGNTO0((-(AT(sorta)&TYPEVIPOK))&AC(sorta))<<ZZFLAGVIRTAINPLACEX;
+    ZZFLAGWORD|=ZZFLAGARRAYA;
+   }else{
+    sorta=a;
+   }
+   virtr=(ar|REPSGN(ar))+1;   // rank of a list of cells, or 0 if original arg was an atom
+   fauxvirtual(virta,virtafaux,sorta,virtr,ACUC1) MCISH(AS(virta),AS(a),virtr); AN(virta)=1;
+   PROD(ack,virtr-1,AS(sorta)+1);  // number of atoms in a cell of w
+   ak=bpnoun(AT(a)); ak&=REPSGN(~ar);  // size of atom of a, but 0 if a is an atom (so we don't advance)
+  }else{virta=virtw; ak=0;}  // if monad, set a=w, and make the addition to AK(a) harmless
 #define ZZDECL
 #define ZZASSUMEBOXATOP 1
 #include "result.h"
-   ZZPARMSNOFS(1,numres)
+  ZZPARMSNOFS(1,numres)
 #define ZZINSTALLFRAME(optr) *optr++=zzncells;  
 
-   // for each value of selector...
-   I blkstart=0;   // start and end+1 of grade
-   I *gradev=IAV(gradepm);  // base of grade vector
-   I graden=AN(gradepm);  // number of result cells
-   do{
-    // blkstart is the beginning index of the next block.
-    I currres=*(I*)(CAV(vres)+gradev[blkstart]*bsiz)&bmsk;  // the result value for this block
-    // binary search through results to find length of block
-    I srchlo=blkstart, srchhi=graden;  // srchlo is in the block, srchhi is not
-    NOUNROLL while(srchlo<srchhi-1){  // search until we have found the last point in the block (at srchlo).  srchhi may not be a valid index
-     I probex=(srchlo+srchhi)>>1;  // ignore overflow, can't happen
-     I proberes=*(I*)(CAV(vres)+gradev[probex]*bsiz)&bmsk;  // fetch next look
-     srchlo=proberes==currres?probex:srchlo; srchhi=proberes==currres?srchhi:probex;  // move the correct end 
-    }
-    currres+=REPSGN(currres)&nar;  // convert currres to nonnegative form
-    // fill in the virtual block for this block
-    if(ZZFLAGWORD&ZZFLAGARRAYW){  // if w is not a repeated atom...
-     AS(virtw)[0]=srchhi-blkstart; AN(virtw)=(srchhi-blkstart)*wck;
-     ACRESET(virtw,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX))   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
-    }
-    if(ZZFLAGWORD&ZZFLAGARRAYA){  // if a is not a repeated atom...
-     AS(virta)[0]=srchhi-blkstart; AN(virta)=AS(virta)[0]*ack;
-     ACRESET(virta,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTAINPLACEX))   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
-    }
-   //  pull the function for the value, execute on the value with forced attributes (ASSUMEBOXATOP, WILLBEOPENED, COUNTITEMS)
-   // take inplaceability from the selected verb always - we have made the cells inplaceable if possible
-    A fs=AAV(FAV(self)->fgh[0])[currres];  // fetch the gerund to execute    pyx cannot return a verb.
-    RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((I)jt+(JTINPLACEA*(ZZFLAGWORD>>ZZFLAGISDYADX)+JTINPLACEW)),
-     virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace depending on valence
+  // for each value of selector...
+  I blkstart=0;   // start and end+1 of grade
+  I *gradev=IAV(gradepm);  // base of grade vector
+  I graden=AN(gradepm);  // number of result cells
+  do{
+   // blkstart is the beginning index of the next block.
+   I currres=*(I*)(CAV(vres)+gradev[blkstart]*bsiz)&bmsk;  // the result value for this block
+   // binary search through results to find length of block
+   I srchlo=blkstart, srchhi=graden;  // srchlo is in the block, srchhi is not
+   NOUNROLL while(srchlo<srchhi-1){  // search until we have found the last point in the block (at srchlo).  srchhi may not be a valid index
+    I probex=(srchlo+srchhi)>>1;  // ignore overflow, can't happen
+    I proberes=*(I*)(CAV(vres)+gradev[probex]*bsiz)&bmsk;  // fetch next look
+    srchlo=proberes==currres?probex:srchlo; srchhi=proberes==currres?srchhi:probex;  // move the correct end 
+   }
+   currres+=REPSGN(currres)&nar;  // convert currres to nonnegative form
+   // fill in the virtual block for this block
+   if(ZZFLAGWORD&ZZFLAGARRAYW){  // if w is not a repeated atom...
+    AS(virtw)[0]=srchhi-blkstart; AN(virtw)=(srchhi-blkstart)*wck;
+    ACRESET(virtw,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTWINPLACEX))   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
+   }
+   if(ZZFLAGWORD&ZZFLAGARRAYA){  // if a is not a repeated atom...
+    AS(virta)[0]=srchhi-blkstart; AN(virta)=AS(virta)[0]*ack;
+    ACRESET(virta,ACUC1 + SGNONLYIF(state,ZZFLAGVIRTAINPLACEX))   // in case we created a virtual block from it, restore inplaceability to the UNINCORPABLE block (not if atom, which is never inplaceable)
+   }
+  //  pull the function for the value, execute on the value with forced attributes (ASSUMEBOXATOP, WILLBEOPENED, COUNTITEMS)
+  // take inplaceability from the selected verb always - we have made the cells inplaceable if possible
+   A fs=AAV(FAV(self)->fgh[0])[currres];  // fetch the gerund to execute    pyx cannot return a verb.
+   RZ(z=(FAV(fs)->valencefns[ZZFLAGWORD>>ZZFLAGISDYADX])((J)((I)jt+(JTINPLACEA*(ZZFLAGWORD>>ZZFLAGISDYADX)+JTINPLACEW)),
+    virta,ZZFLAGWORD&ZZFLAGISDYAD?virtw:fs,fs));  // execute gerund at infinite rank, inplace depending on valence
 
 #define ZZBODY  // create result array
 #define ZZASSUMEBOXATOP 1
 #include "result.h"
 
-    //  verify input itemcount is a prefix of result-shape
-    ASSERT(AR(z)&&AS(z)[0]==srchhi-blkstart,EVRANK);  // must have the right item count
-    blkstart=srchhi;  // advance for next block
-    AK(virtw)+=AN(virtw)*wk;  // advance over bytes just processed (but don't move if argument is an atom)
-    AK(virta)+=AN(virta)*ak;  // for a too
-   }while(blkstart<graden);  // loop till we have processed all results
+   //  verify input itemcount is a prefix of result-shape
+   ASSERT(AR(z)&&AS(z)[0]==srchhi-blkstart,EVRANK);  // must have the right item count
+   blkstart=srchhi;  // advance for next block
+   AK(virtw)+=AN(virtw)*wk;  // advance over bytes just processed (but don't move if argument is an atom)
+   AK(virta)+=AN(virta)*ak;  // for a too
+  }while(blkstart<graden);  // loop till we have processed all results
 
-   // We have executed v on all the cells.  Put the results into the right order
-   I nblkscreated=zzboxp-AAV(zz);
-   if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
-    // The items of the results had a uniform size and type.  We can skip collecting them together, and just move the items from the boxes to their
-    // final resting place.  They can't be pyxes
-    // get the size of each item
-    I itemk; PROD(itemk,AR(AAV(zz)[0])-1,AS(AAV(zz)[0])+1); I zk=itemk<<bplg(AT(AAV(zz)[0]));  // get # atoms/cell, #bytes/cell
-    // allocate result area (could be inplace; but the waste of memory in sort/from is more important)
-    GA(z,AT(AAV(zz)[0]),ncells*itemk,AR(AAV(zz)[0]),AS(AAV(zz)[0])); AS(z)[0]=ncells; // one cell per input item
-    C *zv=CAV(z);  // pointer to output block
-    // for each (actual) result block
-    I blkx=0, *agrade=gradev;  // running index of block in zz, and dest index in gradev
-    do{
-     // move values into result
-     A thisblk=AAV(zz)[blkx];  // the block we are going to move
-     I blkitemct=AS(thisblk)[0];  // number of cells
-     C *resptr=CAV(thisblk);  // running input pointer
-     if(zk==SZI){DQ(blkitemct, *(I*)(zv+zk* *agrade)=*(I*)resptr; resptr+=zk; ++agrade;)   // copy words - could use scatter
-     }else{DQ(blkitemct, MC(zv+zk* *agrade,resptr,zk); resptr+=zk; ++agrade;)  // copy blocks
-     }
-     ++blkx;  // advance to next input block
-    }while(blkx!=nblkscreated);  // loop till all blocks processed
-    zz=z;  // all moved -- switch to the shuffled output
-   }else{
-    // inhomogeneous types or shapes.  Instantiate the entire result and then shuffle it into place
-    // first, install the actual number of boxes of result, which might differ from the calculated maximum
-    AN(zz)=AS(zz)[0]=nblkscreated;  // # valid boxes
-    zz=ev12(gradepm,zz,"(/:~   >@:;@:((<\"_1)&.>))");  // (> ; <"_1&.> zz) /: gradepm
-    if(unlikely(zz==0&&jt->jerr==EVDOMAIN))goto assemblyerror;   // domain error here must be incompatible types
-   }
-   // If the original input had structure, rearrange the result to match it
-   if(vr>1)RZ(zz=reitem(shape(vres),zz));
+  // We have executed v on all the cells.  Put the results into the right order
+  I nblkscreated=zzboxp-AAV(zz);
+  if(ZZFLAGWORD&ZZFLAGCOUNTITEMS){
+   // The items of the results had a uniform size and type.  We can skip collecting them together, and just move the items from the boxes to their
+   // final resting place.  They can't be pyxes
+   // get the size of each item
+   I itemk; PROD(itemk,AR(AAV(zz)[0])-1,AS(AAV(zz)[0])+1); I zk=itemk<<bplg(AT(AAV(zz)[0]));  // get # atoms/cell, #bytes/cell
+   // allocate result area (could be inplace; but the waste of memory in sort/from is more important)
+   GA(z,AT(AAV(zz)[0]),ncells*itemk,AR(AAV(zz)[0]),AS(AAV(zz)[0])); AS(z)[0]=ncells; // one cell per input item
+   C *zv=CAV(z);  // pointer to output block
+   // for each (actual) result block
+   I blkx=0, *agrade=gradev;  // running index of block in zz, and dest index in gradev
+   do{
+    // move values into result
+    A thisblk=AAV(zz)[blkx];  // the block we are going to move
+    I blkitemct=AS(thisblk)[0];  // number of cells
+    C *resptr=CAV(thisblk);  // running input pointer
+    if(zk==SZI){DQ(blkitemct, *(I*)(zv+zk* *agrade)=*(I*)resptr; resptr+=zk; ++agrade;)   // copy words - could use scatter
+    }else{DQ(blkitemct, MC(zv+zk* *agrade,resptr,zk); resptr+=zk; ++agrade;)  // copy blocks
+    }
+    ++blkx;  // advance to next input block
+   }while(blkx!=nblkscreated);  // loop till all blocks processed
+   zz=z;  // all moved -- switch to the shuffled output
+  }else{
+   // inhomogeneous types or shapes.  Instantiate the entire result and then shuffle it into place
+   // first, install the actual number of boxes of result, which might differ from the calculated maximum
+   AN(zz)=AS(zz)[0]=nblkscreated;  // # valid boxes
+   zz=ev12(gradepm,zz,"(/:~   >@:;@:((<\"_1)&.>))");  // (> ; <"_1&.> zz) /: gradepm
+   if(unlikely(zz==0&&jt->jerr==EVDOMAIN))goto assemblyerror;   // domain error here must be incompatible types
+  }
+  // If the original input had structure, rearrange the result to match it
+  if(vr>1)RZ(zz=reitem(shape(vres),zz));
+#if 0  // obsolete 
   }else{
    // If there are too few values to justify the sort, create an indirect iterator for them and run it
    RZ(z=jtcreategerunditerator(jt,(A)&gerit,self,vres));
@@ -336,6 +340,7 @@ static DF2(jtcasei12){DF12IP;A vres,z;I gerit[128/SZI],ZZFLAGWORD;
     zz=rank1ex(w,z,wr,FAV(z)->valencefns[0]);  // Execute on all cells
    }
   }
+#endif
 
   EPILOG(zz);
 assemblyerror: RESETERR jt->etxinfo->asseminfo.assemframelen=0; jt->jerr=EVASSEMBLY;  // framelen=0 means we can't localize it; switch error to assembly.  Will be eformatted up the line

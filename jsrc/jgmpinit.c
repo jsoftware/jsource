@@ -413,13 +413,13 @@ void jgmpinit(C*libpath) {
 #else
  libgmp= dlopen("/usr/local/lib/" LIBGMPNAME, RTLD_LAZY);
 #endif
+ if(libgmp&&!dlsym(libgmp,"__gmpn_gcd_11")){   /* system libgmp older than 6.2: try the one in the libj directory */
+  dlclose(libgmp); libgmp= 0;
+ }
  if(!libgmp) {
   strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,LIBGMPNAME);
   if(!(libgmp= dlopen(dllpath, RTLD_LAZY)))  /* first try libj directory */
   libgmp= dlopen(LIBGMPNAME, RTLD_LAZY);
- }
- if(!dlsym(libgmp,"__gmpn_gcd_11")){   /* check system libgmp version is 6.2.x  */
-  dlclose(libgmp); libgmp= 0; R;
  }
  if (!libgmp) {dldiag();R;}
 #else
@@ -430,6 +430,9 @@ void jgmpinit(C*libpath) {
    i++;
   }
   libgmp= dlopen(LIBGMPNAME10, RTLD_LAZY);
+  if(libgmp&&!dlsym(libgmp,"__gmpn_gcd_11")){   /* system libgmp older than 6.2: try the one in the libj directory */
+   dlclose(libgmp); libgmp= 0;
+  }
 #if !SY_64
   if(!libgmp) {
    strcpy(dllpath,libpath);strcat(dllpath,"/");strcat(dllpath,LIBGMPNAME2);
@@ -443,11 +446,6 @@ void jgmpinit(C*libpath) {
    libgmp= dlopen(FHS?LIBGMPNAME10:LIBGMPNAME, RTLD_LAZY);
   }
  } else libgmp= dlopen(LIBGMPNAME10, RTLD_LAZY);
- if(!libgmp){
-  if(!dlsym(libgmp,"__gmpn_gcd_11")){   /* check system libgmp version is 6.2.x  */
-   dlclose(libgmp); libgmp= 0; R;
-  }
- }
  if (!libgmp) {dldiag();R;}
 #endif
 #endif

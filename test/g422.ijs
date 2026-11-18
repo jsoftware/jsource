@@ -288,7 +288,7 @@ NB. boxed
 (,<1j4) -: /:~ ,<1j4
 
 
-0!:_1`1:@.(-.WINMEM2) '$'   NB. skip because full memory auditing is slow
+0!:_1`1:@.(16b30 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
 *./@f >:       i.3 10
 *./@f >:  5 6#:i.3 10
 *./@f >:5 3 2#:i.3 10

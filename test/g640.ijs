@@ -77,9 +77,7 @@ test1"0 ] IF64#<. 1+2^3 7 9 32 33 47
 test1"0 ] IF64#<._1+2^3 7 9 32 33 47
 a <: 1   NB. more than 1 20000-to-1 shot needs an investigation
 a =: 0
-0!:_1`1:@.(WINMEM2 <: 16b30 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
-test1"0 x: 5 555 55555
-NB.$  end of skip
+test1"0 x: QKTEST{::5 555 55555;5 55 5555
 a = 0
 
 64 = 3!:0 ?10$20x
@@ -306,7 +304,7 @@ test_dx=: 3 : 0
  1
 )
 
-0!:_1`1:@.(WINMEM2 < 16b30 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
+0!:_1`1:@.(16b30 -.@*@(17 b.) 9!:56'memaudit') '$'   NB. skip because full memory auditing is slow
 test_dx 1
 NB.$  end of skip
 

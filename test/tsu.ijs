@@ -262,14 +262,17 @@ RECHO4=: 13 : '+/ RESUB4 y'
 
 NB. bill extensions
 
+NB. index of test inside ddall
+NB. testindex 'g101'
+testindex=: 3 : 'I. (<y,''.ijs'') (+/@E.)&> ddall'
+
 GITHUBCI=: 'true'-:2!:5'GITHUB_ACTIONS'       NB. running on github action
 3 : 0''
 if. 0~:4!:0<'ECHOFILENAME' do.
   ECHOFILENAME=: IFIOS+.IFRASPI+.((<UNAME)e.'Android';'Wasm')  NB. echo file name
 end.
 if. 0~:4!:0<'QKTEST' do.
-NB.  QKTEST=: (9!:56'pyxes') < (*9!:56'memaudit')+.(-.IF64)+.IFIOS+.IFRASPI+.((<UNAME)e.'Android';'OpenBSD';'FreeBSD';'Wasm')  NB. run quick test
-  QKTEST=: (9!:56'pyxes') < (*9!:56'memaudit')  NB. run quick test
+  QKTEST=: (*9!:56'memaudit')  NB. run quick test
   QKTEST=: QKTEST +. GITHUBCI*.('ARM64'-.@-:2!:5'RUNNER_ARCH')*.(<9!:56'cpu')e.'arm';'arm64'
 end.
 ''
@@ -279,7 +282,6 @@ RUNTIME=: 0        NB. time for running each test script
 Debug=: 0
 RUNFILE=: ''       NB. dummy
 PRINTMSG0=: PRINTMSG [ QKTEST0=: QKTEST [ ECHOFILENAME0=: ECHOFILENAME
-WINMEM2=: ('x86_64'-:9!:56'cpu') *. IFWIN *. 2 *@(17 b.) 9!:56'memaudit'   NB. skip some check
 
 RUND1=: 4 : 0
 x123=. x>.1

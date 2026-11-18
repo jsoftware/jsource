@@ -47,9 +47,9 @@ end.
 
 NB. values to use
 NB. Use smaller arrays if doing full memory audit
-arglen =: 100 2 {~ WINMEM2 +. 16b30 *@:(17 b.) 9!:56'memaudit'
+arglen =: QKTEST{100 2
 NB. v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20),((<"0) 100 ?@$ 1e6),((<"0) 100000 * 200 ?@$ 0)
-v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20<.arglen),((<"0) arglen ?@$ 1e6),((<"0) 100000 * (20 <. arglen) ?@$ 0),((<"0) (,-) 0.999999999999999 1. 1.00000000000001)
+v =: 0;1;imax;imin;(<"0 (2.0-2.0)+0 1,imax,imin),((<"0)2 - 1 2),(<"0 i:_20>.-arglen),((<"0) arglen ?@$ 1e6),((<"0) 100000 * (20 <. arglen) ?@$ 0),((<"0) (,-) 0.999999999999999 1. 1.00000000000001)
 NB. vv1 =: ((<"0) adot1{~ arglen ?@$ #adot1)
 NB. vv2 =: ((<"0) adot2{~ arglen ?@$ #adot2)
 
@@ -260,25 +260,25 @@ NB. THRESHOLD +. 0.9 > %/ vv1 o. compst vv0
 THRESHOLD +. 0.9 > %/ vv1 o. compst vv0
 
 NB. Verify that operations are performed in-place where possible
-iptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.x end.''~ 100000'
-niptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.y end.''~ 100000'
+iptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.x end.''~ (QKTEST{100000 10000)'
+niptime =: 6!:2 '4 : ''for. i. y do. y =.y-1 [ t=.y end.''~ (QKTEST{100000 10000)'
 THRESHOLD+. niptime > 1.1 * iptime   NB. ~25% improvement normally
 
-iptime1 =: 6!:2 '3 : ''for. i. y do. 1+1+1+1+1+1+1+1 end.'' 100000'
-iptime2 =: 6!:2 '3 : ''for. i. y do. 1]1]1]1]1]1]1]1 end.'' 100000'
+iptime1 =: 6!:2 '3 : ''for. i. y do. 1+1+1+1+1+1+1+1 end.'' (QKTEST{100000 10000)'
+iptime2 =: 6!:2 '3 : ''for. i. y do. 1]1]1]1]1]1]1]1 end.'' (QKTEST{100000 10000)'
 THRESHOLD+. iptime1 < 1.6 * iptime2  NB. Both are inplace; verify + not too slow
 
-iptime1 =: 6!:2 '3 : ''for. i. y do. ************1 end.'' 100000'
-iptime2 =: 6!:2 '3 : ''for. i. y do. ++++++++++++1 end.'' 100000'  NB. Not ssing
-iptime3 =: 6!:2 '3 : ''for. i. y do. ]]]]]]]]]]]]1 end.'' 100000'  NB. inplace
+iptime1 =: 6!:2 '3 : ''for. i. y do. ************1 end.'' (QKTEST{100000 10000)'
+iptime2 =: 6!:2 '3 : ''for. i. y do. ++++++++++++1 end.'' (QKTEST{100000 10000)'  NB. Not ssing
+iptime3 =: 6!:2 '3 : ''for. i. y do. ]]]]]]]]]]]]1 end.'' (QKTEST{100000 10000)'  NB. inplace
 THRESHOLD+. iptime1 < 0.85 * iptime2 NB. Faster than non-ssing
 THRESHOLD+. iptime1 < 1.45 * iptime3 NB. Both are inplace; verify * not too slow
 
 
 NB. Same for inside fork
-iptime1 =: 6!:2 '3 : ''for. i. y do. (** ** ** ** ** ***)*1 end.'' 100000'
-iptime2 =: 6!:2 '3 : ''for. i. y do. (++ ++ ++ ++ ++ +++) +1 end.'' 100000'  NB. Not ssing
-iptime3 =: 6!:2 '3 : ''for. i. y do. (]] ]] ]] ]] ]] ]]]) ]1 end.'' 100000'  NB. inplace
+iptime1 =: 6!:2 '3 : ''for. i. y do. (** ** ** ** ** ***)*1 end.'' (QKTEST{100000 10000)'
+iptime2 =: 6!:2 '3 : ''for. i. y do. (++ ++ ++ ++ ++ +++) +1 end.'' (QKTEST{100000 10000)'  NB. Not ssing
+iptime3 =: 6!:2 '3 : ''for. i. y do. (]] ]] ]] ]] ]] ]]]) ]1 end.'' (QKTEST{100000 10000)'  NB. inplace
 THRESHOLD+. iptime1 < 0.85 * iptime2 NB. Faster than non-ssing
 THRESHOLD+. iptime1 < 1.45 * iptime3 NB. Both are inplace; verify * not too slow
 

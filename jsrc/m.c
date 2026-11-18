@@ -535,7 +535,7 @@ static void auditsimverify0(J jt,A w){
 // recur on children if any.  If it produces a delete count higher than the use count in the block, abort
 static void auditsimdelete(J jt,A w){I delct=0;
  if(!w)R;
- if((UI)AN(w)==0xdeadbeefdeadbeef||(UI)AN(w)==0xfeeefeeefeeefeee)SEGFAULT;
+ if((UI)AN(w)==0xdeadbeefdeadbeef)SEGFAULT;
  if(ACISPERM(AC(w)))R;  // PERMANENT block may be referred to; don't touch it
 #if !PYXES
  if((delct=((AFLAG(w)+=AFAUDITUC)>>AFAUDITUCX))>ACUC(w))SEGFAULT;   // hang if too many deletes

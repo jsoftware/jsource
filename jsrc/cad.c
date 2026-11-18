@@ -422,7 +422,7 @@ static I jtadcallx(J jt,A f,A x,A Tx,A y,A Ty,B dyad,A*pz,A*tz){A z;
 static A jtadnorule(J,A,A,A,A);
 static A jtadrealarg(J,A);
 static A jtadrecord(J,I,A,A,A,A);
-static DF1(jtdcap1);
+static DFI1(jtdcap1);
 static DF1(jtadscatv);
 #define ISDCAP(f) (FAV(f)->id==CDCAPDOT&&FAV(f)->valencefns[0]==jtdcap1) // verb u D.n (id is shared with internal verbs)
 #define DCAPU(f) (FAV(f)->fgh[2]?FAV(f)->fgh[2]:FAV(f)->fgh[0]) // verb it differentiates: u or u D.(n-1)
@@ -3829,7 +3829,20 @@ static A jtadboxed(J jt,A self,A a,A w,B dyad){A u=FAV(self)->fgh[0],n=FAV(self)
  jtadlocexitn(jt,ls,nls);
  R z;
 }
-static DF1(jtdcap1){DF12IP;PROLOG(0);A u,z;
+static DFI1(jtdcap1){DF12IP;PROLOG(0);A u,z; IARG1; // wcr: rank given by u D.n"r through IRS
+ if(unlikely(wcr<AR(w))){ // u D.n"r with cells smaller than y
+  A u0=FAV(self)->fgh[0]; I k=adrankm(u0);
+  if((AT(w)&BOX)||!AN(w)||k<0){ // boxed y or empty y or u of negative rank: as without IRS
+   RZ(z=rank1ex(w,self,wcr,jtdcap1));
+   EPILOG(z);
+  }
+  I s=efr(AR(w),k);
+  if(wcr<s){A v; // below u's rank: same as u"r D.n
+   RZ(v=jtadmkdcap(jt,qq(u0,sc(wcr)),FAV(self)->fgh[1]));
+   RZ(z=(FAV(v)->valencefns[0])(jt,w,v));
+   EPILOG(z);
+  }
+ } // at or above u's rank: "r changes nothing
  if(ISSPARSE(AT(w)))RZ(w=denseit(w));
  if(AT(w)&BOX){RZ(z=jtadboxed(jt,self,0,w,0)); EPILOG(z);} // y boxed: one block per box
  u=DCAPU(self); // u for n=1, u D.(n-1) for n>1
@@ -3848,7 +3861,26 @@ static DF1(jtdcap1){DF12IP;PROLOG(0);A u,z;
  RZ(z=jtadtraced(jt,u,0,w,0,0,jtadmode(jt),-1)); // Cell is the whole of y. Return the full Jacobian of shape ($u y),$y.
  EPILOG(z);
 }
-static DF2(jtdcap2){DF12IP;PROLOG(0);A u,z;
+static DFI2(jtdcap2){DF12IP;PROLOG(0);A u,z; IARG2; // acr wcr: ranks given by u D.n"r through IRS
+ if(unlikely((acr<AR(a))|(wcr<AR(w)))){ // u D.n"r with cells smaller than x or y
+  I ac=MIN(acr,AR(a)), wc=MIN(wcr,AR(w));
+  A u0=FAV(self)->fgh[0]; I kl=adrankl(u0), kr=adrankr(u0);
+  if(!AN(a)||!AN(w)||(kl|kr)<0){ // empty argument or u of negative rank: as without IRS
+   RZ(z=rank2ex(a,w,self,ac,wc,ac,wc,jtdcap2));
+   EPILOG(z);
+  }
+  I sl=efr(AR(a),kl), sr=efr(AR(w),kr);
+  if(!(AT(w)&BOX)&&wc<=sr){ // y cells no larger than u's: same as u"r D.n
+   if((ac!=sl)|(wc!=sr)){A v;
+    RZ(v=jtadmkdcap(jt,qq(u0,v2(ac,wc)),FAV(self)->fgh[1]));
+    RZ(z=(FAV(v)->valencefns[1])(jt,a,w,v));
+    EPILOG(z);
+   }
+  }else if((AT(w)&BOX)||ac<sl||AR(a)-ac!=AR(w)-wc){ // boxed y or a pairing that differs from u's own: as without IRS
+   RZ(z=rank2ex(a,w,self,ac,wc,ac,wc,jtdcap2));
+   EPILOG(z);
+  }
+ } // otherwise both ranks at or above u's with frames of equal length: "r changes nothing
  if(ISSPARSE(AT(a)))RZ(a=denseit(a)); if(ISSPARSE(AT(w)))RZ(w=denseit(w));
  if(AT(w)&BOX){RZ(z=jtadboxed(jt,self,a,w,1)); EPILOG(z);} // y boxed: one block per box
  u=DCAPU(self);
@@ -3885,7 +3917,7 @@ static A jtadmkdcap(J jt,A a,A w){I n=IAV(w)[0]; A v=0;
  if(n==0)R a; // u D.0 is u
  if(n>1)RZ(v=jtadmkdcap(jt,a,sc(n-1))); // for n>1, the verb to differentiate is u D.(n-1); for n=1 it is u
  // u D.n has ranks of u
- R fdef(0,CDCAPDOT,VERB,jtdcap1,jtdcap2,a,w,v,VFLAGNONE,mr(a),lr(a),rr(a));
+ R fdef(0,CDCAPDOT,VERB,jtdcap1,jtdcap2,a,w,v,VIRS1|VIRS2,mr(a),lr(a),rr(a));
 }
 #define ADMAXORDER 100 // u D.n is built (and walked) one level per order
 F2(jtdcapdot){F12IP;

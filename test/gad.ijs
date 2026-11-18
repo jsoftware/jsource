@@ -1200,7 +1200,7 @@ NB. what D. does not differentiate: refused in forward and in reverse mode
 ('nonce error' -: >./ . * D.1 F etx 2 2 $ 0.5 1 2 3) , 'nonce error' -: >./ . * D.1 R etx 2 2 $ 0.5 1 2 3
 ('nonce error' -: 0.5 (1:}) D.1 F etx 1 2 3) , 'nonce error' -: 0.5 (1:}) D.1 R etx 1 2 3
 'nonce error' -: #: D.1 F etx 2.5
-'rank error' -: (2 2 $ 1 2 3 4) +`*@.(0&<@[) D.1 etx 0 1 +/ 0.5 0.7
+(2 2 $ 1 2 3 4) +`*@.(0&<@[) cdy 0 1 +/ 0.5 0.7
 ('nonce error' -: (+`*:)"0 D.1 F etx 0.5 1.5 2) , ('nonce error' -: (+`*:)"0 D.1 R etx 0.5 1.5 2) , ('nonce error' -: 1 2 3 (]`*)"0 D.1 F etx 0.5) , 'nonce error' -: 2 (]`*)"0 D.1 R etx 0.5 1.5 2
 NB. x u :: v y and x u^:n y (also x traced, second order)
 5 { :: * cdy a1

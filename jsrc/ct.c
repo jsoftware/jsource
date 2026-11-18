@@ -258,6 +258,7 @@ fail:
 // Install a value/errcode into a (recursive) pyx, and broadcast to anyone waiting on it.
 // If the value has been previously installed (invalid, and possible only with user pyxes), return abort code 0, otherwise 1
 // if errcode!=0, change z to be an A block for the error message in this thread
+// This routine must never return 0
 static I jtsetpyxval(J jt, A pyx, A z, C errcode){I res=1;
  S prevthread=__atomic_exchange_n(&((PYXBLOK*)AAV0(pyx))->pyxorigthread,-1,__ATOMIC_ACQ_REL);  // set pyx no longer running
  if(unlikely(prevthread<0))R 0;  // the pyx is read-only once written
@@ -265,7 +266,7 @@ static I jtsetpyxval(J jt, A pyx, A z, C errcode){I res=1;
  if(unlikely(z==0)){
   // error.  Remember the entire message that has been formatted into etx, and pass that string as the result value.  The error code will indicate the semantics
   __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->errcode,errcode,__ATOMIC_RELEASE);  // copy failure code.  Must be non0 - if not that is itself an error above
-  z=str(jt->etxn,jt->etxinfo->etx);   // previous error text
+  if(unlikely((z=str(jt->etxn,jt->etxinfo->etx))==0))z=abortmsg;   // previous error text
  }
  razap(z);    // since the pyx is recursive, we must ra the result/emsg we store into it.  We transfer ownership to the pyx
  __atomic_store_n(&((PYXBLOK*)AAV0(pyx))->pyxvalue,z,__ATOMIC_RELEASE);  // set result/emsg value

@@ -1090,6 +1090,8 @@ struct __attribute__((aligned(ABDY))) Bd2 {I hdr[AKXR(1)/SZI]; D v[2];};  // dat
 struct __attribute__((aligned(ABDY))) Bs1 {I hdr[AKXR(1)/SZI]; C v[16];};  // data is literal list
 extern struct Bd2 Ba0j1;
 #define a0j1 ((A)&Ba0j1)
+extern struct Bs1 Babortmsg;
+#define abortmsg ((A)&Babortmsg)
 extern struct Bd1 Bainf;
 #define ainf ((A)&Bainf)
 extern struct Bd1 Bainfm;

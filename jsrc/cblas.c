@@ -13,7 +13,7 @@
 #else
 #include <unistd.h>
 #include <dlfcn.h>
-#define LOADLIBRARY(p)      dlopen(p,RTLD_LAZY);
+#define LOADLIBRARY(p)      dlopen(p,RTLD_LAZY)
 #define GETPROCADDRESS(h,p)	dlsym(h,p)
 #define FREELIBRARY(p)      dlclose(p)
 #endif

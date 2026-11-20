@@ -91,7 +91,11 @@ void cblasinit(C*libpath) {
  libcblas= 0;
 /* first try current directory */
  if(!libcblas&&libpath&&*libpath&&!!*LIBCBLASNAME2){
+#ifdef _WIN32
   strcpy(cblasfile,libpath);strcat(cblasfile,"\\");strcat(cblasfile,LIBCBLASNAME2);
+#else
+  strcpy(cblasfile,libpath);strcat(cblasfile,"/");strcat(cblasfile,LIBCBLASNAME2);
+#endif
   if((libcblas= LOADLIBRARY(cblasfile))){
    if(!GETPROCADDRESS(libcblas,"cblas_dgemm")){   /* check cblas routine */
     FREELIBRARY(libcblas); libcblas= 0;
@@ -99,7 +103,11 @@ void cblasinit(C*libpath) {
   }
  }
  if(!libcblas&&libpath&&*libpath){
+#ifdef _WIN32
   strcpy(cblasfile,libpath);strcat(cblasfile,"\\");strcat(cblasfile,LIBCBLASNAME);
+#else
+  strcpy(cblasfile,libpath);strcat(cblasfile,"/");strcat(cblasfile,LIBCBLASNAME);
+#endif
   if((libcblas= LOADLIBRARY(cblasfile))){
    if(!GETPROCADDRESS(libcblas,"cblas_dgemm")){   /* check cblas routine */
     FREELIBRARY(libcblas); libcblas= 0;
@@ -108,7 +116,11 @@ void cblasinit(C*libpath) {
  }
 /* lapack2 addon lib folder */
  if(!libcblas&&libpath&&*libpath&&!!*LIBCBLASNAME2){
+#ifdef _WIN32
   strcpy(cblasfile,libpath);strcat(cblasfile,"\\..\\addons\\math\\lapack2\\lib\\");strcat(cblasfile,LIBCBLASNAME2);
+#else
+  strcpy(cblasfile,libpath);strcat(cblasfile,"/../addons/math/lapack2/lib/");strcat(cblasfile,LIBCBLASNAME2);
+#endif
   if((libcblas= LOADLIBRARY(cblasfile))){
    if(!GETPROCADDRESS(libcblas,"cblas_dgemm")){   /* check cblas routine */
     FREELIBRARY(libcblas); libcblas= 0;
@@ -116,7 +128,11 @@ void cblasinit(C*libpath) {
   }
  }
  if(!libcblas&&libpath&&*libpath){
+#ifdef _WIN32
   strcpy(cblasfile,libpath);strcat(cblasfile,"\\..\\addons\\math\\lapack2\\lib\\");strcat(cblasfile,LIBCBLASNAME);
+#else
+  strcpy(cblasfile,libpath);strcat(cblasfile,"/../addons/math/lapack2/lib/");strcat(cblasfile,LIBCBLASNAME);
+#endif
   if((libcblas= LOADLIBRARY(cblasfile))){
    if(!GETPROCADDRESS(libcblas,"cblas_dgemm")){   /* check cblas routine */
     FREELIBRARY(libcblas); libcblas= 0;

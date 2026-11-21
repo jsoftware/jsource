@@ -404,6 +404,7 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #define FMTI04          "%04lli"
 #define FMTI05          "%05lli"
 #define FMTX            "%llx"
+#define FMT0X           "%#018llx"
 #define UIMAX           -1ull
 
 #if defined(MMSC_VER)  // SY_WIN32
@@ -423,6 +424,7 @@ static inline omp_int_t omp_get_num_threads() { return 1;}
 #define FMTI04          "%04d"
 #define FMTI05          "%05d"
 #define FMTX            "%x"
+#define FMT0X           "%#010x"
 #define UIMAX           -1ul
 #define strtoI          strtol
 #endif

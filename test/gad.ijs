@@ -1200,7 +1200,7 @@ NB. what D. does not differentiate: refused in forward and in reverse mode
 ('nonce error' -: >./ . * D.1 F etx 2 2 $ 0.5 1 2 3) , 'nonce error' -: >./ . * D.1 R etx 2 2 $ 0.5 1 2 3
 ('nonce error' -: 0.5 (1:}) D.1 F etx 1 2 3) , 'nonce error' -: 0.5 (1:}) D.1 R etx 1 2 3
 'nonce error' -: #: D.1 F etx 2.5
-NB. works now? 'nonce error' -: (2 2 $ 1 2 3 4) +`*@.(0&<@[) D.1 etx 0 1 +/ 0.5 0.7
+(2 2 $ 1 2 3 4) +`*@.(0&<@[) cdy 0 1 +/ 0.5 0.7
 ('nonce error' -: (+`*:)"0 D.1 F etx 0.5 1.5 2) , ('nonce error' -: (+`*:)"0 D.1 R etx 0.5 1.5 2) , ('nonce error' -: 1 2 3 (]`*)"0 D.1 F etx 0.5) , 'nonce error' -: 2 (]`*)"0 D.1 R etx 0.5 1.5 2
 NB. x u :: v y and x u^:n y (also x traced, second order)
 5 { :: * cdy a1
@@ -2038,6 +2038,64 @@ NB. memory
 noleak 'f2 D.1 BB'
 noleak 'f1 D.2 BA'
 noleak '(XN ; TN) mse D.1 PN'
+
+NB. IRS
+NB. (u D.n)"r must give the same result as applying u D.n to each cell separately.
+NB. ok1/ok2 compare u"n with a reference that boxes the cells and applies u to each one.
+ok1 =: {{ u"n -: >@:(u&.>)@:(<"n) }}
+ok2 =: {{ u"n -: <"({.n)@[ >@:(u&.>) <"({:n)@] }}
+myv =: *: + ^
+e =: {{ (*: y) + ^ y }}
+nu =: +/@:*: , */
+v1 =: +/@:*:"1
+dr =: +/@:*"1 1
+g =: {{ 'p q' =. y
+(+/ *: p) * ^ +/ q }}
+B =: BA ,: +:&.> BA
+
+NB. monads
+*: D.1 ok1 1 CY
+myv D.1 ok1 0 a1
+e D.1 ok1 0 a1
+nu D.1 ok1 1 CY
+nu D.1 ok1 _1 a3
+nu D.2 ok1 1 CY
+v1 D.1 ok1 0 CY
+v1 D.1 ok1 2 a3
+nu D.1"1 D.1 ok1 1 CY
+g D.1 ok1 1 B
+
+NB. dyads
+M3 * D.1 ok2 1 CY
+M3 * D.1 ok2 1 B3
+B3 * D.1 ok2 1 M3
+M3 * D.2 ok2 1 B3
+2 * D.1 ok2 1 CY
+(i. 3) * D.1 ok2 0 1 M3
+M9 * D.1 ok2 2 2 a3
+M3 +/@:* D.1 ok2 1 B3
+B3 +/@:* D.1 ok2 1 M3
+M3 dr D.1 ok2 0 CY
+M9 dr D.1 ok2 2 1 a3
+B3 dr D.1 ok2 1 2 a3
+0.5 2 dr D.1 ok2 0 2 a3
+1 2 {{ x * g y }} D.1 ok2 0 1 B
+M3 {{ x * ^ y }} D.1 ok2 0 CY
+NB. errors are those of the cells
+'length error' -: (i. 3) * D.1"1 etx CY
+'domain error' -: *: D.1"0 etx 'abc'
+NB. u of negative rank
+*:@+:"_1 D.1 ok1 1 a3
+M9 *"_1 D.1 ok2 1 a3
+M9 +/@:*"_1 D.1 ok2 1 a3
+NB. empty argument
+2 0 -: $ (2 0 3 $ 0) #. D.1"2 1 ] 0.25 0.3 0.35 0.4 0.45 0.5
+0 3 -: $ *: D.1"1 ] 0 3 $ 0.5
+NB. memory
+noleak 'myv D.1"1 CY'
+noleak 'e D.1"0 a1'
+noleak 'M3 * D.1"1 B3'
+noleak 'g D.1"1 B'
 
 coerase ;:'adloc adlocA adlocB adlocC adlocP adlocBX'
 epilog''

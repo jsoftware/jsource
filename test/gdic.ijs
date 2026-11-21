@@ -1,6 +1,9 @@
 prolog './gdic.ijs'
 NB. addon/dict
 
+QKTEST0=: QKTEST
+QKTEST=: (*9!:56'memaudit'){QKTEST,1
+
 load 'dict'
 
 d =: ('hash' ,&< 'valueshape' ; 0) conew 'jdict'
@@ -481,9 +484,9 @@ EMPTY
 NB. RUN BATCHES.
 
 9!:39 ] 3 13 NB. It makes refdictionary faster.
-INDEX_TYPES test_batches 3 ; 1000 ; 10 ; 20
-INDEX_TYPES test_batches 142 ; 100 ; 100 ; 200
-INDEX_TYPES test_batches 20001 ; 3 ; 10000 ; 20000
+INDEX_TYPES test_batches 3 ; (QKTEST{1000 100) ; 10 ; 20
+INDEX_TYPES test_batches 142 ; (QKTEST{1000 10) ; 100 ; 200
+INDEX_TYPES test_batches 20001 ; (QKTEST{3 1) ; 10000 ; 20000
 9!:39 ] 3 2
 
 NB. MULTITHREADING.
@@ -610,11 +613,11 @@ NB. RUN MULTITHREADING.
 test_basic_multithreading"0 i. 5
 INDEX_TYPES_CONCURRENT test_multithreading1 1000 5 200
 INDEX_TYPES_CONCURRENT test_multithreading2 1 10000 3
-{{ for. i. 10 do. INDEX_TYPES_CONCURRENT test_multithreading2 50 70 5 end. }} ''
-{{ for. i. 10 do. INDEX_TYPES_CONCURRENT test_multithreading3 1000 3 end. }} ''
+{{ for. i. QKTEST{10 2 do. INDEX_TYPES_CONCURRENT test_multithreading2 50 70 5 end. }} ''
+{{ for. i. QKTEST{10 2 do. INDEX_TYPES_CONCURRENT test_multithreading3 1000 3 end. }} ''
 set_threads 0
 EMPTY
-}}^:((2 *@(17 b.) 9!:56'memaudit') < (9!:56'pyxes') *. IF64 *. 0=dbq'') ''
+}}^:((2 *@(17 b.) 9!:56'memaudit') < (9!:56'pyxes') *. IF64) ''
 
 NB. TEST APPLICATIONS (SINGLETHREADED).
 
@@ -683,7 +686,7 @@ testdijkstra =: {{
   EMPTY
 }}"0
 
-3 testdijkstra 10 30 100 300
+3 testdijkstra QKTEST{::10 30 100 300;10 30 60
 
 NB. x is density (average number of edges per vertex).
 NB. y is number of vertices.
@@ -693,7 +696,7 @@ benchmarkdijkstra =: {{
   6!:2 'g dijkstra 0'
 }}"0
 
-techo 'Dijkstra (1e5 vertices, 3e5 edges): ' , (": 3 benchmarkdijkstra (*9!:56'memaudit'){1e5 1e4) , 's'
+techo 'Dijkstra (1e5 vertices, 3e5 edges): ' , (": 3 benchmarkdijkstra (*9!:56'memaudit'){1e5 1e3) , 's'
 
 NB. x is the maximum height for jumping and falling.
 NB. y is table (rank 2) where each row represents a platform (y, x_left, x_right)
@@ -764,7 +767,7 @@ testpartition =: {{
   EMPTY
 }}
 
-{{ (>: ? 5) testpartition (?@$~ y) ,. 0 1&+"1 /:"1~ (?@$~ ,&2) y }}"0 >: i. 200
+{{ (>: ? 5) testpartition (?@$~ y) ,. 0 1&+"1 /:"1~ (?@$~ ,&2) y }}"0 >: i. QKTEST{200 100
 
 NB. Context-Tree Weighting method (lossless compression).
 NB. https://ieeexplore.ieee.org/document/382012
@@ -879,6 +882,8 @@ _1 = get__dict <'xxx'
 (<'ghi') = get__dict 2
 'index error' -: get__dict etx 4
 destroy__dict''
+
+QKTEST=: QKTEST0
 
 epilog''
 

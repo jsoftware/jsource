@@ -202,6 +202,8 @@ A jtsusp(J jt, C superdebug){A z;
  R z;
 }    /* user keyboard loop while suspended */
 
+static A jtsyslockattn(J jt){R mtm;}  // dummy syslock to propagate BREAK
+
 // Go into debug mode.  Run sentences in suspension until we come out of suspension
 // Result is the value that will be used for the failing sentence.  This should not be 0 unless there is an error, because
 // jtxdefn requires nonzero z during normal operation
@@ -297,9 +299,16 @@ A jtparsex(J jt,A* queue,I m,I source,DC c){A z,parsez;
  // if there is a system lock to take, take it and continue
  S attnval=__atomic_load_n((S*)JT(jt,adbreakr),__ATOMIC_ACQUIRE);
  if(attnval&(S)~0xff){jtsystemlockaccept(jt,LOCKALL);}
- // if there is an ATTN/BREAK to take, take it and enter debug suspension
  if(attnval&0xff){
-  if(!(jt->uflags.trace&TRACEDB1))__atomic_store_n(JT(jt,adbreak),2,__ATOMIC_RELEASE);  // if not debug, promote the ATTN to BREAK for other threads to speed it up
+  // there is an ATTN/BREAK: take it
+  if(!(jt->uflags.trace&TRACEDB1)){
+   // not in debug mode.  We have to make sure all other threads get the message before we continue to console level.
+   __atomic_store_n(JT(jt,adbreak),2,__ATOMIC_RELEASE);  // promote the ATTN to BREAK for other threads to speed it up.
+   do{
+    z=jtsystemlock(jt,LOCKPRIATTN,jtsyslockattn);  // request system lock, which will wake any waiting threads to handle the BREAK
+   }while(z==(A)1);  // loop back if we were not the selected thread
+  }
+      // If debug is NOT enabled, we will immediately fail up the line and turn off 
   jsignal(EVATTN); z=parsez=0; goto noparse;  // if debug is not enabled, this will just be an error in the unparsed line
  }
  // we can stop before the sentence, or after it if it fails.  Stopping before is better because then we know we can restart safely

@@ -13,7 +13,7 @@
 
 #if PYXES
 #if defined(_WIN32)
-#if defined(__MINGW32__)
+#if defined(__MINGW32__) || !defined(PTHREADS4WSRC)
 #include <pthread.h>
 #else
 #include "../pthreads4w/include/pthread.h"

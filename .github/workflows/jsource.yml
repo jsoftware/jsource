@@ -1579,7 +1579,6 @@ jobs:
       USE_OPENMP: ${{ env.USE_OPENMP }}
       USE_PYXES: ${{ env.USE_PYXES }}
       USE_EMU_AVX: ${{ env.USE_EMU_AVX }}
-      PTHREADS4WSRC: 1
       _DEBUG: ${{ env.DEBUGLEVEL }}
       OPTL: ${{ env.OPTL }}
       OPTLD: ${{ env.OPTLD }}

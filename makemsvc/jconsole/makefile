@@ -37,6 +37,19 @@ else
  endif
 endif
 ifeq (1,$(USE_PYXES))
+ ifeq (arm64,$(TARGET_CPU))
+  ifneq ($(PTHREADS4WSRC),)
+   COPTION := $(COPTION) /DPTHREADS4WSRC=1
+  endif
+ else ifeq (x64,$(TARGET_CPU))
+  ifneq ($(PTHREADS4WSRC),)
+   COPTION := $(COPTION) /DPTHREADS4WSRC=1
+  endif
+ else
+  ifneq ($(PTHREADS4WSRC),)
+   COPTION := $(COPTION) /DPTHREADS4WSRC=1
+  endif
+ endif
  COPTION := $(COPTION) /DPYXES=1
 else
  COPTION := $(COPTION) /DPYXES=0

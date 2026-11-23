@@ -56,6 +56,7 @@ copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\bin
 copy "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\lib\libomp.lib" %C%
 copy pcre2\windows\x86\jpcre2.dll %A%\tools\regex\jpcre2_32.dll
 curl --output-dir "%C%" -O "https://www.jsoftware.com/download/lapackbin/windows/x86/libopenblas.dll"
+curl --output-dir "%C%" -O "https://www.jsoftware.com/download/lapackbin/windows/x86/libgcc_s_dw2-1.dll"
 GOTO L01C
 :L01B
 mkdir j64

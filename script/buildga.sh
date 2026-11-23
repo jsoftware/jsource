@@ -141,6 +141,7 @@ elif [ "$1" = "windows" ]; then
   cp pcre2/windows/x86/jpcre2.dll $A/tools/regex/jpcre2_32.dll
   # cp pthreads4w/x86/pthreadVC3.dll $C
   curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/windows/x86/libopenblas.dll" || true
+  curl --output-dir "$C" -O "https://www.jsoftware.com/download/lapackbin/windows/x86/libgcc_s_dw2-1.dll" || true
  else
   cp mpir/windows/arm64/mpir.dll $B
   cp "/c/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/Llvm/ARM64/bin/libomp.dll" $B || true

@@ -313,26 +313,32 @@ if [ $USE_PYXES -eq 1 ]; then
  case "$jplatform/$j64x" in
   windows/j32)
    common="$common -DPYXES=1"
-   if [ -n "$PTHREADS4WSRC" ]; then
+   PTHREADS4WSRC="${PTHREADS4WSRC:=0}"
+   if [ $PTHREADS4WSRC -eq 1 ]; then
     OBJS_PTHREADS4W=" ../pthreads4w/src/pthread.o "
+    common="$common -DPTHREADS4WSRC=1"
    else
-    LDTHREAD=" ../pthreads4w/x86/pthreadVC3.lib "
+    LDTHREAD=" -pthread "
    fi
    ;;
   windows/j64arm)
    common="$common -DPYXES=1"
-   if [ -n "$PTHREADS4WSRC" ]; then
+   PTHREADS4WSRC="${PTHREADS4WSRC:=0}"
+   if [ $PTHREADS4WSRC -eq 1 ]; then
     OBJS_PTHREADS4W=" ../pthreads4w/src/pthread.o "
+    common="$common -DPTHREADS4WSRC=1"
    else
-    LDTHREAD=" ../pthreads4w/arm64/pthreadVC3.lib "
+    LDTHREAD=" -pthread "
    fi
    ;;
   windows/*)
    common="$common -DPYXES=1"
-   if [ -n "$PTHREADS4WSRC" ]; then
+   PTHREADS4WSRC="${PTHREADS4WSRC:=0}"
+   if [ $PTHREADS4WSRC -eq 1 ]; then
     OBJS_PTHREADS4W=" ../pthreads4w/src/pthread.o "
+    common="$common -DPTHREADS4WSRC=1"
    else
-    LDTHREAD=" ../pthreads4w/x64/pthreadVC3.lib "
+    LDTHREAD=" -pthread "
    fi
    ;;
   darwin/*)

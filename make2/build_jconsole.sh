@@ -222,7 +222,32 @@ else
 fi
 
 if [ $USE_PYXES -eq 1 ]; then
- common="$common -DPYXES=1"
+ case "$jplatform/$j64x" in
+  windows/j32)
+   common="$common -DPYXES=1"
+   PTHREADS4WSRC="${PTHREADS4WSRC:=0}"
+   if [ $PTHREADS4WSRC -eq 1 ]; then
+    common="$common -DPTHREADS4WSRC=1"
+   fi
+   ;;
+  windows/j64arm)
+   common="$common -DPYXES=1"
+   PTHREADS4WSRC="${PTHREADS4WSRC:=0}"
+   if [ $PTHREADS4WSRC -eq 1 ]; then
+    common="$common -DPTHREADS4WSRC=1"
+   fi
+   ;;
+  windows/*)
+   common="$common -DPYXES=1"
+   PTHREADS4WSRC="${PTHREADS4WSRC:=0}"
+   if [ $PTHREADS4WSRC -eq 1 ]; then
+    common="$common -DPTHREADS4WSRC=1"
+   fi
+   ;;
+  *)
+   common="$common -DPYXES=1"
+   ;;
+ esac
 else
  common="$common -DPYXES=0"
 fi

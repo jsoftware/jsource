@@ -424,9 +424,15 @@ NB. comparison tolerance
 1 = # (1 + 1e_15 * i. 10) (-.!.0^:2) 1
 
 NB. Verify -.!.0 in the middle is treated like -.
+techo 7!:0''
 yy =: 1e6 $ 1. 2.
+techo 7!:0''
 10000 > (7!:2 'yy ([ -. -.) 1') - (7!:2 'yy ([ -.!.0 -.) 1')
+techo 7!:0''
 (-.9!:56'c_viavx') +. (7!:2 'yy ([ -.!.1e_12 -.) 1') > 1.3 * (7!:2 'yy ([ -.!.0 -.) 1')
+techo 7!:0''
+4!:55 <'yy'
+techo 7!:0''
 
 s =: i. 10000 5  NB. empty arg is lean
 (-.9!:56'c_viavx') +. 4000 > 7!:2 's ([ -. -.) i. 0 5'

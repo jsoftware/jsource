@@ -25,6 +25,21 @@ techo m1=: 7!:0''
 techo m2=: 7!:0''
 m2 < m1 + 1e7
 
+delth''  NB. make sure we start with an empty system
+N=: 62  NB. max # worker threads
+
+NB. create all available threads
+1: 0&T."1^:(0 < #) ''$~ (0 >. N-1 T. ''),0
+N = 1 T.''
+wthr N
+techo m1=: 7!:0''
+
+p2 =: ".
+1: > (p2@> t.'')"0  <@":"0 i. 100   NB. test executing tacit verb with no parser running
+
+techo m2=: 7!:0''
+m2 < m1 + 1e7
+
 NB.?  end of skip if not pyxes
 
 epilog''

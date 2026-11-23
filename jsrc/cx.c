@@ -1258,12 +1258,14 @@ F2(jtcolon){F12IP;A h,*hv;C*s;I flag=VFLAGNONE,m,p;
     }else{ 
 colonfound:;   // : given.  takeafter the : for the first line, and taketo for the control line.  If SP follows :, treat the SP as the end char
      I coln=col1+(cv1[col1+1]==' ');  // end on SP if :SP
-     I Zc=__atomic_load_n(&AC(line1),__ATOMIC_ACQUIRE);
-     raincr(line1);  // demonstrated by {{)d: y }}  otherwise line1 will be freed
-     RZ(w=jtamendn2(jtfg,box(drop(sc(coln+1),line1)),w,zeroionei(0),ds(CAMEND)));  // w =. (< (>:hlen) }. line1) 0} w   discard first char after : if it is SP (overfetch OK)
-     if(Zc!=__atomic_load_n(&AC(line1),__ATOMIC_ACQUIRE)){fprintf(stderr,"Zc "FMT0X" AC "FMT0X"\n",Zc,__atomic_load_n(&AC(line1),__ATOMIC_ACQUIRE));SEGFAULT;}   // scaf  AC would become deadbeef under MEMAUDIT if line1 is freed
-     RZ(line1=take(sc(col1),line1));   // line1 =. hlen {. line1, taking before :
-     if((~ACINPLACE)&(Zc^__atomic_load_n(&AC(line1),__ATOMIC_ACQUIRE))){fprintf(stderr,"Zc "FMT0X" AC "FMT0X"\n",Zc,__atomic_load_n(&AC(line1),__ATOMIC_ACQUIRE));SEGFAULT;}   // scaf  AC would become deadbeef under MEMAUDIT if line1 is freed
+     A rline1=drop(sc(coln+1),line1); RZ(rline1) RZ(line1=take(sc(col1),line1));  // (>:hlen) }. line1   and  hlen {. line1, i. e. split the line at :
+     // SUBTLE POINT: the call to amendn2 replaces the original line1 with rline1, which may free it if there are no other references.  We must calculate the new line1 before the amend.
+// obsolete      I Zc=__atomic_load_n(&AC(line1),__ATOMIC_ACQUIRE);
+// obsolete //     ACINCR(line1);  // demonstrated by {{)d: y }}  otherwise line1 will be freed  // because jtamendn2 is inplace and line1 will be otherwise freed by INSTALLBOXNVRECUR in jtmerge2
+     RZ(w=jtamendn2(jtfg,box(rline1),w,zeroionei(0),ds(CAMEND)));  // w =. (< (>:hlen) }. line1) 0} w   discarding first char after : if it is SP (overfetch OK)
+// obsolete      if(Zc!=__atomic_load_n(&AC(line1),__ATOMIC_ACQUIRE)){fprintf(stderr,"Zc "FMT0X" AC "FMT0X"\n",Zc,__atomic_load_n(&AC(line1),__ATOMIC_ACQUIRE));SEGFAULT;}   // scaf  AC would become deadbeef under MEMAUDIT if line1 is freed
+// obsolete         // line1 =. , taking before :
+// obsolete      if((~ACINPLACE)&(Zc^__atomic_load_n(&AC(line1),__ATOMIC_ACQUIRE))){fprintf(stderr,"Zc "FMT0X" AC "FMT0X"\n",Zc,__atomic_load_n(&AC(line1),__ATOMIC_ACQUIRE));SEGFAULT;}   // scaf  AC would become deadbeef under MEMAUDIT if line1 is freed
     }
     // now line1 has the control line, and w is updated as needed
     flag|=VDDHASCTL;  // indicate that the DD had a control line

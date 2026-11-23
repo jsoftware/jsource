@@ -44,18 +44,21 @@ ifeq (1,$(USE_PYXES))
  ifeq (arm64,$(TARGET_CPU))
   ifneq ($(PTHREADS4WSRC),)
    OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
+   COPTION := $(COPTION) /DPTHREADS4WSRC=1
   else
    PTHREADLIB = ../pthreads4w/arm64/pthreadVC3.lib
   endif
  else ifeq (x64,$(TARGET_CPU))
   ifneq ($(PTHREADS4WSRC),)
    OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
+   COPTION := $(COPTION) /DPTHREADS4WSRC=1
   else
    PTHREADLIB = ../pthreads4w/x64/pthreadVC3.lib
   endif
  else
   ifneq ($(PTHREADS4WSRC),)
    OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
+   COPTION := $(COPTION) /DPTHREADS4WSRC=1
   else
    PTHREADLIB = ../pthreads4w/x86/pthreadVC3.lib
   endif

@@ -44,18 +44,21 @@ COPTION = $(COPTION) $(OPTL)
 !if "arm64"=="$(TARGET_CPU)"
 !if ""!="$(PTHREADS4WSRC)"
 OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
+COPTION = $(COPTION) /DPTHREADS4WSRC=1
 !else
 PTHREADLIB = ../pthreads4w/arm64/pthreadVC3.lib
 !endif
 !elseif "x64"=="$(TARGET_CPU)"
 !if ""!="$(PTHREADS4WSRC)"
 OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
+COPTION = $(COPTION) /DPTHREADS4WSRC=1
 !else
 PTHREADLIB = ../pthreads4w/x64/pthreadVC3.lib
 !endif
 !else
 !if ""!="$(PTHREADS4WSRC)"
 OBJS_PTHREADS4W = ../pthreads4w/src/pthread.o
+COPTION = $(COPTION) /DPTHREADS4WSRC=1
 !else
 PTHREADLIB = ../pthreads4w/x86/pthreadVC3.lib
 !endif

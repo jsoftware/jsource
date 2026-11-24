@@ -1,9 +1,6 @@
 prolog './gdic.ijs'
 NB. addon/dict
 
-QKTEST0=: QKTEST
-QKTEST=: (*9!:56'memaudit'){QKTEST,1
-
 load 'dict'
 
 d =: ('hash' ,&< 'valueshape' ; 0) conew 'jdict'
@@ -882,8 +879,6 @@ _1 = get__dict <'xxx'
 (<'ghi') = get__dict 2
 'index error' -: get__dict etx 4
 destroy__dict''
-
-QKTEST=: QKTEST0
 
 epilog''
 

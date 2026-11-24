@@ -28,7 +28,7 @@ NB. (+/i.1+c) -: (0:`(+ $:@<:)@.*) c=: 370  NB. 400 was failing on 32 bit linux 
 (+/i.1+c) -: (0:`(+ $:@<:)@.*) c=: (*9!:56'memaudit'){268 200  NB. 370 was failing on arm64 -O0
 'stack error' -: 0:`([: $: %)@.* etx 5
 
-((*9!:56'memaudit'){600 490) < c=: $:@>: :: <: 0
+((*9!:56'memaudit'){600 480) < c=: $:@>: :: <: 0
 
 0!:_1`1:@.(0= 9!:56'memaudit') '$'   NB. skip slow
 

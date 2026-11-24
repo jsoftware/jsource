@@ -465,7 +465,7 @@ F1(jtmmaxs){F12IP;
 // At coalescing, mfreeb is set back to indicate SBFREEB bytes, and mfreegenallo is decreased by the amount of the setback.
 I jtspbytesinuse(J jt){I i,totalallo=(jt->mfreegenallo&~MFREEBCOUNTING)+jt->mfreegenalloremote;  // start with bias value
  if(jt->repatq)totalallo-=AN(jt->repatq);  // bytes awaiting gc should not be considered inuse (AN has their total length)
- for(i=PMINL;i<=PLIML;++i){totalallo+=(jt->memballo[-PMINL+i]>>1)<<i;}  // add all the allocations
+ for(i=PMINL;i<=PLIML;++i){totalallo+=(I)(jt->memballo[-PMINL+i]>>1)<<i;}  // add all the allocations
  R totalallo;
 }
 

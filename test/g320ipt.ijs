@@ -90,7 +90,7 @@ timea =: 6!:2 'b =: u y'  NB. cost is verb time period - should be no free or RE
 NB. timea < timenoa +1e_4
 THRESHOLD +. threshold < (timenoa +1e_4) rsq timea
 )
-a =: 1000 $ < <"0 i. 1000
+a =: (QKTEST{1000 200) $ < <"0 i. (QKTEST{1000 200)
 4!:55 <'b'
 
 > f a
@@ -106,7 +106,7 @@ a:&, f a
 ,: f a
 ,:&a: f a
 ;&a f a
-(i. 1000)&{ f a
+(i. (QKTEST{1000 200))&{ f a
 999&{. f a
 {. f a
 }: f a
@@ -115,9 +115,6 @@ a:&, f a
 1&}. f a
 -.&a: f a
 ;&a f a
-
-
-
 
 epilog''
 

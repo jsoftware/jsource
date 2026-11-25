@@ -3,6 +3,8 @@ prolog './g6x14.ijs'
 NB. epoch datetime is nanoseconds from 2000-01-01
 NB. foreigns convert between epochdt and iso 8601 extended format
 
+0!:_1`1:@.(IF64) '?'   NB. skip if not J64
+
 IMIN=: _9223372036854775808
 sfe=: 6!:16
 efs=: 6!:17
@@ -307,6 +309,8 @@ NB. loc=: >@{. ((unxlib 'c'),' duplocale x x')&(15!:0) ^:(IFIOS<(<UNAME) e.;:'Da
 NB. loc=: >@{. ((unxlib 'c'),' newlocale x i *c x')&(15!:0) ^:(IFIOS<(<UNAME) e.;:'Darwin FreeBSD OpenBSD') 32;(,'C');loc
 NB. empty ((unxlib 'c'),' uselocale x x')&(15!:0) ^:(IFIOS<(<UNAME) e.;:'Darwin FreeBSD OpenBSD') <loc
 
+
+NB.?  end of skip if not J64
 
 epilog''
 

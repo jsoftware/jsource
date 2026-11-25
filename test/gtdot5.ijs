@@ -120,7 +120,7 @@ NB. 1: (9!:_5) ] _5000  NB. engage test mode before defining the verbs & names, 
 
 NB. Settings
 TESTS234 =: 0  NB. set to 1 to allow other tests here to run
-TEST1CT =: 1000   NB. set to 1e8 to repeat test1 forever here
+TEST1CT =: QKTEST{1000 100   NB. set to 1e8 to repeat test1 forever here
 REASSIGNFRAC =: 0.5  NB. set to 0 to suppress reassignment, 1.0 to force all assignments to reassign
 ALLOSDURINGASSIGN =: 0  NB. set to 1 to cause many more buffer allocations per assignment
 
@@ -141,7 +141,7 @@ i. 0 0
 
 
 
-TEST1CT t1 REASSIGNFRAC > 1000 ?@$ 0
+TEST1CT t1 REASSIGNFRAC > (QKTEST{1000 100) ?@$ 0
 
 0!:_1@'$'^:(-.TESTS234) 1  NB. optionally skip other tests
 

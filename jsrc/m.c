@@ -10,9 +10,10 @@ GA[^T]* is used for the general case.  GASPARSE is used to allocate sparse value
 
 = Usecounts =
 
-Every allocation has a usecount AC which starts at 1 when the block is allocated.  In addition there is a list of 'death warrants' in a chain of blocks pointed to by jt->tnextpushp.
-The death warrant, which is created when the block is allocated, is executed when the routine that allocated the block executes EPILOG to exit (or tpop for any other reason), and can be thought of as subtracting 1 from the usecount.
-Thus a new block has a net usecount of 0 and will disappear when the allocating routine exits.
+Every allocation has a usecount (AC) which starts at 1 when the block is allocated.  In addition there is a stack of 'death warrants' stored in a chain of blocks; the (empty) top-of-stack pointer is jt->tnextpushp.
+Each routine that does allocations saves the starting value with PROLOG which sets (_old=jt->tnextpushp), and then at the end of the routine issues EPILOG to call tpop(_old) which frees all blocks allocated in the routine.
+
+The death warrant is created when any block is allocated and can be thought of as subtracting 1 from the usecount.  Thus a new block has a net usecount of 0 and will disappear when the allocating routine exits.
 
 A block can be protected against deletion by incrementing the usecount using ra*(); that protection is removed by fa(), which decrements the usecount and frees the block if the usecount goes to 0.
 Such protection is required whenever a block is referred to outside the function that allocated it.  Cases include:
@@ -22,6 +23,8 @@ Such protection is required whenever a block is referred to outside the function
 * referring to the block in an ACV (adverb/conjunction/verb)
 * using the block for some long-term internal purpose, such as a persistent hashtable
 * putting the value of a public name into execution, since any thread may delete any public name at any time
+
+Except at these times, issuing ra*() will cause a memory leak.
 
 /Note/ that putting a private name into execution does require ra*(), because no other thread can delete the value.  This is an important performance improvement.
 

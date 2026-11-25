@@ -2365,7 +2365,7 @@ if(unlikely(!_mm256_testz_pd(sgnbit,mantis0))){  /* if mantissa exactly 0, must 
  if(unlikely(jt->jerr!=0)&&likely(_f&EMSGSTATENOTEXT)){UC _d=jt->jerr; RESIGERR(_d)}}  // run stmt, but suppress eformatting & resignal any error so as to use caller's eformat.  If stmt set USERMSG, keep it to preserve the msg line
         //  Exception: in EMSGSTATENOTEXT was turned off (and not restored), we figure that user used 13!:8, which we don't eformat, so we don't resignal it
 // If the abandoned value we want to ra is likely the last thing on the tstack, look to see if it is.  If so, just back up the tstack (if that backs over to the chain field, that will never match
-// the ZAP pointer and we will not modify tpushnext).  Otherwise ZAP the block
+// the ZAP pointer and we will not modify tnextpushp).  Otherwise ZAP the block
 // It would be a disaster to back the tstack to in front of a valid 'old' pointer held somewhere.  The subsequent tpop would never end.  The case cannot occur, because we set 'old'
 // only before sentence execution, and there is no way for an abandoned value to come from a higher level (name:_ pushes a stack entry at the current level).
 // We do one store: either back up tnextpushp by 1, or zap w

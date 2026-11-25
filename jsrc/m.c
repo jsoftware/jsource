@@ -1667,7 +1667,7 @@ A jtext(J jt,B b,A w){A z;I c,k,m,m1,t;
 
 A jtexta(J jt,I t,I r,I c,I m){A z;I m1; 
  GA00(z,t,m*c,r); 
- I k=bp(t); AS(z)[0]=m1=allosize(z)/(c*k); AN(z)=m1*c;
+ I k=bp(t); m1=allosize(z)/(c*k); if(r)AS(z)[0]=m1; AN(z)=m1*c;
  if(2==r)*(1+AS(z))=c;
  if(!((t&DIRECT)>0))mvc(k*AN(z),AVn(r,z),MEMSET00LEN,MEMSET00);
  R z;

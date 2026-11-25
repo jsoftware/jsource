@@ -570,8 +570,15 @@ static A jtfmtxi(J jt, A a, A w, I mode, I *omode){I lvl;
  if(JCHAR&AT(a)||!AN(a)) RZ(a=fmtbfc(a));
  ASSERT(1>=AR(a), EVRANK);
  ASSERT(0==AR(a) || AN(a)==AS(w)[AR(w)-1], EVLENGTH);
+#if defined(_WIN32) && (defined(__x86_64__)||defined(_M_X64))
+// workaround setjmp crash
+ jmp_buf _env;
+ if(setjmp(_env))ASSERTSYS(jt->jerr, "dtoa");
+ memcpy(&(((struct dtoa_info*)jt->dtoa)->_env),&_env,sizeof(_env));
+#else
  /* catch out-of-memory errors from dtoa.c */
  if(setjmp(((struct dtoa_info*)jt->dtoa)->_env))ASSERTSYS(jt->jerr, "dtoa");
+#endif
  if(lvl=level(jt,w)){A*wv=AAV(w),x; 
   ASSERT(1>=lvl, EVDOMAIN);
   DO(AN(w), x=C(wv[i]); ASSERT(1>=AR(x),EVRANK); if(AN(x)){ASSERT(AT(x)&JCHAR+NUMERIC,EVDOMAIN);

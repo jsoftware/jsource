@@ -3,6 +3,265 @@
 /*                                                                         */
 /* Memory Management                                                       */
 
+/*
+
+Memory is allocated by GA*() and freed by mf(), usually through tpop().  GAT[^V]* is used when type/rank/length are all known, GATV* is used when type is known but something else is not,
+GA[^T]* is used for the general case.  GASPARSE is used to allocate sparse values.
+
+= Usecounts =
+
+Every allocation has a usecount AC which starts at 1 when the block is allocated.  In addition there is a list of 'death warrants' in a chain of blocks pointed to by jt->tnextpushp.
+The death warrant, which is created when the block is allocated, is executed when the routine that allocated the block executes EPILOG to exit (or tpop for any other reason), and can be thought of as subtracting 1 from the usecount.
+Thus a new block has a net usecount of 0 and will disappear when the allocating routine exits.
+
+A block can be protected against deletion by incrementing the usecount using ra*(); that protection is removed by fa(), which decrements the usecount and frees the block if the usecount goes to 0.
+Such protection is required whenever a block is referred to outside the function that allocated it.  Cases include:
+
+* assigning the block as the value of a name
+* putting the value of the name into a box
+* referring to the block in an ACV (adverb/conjunction/verb)
+* using the block for some long-term internal purpose, such as a persistent hashtable
+* putting the value of a public name into execution, since any thread may delete any public name at any time
+
+/Note/ that putting a private name into execution does require ra*(), because no other thread can delete the value.  This is an important performance improvement.
+
+= Permanent blocks =
+
+If the next-to-highest bit in a block's usecount is set, the block is /permanent/: it will never be freed and its usecount will never be modified.  Primitives and frequently-used small values are permanent.
+
+= EPILOG =
+
+If a block allocated in a routine becomes the result of the routine, it must be given a stay of execution when the routine terminates, but only until the /caller/ terminates.  This is the function of EPILOG(z).
+It tpops everything allocated in the routine except z, and leaves z's death warrant on the tpop stack to be executed by the caller.
+
+= Indirect blocks: traversible, recursible =
+
+/Direct/ types (such as integers, floats, or literals) hold their actual values.  /Indirect/ types (such as boxes, ACVs, extended integers and sparse arrays) hold pointers to other blocks.
+Indirect types are /traversible/: when one is freed, it may be necessary to free the blocks it points to.  Non-sparse indirect types are /recursible/: their usecount may be /recursive/
+
+= Recursive usecounts =
+
+When block A is recursive, the usecount of each of A's immediate descendants is the descendant's AC field /plus/ the usecount of A.  This is a huge performance improvement over the alternative of storing the actual usecount in each block.
+
+Rule: when a block is marked recursive, each of its immediate descendants must also be marked recursive.  It follows that all descendants must be marked recursive.  It further follows that a block with a recursive usecount can never be freed
+until all parent blocks have been freed.  Thus, the usecounts in descendants do not need to be modified when the usecount of a recursive block is incremented, or when the usecount of a recursive block is decremented to a nonzero value.
+
+We make the following rules about recursive usecounts:
+
+* Whenever the usecount of a block is raised, the block is marked recursive, and if it was not recursive already its descendants are made recursive.
+* The result of executing a verb in the parser is always made recursive.
+
+As a result of these rules, recursible types are always recursive /except/ for intermediate values that are calculated by a primitive on the way to the final result.
+
+Sparse types are traversible but not recursible: their components' usecounts are modified whenever the parent's usecount is modified.
+
+= Incorporating a block =
+
+When a block is assigned to a name or enclosed in a recursive box, it is said to be /incorporated/.  When a block is incorporated it must have its usecount raised to protect it after its allocating function exits.  The INCORP* macros perform this function.
+
+= Virtual blocks =
+
+The AK field of each block gives the offset to the data for the block.  Usually the data immediately follows the shape, but in memory-mapped blocks the data is far away in a file buffer.  We make use of this mechanism to support
+/virtual blocks/, which are blocks that refer to a portion of another block.  The block that contains the original copy of the data is called the /backer/ and is pointed to by the AM field of the virtual block.  The usecount of the backer is
+raised when a virtual block created, guaranteeing that the backer will not be deleted before the virtual block taken from it.  If block A is made to represent a portion of another virtual block B, the backer of A is the backer of B, not B itself.
+A virtual block has its own shape and copies the type of the backer.
+
+Usually it is faster to create a virtual block than to create a normal block and copy the data.  If the data is very short it might be better to avoid the overhead of modify the backer's usecount.  A tuning parameter controls the choice.
+
+== Realizing virtual blocks ==
+
+A virtual block cannot exist without its backer, but the backer may be huge and the virtual block small.  In such a case, saving the virtual block in a name or box would keep the entire backer allocated until the virtual block was freed.
+This might be a big waste of memory.  To avoid this, we make the rule that when a virtual block is incorporated, it must first be /realized/, i. e. replaced by a new block that has its own copy of the data.
+
+== WILLBEOPENED and WILLBEREALIZED blocks ==
+
+There is an exception to this rule.  Consider an operation such as >@:(f"1), where the result of f will be immediately opened.  In this case it is OK to leave a virtual block in the (boxed) result of f"1.  The WILLBEOPENED flag in jt
+tells the verb that its result will be immediately opened.
+
+= Faux-virtual and Unincorpable blocks =
+
+The partitioning modifiers operate on successive subarrays of the y argument.  To avoid data movement, they create a virtual block that points to each subarray in turn.
+
+To avoid the overhead of allocating and freeing the virtual block and modifying its usecount and its backer's, the virtual block is created in automatic memory and is caused a /faux-virtual/ block.  Because a faux-virtual block was never allocated,
+it is vital that it never be freed, from which it follows that it must never be assigned to a name or put into a box.  To this end the block is flagged as /unincorpable/.  An unincorpable block may be abandoned and inplaceable (see below), but it
+may never be incorporated and its type must not be modified even if it is abandoned.
+
+= Inplaceable blocks and inplacing =
+
+A block is /inplaceable/ if it has never been incorporated.  All blocks are marked inplaceable (by having AC=0x80..01) when they are allocated.  The AM field of an inplaceable block always points to its death warrant in the tpop stack, except when the
+block is unincorpable.
+
+An operation can be performed inplace on a block that is /abandoned/: inplaceable in a context in which it will not be needed later in the execution of its verb.  Low-order bits of jt are used to tell the function which of x/y are eligible for
+inplacing.  For example, in x (f@] g h) y, h is executed first: for this execution, x can be modified inplace because f will not refer to it, but y cannot be modified because it will be an argument to f.  Next, f is executed: for this execution,
+y can be modified inplace /except/ when the result of h was y.  Dyadic verbs must not run inplace when x=y unless both x and y are abandoned.
+
+Inplace execution is a significant performance improvement, because it eliminates the cache cast-outs that occur when a new memory region is filled.
+
+Primitives execute inplace when
+* an argument is inplaceable
+* that argument will not be needed later (i. e. it is abandoned)
+* the operation can overwrite one of its arguments
+* the result fits in the space of the overwritten argument
+
+An unincorpable block may be marked as inplaceable.  For example, in (f"1 inplaceable expression) the unincorpable block will point to successive cells of the inplaceable expression, which may be modified by the operation.
+
+== Memory-mapped files ==
+
+Blocks that are mapped to a file have AFNJA set in AFLAG.  These blocks are not allocated by JE, but by the OS.  Their usecount is managed like any other block, except that there is no death warrant and the usecount starts
+at 0.  When the block is assigned to a name, the usecount goes to 1.  Named AFNJA blocks are never reallocated: if new data is assigned it is copied into the old area.
+
+AM in an AFNJA block contains the total length of the allocation.
+
+== Inplaceable operation on zombie blocks ==
+
+A special case of inplacing is
+
+name =: [x] f name ...
+
+In this case, (name) is going to be replaced by the result of f.  If the value in (name) is not incorporated elsewhere (i. e. its usecount is 1 if the name is private, or 2 if the name is public since it has been ra()'d),
+it is a /zombie/, a dead block walking.  It will be available for inplacing if f supports it.
+
+= Self-virtual blocks =
+
+Virtual blocks are created by a call to virtual() (or, in a few places, locally by a verb).  This call can have inplacing flags.  If a virtual is requested from an abandoned block, there is no need to allocate a new header
+to point to the data: the original header can be reused.  This creates a /self-virtual/ block.
+
+== Virtual extension ==
+
+In the special case of (x , y), even if x is not eligible for inplacing, it might be possible to create a /virtual extension/ by copying y onto the end of x and creating a virtual block for the result.  The original x survives, and is the backer for
+the virtual extension.  This is valuable for something like ((table i. keys) { x , default) where the (keys) might not exist in (table) .  The value of default will be fetched where index=#keys, without requiring a new
+copy of x.
+
+= Freeing abandoned arguments; Zapping the tpop stack =
+
+It is important to free blocks as early as possible so that they can be reallocated and refilled while they are still in cache.  The primary executants are parsing lines 1-3, FORK1() and FORK2().  Each of these checks after a
+verb has been executed to see if there are abandoned arguments that are still abandoned (and also not the result of the verb).  Any such unincorporated arguments are immediately freed.  If there is a death warrant for the
+block on the tpop stack, it must be cancelled so that it does not result in an erroneous second free for the same block.  This is feasible because AM in every inplaceable block points to the death warrant.  Storing 0 into
+the death warrant cancels it, and is called /zapping/ the death warrant.  Zapping can also be used immediately after a block is allocated to make the block incorpable.
+
+= Pristine blocks =
+
+Normal inplacing applies only to blocks that are not the contents of other blocks (obviously, since they cannot be modified inplace without changing the value of the containing block).  The idiom f&.> is so common
+and so efficient that we attempt to allow f to run in place, at least sometimes.  When a boxed value has contents that are only direct types, and none of those blocks has been incorporated anywhere unless it is
+permanent, we mark the boxed value as /pristine/, meaning that all contents are pure and are inplaceable if the overall boxed value is.  When f&.> runs on an inplaceable pristine block, f is executed inplace on all
+non-permanent blocks.
+
+= Hijacking the tpop stack =
+
+Creating an array of many boxes (for example with (<"1 y)  or  (<;._1 y)) in the normal way needlessly creates entries on the tpop stack, and then ra*()s each box of contents.  When the tpop is executed, it executes
+fa() to undo each ra, incurring a expensive RFO cycle.  To avoid this overhead, routines that create an array of boxes use a cute trick: they allocate a recursive array for the boxes and then /hijack the tpop stack/
+by pointing it to the list of boxes.  Then, as the boxes are allocated & filled, the code that would normally fill in death warrants in the tpop stack instead fills in pointers to the boxed contents.  When the
+operation is complete the tpop stack is restored.
+
+= Pyxes, Gerunds, and C() =
+
+There are two types of block that can exist only inside a boxed array and can never be exposed to operations: pyxes and gerunds.  A /pyx/ is a contents that is itself flagged as PYX in the AT field (that is, it is never
+a top-level box, but always enclosed in another box).  A /gerund/ is a contents whose AT=VERB.  The contents are an executable verb.
+
+When a contents of any boxed noun are opened, code should use C(contents addr), e. g. C(AAV(boxval)[0]) to open the first/only box in boxval.  The only time when a contents can be opened without using C() is when
+it is known that the box has a noun value and is not a pyx.  C() calls a resolution routine if the contents are a pyx or gerund. otherwise it quickly returns the  opened contents.  The routine returns a modified contents:
+* if the contents are a pyx, it waits if necessary for the pyx to be filled, and returns the value (which may be an error with message)
+* if the contents are a gerund, it is converted to its atomic representation
+
+= Block alignment and Address flags =
+
+== JTT alignment ==
+
+In the original JE, every routine that could be called from the parser was required to have the same calling sequence: f(jt,w,self) for monads or f(jt,a,w,self) for dyads.
+It came to pass that some such routines were called as subroutines from others, and needed extra arguments when so called.  These extra parameters could not fit into the
+Procrustean calling sequence, and were passed through shared memory, viz through the JTT struct.  The most notable example of these parameters-through-globals was verb rank,
+which was passed into a great many verbs through jt instead of as a parameter.
+
+Using shared memory for such a purpose is bad program design, and moreover it makes the code nonreentrant because a reentrant call using the same jt might overwrite a global.
+After a long campaign I succeeded in reducing the amount of extra information needed to a few bits in some calls.  Still,  there was the question of where to put those bits.
+
+The neat solution was to make the jt pointer do triple duty.  The JTT struct has been ferociously shrunk to keep its size below 0x200 bytes.  The overall shared memory is aligned to a boundary of 0x8000,
+starting with the JST struct on the boundary and followed by the JTT struct for each thread, each on a boundary of 0x200.  This leaves the low-order 9 bits of jt available to carry
+parameter flags.  Only one parameter is needed to give quick access to JTT, JST, and the flags.
+
+On x64 systems, 4 parameters can be passed in registers; more parameters use the stack which imposes a small delay.  Using jt for the parameter flags avoids the delay.
+
+The calling sequence for monads has been changed to f(jt,w,self,self) so that the dyadic entry point can be used for both monads and dyads.  If w=self the call is monadic.
+
+== A-block alignment ==
+
+A blocks are aligned on cacheline boundaries (0x40) to minimize the number of cachelines touched.  This leaves the low 6 bits of each block address 0.
+
+Those 0 bits can be put to good use.  The very-high-use code in JE has been whittled down so far that saving a single memory fetch makes a measurable difference.
+
+== In words in sentences ==
+
+The stacking phase of parsing involves
+* reading the address of a word from the sentence
+* checking its type
+* if the type is a name, looking up the name
+* writing the value
+
+The type cannot be checked until the address of the word has been read.  To save this extra memory-fetch latency, the type of the word is stored in LSBs of the address in a 6-bit form that
+distinguishes part of speech, punctuation, and assignment.
+
+== In values coming from name lookup ==
+
+Name lookup involves
+* reading the address of the value from the symbol table
+* checking its type
+* create a reference for named ACVs
+* encode whether the name was found in a public or private symbol table
+
+In values stored in a symbol table, the type of the word (which must be noun or ACV) is encoded along with the type of the symbol table.
+
+== To support IRS ==
+
+Verbs that support IRS need the verb rank of each argument.  This is encoded in the low 6 bits of each argument, as the complement of the actual rank so that 000000 means 'infinite rank'.
+
+== In ATOMIC2 primitives ==
+
+Encoding verb rank in the arguments means that the argument addresses are not available until the encoded verb rank has settled in the argument register.  This is OK for most primitives,
+but for the arithmetic dyads that support speedy singletons, it slows the verb down by several cycles because the singleton test does not depend on the verb rank.  For these verbs,
+on 64-bit systems the verb ranks are encoded in the /top/ 16 bits of jt, which now does quadruple duty.
+
+= Allocation management =
+
+JE uses a power-of-2 allocation scheme to avoid fragmentation.  In addition, each thread uses a very fast allocator for block sizes up to 1024B.
+
+== Small-block Chains ==
+
+Blocks from 64-1024B are kept in a singly-linked list, FIFO to reuse cache blocks.  When a chain is empty JE gets a /chain unit/ of 16KB from the OS and breaks it into blocks for the chain.
+
+== Large blocks ==
+
+Blocks larger than 1024B are rounded up to a power of 2 and allocated from the OS, on a cacheline boundary.
+
+== Header ==
+
+The block header contains
+* offset to data
+* flags
+* AM (variable field)
+* type
+* usecount AC
+* number of atoms
+* rank
+* allocator work area
+* shape
+
+The allocator work area is 2 bytes that must never be modified, plus (on 64-bit systems) owning thread# and a lock field.  The 2 bytes indicate the size of the block and, for small blocks, the offset of the block in its chain unit.
+
+== GMP blocks ==
+
+The GMP library used for extended integers calls JE to allocate memory blocks.  These are allocated from the OS and tagged with a special value in the allocator work area so they can be freed back to the OS.
+
+== Garbage Collection ==
+
+Garbage collection is triggered from time to time.  When a small-block chain has a large number of free blocks, they are traversed to find entire 16KB chain units that are on the free chain.  
+
+=== Repatriation ===
+
+Because of the way blocks are garbage-collected, it is necessary for each small-chain block to be freed in the thread where it was allocated.  This is achieved by diverting blocks that were allocated in a
+different thread into a /repatriation queue/, whence they are sent back to their origin from time to time, to participate in garbage colletion.
+
+*/
+
 #ifdef _WIN32
 #define __iamcu__
 #define WIN32_LEAN_AND_MEAN

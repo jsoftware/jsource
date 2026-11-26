@@ -30,7 +30,15 @@ Except at these times, issuing ra*() will cause a memory leak.
 
 = Permanent blocks =
 
-If the next-to-highest bit in a block's usecount is set (AC=0x40..00), the block is /permanent/: it will never be freed and its usecount will never be modified.  Primitives and frequently-used small values are permanent.
+If the next-to-highest bit in a block's usecount is set (AC=0x40..00), the block is /permanent/: it will never be freed and its usecount will never be modified, and it will never be put onto the tpop stack.
+Primitives and frequently-used small values are permanent.
+
+= Read-only blocks =
+
+Memory-mapped blocks (see below) can be designated read-only, in which case any assignment that would modify the block will be rejected.  A few other blocks are marked read-only, notably the result of
+(i. n) where n<400.  This shouldn't be necessary but is done out of caution because of the havoc that would ensue if the values in (i. n) were erroneously modified.
+
+The xyz_index noun created by for_xyz. is marked read-only.
 
 = EPILOG =
 
@@ -38,10 +46,13 @@ If a block allocated in a routine becomes the result of the routine, it must be 
 It tpops everything allocated in the routine (i. e. back to the point of the PROLOG) /except/ z, and leaves z's death warrant on the tpop stack to be executed by the caller.  Thus after the EPILOG z is as if it had been
 allocated in the caller.
 
+EPILOG is not required.  If a function omits EPILOG, all blocks it allocated will be inherited by its caller and freed at the next EPILOG (which might be the EPILOG executed at the end of each sentence).
+If these blocks are few and small that is acceptable, but you should not leave the possibility that many routines will allocate memory with no EPILOG or tpop() to free temporaries.
+
 = Indirect blocks: traversible, recursible =
 
 /Direct/ types (such as integers, floats, or literals) hold their actual values.  /Indirect/ types (such as boxes, ACVs, extended integers and sparse arrays) hold pointers to other blocks.
-Indirect types are /traversible/: when one is freed, it may be necessary to free the blocks it points to.  Non-sparse indirect types are /recursible/: their usecount may be /recursive/
+Indirect types are /traversible/: when one is freed, it may be necessary to free the blocks it points to.  Non-sparse indirect types are /recursible/: their usecount may be /recursive/.
 
 = Recursive usecounts =
 
@@ -57,27 +68,28 @@ We make the following rules about recursive usecounts:
 * permanent blocks of recursible types must be recursive.
 * ACVs are always recursive.
 
-As a result of these rules, recursible types are always recursive /except/ for intermediate values that are calculated by a primitive on the way to the final result.
+As a result of these rules, recursible types are always recursive /except/ for intermediate values that are calculated by a primitive on the way to its final result.
 
 Sparse types are traversible but not recursible: their components' usecounts are modified whenever the parent's usecount is modified.
 
 = Incorporating a block =
 
-When a block is assigned to a name or enclosed in a recursive box, it is said to be /incorporated/.  When a block is incorporated it must have its usecount raised to protect it after its allocating function exits.  The INCORP* macros perform this function.
+When a block is assigned to a name, enclosed in a recursive box, or made the f/g/h of an ACV, it is said to be /incorporated/.  When a block is incorporated it must have its usecount raised to protect it
+after its allocating function exits.  The INCORP* macros perform this function.
 
 = Virtual blocks =
 
 The AK field of each block gives the offset to the data for the block.  Usually the data immediately follows the shape, but in memory-mapped blocks the data is far away in a file buffer.  We make use of this mechanism to support
 /virtual blocks/, which are blocks that refer to a portion of another block without making a copy of the data.  The block that contains the original copy of the data is called the /backer/ and is pointed to by the AM field of the
-virtual block.  The usecount of the backer is raised when a virtual block created, guaranteeing that the backer will not be deleted before the virtual block taken from it.  If block A is made to represent a portion of another
+virtual block.  The usecount of the backer is raised when a virtual block created, guaranteeing that the backer will not be deleted before the virtual block referring to it.  If block A is made to represent a portion of another
 virtual block B, the backer of A is the backer of B, not B itself.  A virtual block has its own shape and copies the type of the backer.
 
 Usually it is faster to create a virtual block than to create a normal block and copy the data.  If the data is very short it might be better to avoid the overhead of modify the backer's usecount.  A tuning parameter controls the choice.
 
 == Realizing virtual blocks ==
 
-A virtual block cannot exist without its backer, but the backer may be huge and the virtual block small.  In such a case, saving the virtual block in a name or box would keep the entire backer allocated until the virtual block was freed.
-This might be a big waste of memory.  To avoid this, we make the rule that when a virtual block is incorporated, it must first be /realized/, i. e. replaced by a new block that has its own copy of the data.
+A virtual block cannot exist without its backer, but the backer may be huge and the virtual block small.  In such a case, saving the virtual block in a name or box would keep the entire backer allocated until the virtual block was freed - if ever.
+This might be a big waste of memory.  To avoid it, we make the rule that when a virtual block is incorporated, it must first be /realized/, i. e. replaced by a new block that has its own copy of the data.
 
 == WILLBEOPENED and WILLBEREALIZED blocks ==
 
@@ -113,7 +125,7 @@ An unincorpable block may be marked as inplaceable.  For example, in (f"1 inplac
 
 == Memory-mapped files ==
 
-Blocks that are mapped to a file have AFNJA set in AFLAG.  These blocks are not allocated by JE, but by the OS.  Their usecount is managed like any other block, except that there is no death warrant and the usecount starts
+Blocks that are mapped to a file have AFNJA set in AFLAG.  These blocks are allocated not by JE, but by the OS.  Their usecount is managed like any other block, except that there is no death warrant and the usecount starts
 at 0.  When the block is assigned to a name, the usecount goes to 1.  Named AFNJA blocks are never reallocated: if new data is assigned it is copied into the old area.
 
 AM in an AFNJA block contains the total length of the allocation.
@@ -125,7 +137,7 @@ A special case of inplacing is
 name =: [x] f name ...
 
 In this case, (name) is going to be replaced by the result of f.  If the value in (name) is not incorporated elsewhere (i. e. its usecount is 1 if the name is private, or 2 if the name is public since it has been ra()'d),
-it is a /zombie/, a dead block walking.  It will be available for inplacing if f supports it.
+it is a /zombie/, a dead block walking.  It will be available for inplacing if f supports inplacing.
 
 = Self-virtual blocks =
 
@@ -135,8 +147,7 @@ to point to the data: the original header can be reused.  This creates a /self-v
 == Virtual extension ==
 
 In the special case of (x , y), even if x is not eligible for inplacing, it might be possible to create a /virtual extension/ by copying y onto the end of x and creating a virtual block for the result.  The original x survives, and is the backer for
-the virtual extension.  This is valuable for something like ((table i. keys) { x , default) where the (keys) might not exist in (table) .  The value of default will be fetched where index=#keys, without requiring a new
-copy of x.
+the virtual extension.  This is valuable for something like ((table i. keys) { x , default) where the (keys) might not exist in (table) .  The value of default will be fetched where index=#keys, without requiring a new copy of x.
 
 = Freeing abandoned arguments; Zapping the tpop stack =
 

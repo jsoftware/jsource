@@ -631,13 +631,13 @@ static DF2(cons2){DF12IP;
 }
 
 // cyclic-gerund verbs for m"n create an iterator from the gerund and pass that into rank processing, looping over cells
-static DF1(cycr1){DF12IP;V*sv=FAV(self); I cger[128/SZI];
+static DF1(cycr1){DF12IP;V*sv=FAV(self); I __attribute__((aligned(ABDY))) cger[128/SZI];
  ARGCHK1(w);
  RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund
  I mr=efr(AR(w),(I)sv->localuse.lu1.srank[0]);
  RETF(rank1ex(w,self,mr,FAV(self)->valencefns[0]))  // callback is to the cyclic-execution function
 }
-static DF2(cycr2){DF12IP;V*sv=FAV(self); I cger[128/SZI];
+static DF2(cycr2){DF12IP;V*sv=FAV(self); I __attribute__((aligned(ABDY))) cger[128/SZI];
  ARGCHK2(a,w);
  RZ(self=createcycliciterator((A)&cger, self));  // fill in an iterator for this gerund
  I lr2=efr(AR(a),(I)sv->localuse.lu1.srank[1]), rr2=efr(AR(w),(I)sv->localuse.lu1.srank[2]);

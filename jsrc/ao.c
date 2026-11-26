@@ -426,7 +426,7 @@ A jtkeyct(J jtfg,A a,A w,A self,D toler){F12IP;PROLOG(0009);A ai,z=0;I nitems;
  // We don't have to worry about a==w because a has already been modified
 
  I nfrets;  // we get the # frets early and use that for allocation
- I localfrets[32];  // if we don't have too many frets, we can put them on the C stack
+ I __attribute__((aligned(ABDY))) localfrets[32];  // if we don't have too many frets, we can put them on the C stack
  if(!((I)ai&1)){
   // NOT small-range processing: go through the index+size table to create the frets and reordered data for passing to cut
   nfrets=AM(ai);  // fetch # frets before we possibly clone ai

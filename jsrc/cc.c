@@ -22,7 +22,7 @@ static DF1(jtcut01){DF12IP;A x,z;A fs=FAV(self)->fgh[0]; AF f1=FAV(fs)->valencef
 }    /* f;.0 w */
 
 // a f;.0 w
-static DF2(jtcut02){DF12IP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROLOG(876);I cger[128/SZI];
+static DF2(jtcut02){DF12IP;A fs,q,qq,*qv,z,zz=0;I*as,c,e,i,ii,j,k,m,n,*u,*ws;PROLOG(876);I __attribute__((aligned(ABDY))) cger[128/SZI];
  ARGCHK2(a,w);
 #define ZZFLAGWORD state
  I state=ZZFLAGINITSTATE;  // init flags, including zz flags
@@ -568,8 +568,8 @@ void jtcopyTT(J jt, void *zv, void *wv, I n, I zt, I wt){
   else {D *targ=zv; I *src=wv; DQ(n, *targ++ = (D)*src++;)}
 }
 
-DF2(jtcut2){DF12IP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I cger[128/SZI];
-     I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
+DF2(jtcut2){DF12IP;PROLOG(0025);A fs,z,zz;I neg,pfx;C id,*v1,*wv,*zc;I __attribute__((aligned(ABDY))) cger[128/SZI];
+     I ak,at,wcn,d,k,m=0,n,r,wt,*zi;I __attribute__((aligned(ABDY))) d1[32]; A pd0; UC *pd, *pdend;  // Don't make d1 too big - it fill lots of stack space
  F2RANKIP(lr(self),RMAX,jtcut2,self);  // left rank of ;.2 is 1, but left rank of /. is _ .  Right rank always _ .  For the monad, mark has rank 0
  SETIC(w,n); wt=AT(w);   // n=#items of w; wt=type of w
  // a may have come from /. or /.., in which case it is incompletely filled in.  We look at the type, but nothing else

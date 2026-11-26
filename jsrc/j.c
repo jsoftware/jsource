@@ -224,8 +224,8 @@ F1(jtversq){F12IP;
  strcat(p,"/SLEEF=0");
 #endif
 #if MEMAUDIT
- strcat(p,"/MEMAUDIT=0x");
- sprintf(p + strlen(p), "%x", MEMAUDIT);
+ strcat(p,"/MEMAUDIT=");
+ sprintf(p + strlen(p), "%#x", MEMAUDIT);
 #endif
  R cstr(m);
 }

@@ -26,7 +26,7 @@ Such protection is required whenever a block is referred to outside the function
 
 Except at these times, issuing ra*() will cause a memory leak.
 
-/Note/ that putting a private name into execution does require ra*(), because no other thread can delete the value.  This is an important performance improvement.
+/Note/ that putting a private name into execution does not require ra*(), because no other thread can delete the value.  This is an important performance improvement.
 
 = Permanent blocks =
 
@@ -48,6 +48,8 @@ allocated in the caller.
 
 EPILOG is not required.  If a function omits EPILOG, all blocks it allocated will be inherited by its caller and freed at the next EPILOG (which might be the EPILOG executed at the end of each sentence).
 If these blocks are few and small that is acceptable, but you should not leave the possibility that many routines will allocate memory with no EPILOG or tpop() to free temporaries.
+
+A routine that is running with WILLBEOPENED set in jt must not execute EPILOG or tpop.
 
 = Indirect blocks: traversible, recursible =
 
@@ -95,6 +97,8 @@ This might be a big waste of memory.  To avoid it, we make the rule that when a 
 
 There is an exception to this rule.  Consider an operation such as >@:(f"1), where the result of f will be immediately opened.  In this case it is OK to leave a virtual block in the (boxed) result of f"1.  The WILLBEOPENED flag in jt
 tells the verb that its result will be immediately opened.
+
+Similarly, the WILLBEREALIZED flag in jt tell the routine not to create a virtual block, because it will be immediately realized by the caller.
 
 = Faux-virtual and Unincorpable blocks =
 
@@ -169,6 +173,30 @@ Creating an array of many boxes (for example with (<"1 y)  or  (<;._1 y)) in the
 fa() to undo each ra, incurring a expensive RFO cycle.  To avoid this overhead, routines that create an array of boxes use a cute trick: they allocate a recursive array for the boxes and then /hijack the tpop stack/
 by pointing it to the list of boxes.  Then, as the boxes are allocated & filled, the same code that would normally fill in death warrants in the tpop stack instead fills in pointers to the boxed contents.  When the
 operation is complete the tpop stack is restored.
+
+= result.h =
+
+The include file result.h contains the code for assembling the results on execution on cells.  The including routine must set options and must calculate the number of cells; result.h will allocate the result and
+insert the cell results one by one.  This code is used all over, whenever the number of result cells can be calculated in advance (exceptions being L: and S:).
+
+result.h assumes provisionally that all cells will have the same shape and type as the first cell.  It allocates enough space for that.  As long as the shape of the cell-results do not change, they are accumulated in
+the allocated area (which may have to be reallocated if the result-type changes).  If the shape changes, result.h falls back to storing the results in an array of boxes.  At the end the boxes are opened and fill inserted.
+
+Importantly, result.h never requires the caller to reexecute the same cell twice.  result.h has several options to efficiently handle the common cases.
+
+Verbs that cannot use result.h simply box the results from each cell and open the box at the end.  This is supported even if the cell-results are sparse.
+
+= ACVs =
+
+Executable types (ACVs) are stored in an A block, never virtual; so the AK, AN, and AS fields are not needed (they are used for special purposes in special cases, and may be used in the future for general verbs).
+The informtation about the ACV is a V struct starting at AS, which is addressed by FAV(acv).  The V struct contains:
+* the routines to execute the ACV as a monad and dyad.  If there is special code, it manifests by setting the routine pointer to the special code.
+* f, g, and h for the ACV.  These are pointers to A blocks and are freed when the ACV is freed if nonzero.  These must retain the original arguments to the ACV so that the display of the ACV can be constructed.
+  Only forks (or 3-element modifier trains) naturally have an h field, but other ACVs are free to use h as a work area, with the understanding that it will eventually be fa()'d (for example, cx.c
+  uses h to hold a boxed array that has the control-word table and the original text; u^:_1 uses h to hold the inverse of u)
+* ranks of a verb
+* a character indicating which primitive created the ACV (with special encodings for hook/fork)
+* local-use fields, holding information to speed up execution.  These fields are NOT fa()'d when the ACV is freed. 
 
 = Pyxes, Gerunds, and C() =
 
@@ -276,6 +304,19 @@ Garbage collection is triggered from time to time.  When a small-block chain has
 
 Because of the way blocks are garbage-collected, it is necessary for each small-chain block to be freed in the thread where it was allocated.  This is achieved by diverting blocks that were allocated in a
 different thread into a /repatriation queue/, whence they are sent back to their origin from time to time, to participate in garbage colletion.
+
+= Symbol tables & Locales =
+
+Symbol tables are a type of their own, containing pointers to other names and values.  A symbol table can be a locale, either named or numbered, or it can be a private symbol table for an explicit
+definition.  Flags in the rank (AR) field of the symbol table indicate which kind of symbol table it is and its status.  In any case, when the symbol table is freed all the symbols and their associated names and values are freed first.
+
+Private symbol tables are special because they are tied to an explicit definition.  When a valence of an explicit definition is processed, all names that can be recognized in the definition are collected, and a symbol
+table large enough to hold them is allocated.  A symbol is then permanently allocated for each name.  This /explicit symbol table/ is sotred in the h field of the V blovk for the ACV and persists as long
+as the ACV is allocated.  It is used when possible, because the preallocated information avoids lookups through the symbol table.
+If the explicit definition is recursive, or if it is already running in another thread, the explicit symbol table is cloned and the cloned table is used.
+
+Each thread has a /dummy symbol table/ that is used when no explicit definition is running (i. e. execution is from the console).  The dummy table contains no names and cannot be written to.  To make detection of the
+dummy table fast, it is allocated /not/ on a cacheline boundary and is never freed.
 
 */
 

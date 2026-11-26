@@ -30,12 +30,13 @@ Except at these times, issuing ra*() will cause a memory leak.
 
 = Permanent blocks =
 
-If the next-to-highest bit in a block's usecount is set, the block is /permanent/: it will never be freed and its usecount will never be modified.  Primitives and frequently-used small values are permanent.
+If the next-to-highest bit in a block's usecount is set (AC=0x40..00), the block is /permanent/: it will never be freed and its usecount will never be modified.  Primitives and frequently-used small values are permanent.
 
 = EPILOG =
 
 If a block allocated in a routine becomes the result of the routine, it must be given a stay of execution when the routine terminates, but only until the /caller/ terminates.  This is the function of EPILOG(z).
-It tpops everything allocated in the routine except z, and leaves z's death warrant on the tpop stack to be executed by the caller.
+It tpops everything allocated in the routine (i. e. back to the point of the PROLOG) /except/ z, and leaves z's death warrant on the tpop stack to be executed by the caller.  Thus after the EPILOG z is as if it had been
+allocated in the caller.
 
 = Indirect blocks: traversible, recursible =
 
@@ -53,6 +54,8 @@ We make the following rules about recursive usecounts:
 
 * Whenever the usecount of a block is raised, the block is marked recursive, and if it was not recursive already its descendants are made recursive.
 * The result of executing a verb in the parser is always made recursive.
+* permanent blocks of recursible types must be recursive.
+* ACVs are always recursive.
 
 As a result of these rules, recursible types are always recursive /except/ for intermediate values that are calculated by a primitive on the way to the final result.
 
@@ -65,9 +68,9 @@ When a block is assigned to a name or enclosed in a recursive box, it is said to
 = Virtual blocks =
 
 The AK field of each block gives the offset to the data for the block.  Usually the data immediately follows the shape, but in memory-mapped blocks the data is far away in a file buffer.  We make use of this mechanism to support
-/virtual blocks/, which are blocks that refer to a portion of another block.  The block that contains the original copy of the data is called the /backer/ and is pointed to by the AM field of the virtual block.  The usecount of the backer is
-raised when a virtual block created, guaranteeing that the backer will not be deleted before the virtual block taken from it.  If block A is made to represent a portion of another virtual block B, the backer of A is the backer of B, not B itself.
-A virtual block has its own shape and copies the type of the backer.
+/virtual blocks/, which are blocks that refer to a portion of another block without making a copy of the data.  The block that contains the original copy of the data is called the /backer/ and is pointed to by the AM field of the
+virtual block.  The usecount of the backer is raised when a virtual block created, guaranteeing that the backer will not be deleted before the virtual block taken from it.  If block A is made to represent a portion of another
+virtual block B, the backer of A is the backer of B, not B itself.  A virtual block has its own shape and copies the type of the backer.
 
 Usually it is faster to create a virtual block than to create a normal block and copy the data.  If the data is very short it might be better to avoid the overhead of modify the backer's usecount.  A tuning parameter controls the choice.
 
@@ -85,9 +88,9 @@ tells the verb that its result will be immediately opened.
 
 The partitioning modifiers operate on successive subarrays of the y argument.  To avoid data movement, they create a virtual block that points to each subarray in turn.
 
-To avoid the overhead of allocating and freeing the virtual block and modifying its usecount and its backer's, the virtual block is created in automatic memory and is caused a /faux-virtual/ block.  Because a faux-virtual block was never allocated,
-it is vital that it never be freed, from which it follows that it must never be assigned to a name or put into a box.  To this end the block is flagged as /unincorpable/.  An unincorpable block may be abandoned and inplaceable (see below), but it
-may never be incorporated and its type must not be modified even if it is abandoned.
+To avoid the overhead of allocating and freeing the virtual block and modifying its usecount and its backer's, the virtual block is created in automatic memory (i. e. on the C stack) and is called a /faux-virtual/ block.
+Because a faux-virtual block was never allocated, it is vital that it never be freed, from which it follows that it must never be assigned to a name or put into a box.  To this end the block is flagged as /unincorpable/.
+An unincorpable block may be abandoned and inplaceable (see below), but it may never be incorporated and its type must not be modified even if it is abandoned.
 
 = Inplaceable blocks and inplacing =
 
@@ -153,7 +156,7 @@ non-permanent blocks.
 
 Creating an array of many boxes (for example with (<"1 y)  or  (<;._1 y)) in the normal way needlessly creates entries on the tpop stack, and then ra*()s each box of contents.  When the tpop is executed, it executes
 fa() to undo each ra, incurring a expensive RFO cycle.  To avoid this overhead, routines that create an array of boxes use a cute trick: they allocate a recursive array for the boxes and then /hijack the tpop stack/
-by pointing it to the list of boxes.  Then, as the boxes are allocated & filled, the code that would normally fill in death warrants in the tpop stack instead fills in pointers to the boxed contents.  When the
+by pointing it to the list of boxes.  Then, as the boxes are allocated & filled, the same code that would normally fill in death warrants in the tpop stack instead fills in pointers to the boxed contents.  When the
 operation is complete the tpop stack is restored.
 
 = Pyxes, Gerunds, and C() =
@@ -163,7 +166,7 @@ a top-level box, but always enclosed in another box).  A /gerund/ is a contents 
 
 When a contents of any boxed noun are opened, code should use C(contents addr), e. g. C(AAV(boxval)[0]) to open the first/only box in boxval.  The only time when a contents can be opened without using C() is when
 it is known that the box has a noun value and is not a pyx.  C() calls a resolution routine if the contents are a pyx or gerund. otherwise it quickly returns the  opened contents.  The routine returns a modified contents:
-* if the contents are a pyx, it waits if necessary for the pyx to be filled, and returns the value (which may be an error with message)
+* if the contents are a pyx, it waits if necessary for the pyx to be filled, and then returns the value (which may be an error with message)
 * if the contents are a gerund, it is converted to its atomic representation
 
 = Block alignment and Address flags =
@@ -248,7 +251,7 @@ The block header contains
 * allocator work area
 * shape
 
-The allocator work area is 2 bytes that must never be modified, plus (on 64-bit systems) owning thread# and a lock field.  The 2 bytes indicate the size of the block and, for small blocks, the offset of the block in its chain unit.
+The allocator work area is 2 bytes that must never be modified, plus (on systems supporting multithreading) owning thread# and a lock field.  The 2 bytes indicate the size of the block and, for small blocks, the offset of the block in its chain unit.
 
 == GMP blocks ==
 

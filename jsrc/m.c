@@ -1683,7 +1683,7 @@ if((I)jt&3)SEGFAULT;
  }
 #endif
 #if SHOWALLALLOC
-printf("%p+\n",z);
+if(JT(jt,peekdata))printf("%p+\n",z);
 #endif
  R z;
 }
@@ -1844,7 +1844,7 @@ if((AC(w)>>(BW-2))==-1)SEGFAULT;  // high bits 11 must be deadbeef
 
 // audit free list {I Wi,Wj;MS *Wx; for(Wi=PMINL;Wi<=PLIML;++Wi){Wj=0; Wx=(jt->mempool[-PMINL+Wi]); while(Wx){Wx=(MS*)(Wx->a); ++Wj;}}}
 #if SHOWALLALLOC
-printf("%p-\n",w);
+if(JT(jt,peekdata))printf("%p-\n",w);
 #endif
 #if MEMAUDIT&1
  if(hrh!=FHRHISGMP) {

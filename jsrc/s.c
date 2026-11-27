@@ -464,6 +464,7 @@ static A jtlocindirect(J jt,I n,C*u,I hash){A x;C*s,*v,*xv;I k,xn;
  A locsym=jt->locsyms;  // if g=0, the local table we are looking in.  name___1 yields a second local name, after which they must be globals
  A y;  //  resolved A block for __x.  This is the name of a locale which will be found & put into g
  s=n+u;   // s->end+1 of name, past the last locative
+ I yneedsfa;  // will be nonzero if y came from syrd1 and needs a fa
  while(u<s){
   v=s; NOUNROLL while('_'!=*--v); ++v;  // v->start of next indirect locative, scanning right to left
   k=s-v; s=v-2; s-=s[-1]=='_';    // k=length of indirect locative; s->end+1 of next name if any
@@ -471,7 +472,8 @@ static A jtlocindirect(J jt,I n,C*u,I hash){A x;C*s,*v,*xv;I k,xn;
   if(likely(g==0)){  // first time through, or maybe second if the first was l___1
    if(likely(!BETWEENC(v[0],'0','9'))){  // is normal name?
     y=QCWORD(probex(k,v,SYMORIGIN,hash,locsym));  // look up local first.
-    if(y==0)y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)hash,jt->global));else{rapos(y,y);}  // if not local, start in implied locale.  ra to match syrd
+    if(y==0)y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)hash,g=jt->global));  // if not local, start in implied locale and set g to indicate not local.
+// obsolete ;else{rapos(y,y);}
    }else{DC d; 
     // the 'name' is a number (it must be the last name, ___n).  It refers to debug stack frames, the first of which is numbered _1.  hash has the value of the number
     // To avoid uncertainty as new frames are created, frames before the top suspended frame are ignored
@@ -485,28 +487,32 @@ neglocnum:;
     continue;  // advance to next locative, leaving g=0 to indicate we are still in a local table
    }
   }else y=QCWORD(jtsyrd1((J)((I)jt+k),v,(UI4)nmhash(k,v),g));   // look up later indirect locatives, yielding an A block for a locative
-  ASSERTN(y,EVVALUE,nfs(k,v,0));  // verify found.  If y was found, it has been ra()d
+  // g has been used for the lookup and no longer needed except as a flag.  It has been set to non0 if the last lookup was in a public table and now needs a fa
+  ASSERTN(y,EVVALUE,nfs(k,v,0));  // verify found.  If y was found, it may have been ra()d
+  yneedsfa=g;  // remember if we must fa y, before we take any error exit
   ASSERTNGOTO(!AR(y),EVRANK,nfs(k,v,0),exitfa);   // verify atomic
   if(AT(y)&(INT|B01)){  // atomic integer, numbered or debug locale
-numloc: ;  // integer locale whether boxed or not
    hash=BIV0(y);   // fetch locale number, overwriting the input parameter as needed below
-   if(hash<0)goto neglocnum;   // negative locale number (debug frame) is valid only as last locale.  Transfer to the code to handle it
+numloc: ;  // integer locale whether boxed or not
+   if(unlikely(hash<0)){g=0; goto neglocnum;}   // negative locale number (debug frame) is valid only as last locale.  Set g to indicate we still look in the local table of the debug frame; transfer to the code to handle it
    g=findnl(hash); ASSERTGOTO(g!=0,EVLOCALE,exitfa);  // nonnegative locale#, use it for the numbered locale
   }else{   // 
    ASSERTNGOTO(BOX&AT(y),EVDOMAIN,nfs(k,v,0),exitfa);  // verify box
-   x=C(AAV(y)[0]); if((((I)AR(x)-1)&-(AT(x)&(INT|B01)))<0){y=x; goto numloc;}  // Boxed integer - use that as the locale number
-  xn=AN(x); xv=CAV(x);   // x->boxed contents, xn=length, xv->string
+   x=C(AAV(y)[0]); if((((I)AR(x)-1)&-(AT(x)&(INT|B01)))<0){hash=BIV0(x); goto numloc;}  // Boxed integer - use that as the locale number
+   xn=AN(x); xv=CAV(x);   // x->boxed contents, xn=length, xv->string
    ASSERTNGOTO(1>=AR(x),EVRANK,nfs(k,v,0),exitfa);   // verify list (or atom)
    ASSERTNGOTO(xn,EVLENGTH,nfs(k,v,0),exitfa);   // verify not empty
    ASSERTNGOTO(LIT&AT(x),EVDOMAIN,nfs(k,v,0),exitfa);  // verify string
    ASSERTNGOTO(vlocnm(xn,xv),EVILNAME,nfs(k,v,0),exitfa);  // verify legal name
-   I bucketx=BUCKETXLOC(xn,xv);
+   I bucketx=BUCKETXLOC(xn,xv); 
    RZGOTO(g=stfindcre(xn,xv,bucketx),exitfa);  // find st for the name
- }
+  }
+  if(yneedsfa!=0)fa(y);  // we are finished with y; fa if it came from syrd1
  }
  g=g?g:locsym; R g;  // if we get here, good return.  If we stayed in the local table, return it
 exitfa: ;
- fa(y);
+// fa y if not local table
+ if(yneedsfa!=0)fa(y);  // fa y if it came from syrd1
  R 0;
 }
 

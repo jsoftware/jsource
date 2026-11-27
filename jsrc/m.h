@@ -41,7 +41,17 @@
 
 
 #define LEAKSNIFF 0
-#define SHOWALLALLOC 0 // to display log of allo/free
+#define SHOWALLALLOC 0 // to display log of allo/free after peekdata set
+/* useful code for finding leaks when SHOWALLALLOC=1
+allo =. <;._2 ,&LF wd 'clippaste'
+allo =. (#~ '0' = {.@>) allo
+plus =. 0 {:: plusminus =. ({:@> </. }:"1@:>) allo
+oc=: i.~ (] - {) /:@/:
+leakx=.-.&:(,. oc)&>/ (i.~&.> {.) plusminus
+plusxo =. (,. oc) i.~ plus
+]leakxx =. plusxo i. leakx  NB. index of leaking allocation
+]leakxx { plus  NB. address of leaking block
+ */
 /*  to analyze
 ;@:(<@({.~  2 | #)/.)~ (#~ ('0000' -: 4&{.)@>) {.@;:;._2 wd 'clippaste'
 */

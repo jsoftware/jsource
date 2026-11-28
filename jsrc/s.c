@@ -464,7 +464,7 @@ static A jtlocindirect(J jt,I n,C*u,I hash){A x;C*s,*v,*xv;I k,xn;
  A locsym=jt->locsyms;  // if g=0, the local table we are looking in.  name___1 yields a second local name, after which they must be globals
  A y;  //  resolved A block for __x.  This is the name of a locale which will be found & put into g
  s=n+u;   // s->end+1 of name, past the last locative
- I yneedsfa;  // will be nonzero if y came from syrd1 and needs a fa
+ A yneedsfa;  // will be nonzero if y came from syrd1 and needs a fa
  while(u<s){
   v=s; NOUNROLL while('_'!=*--v); ++v;  // v->start of next indirect locative, scanning right to left
   k=s-v; s=v-2; s-=s[-1]=='_';    // k=length of indirect locative; s->end+1 of next name if any
